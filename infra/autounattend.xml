@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  autounattend.xml — Zero-touch Windows 10/11 install for CrossDesk guest VM.
+  Place this file + CrossDeskAgent.exe in the root of the tools ISO (D: in the VM).
+  Windows Setup picks up autounattend.xml automatically from any optical drive root.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+
+  <!-- ── windowsPE ── disk layout + image selection ──────────────────────── -->
+  <settings pass="windowsPE">
+    <component name="Microsoft-Windows-International-Core-WinPE"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <SetupUILanguage>
+        <UILanguage>en-US</UILanguage>
+      </SetupUILanguage>
+      <InputLocale>en-US</InputLocale>
+      <SystemLocale>en-US</SystemLocale>
+      <UILanguage>en-US</UILanguage>
+      <UserLocale>en-US</UserLocale>
+    </component>
+
+    <component name="Microsoft-Windows-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <DiskConfiguration>
+        <Disk wcm:action="add">
+          <DiskID>0</DiskID>
+          <WillWipeDisk>true</WillWipeDisk>
+          <CreatePartitions>
+            <!-- EFI System Partition -->
+            <CreatePartition wcm:action="add">
+              <Order>1</Order>
+              <Type>EFI</Type>
+              <Size>260</Size>
+            </CreatePartition>
+            <!-- Microsoft Reserved Partition -->
+            <CreatePartition wcm:action="add">
+              <Order>2</Order>
+              <Type>MSR</Type>
+              <Size>16</Size>
+            </CreatePartition>
+            <!-- Windows partition: fills remainder of disk -->
+            <CreatePartition wcm:action="add">
+              <Order>3</Order>
+              <Type>Primary</Type>
+              <Extend>true</Extend>
+            </CreatePartition>
+          </CreatePartitions>
+          <ModifyPartitions>
+            <ModifyPartition wcm:action="add">
+              <Order>1</Order>
+              <PartitionID>1</PartitionID>
+              <Label>System</Label>
+              <Format>FAT32</Format>
+            </ModifyPartition>
+            <ModifyPartition wcm:action="add">
+              <Order>2</Order>
+              <PartitionID>3</PartitionID>
+              <Label>Windows</Label>
+              <Format>NTFS</Format>
+              <Letter>C</Letter>
+            </ModifyPartition>
+          </ModifyPartitions>
+        </Disk>
+      </DiskConfiguration>
+
+      <ImageInstall>
+        <OSImage>
+          <InstallTo>
+            <DiskID>0</DiskID>
+            <PartitionID>3</PartitionID>
+          </InstallTo>
+          <!-- Index 6 = Windows 10/11 Pro in most retail ISOs.
+               Run `dism /Get-WimInfo /WimFile:sources\install.wim` to verify. -->
+          <InstallFrom>
+            <MetaData wcm:action="add">
+              <Key>/IMAGE/INDEX</Key>
+              <Value>6</Value>
+            </MetaData>
+          </InstallFrom>
+        </OSImage>
+      </ImageInstall>
+
+      <UserData>
+        <!-- No product key: VM runs in evaluation mode or picks up KMS from network. -->
+        <AcceptEula>true</AcceptEula>
+        <FullName>CrossDesk</FullName>
+        <Organization>CrossDesk</Organization>
+      </UserData>
+
+    </component>
+  </settings>
+
+  <!-- ── specialize ── hostname + Win11 hardware-check bypass ─────────────── -->
+  <settings pass="specialize">
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS">
+      <ComputerName>CrossDesk-Guest</ComputerName>
+      <TimeZone>UTC</TimeZone>
+    </component>
+
+    <component name="Microsoft-Windows-Deployment"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <RunSynchronous>
+        <!-- Defence-in-depth: bypass Win11 hardware checks even when swtpm is
+             present, in case OVMF Secure Boot enrollment is incomplete. -->
+        <RunSynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <Path>reg add "HKLM\SYSTEM\Setup\LabConfig" /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <Path>reg add "HKLM\SYSTEM\Setup\LabConfig" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <Path>reg add "HKLM\SYSTEM\Setup\LabConfig" /v BypassRAMCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+      </RunSynchronous>
+    </component>
+  </settings>
+
+  <!-- ── oobeSystem ── skip OOBE, create account, install agent ───────────── -->
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <NetworkLocation>Work</NetworkLocation>
+        <!-- ProtectYourPC=3: disable Windows Defender telemetry prompts -->
+        <ProtectYourPC>3</ProtectYourPC>
+        <SkipMachineOOBE>true</SkipMachineOOBE>
+        <SkipUserOOBE>true</SkipUserOOBE>
+      </OOBE>
+
+      <UserAccounts>
+        <LocalAccounts>
+          <LocalAccount wcm:action="add">
+            <Name>crossdesk</Name>
+            <DisplayName>CrossDesk</DisplayName>
+            <Group>Administrators</Group>
+            <Password>
+              <Value></Value>
+              <PlainText>true</PlainText>
+            </Password>
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+
+      <!-- Single auto-logon to trigger FirstLogonCommands, then disabled. -->
+      <AutoLogon>
+        <Enabled>true</Enabled>
+        <LogonCount>1</LogonCount>
+        <Username>crossdesk</Username>
+        <Password>
+          <Value></Value>
+          <PlainText>true</PlainText>
+        </Password>
+      </AutoLogon>
+
+      <FirstLogonCommands>
+        <SynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c mkdir "C:\CrossDesk"</CommandLine>
+        </SynchronousCommand>
+        <!-- D: is the tools ISO (second CD-ROM), containing CrossDeskAgent.exe. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c copy /Y "D:\CrossDeskAgent.exe" "C:\Windows\System32\CrossDeskAgent.exe"</CommandLine>
+        </SynchronousCommand>
+        <!-- Note: sc.exe requires a space after each = sign. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c sc create CrossDeskAgent binPath= "C:\Windows\System32\CrossDeskAgent.exe" start= auto type= own DisplayName= "CrossDesk Agent"</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>4</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c sc start CrossDeskAgent</CommandLine>
+        </SynchronousCommand>
+        <!-- Disable auto-logon to prevent a login loop on subsequent boots. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>5</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d 0 /f</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
+
+    </component>
+  </settings>
+
+</unattend>

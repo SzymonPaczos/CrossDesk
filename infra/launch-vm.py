@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+"""
+launch-vm.py — Bootstrap launcher for the CrossDesk Windows guest VM.
+
+Usage:
+    python3 infra/launch-vm.py <windows.iso> <tools.iso>
+
+    windows.iso  — Downloaded Windows 10/11 installation ISO.
+    tools.iso    — ISO containing autounattend.xml + CrossDeskAgent.exe at root.
+
+Requirements (install via distro package manager):
+    qemu-system-x86_64, qemu-img, ovmf, swtpm
+
+The script creates crossdesk-win.qcow2 and efivars.fd in the current directory
+on first run; subsequent runs reuse them (install does not repeat).
+"""
+
+from __future__ import annotations
+
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+# ── Configuration ────────────────────────────────────────────────────────────
+
+DISK_IMAGE: Path = Path("crossdesk-win.qcow2")
+EFIVARS: Path = Path("efivars.fd")
+
+DISK_GB: int = 64
+RAM_MB: int = 4096
+VCPUS: int = 4
+
+# Guest CID for AF_VSOCK; 0=hypervisor, 1=loopback, 2=host, 3+ are free.
+VSOCK_CID: int = 3
+
+# OVMF paths differ by distro; list checked in order.
+_OVMF_CODE_CANDIDATES: list[Path] = [
+    Path("/usr/share/OVMF/OVMF_CODE_4M.fd"),           # Ubuntu/Debian
+    Path("/usr/share/OVMF/OVMF_CODE.fd"),
+    Path("/usr/share/edk2/ovmf/OVMF_CODE.fd"),          # Fedora/RHEL
+    Path("/usr/share/ovmf/x64/OVMF_CODE.fd"),           # Arch
+]
+_OVMF_VARS_CANDIDATES: list[Path] = [
+    Path("/usr/share/OVMF/OVMF_VARS_4M.fd"),
+    Path("/usr/share/OVMF/OVMF_VARS.fd"),
+    Path("/usr/share/edk2/ovmf/OVMF_VARS.fd"),
+    Path("/usr/share/ovmf/x64/OVMF_VARS.fd"),
+]
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def die(msg: str) -> None:
+    print(f"error: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def find_first(candidates: list[Path]) -> Path:
+    for p in candidates:
+        if p.exists():
+            return p
+    die(
+        "OVMF firmware not found. Install the 'ovmf' package.\n"
+        f"  Searched: {[str(c) for c in candidates]}"
+    )
+    raise SystemExit(1)  # unreachable; satisfies type-checker
+
+
+def require_binary(name: str) -> None:
+    if shutil.which(name) is None:
+        die(f"required binary not in PATH: {name}")
+
+
+def preflight(windows_iso: Path, tools_iso: Path) -> None:
+    for iso, label in ((windows_iso, "Windows ISO"), (tools_iso, "tools ISO")):
+        if not iso.exists():
+            die(f"{label} not found: {iso}")
+    for binary in ("qemu-system-x86_64", "qemu-img", "swtpm"):
+        require_binary(binary)
+    if not Path("/dev/kvm").exists():
+        die("/dev/kvm not present — enable KVM (modprobe kvm_intel or kvm_amd)")
+
+
+def create_disk_if_missing() -> None:
+    if not DISK_IMAGE.exists():
+        subprocess.run(
+            ["qemu-img", "create", "-f", "qcow2", str(DISK_IMAGE), f"{DISK_GB}G"],
+            check=True,
+        )
+
+
+def copy_efivars_if_missing(ovmf_vars: Path) -> None:
+    if not EFIVARS.exists():
+        shutil.copy2(ovmf_vars, EFIVARS)
+
+
+def start_swtpm(state_dir: Path) -> tuple[subprocess.Popen[bytes], Path]:
+    sock = state_dir / "swtpm.sock"
+    proc = subprocess.Popen(
+        [
+            "swtpm", "socket",
+            "--tpmstate", f"dir={state_dir}",
+            "--ctrl",     f"type=unixio,path={sock}",
+            "--log",      "level=0",
+            "--tpm2",
+        ]
+    )
+    _wait_for_unix_socket(sock, timeout=5.0)
+    return proc, sock
+
+
+def _wait_for_unix_socket(path: Path, timeout: float) -> None:
+    """Poll until the AF_UNIX socket accepts connections or timeout expires."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                s.connect(str(path))
+            return
+        except OSError:
+            time.sleep(0.05)
+    die(f"swtpm socket {path} not ready within {timeout}s")
+
+
+def build_qemu_cmd(
+    windows_iso: Path,
+    tools_iso: Path,
+    ovmf_code: Path,
+    tpm_sock: Path,
+) -> list[str]:
+    return [
+        "qemu-system-x86_64",
+        "-name",    "CrossDesk-Win",
+        # q35 chipset; smm=on required for OVMF Secure Boot / Win11 compatibility
+        "-machine", "q35,accel=kvm,smm=on",
+        "-cpu",     "host",
+        "-smp",     str(VCPUS),
+        "-m",       str(RAM_MB),
+        # ── UEFI ──────────────────────────────────────────────────────────
+        "-drive",   f"if=pflash,format=raw,readonly=on,file={ovmf_code}",
+        "-drive",   f"if=pflash,format=raw,file={EFIVARS}",
+        # ── TPM 2.0 ───────────────────────────────────────────────────────
+        "-chardev", f"socket,id=chrtpm,path={tpm_sock}",
+        "-tpmdev",  "emulator,id=tpm0,chardev=chrtpm",
+        "-device",  "tpm-tis,tpmdev=tpm0",
+        # ── Storage ───────────────────────────────────────────────────────
+        "-drive",   f"file={DISK_IMAGE},if=virtio,format=qcow2,cache=writeback",
+        # cdrom index=0 → C: (install source), index=1 → D: (tools ISO)
+        "-drive",   f"file={windows_iso},media=cdrom,readonly=on,index=0",
+        "-drive",   f"file={tools_iso},media=cdrom,readonly=on,index=1",
+        # Boot from optical first (install); disk takes over on subsequent boots
+        "-boot",    "order=dc,menu=off",
+        # ── Network (user-mode, no root required) ─────────────────────────
+        "-netdev",  "user,id=net0",
+        "-device",  "virtio-net-pci,netdev=net0",
+        # ── AF_VSOCK for Phase 2 gRPC transport ───────────────────────────
+        # Requires: modprobe vhost_vsock (or CONFIG_VHOST_VSOCK=y in kernel)
+        "-device",  f"vhost-vsock-pci,guest-cid={VSOCK_CID}",
+        # ── Display: headless; attach VNC on :0 (port 5900) for debugging ─
+        "-display", "none",
+        "-vnc",     "127.0.0.1:0",
+    ]
+
+
+# ── Entry point ──────────────────────────────────────────────────────────────
+
+def main() -> None:
+    if len(sys.argv) != 3:
+        print(__doc__)
+        sys.exit(1)
+
+    windows_iso = Path(sys.argv[1])
+    tools_iso = Path(sys.argv[2])
+
+    preflight(windows_iso, tools_iso)
+
+    ovmf_code = find_first(_OVMF_CODE_CANDIDATES)
+    ovmf_vars = find_first(_OVMF_VARS_CANDIDATES)
+
+    create_disk_if_missing()
+    copy_efivars_if_missing(ovmf_vars)
+
+    tpm_state = Path(tempfile.mkdtemp(prefix="crossdesk-tpm-"))
+    tpm_proc, tpm_sock = start_swtpm(tpm_state)
+
+    try:
+        cmd = build_qemu_cmd(windows_iso, tools_iso, ovmf_code, tpm_sock)
+        print("+ " + " ".join(cmd))
+        subprocess.run(cmd, check=True)
+    finally:
+        tpm_proc.terminate()
+        tpm_proc.wait()
+
+
+if __name__ == "__main__":
+    main()

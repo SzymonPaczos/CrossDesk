@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package crossdesk.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// =============================================================================
+// Wspólne typy referowane przez control.proto, filesystem.proto, heartbeat.proto.
+//
+// Wydzielone do osobnego pliku, żeby:
+//   - semantyka uwierzytelnienia i znaczników czasu ewoluowała w jednym miejscu;
+//   - buf-breaking blokował niespójne zmiany na poziomie pojedynczego pliku;
+//   - nowe plany IPC dodawane w przyszłości dziedziczyły identyczne envelope'y
+//     bez kopiowania definicji.
+// =============================================================================
+
+// Per-frame authentication envelope. WYMAGANE w każdej wiadomości każdego planu.
+//
+// Zaadresowane zagrożenia (Red Team, zatwierdzone):
+//   1. CID collision / spoofing: AF_VSOCK nie posiada peer-identity na poziomie
+//      transportu. mTLS daje tożsamość na handshake'u, ale dynamiczne CID-y w
+//      `qemu:///session` mogą zostać zrecyklowane między restartami domeny
+//      libvirt — frame zaadresowany do nieżyjącej domeny może trafić do nowej.
+//      Trójka {fingerprint, nonce, sequence} czyni taki misroute wykrywalnym
+//      po stronie odbiorcy.
+//   2. Replay attack: monotoniczny `sequence` per-direction wymusza, że każdy
+//      kolejny frame ma numer dokładnie o 1 większy. Powtórka lub regresja ⇒
+//      zerwanie strumienia + incident counter.
+message AuthContext {
+  // SHA-256 leaf certyfikatu mTLS peera, lowercase hex, bez separatorów.
+  // Odbiorca MUSI porównać z fingerprintem zaobserwowanym na warstwie TLS
+  // dla aktywnego strumienia. Niezgodność ⇒ zamknij strumień.
+  string peer_cert_fingerprint = 1;
+
+  // Losowy 16-bajtowy nonce, stały przez cały czas życia strumienia.
+  // Wykrywa przypadek, gdy dwa niezależne strumienie skrzyżują się na
+  // poziomie vsock z powodu reuse CID.
+  bytes stream_nonce = 2;
+
+  // Ściśle monotoniczny licznik per-kierunek (klient i serwer mają osobne).
+  // Nadawca inkrementuje przed wysłaniem; odbiorca wymusza ścisłe +1.
+  uint64 sequence = 3;
+}
+
+// Wall-clock + monotonic shipowane razem.
+//
+// Rationale: z samego wall-clocka nie da się odróżnić opóźnienia sieciowego
+// od stalla schedulera ani od skoku zegara (NTP jump, hibernate). Para pozwala
+// hostowi liczyć sensowne RTT w heartbeat.proto i wykrywać clock drift.
+message TimingMark {
+  google.protobuf.Timestamp wall_clock = 1;
+  fixed64 monotonic_ns = 2;
+}

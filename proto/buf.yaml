@@ -1,0 +1,19 @@
+version: v2
+
+modules:
+  - path: .
+    name: buf.build/crossdesk/proto
+
+# Lint: STANDARD wymusza m.in. snake_case nazw pól, PACKAGE_VERSION_SUFFIX,
+# enum value prefixes. Brak "except" — chcemy maksymalnie surowych reguł
+# od pierwszego dnia, dopóki kontrakt jest mały.
+lint:
+  use:
+    - STANDARD
+
+# Wire-compat guard. FILE-level: zmiana w pojedynczym pliku, która łamałaby
+# klientów (zmiana typu pola, usunięcie pola, zmiana numeru), jest blokowana
+# przez `buf breaking --against .git#branch=main` w CI.
+breaking:
+  use:
+    - FILE

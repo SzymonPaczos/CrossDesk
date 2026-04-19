@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package crossdesk.v1;
+
+import "google/protobuf/duration.proto";
+import "crossdesk/v1/common.proto";
+
+// =============================================================================
+// CrossDesk Filesystem Plane — cykl życia JIT VirtioFS share'a.
+//
+// MODEL BEZPIECZEŃSTWA (po Red Team)
+// ----------------------------------
+// Host NIGDY nie mapuje $HOME na stałe. Gdy user dwuklika plik:
+//   1. Host wylicza MINIMALNY katalog zawierający plik (per-app sandbox po
+//      stronie host/virtiofs/, NIE naiwny os.path.dirname).
+//   2. Host hot-pluguje urządzenie VirtioFS w trybie wyznaczonym polityką.
+//   3. Host CZEKA na ReleaseAck POCHODZĄCY Z GUESTA przed odpięciem.
+//      Host NIE może zgadnąć, kiedy proces zamknął uchwyty — tylko Guest
+//      potrafi udowodnić, że wszystkie handle są zamknięte i bufory zflushowane.
+//
+// SHARE FSM (perspektywa hosta; mirror po stronie Guesta):
+//
+//   REQUESTED ──policy ok──▶ ATTACHING ──libvirt attach──▶ ATTACHED
+//        │                                                      │
+//        │ policy reject                          Guest mounts  │
+//        ▼                                                      ▼
+//      DENIED                                                MOUNTED
+//                                                                │
+//                                                  first open()  │
+//                                                                ▼
+//                                                             IN_USE
+//                                                                │
+//             ┌──────────────────────────────────────────────────┤
+//             │ open_handles == 0 AND pending_writes_bytes == 0  │
+//             ▼                                                  │
+//      RELEASE_PENDING                                           │
+//             │ ReleaseAck                                       │
+//             ▼                                                  │
+//        DETACHING ◀────────────────────────────── (idle TTL elapsed)
+//             │ libvirt detach-device
+//             ▼
+//        DETACHED (terminal)
+//
+// Forced path: jeśli supervisor zdecyduje (np. crash agenta, security
+// incident), Host wysyła DetachRequest{force=true} i emituje ShareIncident
+// z rodzajem KIND_FORCED_DETACH. Guest powinien wówczas wymusić zamknięcie
+// uchwytów po swojej stronie i zalogować incident dla forensyki.
+// =============================================================================
+
+service FilesystemService {
+  // Bidirectional. Host pushuje komendy share'a; Guest pushuje raporty stanu
+  // (mount results, lock reports, release acks, incydenty).
+  rpc ShareChannel(stream ShareClientFrame) returns (stream ShareServerFrame);
+}
+
+// =============================================================================
+// Host → Guest
+// =============================================================================
+
+message ShareClientFrame {
+  AuthContext auth = 1;
+  TimingMark sent_at = 2;
+
+  oneof payload {
+    MountRequest mount = 10;
+    DetachRequest detach = 11;
+    LockQuery lock_query = 12;
+  }
+}
+
+message MountRequest {
+  // UUID; każdy kolejny frame dotyczący tego share'a echo'uje go.
+  string share_id = 1;
+
+  // Litera dysku, którą Guest MUSI przypisać (np. "X:"). Host pre-wybiera
+  // wolną literę, żeby uniknąć race'ów z enumeracją mountów po stronie Guesta.
+  string guest_drive_letter = 2;
+
+  enum AccessMode {
+    ACCESS_UNSPECIFIED = 0;
+    ACCESS_READ_ONLY = 1;
+    ACCESS_READ_WRITE = 2;
+  }
+  AccessMode access_mode = 3;
+
+  // Dokładna nazwa pliku, który użytkownik kliknął na hoście. Guest POWINIEN
+  // ujawnić tylko tę pozycję (i jawne dependencies otwierane przez aplikację)
+  // launchowanemu procesowi, żeby skompromitowana aplikacja nie mogła
+  // enumerować rodzeństwa w katalogu.
+  string focal_filename = 4;
+
+  // Po tym oknie braku otwartych uchwytów Host wyśle DetachRequest. Guest
+  // proaktywnie pre-flushuje bufory w miarę zbliżania się do deadline'u.
+  google.protobuf.Duration idle_release_after = 5;
+
+  // Mount token: nieprzezroczysty bearer, który Guest MUSI echo'ować w
+  // każdym frame'ie dotyczącym tego share'a. Niezależny od mTLS; rotowany
+  // per-share, żeby skompromitowany handle share'a nie mógł zostać użyty
+  // ponownie po detach.
+  bytes mount_token = 6;
+}
+
+message DetachRequest {
+  string share_id = 1;
+  bytes mount_token = 2;
+  // Bypass open-handle check. Wyłącznie incident path; Host MUSI zalogować
+  // powód i wyemitować ShareIncident{KIND_FORCED_DETACH} przed wysłaniem.
+  bool force = 3;
+  string reason = 4;
+}
+
+message LockQuery {
+  // On-demand audyt: Host prosi Guesta o enumerację aktualnie trzymanych
+  // uchwytów. Używane przez supervisor przed decyzją o forced detach.
+  string share_id = 1;
+  bytes mount_token = 2;
+}
+
+// =============================================================================
+// Guest → Host
+// =============================================================================
+
+message ShareServerFrame {
+  AuthContext auth = 1;
+  TimingMark sent_at = 2;
+
+  oneof payload {
+    MountResult mount_result = 10;
+    LockReport lock_report = 11;
+    ReleaseAck release_ack = 12;
+    DetachResult detach_result = 13;
+    ShareIncident incident = 14;
+  }
+}
+
+message MountResult {
+  string share_id = 1;
+  bytes mount_token = 2;
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_MOUNTED = 1;
+    STATUS_DEVICE_NOT_PRESENT = 2;     // libvirt attach nie zmaterializował się w czasie
+    STATUS_DRIVE_LETTER_TAKEN = 3;
+    STATUS_PERMISSION_DENIED = 4;
+    STATUS_INTERNAL_ERROR = 5;
+  }
+  Status status = 3;
+  string detail = 4;
+}
+
+// Periodyczny + on-change raport stanu uchwytów po stronie Guesta.
+// Host traktuje (open_handles == 0 AND pending_writes_bytes == 0) jako
+// warunek konieczny wejścia w RELEASE_PENDING.
+message LockReport {
+  string share_id = 1;
+  bytes mount_token = 2;
+  uint32 open_handles = 3;
+  uint64 pending_writes_bytes = 4;     // bajty czekające na fsync
+  repeated FileHandle handles = 5;
+  TimingMark observed_at = 6;
+}
+
+message FileHandle {
+  string path_on_share = 1;
+  uint32 process_id = 2;
+  enum Mode {
+    MODE_UNSPECIFIED = 0;
+    MODE_READ = 1;
+    MODE_WRITE = 2;
+    MODE_READ_WRITE = 3;
+  }
+  Mode mode = 3;
+  bool exclusive_lock = 4;
+}
+
+// Wysyłany WYŁĄCZNIE gdy Guest może udowodnić, że:
+//   (a) wszystkie handle zamknięte,
+//   (b) wszystkie dirty pages zflushowane przez NtFlushBuffersFile,
+//   (c) proces, dla którego share został utworzony, zakończył się LUB
+//       jawnie zwolnił share.
+// To jest jedyny sygnał, na podstawie którego Host detachuje urządzenie
+// w ścieżce happy-path. Brak ReleaseAck ⇒ share trwa do idle_release_after.
+message ReleaseAck {
+  string share_id = 1;
+  bytes mount_token = 2;
+  TimingMark released_at = 3;
+  uint64 total_bytes_written = 4;
+  uint32 final_handle_count_observed = 5;  // oczekiwane 0; logujemy dla forensyki
+}
+
+message DetachResult {
+  string share_id = 1;
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_DETACHED = 1;
+    STATUS_BUSY = 2;             // otwarte handle pozostały, force=false
+    STATUS_NOT_FOUND = 3;
+    STATUS_INTERNAL_ERROR = 4;
+  }
+  Status status = 2;
+  string detail = 3;
+}
+
+message ShareIncident {
+  string share_id = 1;
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_TOKEN_MISMATCH = 1;
+    KIND_PATH_TRAVERSAL_BLOCKED = 2;     // próba ucieczki przez symlink etc.
+    KIND_UNEXPECTED_DETACH = 3;          // urządzenie zniknęło w trakcie mount
+    KIND_WRITE_FAILED = 4;
+    KIND_FORCED_DETACH = 5;              // Host wymusił detach mimo otwartych uchwytów
+  }
+  Kind kind = 2;
+  string detail = 3;
+  TimingMark observed_at = 4;
+}

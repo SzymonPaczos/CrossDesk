@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crossdesk-host"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "grpcio>=1.63",
+    "grpcio-tools>=1.63",
+    "libvirt-python>=10.3",
+    "systemd-python>=235",
+]
+
+[project.scripts]
+crossdesk-host = "crossdesk_host.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crossdesk_host"]
+
+[tool.mypy]
+strict = true
+python_version = "3.9"
+
+[tool.black]
+target-version = ["py39"]
+
+[tool.ruff]
+target-version = "py39"
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10",
+    "black>=24.4",
+    "ruff>=0.4",
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+]

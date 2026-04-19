@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Rust
+target/
+**/*.rs.bk
+
+# Protobuf / buf
+host/generated/
+guest/crates/proto/src/generated/
+buf.lock
+
+# Build artefacts
+*.tar
+*.zip
+dist/
+build/

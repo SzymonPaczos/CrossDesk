@@ -1,0 +1,211 @@
+syntax = "proto3";
+
+package crossdesk.v1;
+
+import "crossdesk/v1/common.proto";
+
+// =============================================================================
+// CrossDesk Control Plane — cykl życia sesji + zdarzenia okien RAIL.
+//
+// Transport: gRPC over AF_VSOCK z mTLS na warstwie kanału gRPC. Każdy frame
+// niezależnie nosi AuthContext (defense-in-depth wobec CID collision i replay
+// — patrz common.proto).
+//
+// SESSION FSM (driven by ControlService.OpenSession bidi stream):
+//
+//                ClientHello                ServerAccept
+//   HANDSHAKE ───────────────▶ AUTHENTICATING ─────────────▶ AUTHENTICATED
+//        ▲                            │                              │
+//        │                            │ AuthFailure                  │ Ready
+//        └────────────────────────────┘                              ▼
+//                                                                 READY ◀────┐
+//                                                                    │      │
+//                                                  AppLaunchRequest  │      │
+//                                                                    ▼      │
+//                                                            LAUNCHING_APP  │
+//                                                                    │      │
+//                                                       AppLaunched  │      │
+//                                                                    ▼      │
+//                                                            APP_RUNNING ───┘
+//                                                                    │  AppExit
+//                                                                    │
+//                                                  SessionTerminate  │
+//                                                                    ▼
+//                                                              DRAINING
+//                                                                    │
+//                                          all RAIL windows closed   │
+//                                                                    ▼
+//                                                              CLOSED (terminal)
+//
+// Każdy nieoczekiwany błąd na strumieniu ⇒ CLOSED + tear-down kanału.
+// =============================================================================
+
+service ControlService {
+  // Bidirectional. Host inicjuje; Guest multipleksuje RailWindowEvent i
+  // AppLifecycleEvent z powrotem tym samym strumieniem, żeby zachować
+  // kolejność względem komend kontrolnych.
+  rpc OpenSession(stream ClientFrame) returns (stream ServerFrame);
+}
+
+// =============================================================================
+// Client → Server
+// =============================================================================
+
+message ClientFrame {
+  AuthContext auth = 1;
+  TimingMark sent_at = 2;
+
+  oneof payload {
+    ClientHello hello = 10;
+    AppLaunchRequest launch = 11;
+    AppFocusRequest focus = 12;
+    AppCloseRequest close = 13;
+    SessionTerminate terminate = 14;
+  }
+}
+
+message ClientHello {
+  string host_version = 1;
+  // Capability advertisement; Guest odpowiada wynegocjowanym podzbiorem.
+  repeated string supported_features = 2;  // np. "rail.v1", "virtiofs.jit"
+  // UUID domeny libvirt po stronie hosta. Guest porównuje z własnym
+  // SMBIOS-injected UUID, żeby wykryć live-migration / host swap.
+  string host_domain_uuid = 3;
+}
+
+message AppLaunchRequest {
+  string request_id = 1;                  // UUID; koreluje AppLaunched/Failed
+  string executable_guest_path = 2;
+  repeated string argv = 3;
+  // Opcjonalny share_id z filesystem.proto, który MUSI być w stanie ATTACHED
+  // przed startem procesu. Ustawiany, gdy launch wynika z dwukliku na pliku.
+  string required_share_id = 4;
+  // CWD wewnątrz Guesta, zwykle root JIT-mountowanego dysku.
+  string working_directory = 5;
+}
+
+message AppFocusRequest {
+  string request_id = 1;
+  uint64 window_id = 2;  // HWND z wcześniejszego RailWindowEvent
+}
+
+message AppCloseRequest {
+  string request_id = 1;
+  uint64 window_id = 2;
+  bool force = 3;        // false ⇒ WM_CLOSE; true ⇒ TerminateProcess
+}
+
+message SessionTerminate {
+  enum Reason {
+    REASON_UNSPECIFIED = 0;
+    REASON_USER_QUIT = 1;
+    REASON_HOST_SHUTDOWN = 2;
+    REASON_PROTOCOL_ERROR = 3;
+    REASON_AUTH_FAILED = 4;
+  }
+  Reason reason = 1;
+  string detail = 2;
+}
+
+// =============================================================================
+// Server → Client
+// =============================================================================
+
+message ServerFrame {
+  AuthContext auth = 1;
+  TimingMark sent_at = 2;
+
+  oneof payload {
+    ServerAccept accept = 10;
+    AuthFailure auth_failure = 11;
+    AppLaunched launched = 12;
+    AppLaunchFailed launch_failed = 13;
+    AppLifecycleEvent app_event = 14;
+    RailWindowEvent rail_event = 15;
+    SessionClosed closed = 16;
+  }
+}
+
+message ServerAccept {
+  string guest_version = 1;
+  repeated string negotiated_features = 2;
+  string guest_smbios_uuid = 3;  // p. ClientHello.host_domain_uuid
+}
+
+message AuthFailure {
+  enum Code {
+    CODE_UNSPECIFIED = 0;
+    CODE_FINGERPRINT_MISMATCH = 1;
+    CODE_NONCE_REUSE = 2;
+    CODE_SEQUENCE_REGRESSION = 3;
+    CODE_UUID_MISMATCH = 4;
+    CODE_FEATURE_NEGOTIATION_FAILED = 5;
+  }
+  Code code = 1;
+  string detail = 2;
+}
+
+message AppLaunched {
+  string request_id = 1;
+  uint32 process_id = 2;
+}
+
+message AppLaunchFailed {
+  string request_id = 1;
+  string error = 2;       // human-readable
+  uint32 ntstatus = 3;    // 0 jeśli niezwiązane z Win32
+}
+
+message AppLifecycleEvent {
+  uint32 process_id = 1;
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_STARTED = 1;
+    KIND_EXITED = 2;
+    KIND_CRASHED = 3;
+  }
+  Kind kind = 2;
+  int32 exit_code = 3;
+}
+
+// -----------------------------------------------------------------------------
+// RAIL (Remote Application Integrated Locally) window events.
+// Emitowane przez Guest agent obserwujący top-level okna uruchomionych
+// aplikacji; konsumowane przez display engine hosta (FreeRDP/RAIL).
+// -----------------------------------------------------------------------------
+message RailWindowEvent {
+  uint64 window_id = 1;     // HWND
+  uint32 process_id = 2;
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_CREATED = 1;
+    KIND_DESTROYED = 2;
+    KIND_MOVED = 3;
+    KIND_RESIZED = 4;
+    KIND_MINIMIZED = 5;
+    KIND_MAXIMIZED = 6;
+    KIND_RESTORED = 7;
+    KIND_FOCUS_GAINED = 8;
+    KIND_FOCUS_LOST = 9;
+    KIND_TITLE_CHANGED = 10;
+    KIND_ICON_CHANGED = 11;
+  }
+  Kind kind = 3;
+
+  // Geometria znacząca tylko dla CREATED / MOVED / RESIZED.
+  Rect geometry = 4;
+  string title = 5;
+  bytes icon_png = 6;       // wypełniane tylko dla CREATED / ICON_CHANGED
+}
+
+message Rect {
+  int32 x = 1;
+  int32 y = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
+
+message SessionClosed {
+  SessionTerminate.Reason reason = 1;
+  string detail = 2;
+}

@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package crossdesk.v1;
+
+import "google/protobuf/duration.proto";
+import "crossdesk/v1/common.proto";
+
+// =============================================================================
+// CrossDesk Heartbeat Plane — adaptive RTT-based liveness.
+//
+// ZASTĘPUJE oryginalny watchdog 3×500 ms. Host liczy EWMA RTT z tego strumienia
+// i dynamicznie wyprowadza próg miss. Guest kooperuje, echo'ując własny zegar
+// monotoniczny — pozwala to dekomponować latency na: czas na łączu vs. czas
+// w schedulerze Guesta vs. clock skew.
+//
+// FAILURE-RESPONSE FSM (perspektywa hosta, per-sesja):
+//
+//   HEALTHY ──ewma_rtt > k1*baseline──▶ DEGRADED
+//      ▲                                    │
+//      │ recovery (3 zdrowe ticki)          │ utrzymane przekroczenie
+//      │                                    ▼
+//      └──────────────────────────────── PROBING
+//                                            │
+//                                            │ Guest niereagujący ≥ adaptive_threshold
+//                                            ▼
+//                                       SOFT_RECOVERY  (HostDirective.GRACEFUL_SHUTDOWN)
+//                                            │
+//                                            │ brak ack w oknie backoff
+//                                            ▼
+//                                       HARD_DESTROY   (libvirt destroy + start)
+//
+// Backoff między próbami SOFT_RECOVERY jest exponential-with-jitter; Host MUSI
+// wyemitować GuestSignal/AdaptiveProfile z RecoveryAction PRZED akcją, żeby
+// supervisor mógł zwetować (np. user actively interacting).
+// =============================================================================
+
+service HeartbeatService {
+  // Bidirectional. HOST jest cadence-setterem; Guest MUSI odpowiadać Pongiem
+  // na każdy Ping nawet w stanie DEGRADED. Guest może asynchronicznie wpychać
+  // GuestSignal-e między Pongami, żeby zgłosić self-detected issues.
+  rpc Channel(stream HostFrame) returns (stream GuestFrame);
+}
+
+message HostFrame {
+  AuthContext auth = 1;
+  oneof payload {
+    Ping ping = 10;
+    HostDirective directive = 11;
+    AdaptiveProfile profile_update = 12;
+  }
+}
+
+message GuestFrame {
+  AuthContext auth = 1;
+  oneof payload {
+    Pong pong = 10;
+    GuestSignal signal = 11;
+  }
+}
+
+message Ping {
+  uint64 sequence = 1;
+  fixed64 host_send_monotonic_ns = 2;
+  // Host echo'uje ostatnio zaobserwowany RTT, żeby Guest mógł adaptować
+  // własny scheduling (np. odraczać niekrytyczne zadania).
+  google.protobuf.Duration last_observed_rtt = 3;
+}
+
+message Pong {
+  uint64 sequence = 1;                       // mirror Ping.sequence
+  fixed64 host_send_monotonic_ns = 2;        // echo verbatim
+  fixed64 guest_recv_monotonic_ns = 3;       // znacznik recv po stronie Guesta
+  fixed64 guest_send_monotonic_ns = 4;       // znacznik send po stronie Guesta
+  GuestState state = 5;
+  ResourcePressure pressure = 6;
+}
+
+enum GuestState {
+  GUEST_STATE_UNSPECIFIED = 0;
+  GUEST_STATE_BOOTING = 1;
+  GUEST_STATE_READY = 2;
+  GUEST_STATE_RAIL_ACTIVE = 3;
+  GUEST_STATE_FS_BUSY = 4;        // virtiofs flush w toku; toleruj wyższy RTT
+  GUEST_STATE_DEGRADED = 5;
+  GUEST_STATE_SHUTTING_DOWN = 6;
+}
+
+message ResourcePressure {
+  // 0–100. Raportowane, żeby kontroler virtio-balloon po stronie hosta
+  // mógł reagować dynamicznym skalowaniem RAM.
+  uint32 cpu_percent = 1;
+  uint32 memory_percent = 2;
+  uint32 disk_io_pressure = 3;
+}
+
+// Host-side adaptive parameters wysyłane, gdy Host przelicza próg.
+// Guest używa ich jako advisory hints dla własnego pacingu.
+message AdaptiveProfile {
+  google.protobuf.Duration ewma_rtt = 1;
+  google.protobuf.Duration jitter = 2;
+  google.protobuf.Duration current_ping_interval = 3;
+  google.protobuf.Duration miss_threshold = 4;        // adaptive timeout
+  uint32 consecutive_miss_count = 5;
+  RecoveryAction next_action = 6;
+  google.protobuf.Duration next_action_after = 7;     // exponential backoff
+}
+
+enum RecoveryAction {
+  RECOVERY_ACTION_UNSPECIFIED = 0;
+  RECOVERY_ACTION_NONE = 1;
+  RECOVERY_ACTION_OBSERVE = 2;
+  RECOVERY_ACTION_REQUEST_DIAG = 3;
+  RECOVERY_ACTION_GRACEFUL_SHUTDOWN = 4;
+  RECOVERY_ACTION_HARD_DESTROY = 5;
+}
+
+message HostDirective {
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_REQUEST_DIAG_DUMP = 1;
+    KIND_REQUEST_GRACEFUL_SHUTDOWN = 2;
+    KIND_FREEZE_NEW_WORK = 3;
+    KIND_RESUME_NEW_WORK = 4;
+  }
+  Kind kind = 1;
+  string detail = 2;
+}
+
+// Asynchroniczny self-report z Guesta (event Windows, o którym Host powinien
+// wiedzieć między Pongami).
+message GuestSignal {
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_SELF_DETECTED_DEGRADATION = 1;
+    KIND_SHUTDOWN_INITIATED_BY_OS = 2;
+    KIND_DRIVER_FAULT = 3;
+    KIND_DIAG_DUMP_READY = 4;
+  }
+  Kind kind = 1;
+  string detail = 2;
+  TimingMark observed_at = 3;
+}

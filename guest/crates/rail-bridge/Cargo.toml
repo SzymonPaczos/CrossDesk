@@ -1,0 +1,10 @@
+[package]
+name    = "rail-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+windows = { workspace = true, features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
+tonic   = { workspace = true }
+anyhow  = { workspace = true }
+tracing = { workspace = true }

@@ -1,87 +1,134 @@
 # CrossDesk
 
-## Add your files
+> **Run Windows applications as native Linux desktop windows** — bridging two worlds on a single workstation.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+CrossDesk is a high-performance integration layer that seamlessly connects Linux workstations and Windows environments. It uses hardware virtualization to execute Windows applications on your Linux desktop, rendering them as native windows with zero network overhead.
+
+## ✨ Why CrossDesk?
+
+Windows and Linux don’t have to be enemies. Instead of choosing one or running them in isolation, CrossDesk lets you leverage both ecosystems on the same machine:
+
+- **Native Integration**: Windows apps appear as native Linux windows in your desktop environment (Wayland/X11)
+- **Zero Network Overhead**: Communication between host and guest happens via CPU sockets (`vsock`), not TCP/IP
+- **Hardware Optimized**: Built on QEMU/libvirt with event-driven architecture—no polling, no wasted cycles
+- **Security-First**: Just-in-time resource mounting means the host directory is only accessible when needed by a specific process
+- **Zero-Touch Provisioning**: Windows VMs self-install via `autounattend.xml` with automated agent deployment
+
+## 🏗️ Architecture at a Glance
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/crossdeskgroup/CrossDesk.git
-git branch -M main
-git push -uf origin main
+┌─────────────────────────────────────────────────────────────┐
+│  Linux Host                                                 │
+│  ┌──────────────────────┐          ┌────────────────────┐  │
+│  │ Python Orchestrator  │          │  FreeRDP RAIL      │  │
+│  │ (systemd daemon)     │◄────────►│  (display server)  │  │
+│  └──────────────────────┘          └────────────────────┘  │
+│           ▲                                  ▲               │
+│           │ gRPC over vsock                 │               │
+│           │ (async streams)                 │               │
+│  ┌────────┴──────────────────────────────────┴─────────┐   │
+│  │  QEMU/KVM (libvirt session)                         │   │
+│  │                                                     │   │
+│  │  ┌──────────────────────────────────────────────┐  │   │
+│  │  │  Windows Guest VM                            │  │   │
+│  │  │  ┌────────────────────────────────────────┐  │  │   │
+│  │  │  │ Rust NT Service Agent                  │  │  │   │
+│  │  │  │ (gRPC endpoint, process manager)       │  │  │   │
+│  │  │  └────────────────────────────────────────┘  │  │   │
+│  │  │                                              │  │   │
+│  │  │  Windows applications run here              │  │   │
+│  │  └──────────────────────────────────────────────┘  │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Integrate with your tools
+## 🚀 Getting Started
 
-- [ ] [Set up project integrations](https://gitlab.com/crossdeskgroup/CrossDesk/-/settings/integrations)
+### Requirements
 
-## Collaborate with your team
+- Linux host with QEMU/KVM and libvirt support
+- Python 3.9+
+- Rust toolchain (for building the guest agent)
+- Windows ISO for guest installation
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Quick Start
 
-## Test and Deploy
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/crossdeskgroup/CrossDesk.git
+   cd CrossDesk
+   ```
 
-Use the built-in continuous integration in GitLab.
+2. **Review the architecture documentation**
+   ```bash
+   cat ARCHITECTURE.md
+   ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+3. **Follow the roadmap for implementation progress**
+   ```bash
+   cat ROADMAP.md
+   ```
 
-***
+## 📋 Project Phases
 
-## Suggestions for a good README
+**Phase 1: Bootstrap VM + NT Service**
+- Headless Windows installation via `autounattend.xml`
+- Automatic NT service registration for the Rust agent
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+**Phase 2: Transport & Security**
+- gRPC over `vsock` with mutual TLS and per-frame authentication
 
-## Name
-CrossDesk - your Linux workstation meets the Windows as a partner. 
+**Phase 3: Session Management & Heartbeat**
+- Adaptive heartbeat protocol with automatic recovery
+- State machine for graceful failure handling
 
-## Description
+**Phase 4: Display Integration**
+- RAIL (Remote App Integrated Locally) mode rendering
+- Native Wayland/X11 window compositing
 
-They said different systems couldn’t be brought together on a single workstation, that there’s no way to integrate and make them work as one.
+**Phase 5: Just-In-Time Storage**
+- Dynamic filesystem mounting based on process needs
+- Automatic cleanup and resource release
 
-But there’s a certain kind of person who doesn’t take no for an answer.
-They’d rather defy the rules and amaze.
+## 🏛️ Core Principles
 
-We can’t wait to see how you use the GNU/Linux to do such incredible things.
+1. **No Docker** — Direct `qemu:///session` libvirt for Wayland/X11 socket access
+2. **Event-Driven Only** — Async gRPC streams, never polling loops
+3. **Zero-Touch Setup** — Automated VM provisioning and agent deployment
+4. **Security by Default** — JIT resource mounting, mTLS authentication, per-frame validation
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 📚 Documentation
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design, technology stack, security model
+- **[ROADMAP.md](ROADMAP.md)** — Implementation phases and critical dependencies (SPOFs)
+- **[AGENT.md](AGENT.md)** — AI development directives and code standards
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## 🛠️ Development
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+This project maintains strict code quality standards:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- **Rust**: Idiomatic code, no `unwrap()` without justification
+- **Python**: Type hints (`mypy --strict`), async-only, `black` formatting
+- **Git**: Conventional Commits with clear message structure
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+See [AGENT.md](AGENT.md) for the full development mandate.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 📄 License
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
 GPL v3 or later
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## 🤝 Contributing
+
+We welcome contributions! Before submitting a PR:
+
+1. Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand the system design
+2. Review [AGENT.md](AGENT.md) for code standards
+3. Ensure your changes align with the [ROADMAP.md](ROADMAP.md)
+
+## 📞 Support & Feedback
+
+For questions, feature requests, or bug reports, please open an issue on GitHub.
+
+---
+
+**Status**: Active Development (Phase 1 complete, Phase 2 in progress)

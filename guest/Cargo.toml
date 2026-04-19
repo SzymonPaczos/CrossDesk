@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agent-svc",
+    "crates/ipc-vsock",
+    "crates/rail-bridge",
+    "crates/fs-mount",
+    "crates/proto",
+    "xtask",
+]
+
+[workspace.dependencies]
+tokio   = { version = "1", features = ["full"] }
+tonic   = "0.12"
+prost   = "0.13"
+windows = { version = "0.58", features = [] }
+anyhow  = "1"
+tracing = "0.1"

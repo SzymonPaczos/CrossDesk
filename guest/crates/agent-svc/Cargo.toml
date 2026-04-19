@@ -3,8 +3,15 @@ name    = "agent-svc"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "CrossDeskAgent"
+path = "src/main.rs"
+
 [dependencies]
-tokio   = { workspace = true }
-tonic   = { workspace = true }
 anyhow  = { workspace = true }
 tracing = { workspace = true }
+
+# windows-service is Windows-only; conditionally declared so the crate still
+# resolves on Linux toolchains used for cross-compilation checks.
+[target.'cfg(windows)'.dependencies]
+windows-service = "0.6"

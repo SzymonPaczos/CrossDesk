@@ -16,6 +16,7 @@ tokio-stream = "0.1"
 proto   = { path = "../proto" }
 ipc-vsock = { path = "../ipc-vsock" }
 rail-bridge = { path = "../rail-bridge" }
+fs-mount = { path = "../fs-mount" }
 
 # windows-service is Windows-only; conditionally declared so the crate still
 # resolves on Linux toolchains used for cross-compilation checks.

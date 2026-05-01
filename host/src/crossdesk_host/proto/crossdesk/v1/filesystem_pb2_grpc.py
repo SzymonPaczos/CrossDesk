@@ -78,8 +78,8 @@ class FilesystemServiceStub(object):
         """
         self.ShareChannel = channel.stream_stream(
                 '/crossdesk.v1.FilesystemService/ShareChannel',
-                request_serializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareClientFrame.SerializeToString,
-                response_deserializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareServerFrame.FromString,
+                request_serializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareGuestFrame.SerializeToString,
+                response_deserializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareHostFrame.FromString,
                 _registered_method=True)
 
 
@@ -141,8 +141,8 @@ def add_FilesystemServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ShareChannel': grpc.stream_stream_rpc_method_handler(
                     servicer.ShareChannel,
-                    request_deserializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareClientFrame.FromString,
-                    response_serializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareServerFrame.SerializeToString,
+                    request_deserializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareGuestFrame.FromString,
+                    response_serializer=crossdesk_dot_v1_dot_filesystem__pb2.ShareHostFrame.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -212,8 +212,8 @@ class FilesystemService(object):
             request_iterator,
             target,
             '/crossdesk.v1.FilesystemService/ShareChannel',
-            crossdesk_dot_v1_dot_filesystem__pb2.ShareClientFrame.SerializeToString,
-            crossdesk_dot_v1_dot_filesystem__pb2.ShareServerFrame.FromString,
+            crossdesk_dot_v1_dot_filesystem__pb2.ShareGuestFrame.SerializeToString,
+            crossdesk_dot_v1_dot_filesystem__pb2.ShareHostFrame.FromString,
             options,
             channel_credentials,
             insecure,

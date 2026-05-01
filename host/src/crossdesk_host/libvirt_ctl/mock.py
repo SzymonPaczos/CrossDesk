@@ -16,3 +16,11 @@ class LibvirtControllerMock:
 
     def graceful_shutdown(self) -> None:
         logger.warning(f"[LIBVIRT MOCK] Executing 'virsh shutdown {self.domain_name}'")
+
+    def attach_virtiofs(self, share_id: str, host_path: str) -> bool:
+        logger.info(f"[LIBVIRT MOCK] Executing 'virsh attach-device {self.domain_name}' for virtiofs share '{share_id}' -> '{host_path}'")
+        return True
+
+    def detach_virtiofs(self, share_id: str) -> bool:
+        logger.info(f"[LIBVIRT MOCK] Executing 'virsh detach-device {self.domain_name}' for virtiofs share '{share_id}'")
+        return True

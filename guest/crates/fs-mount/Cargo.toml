@@ -7,3 +7,5 @@ edition = "2021"
 windows = { workspace = true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
 anyhow  = { workspace = true }
 tracing = { workspace = true }
+tokio   = { workspace = true }
+proto   = { path = "../proto" }

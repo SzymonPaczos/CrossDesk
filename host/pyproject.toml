@@ -11,6 +11,7 @@ dependencies = [
     "grpcio-tools>=1.63",
     "libvirt-python>=10.3",
     "systemd-python>=235",
+    "cryptography>=41.0",
 ]
 
 [project.scripts]

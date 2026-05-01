@@ -1,5 +1,5 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::configure().compile(
+    tonic_build::configure().compile_protos(
         &[
             "../../../proto/crossdesk/v1/common.proto",
             "../../../proto/crossdesk/v1/control.proto",

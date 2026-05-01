@@ -11,8 +11,9 @@ members = [
 
 [workspace.dependencies]
 tokio   = { version = "1", features = ["full"] }
-tonic   = "0.12"
+tonic   = { version = "0.12", features = ["tls", "transport"] }
 prost   = "0.13"
-windows = { version = "0.58", features = [] }
+prost-types = "0.13"
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading"] }
 anyhow  = "1"
 tracing = "0.1"

@@ -4,3 +4,6 @@
 pub mod lifecycle;
 #[cfg(windows)]
 pub mod service;
+
+pub mod session;
+pub mod heartbeat;

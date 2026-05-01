@@ -2,3 +2,5 @@
 
 pub mod channel;
 pub mod tls;
+pub mod connector;
+pub mod client;

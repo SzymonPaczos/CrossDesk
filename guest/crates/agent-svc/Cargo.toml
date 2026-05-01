@@ -10,6 +10,12 @@ path = "src/main.rs"
 [dependencies]
 anyhow  = { workspace = true }
 tracing = { workspace = true }
+tokio   = { workspace = true }
+tonic   = { workspace = true }
+tokio-stream = "0.1"
+proto   = { path = "../proto" }
+ipc-vsock = { path = "../ipc-vsock" }
+rail-bridge = { path = "../rail-bridge" }
 
 # windows-service is Windows-only; conditionally declared so the crate still
 # resolves on Linux toolchains used for cross-compilation checks.

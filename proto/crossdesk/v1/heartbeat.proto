@@ -38,7 +38,7 @@ service HeartbeatService {
   // Bidirectional. HOST jest cadence-setterem; Guest MUSI odpowiadać Pongiem
   // na każdy Ping nawet w stanie DEGRADED. Guest może asynchronicznie wpychać
   // GuestSignal-e między Pongami, żeby zgłosić self-detected issues.
-  rpc Channel(stream HostFrame) returns (stream GuestFrame);
+  rpc Channel(stream GuestFrame) returns (stream HostFrame);
 }
 
 message HostFrame {

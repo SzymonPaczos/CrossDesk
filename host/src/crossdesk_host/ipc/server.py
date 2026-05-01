@@ -29,12 +29,22 @@ def create_vsock_server(ca_cert_path: Path, host_cert_path: Path, host_key_path:
     )
 
     # Używamy CID: -1 (VMADDR_CID_ANY) dla serwera nasłuchującego
-    # Składnia grpc dla vsock: `vsock:CID:PORT` (wiele implementacji akceptuje `vsock:-1:PORT` lub `vsock::PORT`)
-    endpoint = f"vsock:-1:{vsock_port}"
+    import sys
+    if sys.platform == "darwin" or sys.platform == "win32":
+        # macOS i czysty Windows (nie WSL) nie wspierają AF_VSOCK. Fallback do TCP.
+        endpoint = f"127.0.0.1:{vsock_port}"
+        logger.info("macOS/Windows detected. Falling back to TCP endpoint.")
+    else:
+        endpoint = f"vsock:-1:{vsock_port}"
     
     port = server.add_secure_port(endpoint, server_credentials)
     if port == 0:
-        logger.warning(f"Failed to bind to {endpoint} natively. Fallback / proxy might be required.")
+        logger.warning(f"Failed to bind to {endpoint}. Trying TCP fallback...")
+        endpoint = f"127.0.0.1:{vsock_port}"
+        port = server.add_secure_port(endpoint, server_credentials)
+        
+    if port == 0:
+        logger.error("Failed to bind to any endpoint.")
     else:
         logger.info(f"gRPC server listening securely on {endpoint}")
 

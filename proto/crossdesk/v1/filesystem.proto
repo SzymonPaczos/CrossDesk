@@ -50,14 +50,14 @@ import "crossdesk/v1/common.proto";
 service FilesystemService {
   // Bidirectional. Host pushuje komendy share'a; Guest pushuje raporty stanu
   // (mount results, lock reports, release acks, incydenty).
-  rpc ShareChannel(stream ShareClientFrame) returns (stream ShareServerFrame);
+  rpc ShareChannel(stream ShareGuestFrame) returns (stream ShareHostFrame);
 }
 
 // =============================================================================
 // Host → Guest
 // =============================================================================
 
-message ShareClientFrame {
+message ShareHostFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
 
@@ -120,7 +120,7 @@ message LockQuery {
 // Guest → Host
 // =============================================================================
 
-message ShareServerFrame {
+message ShareGuestFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
 

@@ -7,6 +7,7 @@ name = "agent-svc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fs-mount",
  "ipc-vsock",
  "proto",
  "rail-bridge",
@@ -221,6 +222,8 @@ name = "fs-mount"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "proto",
+ "tokio",
  "tracing",
  "windows",
 ]

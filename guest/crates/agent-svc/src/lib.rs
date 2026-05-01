@@ -7,3 +7,4 @@ pub mod service;
 
 pub mod session;
 pub mod heartbeat;
+pub mod filesystem;

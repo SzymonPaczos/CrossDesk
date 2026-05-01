@@ -61,6 +61,7 @@ message ClientFrame {
     AppFocusRequest focus = 12;
     AppCloseRequest close = 13;
     SessionTerminate terminate = 14;
+    RailWindowEvent rail_event = 15;
   }
 }
 
@@ -121,7 +122,6 @@ message ServerFrame {
     AppLaunched launched = 12;
     AppLaunchFailed launch_failed = 13;
     AppLifecycleEvent app_event = 14;
-    RailWindowEvent rail_event = 15;
     SessionClosed closed = 16;
   }
 }

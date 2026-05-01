@@ -8,3 +8,7 @@ tokio   = { workspace = true }
 tonic   = { workspace = true }
 anyhow  = { workspace = true }
 tracing = { workspace = true }
+tower   = "0.4"
+proto   = { path = "../proto" }
+rand    = "0.8"
+hex     = "0.4"

@@ -48,6 +48,16 @@ pub fn run_service() -> anyhow::Result<()> {
 
     append_log("CrossDeskAgent started");
 
+    let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+    
+    // Uruchomienie FSM i Heartbeata w tle (mock)
+    rt.spawn(async {
+        // W produkcji tu nastąpiłoby wywołanie ipc_vsock::client::create_secure_channel
+        // let channel = ipc_vsock::client::create_secure_channel(...).await.unwrap();
+        // let _ = crate::session::run_control_session(ControlServiceClient::new(channel.clone())).await;
+        // let _ = crate::heartbeat::run_heartbeat_loop(HeartbeatServiceClient::new(channel)).await;
+    });
+
     // Block on SCM stop signal — no polling, no spin-wait.
     let _ = stop_rx.recv();
 

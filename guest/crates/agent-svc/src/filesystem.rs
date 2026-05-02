@@ -1,10 +1,14 @@
+use ipc_vsock::client::AuthCarrier;
 use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
 use proto::crossdesk::v1::{ShareGuestFrame, share_guest_frame::Payload};
 use tokio::sync::mpsc;
 use tracing::{info, error, debug};
 use tokio_stream::wrappers::ReceiverStream;
 
-pub async fn run_filesystem_channel(mut client: FilesystemServiceClient<tonic::transport::Channel>) -> Result<(), anyhow::Error> {
+pub async fn run_filesystem_channel(
+    mut client: FilesystemServiceClient<tonic::transport::Channel>,
+    auth: AuthCarrier,
+) -> Result<(), anyhow::Error> {
     info!("Starting Filesystem JIT Service");
 
     let (tx, rx) = mpsc::channel::<ShareGuestFrame>(32);
@@ -28,7 +32,7 @@ pub async fn run_filesystem_channel(mut client: FilesystemServiceClient<tonic::t
                     
                     // Odpowiedź o wyniku
                     let out_frame = ShareGuestFrame {
-                        auth: None, // zostanie wstrzyknięte przez interceptor
+                        auth: Some(auth.next()),
                         sent_at: None,
                         payload: Some(Payload::MountResult(result)),
                     };
@@ -40,26 +44,27 @@ pub async fn run_filesystem_channel(mut client: FilesystemServiceClient<tonic::t
                     
                     // Uruchamiamy w tle pętlę generującą LockReport i ostatecznie ReleaseAck
                     let tx_clone = tx.clone();
+                    let auth_clone = auth.clone();
                     tokio::spawn(async move {
                         // Polling flush
                         tokio::time::sleep(idle_duration).await;
-                        
+
                         let report = fs_mount::flush::generate_mock_lock_report(&share_id, &token).await;
                         let _ = tx_clone.send(ShareGuestFrame {
-                            auth: None,
+                            auth: Some(auth_clone.next()),
                             sent_at: None,
                             payload: Some(Payload::LockReport(report)),
                         }).await;
-                        
+
                         // Po raporcie, symulujemy pomyślny flush i zwalniamy
                         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                         let ack = fs_mount::flush::generate_release_ack(&share_id, &token).await;
                         let _ = tx_clone.send(ShareGuestFrame {
-                            auth: None,
+                            auth: Some(auth_clone.next()),
                             sent_at: None,
                             payload: Some(Payload::ReleaseAck(ack)),
                         }).await;
-                        
+
                         info!("ReleaseAck sent for share {}", share_id);
                     });
                 },

@@ -12,3 +12,5 @@ tower   = "0.4"
 proto   = { path = "../proto" }
 rand    = "0.8"
 hex     = "0.4"
+sha2    = "0.10"
+pem     = "3"

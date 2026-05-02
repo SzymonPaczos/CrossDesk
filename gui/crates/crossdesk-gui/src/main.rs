@@ -12,7 +12,7 @@ fn main() {
 
     let mut engine = QQmlApplicationEngine::new();
     if let Some(engine_mut) = engine.as_mut() {
-        engine_mut.load(&QUrl::from(QString::from(
+        engine_mut.load(&QUrl::from(&QString::from(
             "qrc:/qt/qml/com/crossdesk/gui/qml/Main.qml",
         )));
     }

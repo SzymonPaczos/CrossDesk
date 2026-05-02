@@ -1,15 +1,7 @@
-use cxx_qt_lib::{QCoreApplication, QString, QTranslator};
+use cxx_qt_lib::QGuiApplication;
+use std::pin::Pin;
 
-pub fn install_translator(app: std::pin::Pin<&mut cxx_qt_lib::QGuiApplication>, locale: &str) {
-    let mut translator = QTranslator::new();
-    let resource = QString::from(format!(":/i18n/crossdesk_{locale}.qm"));
-    let loaded = if let Some(t) = translator.as_mut() {
-        t.load_from_file(&resource)
-    } else {
-        false
-    };
-
-    if loaded {
-        QCoreApplication::install_translator(app, &mut translator);
-    }
-}
+// TODO: cxx-qt-lib 0.7.3 does not expose QTranslator or
+// QCoreApplication::installTranslator. Wire translation loading once we
+// add a custom cxx::bridge for QTranslator (or upgrade cxx-qt-lib).
+pub fn install_translator(_app: Pin<&mut QGuiApplication>, _locale: &str) {}

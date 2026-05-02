@@ -40,11 +40,9 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 
                 # Wysyłamy PING
                 yield heartbeat_pb2.HostFrame(
-                    payload=heartbeat_pb2.HostFrame.Payload(
-                        ping=heartbeat_pb2.Ping(
-                            sequence=seq,
-                            host_send_monotonic_ns=start_ns
-                        )
+                    ping=heartbeat_pb2.Ping(
+                        sequence=seq,
+                        host_send_monotonic_ns=start_ns,
                     )
                 )
                 
@@ -52,7 +50,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 try:
                     # Timeout 2 sekundy na Ping
                     guest_frame = await asyncio.wait_for(request_iterator.__anext__(), timeout=2.0)
-                    self.auth_validator.verify_auth_context(context, guest_frame.auth)
+                    await self.auth_validator.verify_auth_context(context, guest_frame.auth)
                     
                     if guest_frame.WhichOneof('payload') == 'pong':
                         rtt_ns = time.monotonic_ns() - start_ns

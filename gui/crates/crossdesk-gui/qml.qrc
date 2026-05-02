@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/i18n">
+        <file alias="crossdesk_en.qm">i18n/crossdesk_en.qm</file>
+        <file alias="crossdesk_pl.qm">i18n/crossdesk_pl.qm</file>
+    </qresource>
+</RCC>

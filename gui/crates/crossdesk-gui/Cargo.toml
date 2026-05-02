@@ -1,0 +1,19 @@
+[package]
+name        = "crossdesk-gui"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+description = "CrossDesk visual mock console (Rust + Qt6/QML)"
+
+[[bin]]
+name = "crossdesk-gui"
+path = "src/main.rs"
+
+[dependencies]
+cxx        = { workspace = true }
+cxx-qt     = { workspace = true }
+cxx-qt-lib = { workspace = true }
+
+[build-dependencies]
+cxx-qt-build = { workspace = true }

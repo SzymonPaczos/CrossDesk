@@ -36,3 +36,15 @@ build/
 # GUI (Qt Linguist compiled translations)
 gui/target/
 *.qm
+
+# Local mTLS material — never commit private keys.
+# (Note: infra/certs/{ca,host,guest}.{key,crt} are already in git history from
+#  the initial scaffolding; rotate them and run `git filter-repo` if going
+#  public.)
+infra/certs/pki/
+*.key
+*.csr
+*.srl
+
+# Claude Code per-project state
+.claude/

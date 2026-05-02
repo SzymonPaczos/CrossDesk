@@ -28,7 +28,7 @@ async def main() -> None:
     host_key = base_dir / "infra" / "certs" / "pki" / "host.key"
 
     # Przygotowanie zależności
-    auth_validator = AuthValidator(ca_cert)
+    auth_validator = AuthValidator()
     libvirt_ctl = LibvirtControllerMock()
 
     # Tworzenie serwera gRPC

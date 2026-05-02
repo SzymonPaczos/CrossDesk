@@ -27,7 +27,7 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         try:
             async for client_frame in request_iterator:
                 # Ochrona per-frame weryfikacji AuthContext
-                self.auth_validator.verify_auth_context(context, client_frame.auth)
+                await self.auth_validator.verify_auth_context(context, client_frame.auth)
                 
                 payload_type = client_frame.WhichOneof('payload')
                 
@@ -35,21 +35,22 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                     if payload_type == "hello":
                         state = "AUTHENTICATED"
                         logger.info(f"Received ClientHello: {client_frame.hello}")
-                        
+
                         # Zbuduj ServerAccept
                         yield control_pb2.ServerFrame(
-                            payload=control_pb2.ServerFrame.Payload(
-                                accept=control_pb2.ServerAccept(
-                                    guest_version="v0.1.0",
-                                    negotiated_features=["rail.v1"],
-                                    guest_smbios_uuid="fake-uuid-dry-run"
-                                )
+                            accept=control_pb2.ServerAccept(
+                                guest_version="v0.1.0",
+                                negotiated_features=["rail.v1"],
+                                guest_smbios_uuid="fake-uuid-dry-run",
                             )
                         )
                         state = "READY"
                         logger.info("Session state: READY")
                     else:
-                        context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"Expected ClientHello, got {payload_type}")
+                        await context.abort(
+                            grpc.StatusCode.FAILED_PRECONDITION,
+                            f"Expected ClientHello, got {payload_type}",
+                        )
                 
                 elif state == "READY" or state == "APP_RUNNING":
                     if payload_type == "launch":
@@ -57,11 +58,9 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                         # Tutaj wywołalibyśmy faktyczną logikę uruchamiania procesu
                         
                         yield control_pb2.ServerFrame(
-                            payload=control_pb2.ServerFrame.Payload(
-                                launched=control_pb2.AppLaunched(
-                                    request_id=client_frame.launch.request_id,
-                                    process_id=9999
-                                )
+                            launched=control_pb2.AppLaunched(
+                                request_id=client_frame.launch.request_id,
+                                process_id=9999,
                             )
                         )
                         state = "APP_RUNNING"
@@ -73,11 +72,9 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                         logger.info("SessionTerminate requested by Guest.")
                         state = "DRAINING"
                         yield control_pb2.ServerFrame(
-                            payload=control_pb2.ServerFrame.Payload(
-                                closed=control_pb2.SessionClosed(
-                                    reason=control_pb2.SessionTerminate.Reason.REASON_USER_QUIT,
-                                    detail="Acknowledged"
-                                )
+                            closed=control_pb2.SessionClosed(
+                                reason=control_pb2.SessionTerminate.Reason.REASON_USER_QUIT,
+                                detail="Acknowledged",
                             )
                         )
                         break

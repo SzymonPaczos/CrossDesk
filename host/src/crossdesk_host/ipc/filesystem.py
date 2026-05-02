@@ -63,32 +63,13 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         
         async def consume_incoming():
             async for frame in request_iterator:
-                payload_type = frame.WhichOneof("payload")
-                
-                if payload_type == "mount_result":
-                    res = frame.mount_result
-                    logger.info(f"[Filesystem] MountResult for share {res.share_id}: {res.status}")
-                    if res.status == filesystem_pb2.MountResult.Status.STATUS_MOUNTED:
-                        self.active_shares[res.share_id] = "MOUNTED"
-
-                elif payload_type == "lock_report":
-                    rep = frame.lock_report
-                    logger.debug(f"[Filesystem] LockReport for share {rep.share_id}: {rep.open_handles} open handles, {rep.pending_writes_bytes} bytes pending")
-
-                elif payload_type == "release_ack":
-                    ack = frame.release_ack
-                    logger.info(f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching...")
-                    self.libvirt_ctl.detach_virtiofs(ack.share_id)
-                    
-                    if ack.share_id in self.active_shares:
-                        del self.active_shares[ack.share_id]
-
-                elif payload_type == "incident":
-                    inc = frame.incident
-                    logger.error(f"[Filesystem] Incident on share {inc.share_id}: {inc.kind} - {inc.detail}")
-                    
-                else:
-                    logger.warning(f"Unhandled payload type: {payload_type}")
+                # Per-frame mTLS+nonce+sequence enforcement. Without this,
+                # ShareChannel was the one plane that bypassed the validator
+                # entirely — any peer holding a TLS handshake could push
+                # arbitrary MountResult / ReleaseAck frames and detach shares
+                # mid-write.
+                await self.auth_validator.verify_auth_context(context, frame.auth)
+                self._process_guest_frame(frame)
 
         # Start consuming in background
         consumer_task = asyncio.create_task(consume_incoming())
@@ -99,6 +80,39 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         finally:
             consumer_task.cancel()
             logger.info(f"[{peer_identity}] Filesystem channel closed")
+
+    def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:
+        """Dispatch a single Guest-side frame to its state-mutation path.
+
+        Extracted from the nested consume_incoming coroutine so unit tests can
+        drive it directly without instantiating a full bidi gRPC stream.
+        """
+        payload_type = frame.WhichOneof("payload")
+
+        if payload_type == "mount_result":
+            res = frame.mount_result
+            logger.info(f"[Filesystem] MountResult for share {res.share_id}: {res.status}")
+            if res.status == filesystem_pb2.MountResult.Status.STATUS_MOUNTED:
+                self.active_shares[res.share_id] = "MOUNTED"
+
+        elif payload_type == "lock_report":
+            rep = frame.lock_report
+            logger.debug(f"[Filesystem] LockReport for share {rep.share_id}: {rep.open_handles} open handles, {rep.pending_writes_bytes} bytes pending")
+
+        elif payload_type == "release_ack":
+            ack = frame.release_ack
+            logger.info(f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching...")
+            self.libvirt_ctl.detach_virtiofs(ack.share_id)
+
+            if ack.share_id in self.active_shares:
+                del self.active_shares[ack.share_id]
+
+        elif payload_type == "incident":
+            inc = frame.incident
+            logger.error(f"[Filesystem] Incident on share {inc.share_id}: {inc.kind} - {inc.detail}")
+
+        else:
+            logger.warning(f"Unhandled payload type: {payload_type}")
 
     async def trigger_mount(self, host_path: str, focal_filename: str):
         """Metoda testowa do zasymulowania kliknięcia pliku w UI."""
@@ -119,10 +133,6 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             mount_token=b"secure_token_123"
         )
         
-        frame = filesystem_pb2.ShareHostFrame(
-            payload=filesystem_pb2.ShareHostFrame.Mount(mount=req) # Payload to mount
-        )
-        # Z powodu buga z oneof generacją czasami przypisuje się kwargs: mount=req
         frame = filesystem_pb2.ShareHostFrame(mount=req)
-        
+
         await self.command_queue.put(frame)

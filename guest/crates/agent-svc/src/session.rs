@@ -2,13 +2,17 @@ use tokio::sync::mpsc;
 use tonic::Request;
 use tracing::{info, warn, error};
 
+use ipc_vsock::client::AuthCarrier;
 use proto::crossdesk::v1::{
     control_service_client::ControlServiceClient,
     ClientFrame, ClientHello, ServerFrame,
 };
 use proto::crossdesk::v1::client_frame::Payload;
 
-pub async fn run_control_session(mut client: ControlServiceClient<tonic::transport::Channel>) -> Result<(), anyhow::Error> {
+pub async fn run_control_session(
+    mut client: ControlServiceClient<tonic::transport::Channel>,
+    auth: AuthCarrier,
+) -> Result<(), anyhow::Error> {
     info!("Starting Control Session FSM");
 
     let (tx, rx) = mpsc::channel::<ClientFrame>(32);
@@ -18,10 +22,11 @@ pub async fn run_control_session(mut client: ControlServiceClient<tonic::transpo
     rail_bridge::start_hook_thread(rail_tx);
 
     let tx_clone = tx.clone();
+    let auth_for_rail = auth.clone();
     tokio::spawn(async move {
         while let Some(rail_event) = rail_rx.recv().await {
             let frame = ClientFrame {
-                auth: None, // wstrzykiwane przez interceptor
+                auth: Some(auth_for_rail.next()),
                 sent_at: None,
                 payload: Some(Payload::RailEvent(rail_event)),
             };
@@ -33,7 +38,7 @@ pub async fn run_control_session(mut client: ControlServiceClient<tonic::transpo
 
     // Wysyłamy ClientHello jako pierwszą ramkę
     let hello_frame = ClientFrame {
-        auth: None, // Auth jest wstrzykiwane w interceptorze (patrz Faza 2)
+        auth: Some(auth.next()),
         sent_at: None,
         payload: Some(Payload::Hello(ClientHello {
             host_version: "0.1.0".to_string(),
@@ -41,7 +46,7 @@ pub async fn run_control_session(mut client: ControlServiceClient<tonic::transpo
             host_domain_uuid: "fake-uuid-dry-run".to_string(), // Do pobrania z SMBIOS w prod
         })),
     };
-    
+
     if tx.send(hello_frame).await.is_err() {
         return Err(anyhow::anyhow!("Failed to send ClientHello"));
     }

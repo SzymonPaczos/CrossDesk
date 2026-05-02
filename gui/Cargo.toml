@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/crossdesk-gui"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/crossdeskgroup/CrossDesk"
+
+[workspace.dependencies]
+cxx-qt        = "0.7"
+cxx-qt-lib    = { version = "0.7", features = ["qt_full"] }
+cxx-qt-build  = "0.7"
+cxx           = "1.0"

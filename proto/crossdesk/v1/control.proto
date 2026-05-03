@@ -55,6 +55,12 @@ message ClientFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
 
+  // Field numbers 3-9 are reserved for future top-level metadata; payload
+  // variants live at 10+. Reserve a generous range so adding a variant later
+  // never reuses a deprecated number.
+  reserved 3 to 9;
+  reserved 30 to 39;
+
   oneof payload {
     ClientHello hello = 10;
     AppLaunchRequest launch = 11;
@@ -115,6 +121,12 @@ message SessionTerminate {
 message ServerFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
+
+  // 15 was a `BackoffHint` variant during prototyping; never deployed but
+  // tagged here so it cannot be silently reused.
+  reserved 3 to 9;
+  reserved 15;
+  reserved 30 to 39;
 
   oneof payload {
     ServerAccept accept = 10;

@@ -26,7 +26,7 @@ from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb
 from crossdesk.v1 import common_pb2 as crossdesk_dot_v1_dot_common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1d\x63rossdesk/v1/filesystem.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x19\x63rossdesk/v1/common.proto\"\xfa\x01\n\x0eShareHostFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12+\n\x05mount\x18\n \x01(\x0b\x32\x1a.crossdesk.v1.MountRequestH\x00\x12-\n\x06\x64\x65tach\x18\x0b \x01(\x0b\x32\x1b.crossdesk.v1.DetachRequestH\x00\x12-\n\nlock_query\x18\x0c \x01(\x0b\x32\x17.crossdesk.v1.LockQueryH\x00\x42\t\n\x07payload\"\xaf\x02\n\x0cMountRequest\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x1a\n\x12guest_drive_letter\x18\x02 \x01(\t\x12:\n\x0b\x61\x63\x63\x65ss_mode\x18\x03 \x01(\x0e\x32%.crossdesk.v1.MountRequest.AccessMode\x12\x16\n\x0e\x66ocal_filename\x18\x04 \x01(\t\x12\x35\n\x12idle_release_after\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x13\n\x0bmount_token\x18\x06 \x01(\x0c\"Q\n\nAccessMode\x12\x16\n\x12\x41\x43\x43\x45SS_UNSPECIFIED\x10\x00\x12\x14\n\x10\x41\x43\x43\x45SS_READ_ONLY\x10\x01\x12\x15\n\x11\x41\x43\x43\x45SS_READ_WRITE\x10\x02\"U\n\rDetachRequest\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\r\n\x05\x66orce\x18\x03 \x01(\x08\x12\x0e\n\x06reason\x18\x04 \x01(\t\"2\n\tLockQuery\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\"\xeb\x02\n\x0fShareGuestFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12\x31\n\x0cmount_result\x18\n \x01(\x0b\x32\x19.crossdesk.v1.MountResultH\x00\x12/\n\x0block_report\x18\x0b \x01(\x0b\x32\x18.crossdesk.v1.LockReportH\x00\x12/\n\x0brelease_ack\x18\x0c \x01(\x0b\x32\x18.crossdesk.v1.ReleaseAckH\x00\x12\x33\n\rdetach_result\x18\r \x01(\x0b\x32\x1a.crossdesk.v1.DetachResultH\x00\x12/\n\x08incident\x18\x0e \x01(\x0b\x32\x1b.crossdesk.v1.ShareIncidentH\x00\x42\t\n\x07payload\"\xa4\x02\n\x0bMountResult\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\x30\n\x06status\x18\x03 \x01(\x0e\x32 .crossdesk.v1.MountResult.Status\x12\x0e\n\x06\x64\x65tail\x18\x04 \x01(\t\"\xab\x01\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\x12\n\x0eSTATUS_MOUNTED\x10\x01\x12\x1d\n\x19STATUS_DEVICE_NOT_PRESENT\x10\x02\x12\x1d\n\x19STATUS_DRIVE_LETTER_TAKEN\x10\x03\x12\x1c\n\x18STATUS_PERMISSION_DENIED\x10\x04\x12\x19\n\x15STATUS_INTERNAL_ERROR\x10\x05\"\xc1\x01\n\nLockReport\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\x14\n\x0copen_handles\x18\x03 \x01(\r\x12\x1c\n\x14pending_writes_bytes\x18\x04 \x01(\x04\x12)\n\x07handles\x18\x05 \x03(\x0b\x32\x18.crossdesk.v1.FileHandle\x12-\n\x0bobserved_at\x18\x06 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\"\xce\x01\n\nFileHandle\x12\x15\n\rpath_on_share\x18\x01 \x01(\t\x12\x12\n\nprocess_id\x18\x02 \x01(\r\x12+\n\x04mode\x18\x03 \x01(\x0e\x32\x1d.crossdesk.v1.FileHandle.Mode\x12\x16\n\x0e\x65xclusive_lock\x18\x04 \x01(\x08\"P\n\x04Mode\x12\x14\n\x10MODE_UNSPECIFIED\x10\x00\x12\r\n\tMODE_READ\x10\x01\x12\x0e\n\nMODE_WRITE\x10\x02\x12\x13\n\x0fMODE_READ_WRITE\x10\x03\"\xa4\x01\n\nReleaseAck\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12-\n\x0breleased_at\x18\x03 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12\x1b\n\x13total_bytes_written\x18\x04 \x01(\x04\x12#\n\x1b\x66inal_handle_count_observed\x18\x05 \x01(\r\"\xdc\x01\n\x0c\x44\x65tachResult\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x31\n\x06status\x18\x02 \x01(\x0e\x32!.crossdesk.v1.DetachResult.Status\x12\x0e\n\x06\x64\x65tail\x18\x03 \x01(\t\"w\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\x13\n\x0fSTATUS_DETACHED\x10\x01\x12\x0f\n\x0bSTATUS_BUSY\x10\x02\x12\x14\n\x10STATUS_NOT_FOUND\x10\x03\x12\x19\n\x15STATUS_INTERNAL_ERROR\x10\x04\"\xb4\x02\n\rShareIncident\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12.\n\x04kind\x18\x02 \x01(\x0e\x32 .crossdesk.v1.ShareIncident.Kind\x12\x0e\n\x06\x64\x65tail\x18\x03 \x01(\t\x12-\n\x0bobserved_at\x18\x04 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\"\xa1\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x17\n\x13KIND_TOKEN_MISMATCH\x10\x01\x12\x1f\n\x1bKIND_PATH_TRAVERSAL_BLOCKED\x10\x02\x12\x1a\n\x16KIND_UNEXPECTED_DETACH\x10\x03\x12\x15\n\x11KIND_WRITE_FAILED\x10\x04\x12\x16\n\x12KIND_FORCED_DETACH\x10\x05\x32\x64\n\x11\x46ilesystemService\x12O\n\x0cShareChannel\x12\x1d.crossdesk.v1.ShareGuestFrame\x1a\x1c.crossdesk.v1.ShareHostFrame(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1d\x63rossdesk/v1/filesystem.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x19\x63rossdesk/v1/common.proto\"\x86\x02\n\x0eShareHostFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12+\n\x05mount\x18\n \x01(\x0b\x32\x1a.crossdesk.v1.MountRequestH\x00\x12-\n\x06\x64\x65tach\x18\x0b \x01(\x0b\x32\x1b.crossdesk.v1.DetachRequestH\x00\x12-\n\nlock_query\x18\x0c \x01(\x0b\x32\x17.crossdesk.v1.LockQueryH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x1e\x10(\"\xaf\x02\n\x0cMountRequest\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x1a\n\x12guest_drive_letter\x18\x02 \x01(\t\x12:\n\x0b\x61\x63\x63\x65ss_mode\x18\x03 \x01(\x0e\x32%.crossdesk.v1.MountRequest.AccessMode\x12\x16\n\x0e\x66ocal_filename\x18\x04 \x01(\t\x12\x35\n\x12idle_release_after\x18\x05 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x13\n\x0bmount_token\x18\x06 \x01(\x0c\"Q\n\nAccessMode\x12\x16\n\x12\x41\x43\x43\x45SS_UNSPECIFIED\x10\x00\x12\x14\n\x10\x41\x43\x43\x45SS_READ_ONLY\x10\x01\x12\x15\n\x11\x41\x43\x43\x45SS_READ_WRITE\x10\x02\"U\n\rDetachRequest\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\r\n\x05\x66orce\x18\x03 \x01(\x08\x12\x0e\n\x06reason\x18\x04 \x01(\t\"2\n\tLockQuery\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\"\xf7\x02\n\x0fShareGuestFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12\x31\n\x0cmount_result\x18\n \x01(\x0b\x32\x19.crossdesk.v1.MountResultH\x00\x12/\n\x0block_report\x18\x0b \x01(\x0b\x32\x18.crossdesk.v1.LockReportH\x00\x12/\n\x0brelease_ack\x18\x0c \x01(\x0b\x32\x18.crossdesk.v1.ReleaseAckH\x00\x12\x33\n\rdetach_result\x18\r \x01(\x0b\x32\x1a.crossdesk.v1.DetachResultH\x00\x12/\n\x08incident\x18\x0e \x01(\x0b\x32\x1b.crossdesk.v1.ShareIncidentH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x1e\x10(\"\xa4\x02\n\x0bMountResult\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\x30\n\x06status\x18\x03 \x01(\x0e\x32 .crossdesk.v1.MountResult.Status\x12\x0e\n\x06\x64\x65tail\x18\x04 \x01(\t\"\xab\x01\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\x12\n\x0eSTATUS_MOUNTED\x10\x01\x12\x1d\n\x19STATUS_DEVICE_NOT_PRESENT\x10\x02\x12\x1d\n\x19STATUS_DRIVE_LETTER_TAKEN\x10\x03\x12\x1c\n\x18STATUS_PERMISSION_DENIED\x10\x04\x12\x19\n\x15STATUS_INTERNAL_ERROR\x10\x05\"\xc1\x01\n\nLockReport\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12\x14\n\x0copen_handles\x18\x03 \x01(\r\x12\x1c\n\x14pending_writes_bytes\x18\x04 \x01(\x04\x12)\n\x07handles\x18\x05 \x03(\x0b\x32\x18.crossdesk.v1.FileHandle\x12-\n\x0bobserved_at\x18\x06 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\"\xce\x01\n\nFileHandle\x12\x15\n\rpath_on_share\x18\x01 \x01(\t\x12\x12\n\nprocess_id\x18\x02 \x01(\r\x12+\n\x04mode\x18\x03 \x01(\x0e\x32\x1d.crossdesk.v1.FileHandle.Mode\x12\x16\n\x0e\x65xclusive_lock\x18\x04 \x01(\x08\"P\n\x04Mode\x12\x14\n\x10MODE_UNSPECIFIED\x10\x00\x12\r\n\tMODE_READ\x10\x01\x12\x0e\n\nMODE_WRITE\x10\x02\x12\x13\n\x0fMODE_READ_WRITE\x10\x03\"\xa4\x01\n\nReleaseAck\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x13\n\x0bmount_token\x18\x02 \x01(\x0c\x12-\n\x0breleased_at\x18\x03 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12\x1b\n\x13total_bytes_written\x18\x04 \x01(\x04\x12#\n\x1b\x66inal_handle_count_observed\x18\x05 \x01(\r\"\xdc\x01\n\x0c\x44\x65tachResult\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x31\n\x06status\x18\x02 \x01(\x0e\x32!.crossdesk.v1.DetachResult.Status\x12\x0e\n\x06\x64\x65tail\x18\x03 \x01(\t\"w\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\x13\n\x0fSTATUS_DETACHED\x10\x01\x12\x0f\n\x0bSTATUS_BUSY\x10\x02\x12\x14\n\x10STATUS_NOT_FOUND\x10\x03\x12\x19\n\x15STATUS_INTERNAL_ERROR\x10\x04\"\xb4\x02\n\rShareIncident\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12.\n\x04kind\x18\x02 \x01(\x0e\x32 .crossdesk.v1.ShareIncident.Kind\x12\x0e\n\x06\x64\x65tail\x18\x03 \x01(\t\x12-\n\x0bobserved_at\x18\x04 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\"\xa1\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x17\n\x13KIND_TOKEN_MISMATCH\x10\x01\x12\x1f\n\x1bKIND_PATH_TRAVERSAL_BLOCKED\x10\x02\x12\x1a\n\x16KIND_UNEXPECTED_DETACH\x10\x03\x12\x15\n\x11KIND_WRITE_FAILED\x10\x04\x12\x16\n\x12KIND_FORCED_DETACH\x10\x05\x32\x64\n\x11\x46ilesystemService\x12O\n\x0cShareChannel\x12\x1d.crossdesk.v1.ShareGuestFrame\x1a\x1c.crossdesk.v1.ShareHostFrame(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,37 +34,37 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.filesystem_pb2
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_SHAREHOSTFRAME']._serialized_start=107
-  _globals['_SHAREHOSTFRAME']._serialized_end=357
-  _globals['_MOUNTREQUEST']._serialized_start=360
-  _globals['_MOUNTREQUEST']._serialized_end=663
-  _globals['_MOUNTREQUEST_ACCESSMODE']._serialized_start=582
-  _globals['_MOUNTREQUEST_ACCESSMODE']._serialized_end=663
-  _globals['_DETACHREQUEST']._serialized_start=665
-  _globals['_DETACHREQUEST']._serialized_end=750
-  _globals['_LOCKQUERY']._serialized_start=752
-  _globals['_LOCKQUERY']._serialized_end=802
-  _globals['_SHAREGUESTFRAME']._serialized_start=805
-  _globals['_SHAREGUESTFRAME']._serialized_end=1168
-  _globals['_MOUNTRESULT']._serialized_start=1171
-  _globals['_MOUNTRESULT']._serialized_end=1463
-  _globals['_MOUNTRESULT_STATUS']._serialized_start=1292
-  _globals['_MOUNTRESULT_STATUS']._serialized_end=1463
-  _globals['_LOCKREPORT']._serialized_start=1466
-  _globals['_LOCKREPORT']._serialized_end=1659
-  _globals['_FILEHANDLE']._serialized_start=1662
-  _globals['_FILEHANDLE']._serialized_end=1868
-  _globals['_FILEHANDLE_MODE']._serialized_start=1788
-  _globals['_FILEHANDLE_MODE']._serialized_end=1868
-  _globals['_RELEASEACK']._serialized_start=1871
-  _globals['_RELEASEACK']._serialized_end=2035
-  _globals['_DETACHRESULT']._serialized_start=2038
-  _globals['_DETACHRESULT']._serialized_end=2258
-  _globals['_DETACHRESULT_STATUS']._serialized_start=2139
-  _globals['_DETACHRESULT_STATUS']._serialized_end=2258
-  _globals['_SHAREINCIDENT']._serialized_start=2261
-  _globals['_SHAREINCIDENT']._serialized_end=2569
-  _globals['_SHAREINCIDENT_KIND']._serialized_start=2408
-  _globals['_SHAREINCIDENT_KIND']._serialized_end=2569
-  _globals['_FILESYSTEMSERVICE']._serialized_start=2571
-  _globals['_FILESYSTEMSERVICE']._serialized_end=2671
+  _globals['_SHAREHOSTFRAME']._serialized_end=369
+  _globals['_MOUNTREQUEST']._serialized_start=372
+  _globals['_MOUNTREQUEST']._serialized_end=675
+  _globals['_MOUNTREQUEST_ACCESSMODE']._serialized_start=594
+  _globals['_MOUNTREQUEST_ACCESSMODE']._serialized_end=675
+  _globals['_DETACHREQUEST']._serialized_start=677
+  _globals['_DETACHREQUEST']._serialized_end=762
+  _globals['_LOCKQUERY']._serialized_start=764
+  _globals['_LOCKQUERY']._serialized_end=814
+  _globals['_SHAREGUESTFRAME']._serialized_start=817
+  _globals['_SHAREGUESTFRAME']._serialized_end=1192
+  _globals['_MOUNTRESULT']._serialized_start=1195
+  _globals['_MOUNTRESULT']._serialized_end=1487
+  _globals['_MOUNTRESULT_STATUS']._serialized_start=1316
+  _globals['_MOUNTRESULT_STATUS']._serialized_end=1487
+  _globals['_LOCKREPORT']._serialized_start=1490
+  _globals['_LOCKREPORT']._serialized_end=1683
+  _globals['_FILEHANDLE']._serialized_start=1686
+  _globals['_FILEHANDLE']._serialized_end=1892
+  _globals['_FILEHANDLE_MODE']._serialized_start=1812
+  _globals['_FILEHANDLE_MODE']._serialized_end=1892
+  _globals['_RELEASEACK']._serialized_start=1895
+  _globals['_RELEASEACK']._serialized_end=2059
+  _globals['_DETACHRESULT']._serialized_start=2062
+  _globals['_DETACHRESULT']._serialized_end=2282
+  _globals['_DETACHRESULT_STATUS']._serialized_start=2163
+  _globals['_DETACHRESULT_STATUS']._serialized_end=2282
+  _globals['_SHAREINCIDENT']._serialized_start=2285
+  _globals['_SHAREINCIDENT']._serialized_end=2593
+  _globals['_SHAREINCIDENT_KIND']._serialized_start=2432
+  _globals['_SHAREINCIDENT_KIND']._serialized_end=2593
+  _globals['_FILESYSTEMSERVICE']._serialized_start=2595
+  _globals['_FILESYSTEMSERVICE']._serialized_end=2695
 # @@protoc_insertion_point(module_scope)

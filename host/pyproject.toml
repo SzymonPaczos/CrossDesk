@@ -24,6 +24,18 @@ packages = ["src/crossdesk_host"]
 strict = true
 python_version = "3.9"
 
+# Generated protobuf modules use descriptor-pool attribute lookup that strict
+# mypy cannot model without stubs from `mypy-protobuf`. Skipping their imports
+# treats them as Any at the call site, which keeps --strict on real code.
+[[tool.mypy.overrides]]
+module = "crossdesk_host.proto.*"
+follow_imports = "skip"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["grpc", "grpc.*", "google.protobuf.*", "systemd", "systemd.*"]
+ignore_missing_imports = true
+
 [tool.black]
 target-version = ["py39"]
 
@@ -41,4 +53,6 @@ dev = [
     "ruff>=0.4",
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
+    "types-protobuf>=4.24",
+    "mypy-protobuf>=3.6",
 ]

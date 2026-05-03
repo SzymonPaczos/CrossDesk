@@ -61,6 +61,9 @@ message ShareHostFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
 
+  reserved 3 to 9;
+  reserved 30 to 39;
+
   oneof payload {
     MountRequest mount = 10;
     DetachRequest detach = 11;
@@ -97,6 +100,11 @@ message MountRequest {
   // każdym frame'ie dotyczącym tego share'a. Niezależny od mTLS; rotowany
   // per-share, żeby skompromitowany handle share'a nie mógł zostać użyty
   // ponownie po detach.
+  //
+  // WIRE LIMIT: dokładnie 32 bajty (SHA-256 stream-bound HMAC). Implementacje
+  // MUSZĄ odrzucić frame'y z `mount_token` o innej długości; bez tego limitu
+  // złośliwy Guest mógłby wyczerpać pamięć Hosta wysyłając wielomegabajtowy
+  // token na każdym frame'ie.
   bytes mount_token = 6;
 }
 
@@ -123,6 +131,9 @@ message LockQuery {
 message ShareGuestFrame {
   AuthContext auth = 1;
   TimingMark sent_at = 2;
+
+  reserved 3 to 9;
+  reserved 30 to 39;
 
   oneof payload {
     MountResult mount_result = 10;

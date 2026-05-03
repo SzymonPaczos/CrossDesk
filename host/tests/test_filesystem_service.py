@@ -26,6 +26,11 @@ def servicer(libvirt: MagicMock) -> FilesystemServiceServicer:
     return FilesystemServiceServicer(MagicMock(), libvirt)
 
 
+# 32-byte placeholder; the wire contract enforces exactly this length so
+# every test frame must carry one. Real deployments rotate per-share.
+_TOKEN: bytes = b"\xab" * 32
+
+
 def _auth() -> common_pb2.AuthContext:
     return common_pb2.AuthContext(
         peer_cert_fingerprint="ff" * 32, stream_nonce=b"fs", sequence=1
@@ -44,6 +49,7 @@ def test_mount_result_status_mounted_marks_share_active(
         mount_result=filesystem_pb2.MountResult(
             share_id="share-1",
             status=filesystem_pb2.MountResult.Status.STATUS_MOUNTED,
+            mount_token=_TOKEN,
         ),
     )
     servicer._process_guest_frame(frame)
@@ -63,7 +69,9 @@ def test_mount_result_failure_does_not_register_share(
         frame = filesystem_pb2.ShareGuestFrame(
             auth=_auth(),
             mount_result=filesystem_pb2.MountResult(
-                share_id=f"share-{failed_status}", status=failed_status
+                share_id=f"share-{failed_status}",
+                status=failed_status,
+                mount_token=_TOKEN,
             ),
         )
         servicer._process_guest_frame(frame)
@@ -82,7 +90,7 @@ def test_release_ack_triggers_detach_and_removes_share(
 
     ack = filesystem_pb2.ShareGuestFrame(
         auth=_auth(),
-        release_ack=filesystem_pb2.ReleaseAck(share_id="s1"),
+        release_ack=filesystem_pb2.ReleaseAck(share_id="s1", mount_token=_TOKEN),
     )
     servicer._process_guest_frame(ack)
 
@@ -98,7 +106,7 @@ def test_release_ack_for_unknown_share_still_detaches(
     alternative is a stuck virtiofs device on the host."""
     ack = filesystem_pb2.ShareGuestFrame(
         auth=_auth(),
-        release_ack=filesystem_pb2.ReleaseAck(share_id="ghost"),
+        release_ack=filesystem_pb2.ReleaseAck(share_id="ghost", mount_token=_TOKEN),
     )
     servicer._process_guest_frame(ack)
 
@@ -117,7 +125,10 @@ def test_lock_report_does_not_mutate_state(
     rep = filesystem_pb2.ShareGuestFrame(
         auth=_auth(),
         lock_report=filesystem_pb2.LockReport(
-            share_id="s1", open_handles=3, pending_writes_bytes=1024
+            share_id="s1",
+            open_handles=3,
+            pending_writes_bytes=1024,
+            mount_token=_TOKEN,
         ),
     )
     servicer._process_guest_frame(rep)
@@ -184,3 +195,25 @@ async def test_trigger_mount_assigns_unique_share_ids(
 # ShareChannel from a unit test is awkward because its producer task polls
 # `command_queue` on a 1s timeout and only exits when the gRPC context aborts —
 # the smoke test exercises both paths through the wire instead.
+
+
+# ---------------------------------------------------------------------------
+# Wire-format invariant: mount_token must be exactly 32 bytes
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("bad_token", [b"", b"\x00" * 31, b"\x00" * 33, b"\x00" * 4096])
+def test_release_ack_rejected_when_mount_token_length_invalid(
+    servicer: FilesystemServiceServicer, libvirt: MagicMock, bad_token: bytes
+) -> None:
+    """A malicious or buggy Guest could otherwise stamp every frame with a
+    multi-MB token to balloon host memory; we drop the frame on length mismatch."""
+    servicer.active_shares["s1"] = "MOUNTED"
+
+    ack = filesystem_pb2.ShareGuestFrame(
+        auth=_auth(),
+        release_ack=filesystem_pb2.ReleaseAck(share_id="s1", mount_token=bad_token),
+    )
+    servicer._process_guest_frame(ack)
+
+    libvirt.detach_virtiofs.assert_not_called()
+    assert servicer.active_shares == {"s1": "MOUNTED"}

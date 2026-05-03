@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from typing import AsyncIterable, Dict
+from typing import AsyncIterator, Dict
 import uuid
 
 import grpc
@@ -12,6 +12,10 @@ from google.protobuf.duration_pb2 import Duration
 
 logger = logging.getLogger(__name__)
 
+# 32 bytes (SHA-256). Guests sending a longer token would let a malicious
+# peer balloon host memory by stamping every frame with a multi-MB blob.
+MOUNT_TOKEN_LEN = 32
+
 
 class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
     def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtControllerMock):
@@ -20,7 +24,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = asyncio.Queue()
         self.active_shares: Dict[str, str] = {}
 
-    async def ShareChannel(self, request_iterator: AsyncIterable[filesystem_pb2.ShareGuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[filesystem_pb2.ShareHostFrame]:
+    async def ShareChannel(self, request_iterator: AsyncIterator[filesystem_pb2.ShareGuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterator[filesystem_pb2.ShareHostFrame]:
         peer_identity = context.peer()
         logger.info(f"[{peer_identity}] Filesystem channel established")
 
@@ -58,16 +62,22 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
 
         if payload_type == "mount_result":
             res = frame.mount_result
+            if not self._token_ok(res.mount_token, "mount_result", res.share_id):
+                return
             logger.info(f"[Filesystem] MountResult for share {res.share_id}: {res.status}")
             if res.status == filesystem_pb2.MountResult.Status.STATUS_MOUNTED:
                 self.active_shares[res.share_id] = "MOUNTED"
 
         elif payload_type == "lock_report":
             rep = frame.lock_report
+            if not self._token_ok(rep.mount_token, "lock_report", rep.share_id):
+                return
             logger.debug(f"[Filesystem] LockReport for share {rep.share_id}: {rep.open_handles} open handles, {rep.pending_writes_bytes} bytes pending")
 
         elif payload_type == "release_ack":
             ack = frame.release_ack
+            if not self._token_ok(ack.mount_token, "release_ack", ack.share_id):
+                return
             logger.info(f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching...")
             self.libvirt_ctl.detach_virtiofs(ack.share_id)
 
@@ -81,25 +91,44 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         else:
             logger.warning(f"Unhandled payload type: {payload_type}")
 
-    async def trigger_mount(self, host_path: str, focal_filename: str):
-        """Metoda testowa do zasymulowania kliknięcia pliku w UI."""
+    @staticmethod
+    def _token_ok(token: bytes, frame_kind: str, share_id: str) -> bool:
+        if len(token) != MOUNT_TOKEN_LEN:
+            logger.error(
+                "[Filesystem] %s for share %s rejected: mount_token len=%d (expected %d)",
+                frame_kind, share_id, len(token), MOUNT_TOKEN_LEN,
+            )
+            return False
+        return True
+
+    async def trigger_mount(self, host_path: str, focal_filename: str) -> str:
+        """Hot-plug a virtiofs share for `host_path` and queue a MountRequest for the guest.
+
+        Returns the freshly-minted `share_id` so callers can correlate the
+        eventual MountResult back to this attach.
+        """
         share_id = str(uuid.uuid4())
-        logger.info(f"Triggering mount for {host_path} (focal: {focal_filename}) -> share {share_id}")
-        
-        # 1. Hot plug libvirt
+        logger.info(
+            "Triggering mount for %s (focal: %s) -> share %s",
+            host_path, focal_filename, share_id,
+        )
+
         self.libvirt_ctl.attach_virtiofs(share_id, host_path)
         self.active_shares[share_id] = "ATTACHED"
 
-        # 2. Wysyłamy żądanie do Guesta
+        # 32-byte random token bound to this share. Real deployments rotate
+        # via HMAC over (share_id, libvirt domain UUID) — for now any
+        # cryptographically random 32 bytes satisfy the wire contract.
+        mount_token = uuid.uuid4().bytes + uuid.uuid4().bytes
+
         req = filesystem_pb2.MountRequest(
             share_id=share_id,
             guest_drive_letter="X:",
             access_mode=filesystem_pb2.MountRequest.AccessMode.ACCESS_READ_WRITE,
             focal_filename=focal_filename,
-            idle_release_after=Duration(seconds=5), # po 5 sekundach idle, oczekujemy detach
-            mount_token=b"secure_token_123"
+            idle_release_after=Duration(seconds=5),
+            mount_token=mount_token,
         )
-        
-        frame = filesystem_pb2.ShareHostFrame(mount=req)
 
-        await self.command_queue.put(frame)
+        await self.command_queue.put(filesystem_pb2.ShareHostFrame(mount=req))
+        return share_id

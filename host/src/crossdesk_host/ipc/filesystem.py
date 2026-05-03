@@ -1,84 +1,51 @@
 import logging
 import asyncio
-from typing import AsyncIterable, Optional, Dict
-import time
+from typing import AsyncIterable, Dict
 import uuid
 
 import grpc
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
-from crossdesk_host.proto.crossdesk.v1 import common_pb2
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from google.protobuf.duration_pb2 import Duration
 
 logger = logging.getLogger(__name__)
 
+
 class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
-    """
-    Obsługa maszyny stanów cyklu życia dysków JIT VirtioFS.
-    """
     def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtControllerMock):
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
         self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = asyncio.Queue()
-        self.active_shares: Dict[str, str] = {} # share_id -> state
-
-    async def _producer_task(self, context: grpc.aio.ServicerContext) -> AsyncIterable[filesystem_pb2.ShareHostFrame]:
-        """Czyta z kolejki komend i wysyła do Guesta."""
-        try:
-            while not context.core_context.aborted():
-                frame = await self.command_queue.get()
-                yield frame
-        except asyncio.CancelledError:
-            pass
+        self.active_shares: Dict[str, str] = {}
 
     async def ShareChannel(self, request_iterator: AsyncIterable[filesystem_pb2.ShareGuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[filesystem_pb2.ShareHostFrame]:
         peer_identity = context.peer()
         logger.info(f"[{peer_identity}] Filesystem channel established")
 
-        # Uruchamiamy task produkujący ramki z kolejki
-        import collections
-        
-        # Generator asynchroniczny z queue
-        async def yield_from_queue():
-            while True:
-                # Polling queue with cancellation check
-                get_task = asyncio.create_task(self.command_queue.get())
-                done, pending = await asyncio.wait(
-                    [get_task], timeout=1.0, return_when=asyncio.FIRST_COMPLETED
-                )
-                if get_task in done:
-                    yield get_task.result()
-                if context.core_context.aborted():
-                    if get_task in pending:
-                        get_task.cancel()
-                    break
-
-        producer_gen = yield_from_queue()
-        
-        # W celu odbierania i odpowiadania równolegle użyjemy asyncio.gather/create_task
-        # lub po prostu odpowiadamy yield z pętli. Pętla w python grpc może yieldować
-        # bezpośrednio.
-        
-        async def consume_incoming():
+        async def consume_incoming() -> None:
             async for frame in request_iterator:
-                # Per-frame mTLS+nonce+sequence enforcement. Without this,
-                # ShareChannel was the one plane that bypassed the validator
-                # entirely — any peer holding a TLS handshake could push
-                # arbitrary MountResult / ReleaseAck frames and detach shares
-                # mid-write.
+                # Per-frame validation: without this, ShareChannel would let any peer
+                # holding a TLS handshake push MountResult/ReleaseAck and detach shares.
                 await self.auth_validator.verify_auth_context(context, frame.auth)
                 self._process_guest_frame(frame)
 
-        # Start consuming in background
         consumer_task = asyncio.create_task(consume_incoming())
 
         try:
-            async for out_frame in producer_gen:
-                yield out_frame
+            while not context.core_context.aborted() and not consumer_task.done():
+                try:
+                    frame = await asyncio.wait_for(self.command_queue.get(), timeout=1.0)
+                except asyncio.TimeoutError:
+                    continue
+                yield frame
         finally:
             consumer_task.cancel()
+            try:
+                await consumer_task
+            except (asyncio.CancelledError, Exception):
+                pass
             logger.info(f"[{peer_identity}] Filesystem channel closed")
 
     def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:

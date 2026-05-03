@@ -1,7 +1,7 @@
 import logging
 import asyncio
 import time
-from typing import AsyncIterable
+from typing import AsyncIterator
 import grpc
 
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2
@@ -16,7 +16,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
 
-    async def Channel(self, request_iterator: AsyncIterable[heartbeat_pb2.GuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[heartbeat_pb2.HostFrame]:
+    async def Channel(self, request_iterator: AsyncIterator[heartbeat_pb2.GuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterator[heartbeat_pb2.HostFrame]:
         logger.info("Heartbeat Channel opened.")
 
         state = "HEALTHY"

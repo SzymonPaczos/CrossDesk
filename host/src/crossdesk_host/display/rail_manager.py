@@ -6,13 +6,9 @@ from crossdesk_host.proto.crossdesk.v1 import control_pb2
 logger = logging.getLogger(__name__)
 
 class RailManager:
-    """
-    Zarządza oknami wyświetlanymi przez Hosta.
-    Na etapie POC działa jako zaawansowany MOCK, logując tworzenie
-    i zarządzanie oknami z Windows API w środowisku Wayland/X11.
-    """
-    def __init__(self):
-        # Mapowanie HWND na obiekty symulujące instancje okien Wayland/FreeRDP
+    """Tracks RAIL windows on the host side. POC stub — real impl drives FreeRDP/Wayland."""
+
+    def __init__(self) -> None:
         self._windows: Dict[int, Dict[str, Any]] = {}
 
     def handle_rail_event(self, event: control_pb2.RailWindowEvent) -> None:

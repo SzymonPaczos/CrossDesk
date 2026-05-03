@@ -92,6 +92,12 @@ impl cxx_qt::Initialize for qobject::WizardState {
 
 impl qobject::WizardState {
     pub fn start_install(mut self: std::pin::Pin<&mut Self>) {
+        // Guard against double-invocation from QML (a user double-clicking the
+        // Install button would otherwise spawn two ProgressView Timers racing
+        // on the same state).
+        if *self.as_ref().installing() {
+            return;
+        }
         self.as_mut().set_current_step(0);
         self.as_mut().set_progress_pct(0);
         self.as_mut().set_finished(false);
@@ -101,6 +107,11 @@ impl qobject::WizardState {
     }
 
     pub fn advance(mut self: std::pin::Pin<&mut Self>) {
+        // Re-entrancy guard: only the active install loop may advance the
+        // counter. Any extra Timer firing after `finished` is a no-op.
+        if !*self.as_ref().installing() {
+            return;
+        }
         let next = *self.as_ref().current_step() + 1;
         let total = progress::total_steps() as i32;
         if next >= total {
@@ -112,8 +123,8 @@ impl qobject::WizardState {
             self.as_mut().set_finished(true);
         } else {
             self.as_mut().set_current_step(next);
-            // Progress at the *start* of step N is N/total; expressed as percent
-            // for the QML ProgressBar which expects 0..100.
+            // Progress at the start of step N is N/total; the QML ProgressBar
+            // expects 0..100.
             self.as_mut().set_progress_pct((next * 100) / total);
             self.as_mut()
                 .set_progress_label(QString::from(progress::step_label(next as usize)));

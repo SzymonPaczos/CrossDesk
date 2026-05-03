@@ -107,23 +107,40 @@ def start_swtpm(state_dir: Path) -> tuple[subprocess.Popen[bytes], Path]:
             "--ctrl",     f"type=unixio,path={sock}",
             "--log",      "level=0",
             "--tpm2",
-        ]
+        ],
+        stderr=subprocess.PIPE,
     )
-    _wait_for_unix_socket(sock, timeout=5.0)
+    _wait_for_unix_socket(proc, sock, timeout=5.0)
     return proc, sock
 
 
-def _wait_for_unix_socket(path: Path, timeout: float) -> None:
-    """Poll until the AF_UNIX socket accepts connections or timeout expires."""
+def _wait_for_unix_socket(proc: subprocess.Popen[bytes], path: Path, timeout: float) -> None:
+    """Poll until the AF_UNIX socket accepts connections or timeout expires.
+
+    If `proc` has already exited, surface its stderr so the caller doesn't have
+    to guess between "swtpm crashed" and "swtpm is just slow."
+    """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            stderr = proc.stderr.read().decode(errors="replace") if proc.stderr else ""
+            die(f"swtpm exited with code {proc.returncode} before socket appeared:\n{stderr}")
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
                 s.connect(str(path))
             return
         except OSError:
             time.sleep(0.05)
-    die(f"swtpm socket {path} not ready within {timeout}s")
+
+    proc.terminate()
+    try:
+        stderr = proc.stderr.read().decode(errors="replace") if proc.stderr else ""
+    except Exception:
+        stderr = ""
+    die(
+        f"swtpm socket {path} not ready within {timeout}s"
+        + (f"; swtpm stderr:\n{stderr}" if stderr else "")
+    )
 
 
 def build_qemu_cmd(

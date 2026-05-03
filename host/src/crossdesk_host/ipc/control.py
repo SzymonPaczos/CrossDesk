@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncIterable, Optional
+from typing import AsyncIterator, Optional
 import grpc
 
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
     def __init__(self, auth_validator: AuthValidator, rail_manager: Optional[RailManager] = None) -> None:
         self.auth_validator = auth_validator
-        self.rail_manager = rail_manager or RailManager()
+        self.rail_manager = rail_manager if rail_manager is not None else RailManager()
 
-    async def OpenSession(self, request_iterator: AsyncIterable[control_pb2.ClientFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[control_pb2.ServerFrame]:
+    async def OpenSession(self, request_iterator: AsyncIterator[control_pb2.ClientFrame], context: grpc.aio.ServicerContext) -> AsyncIterator[control_pb2.ServerFrame]:
         peer_identity = context.peer()
         logger.info(f"New ControlSession stream initiated from {peer_identity}")
 

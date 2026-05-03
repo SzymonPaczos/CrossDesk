@@ -9,12 +9,18 @@ Item {
 
     Timer {
         id: tick
-        // Each Rust step reports its own duration (5s/10s); the engine
-        // re-arms us with the next step's duration after each fire.
+        // Each Rust step reports its own duration; we re-arm with the next
+        // step's duration after every fire. `running: wizard.installing` ties
+        // the timer's lifetime to the install state so a parallel
+        // start_install() (e.g. accidental double-click) does not produce two
+        // racing timers — the second start is a no-op on the Rust side.
         interval: wizard.current_step_duration_ms()
         running: wizard.installing
         repeat: false
         onTriggered: {
+            if (!wizard.installing) {
+                return;
+            }
             wizard.advance();
             if (wizard.installing) {
                 interval = wizard.current_step_duration_ms();

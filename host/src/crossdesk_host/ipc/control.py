@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncIterable
+from typing import AsyncIterable, Optional
 import grpc
 
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
@@ -9,28 +9,27 @@ from crossdesk_host.display.rail_manager import RailManager
 
 logger = logging.getLogger(__name__)
 
+
 class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
-    """
-    Implementacja maszyny stanów (FSM) cyklu życia sesji dla CrossDesk.
-    """
-    def __init__(self, auth_validator: AuthValidator, rail_manager: RailManager = None) -> None:
+    def __init__(self, auth_validator: AuthValidator, rail_manager: Optional[RailManager] = None) -> None:
         self.auth_validator = auth_validator
         self.rail_manager = rail_manager or RailManager()
 
     async def OpenSession(self, request_iterator: AsyncIterable[control_pb2.ClientFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[control_pb2.ServerFrame]:
         peer_identity = context.peer()
         logger.info(f"New ControlSession stream initiated from {peer_identity}")
-        
-        # State Machine tracker
+
         state = "HANDSHAKE"
+        stream_nonce: Optional[bytes] = None
 
         try:
             async for client_frame in request_iterator:
-                # Ochrona per-frame weryfikacji AuthContext
                 await self.auth_validator.verify_auth_context(context, client_frame.auth)
-                
+                if stream_nonce is None:
+                    stream_nonce = client_frame.auth.stream_nonce
+
                 payload_type = client_frame.WhichOneof('payload')
-                
+
                 if state == "HANDSHAKE":
                     if payload_type == "hello":
                         state = "AUTHENTICATED"
@@ -85,6 +84,6 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         except grpc.RpcError as e:
             logger.error(f"RPC Error in OpenSession: {e}")
         finally:
+            if stream_nonce is not None:
+                self.auth_validator.remove_stream(stream_nonce)
             logger.info("ControlSession stream closed.")
-            # Zdejmujemy nonce ze słownika AuthValidatora żeby zapobiec wyciekowi
-            # Uwaga: w produkcji dobrze by było pobrać ten nonce z jakiejś struktury pomocniczej

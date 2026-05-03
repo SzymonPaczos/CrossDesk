@@ -18,21 +18,10 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
 
     async def Channel(self, request_iterator: AsyncIterable[heartbeat_pb2.GuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterable[heartbeat_pb2.HostFrame]:
         logger.info("Heartbeat Channel opened.")
-        
-        # State machine
+
         state = "HEALTHY"
         miss_count = 0
         miss_threshold = 3
-        
-        # Pętla nasłuchująca Pongów z Guesta (uruchomiona w tle na tym strumieniu asynchronicznym)
-        # Główne wyzwanie z gRPC bidirectional to wysyłanie asynchronicznych Pingów i czytanie Pongów 
-        # w tym samym context managerze. Najprostszą implementacją w Pythonie z `yield` jest wrzucenie 
-        # Pingów do kolejki, a czytanie z iteratora, co wymaga sprytnego użycia asyncio.
-        
-        # Ze względu na uproszczenie w fazie POC, zrealizujemy generator w sposób, w którym 
-        # Host wysyła pinga, a zaraz po tym wymusza await na `request_iterator.__anext__()` 
-        # (wzorzec lockstep). Dla pełnego duplexu używa się osobnego taska pushującego do Queue.
-        
         seq = 1
         try:
             while True:
@@ -67,20 +56,18 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                     miss_count += 1
                     logger.warning(f"Missed heartbeat! Count: {miss_count}")
                     
-                    if state == "HEALTHY":
-                        state = "DEGRADED"
-                    elif state == "DEGRADED" and miss_count > miss_threshold:
-                        state = "PROBING"
-                        
-                    if state == "PROBING" and miss_count > miss_threshold + 2:
-                        logger.error("Guest unresponsive. Transitioning to SOFT_RECOVERY")
-                        state = "SOFT_RECOVERY"
-                        self.libvirt_ctl.graceful_shutdown()
-                        
                     if state == "SOFT_RECOVERY" and miss_count > miss_threshold + 5:
                         logger.critical("Guest completely dead. Initiating HARD_DESTROY")
                         self.libvirt_ctl.hard_destroy()
                         break
+                    elif state == "PROBING" and miss_count > miss_threshold + 2:
+                        logger.error("Guest unresponsive. Transitioning to SOFT_RECOVERY")
+                        state = "SOFT_RECOVERY"
+                        self.libvirt_ctl.graceful_shutdown()
+                    elif state == "DEGRADED" and miss_count > miss_threshold:
+                        state = "PROBING"
+                    elif state == "HEALTHY":
+                        state = "DEGRADED"
                         
                 except StopAsyncIteration:
                     logger.info("Client closed heartbeat channel")

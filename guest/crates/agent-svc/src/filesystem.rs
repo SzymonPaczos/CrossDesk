@@ -2,8 +2,9 @@ use ipc_vsock::client::AuthCarrier;
 use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
 use proto::crossdesk::v1::{ShareGuestFrame, share_guest_frame::Payload};
 use tokio::sync::mpsc;
-use tracing::{info, error, debug};
+use tokio::task::JoinSet;
 use tokio_stream::wrappers::ReceiverStream;
+use tracing::{debug, error, info};
 
 pub async fn run_filesystem_channel(
     mut client: FilesystemServiceClient<tonic::transport::Channel>,
@@ -13,72 +14,106 @@ pub async fn run_filesystem_channel(
 
     let (tx, rx) = mpsc::channel::<ShareGuestFrame>(32);
 
-    // Wysyłamy strumień ramek Gościa do Hosta, otrzymując strumień od Hosta.
-    let response_stream = client.share_channel(ReceiverStream::new(rx)).await?.into_inner();
-
+    let response_stream = client
+        .share_channel(ReceiverStream::new(rx))
+        .await?
+        .into_inner();
     let mut host_stream = response_stream;
-    
-    // Pętla odczytu komend od Hosta
-    while let Ok(Some(host_frame)) = host_stream.message().await {
-        if let Some(payload) = host_frame.payload {
-            match payload {
-                proto::crossdesk::v1::share_host_frame::Payload::Mount(req) => {
-                    info!("Received MountRequest for focal file: {}", req.focal_filename);
-                    let share_id = req.share_id.clone();
-                    let token = req.mount_token.clone();
-                    let idle_duration = req.idle_release_after.map(|d| std::time::Duration::from_secs(d.seconds as u64)).unwrap_or(std::time::Duration::from_secs(5));
-                    
-                    let result = fs_mount::mount::handle_mount_request(&req.share_id, &req.guest_drive_letter, &req.mount_token).await;
-                    
-                    // Odpowiedź o wyniku
-                    let out_frame = ShareGuestFrame {
-                        auth: Some(auth.next()),
-                        sent_at: None,
-                        payload: Some(Payload::MountResult(result)),
-                    };
-                    
-                    if tx.send(out_frame).await.is_err() {
-                        error!("Failed to send MountResult");
-                        break;
-                    }
-                    
-                    // Uruchamiamy w tle pętlę generującą LockReport i ostatecznie ReleaseAck
-                    let tx_clone = tx.clone();
-                    let auth_clone = auth.clone();
-                    tokio::spawn(async move {
-                        // Polling flush
-                        tokio::time::sleep(idle_duration).await;
 
-                        let report = fs_mount::flush::generate_mock_lock_report(&share_id, &token).await;
-                        let _ = tx_clone.send(ShareGuestFrame {
-                            auth: Some(auth_clone.next()),
+    // JoinSet owns every per-mount worker; dropping it cancels them in one
+    // place when the host stream goes away. The previous version detached
+    // the workers with bare `tokio::spawn` and they outlived the channel,
+    // which leaked tasks every time the host disconnected mid-mount.
+    let mut workers: JoinSet<()> = JoinSet::new();
+
+    while let Some(msg_result) = host_stream.message().await.transpose() {
+        let host_frame = match msg_result {
+            Ok(f) => f,
+            Err(e) => {
+                error!("Filesystem stream error: {:?}", e);
+                break;
+            }
+        };
+
+        let Some(payload) = host_frame.payload else { continue };
+        match payload {
+            proto::crossdesk::v1::share_host_frame::Payload::Mount(req) => {
+                info!(
+                    focal = %req.focal_filename,
+                    share = %req.share_id,
+                    "Received MountRequest",
+                );
+                let idle_duration = req
+                    .idle_release_after
+                    .map(|d| std::time::Duration::from_secs(d.seconds as u64))
+                    .unwrap_or(std::time::Duration::from_secs(5));
+
+                let mount_result = fs_mount::mount::mock_handle_mount_request(
+                    &req.share_id,
+                    &req.guest_drive_letter,
+                    &req.mount_token,
+                )
+                .await;
+
+                let out_frame = ShareGuestFrame {
+                    auth: Some(auth.next()),
+                    sent_at: None,
+                    payload: Some(Payload::MountResult(mount_result)),
+                };
+                if tx.send(out_frame).await.is_err() {
+                    error!("Failed to send MountResult");
+                    break;
+                }
+
+                let tx_for_worker = tx.clone();
+                let auth_for_worker = auth.clone();
+                let share_id = req.share_id;
+                let token = req.mount_token;
+                workers.spawn(async move {
+                    tokio::time::sleep(idle_duration).await;
+
+                    let report =
+                        fs_mount::flush::mock_generate_lock_report(&share_id, &token).await;
+                    if tx_for_worker
+                        .send(ShareGuestFrame {
+                            auth: Some(auth_for_worker.next()),
                             sent_at: None,
                             payload: Some(Payload::LockReport(report)),
-                        }).await;
+                        })
+                        .await
+                        .is_err()
+                    {
+                        return;
+                    }
 
-                        // Po raporcie, symulujemy pomyślny flush i zwalniamy
-                        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-                        let ack = fs_mount::flush::generate_release_ack(&share_id, &token).await;
-                        let _ = tx_clone.send(ShareGuestFrame {
-                            auth: Some(auth_clone.next()),
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                    let ack =
+                        fs_mount::flush::mock_generate_release_ack(&share_id, &token).await;
+                    if tx_for_worker
+                        .send(ShareGuestFrame {
+                            auth: Some(auth_for_worker.next()),
                             sent_at: None,
                             payload: Some(Payload::ReleaseAck(ack)),
-                        }).await;
-
-                        info!("ReleaseAck sent for share {}", share_id);
-                    });
-                },
-                proto::crossdesk::v1::share_host_frame::Payload::Detach(req) => {
-                    info!("Received DetachRequest for share {}", req.share_id);
-                    // Prawdziwa implementacja potwierdza wymuszenie odpięcia.
-                },
-                proto::crossdesk::v1::share_host_frame::Payload::LockQuery(req) => {
-                    debug!("Received LockQuery for share {}", req.share_id);
-                }
+                        })
+                        .await
+                        .is_ok()
+                    {
+                        info!(share = %share_id, "ReleaseAck sent");
+                    }
+                });
+            }
+            proto::crossdesk::v1::share_host_frame::Payload::Detach(req) => {
+                info!(share = %req.share_id, "Received DetachRequest");
+            }
+            proto::crossdesk::v1::share_host_frame::Payload::LockQuery(req) => {
+                debug!(share = %req.share_id, "Received LockQuery");
             }
         }
     }
 
-    info!("Filesystem channel disconnected");
+    info!("Filesystem channel disconnected; aborting in-flight workers");
+    workers.abort_all();
+    while workers.join_next().await.is_some() {}
+
     Ok(())
 }

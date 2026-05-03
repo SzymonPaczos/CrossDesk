@@ -9,15 +9,19 @@ use proto::crossdesk::v1::{
 };
 use proto::crossdesk::v1::client_frame::Payload;
 
+use crate::host_uuid::read_host_domain_uuid;
+
 pub async fn run_control_session(
     mut client: ControlServiceClient<tonic::transport::Channel>,
     auth: AuthCarrier,
 ) -> Result<(), anyhow::Error> {
     info!("Starting Control Session FSM");
 
+    let host_domain_uuid = read_host_domain_uuid()?;
+    info!(uuid = %host_domain_uuid, "Resolved host domain UUID");
+
     let (tx, rx) = mpsc::channel::<ClientFrame>(32);
 
-    // Uruchamiamy w tle wątek nasłuchujący zdarzeń Win32 API
     let (rail_tx, mut rail_rx) = mpsc::channel(64);
     rail_bridge::start_hook_thread(rail_tx);
 
@@ -36,14 +40,13 @@ pub async fn run_control_session(
         }
     });
 
-    // Wysyłamy ClientHello jako pierwszą ramkę
     let hello_frame = ClientFrame {
         auth: Some(auth.next()),
         sent_at: None,
         payload: Some(Payload::Hello(ClientHello {
             host_version: "0.1.0".to_string(),
             supported_features: vec!["rail.v1".to_string()],
-            host_domain_uuid: "fake-uuid-dry-run".to_string(), // Do pobrania z SMBIOS w prod
+            host_domain_uuid,
         })),
     };
 

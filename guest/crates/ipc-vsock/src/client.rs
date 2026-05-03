@@ -1,31 +1,24 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tonic::transport::{Channel, ClientTlsConfig, Certificate, Identity};
 use rand::RngCore;
 
 use proto::crossdesk::v1::AuthContext;
 
-/// Per-stream credential vault.
-///
-/// Auth in CrossDesk lives **inside the protobuf payload** (`AuthContext`
-/// embedded in every ClientFrame / GuestFrame / ShareGuestFrame), not in gRPC
-/// metadata headers. This struct hands the session/heartbeat/filesystem
-/// loops a freshly-incremented `AuthContext` to stamp on every outbound frame.
-///
-/// The earlier `tonic::Interceptor`-based design pushed credentials into
-/// `x-auth-*` headers, which the host never reads — auth always failed at
-/// peer-fingerprint check. Centralising on payload-based auth keeps wire
-/// format and validator in lockstep.
+/// Per-stream credential vault. Auth lives inside the protobuf payload
+/// (`AuthContext` on every frame), not in gRPC metadata headers, so each
+/// outbound frame asks this carrier for a freshly-incremented context.
 #[derive(Clone)]
 pub struct AuthCarrier {
     peer_cert_fingerprint: String,
     stream_nonce: Vec<u8>,
-    sequence: Arc<Mutex<u64>>,
+    sequence: Arc<AtomicU64>,
 }
 
 impl AuthCarrier {
-    /// `peer_cert_fingerprint` is the SHA-256 of the *host* leaf cert, lowercase
-    /// hex, no separators — matches what `AuthValidator.extract_peer_fingerprint`
-    /// computes server-side.
+    /// `peer_cert_fingerprint` is the SHA-256 of the host leaf cert, lowercase
+    /// hex, no separators — matches `AuthValidator.extract_peer_fingerprint`
+    /// on the server side.
     pub fn new(peer_cert_fingerprint: String) -> Self {
         let mut nonce = vec![0u8; 16];
         rand::thread_rng().fill_bytes(&mut nonce);
@@ -33,24 +26,14 @@ impl AuthCarrier {
         Self {
             peer_cert_fingerprint,
             stream_nonce: nonce,
-            sequence: Arc::new(Mutex::new(0)),
+            sequence: Arc::new(AtomicU64::new(0)),
         }
     }
 
     /// Mint the next AuthContext. Sequence starts at 1 and increments strictly
     /// monotonically; the host's AuthValidator enforces strict +1 deltas.
     pub fn next(&self) -> AuthContext {
-        // Lock contention is impossible in single-stream usage; in the
-        // worst case (lock poisoning) we surface 0 — the host will reject the
-        // sequence and tear the stream, which is exactly the right outcome.
-        let seq = match self.sequence.lock() {
-            Ok(mut g) => {
-                *g += 1;
-                *g
-            }
-            Err(_) => 0,
-        };
-
+        let seq = self.sequence.fetch_add(1, Ordering::Relaxed) + 1;
         AuthContext {
             peer_cert_fingerprint: self.peer_cert_fingerprint.clone(),
             stream_nonce: self.stream_nonce.clone(),

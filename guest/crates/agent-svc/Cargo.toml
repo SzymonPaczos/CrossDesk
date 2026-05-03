@@ -18,7 +18,8 @@ ipc-vsock = { path = "../ipc-vsock" }
 rail-bridge = { path = "../rail-bridge" }
 fs-mount = { path = "../fs-mount" }
 
-# windows-service is Windows-only; conditionally declared so the crate still
-# resolves on Linux toolchains used for cross-compilation checks.
+# windows-service and the windows crate are Windows-only; conditionally declared
+# so the crate still resolves on Linux toolchains used for cross-compilation checks.
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.6"
+windows         = { workspace = true }

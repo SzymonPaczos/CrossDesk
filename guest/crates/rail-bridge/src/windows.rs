@@ -1,17 +1,25 @@
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::mpsc;
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, SetWinEventHook, UnhookWinEvent,
+    DispatchMessageW, GetMessageW, PostThreadMessageW, SetWinEventHook, UnhookWinEvent,
     EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_FOCUS, EVENT_OBJECT_LOCATIONCHANGE,
-    EVENT_OBJECT_NAMECHANGE, HWINEVENTHOOK, MSG, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
-    GetAncestor, GA_ROOT, IsWindowVisible, GetWindowLongW, GWL_STYLE, WS_CHILD, WS_POPUP,
+    EVENT_OBJECT_NAMECHANGE, GetAncestor, GA_ROOT, GetWindowLongW, GWL_STYLE, HWINEVENTHOOK,
+    IsWindowVisible, MSG, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_QUIT, WS_CHILD,
+    WS_POPUP,
 };
 use tracing::{debug, error, info};
 use proto::crossdesk::v1::RailWindowEvent;
 use crate::events::build_rail_event;
 
 static EVENT_SENDER: OnceLock<mpsc::Sender<RailWindowEvent>> = OnceLock::new();
+
+/// Win32 thread ID of the message-pump thread, captured once on startup so a
+/// subsequent `request_shutdown()` can post `WM_QUIT` to break the
+/// `GetMessageW` loop. Zero means the thread has not started yet.
+static HOOK_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 
 pub fn start_hook_thread(sender: mpsc::Sender<RailWindowEvent>) {
     if EVENT_SENDER.set(sender).is_err() {
@@ -21,24 +29,29 @@ pub fn start_hook_thread(sender: mpsc::Sender<RailWindowEvent>) {
 
     std::thread::spawn(|| {
         info!("Starting WinEvent hook thread");
+        // Recording the thread ID before SetWinEventHook means an early
+        // shutdown signal still finds a valid target — PostThreadMessageW will
+        // simply queue WM_QUIT before GetMessageW first runs.
+        HOOK_THREAD_ID.store(unsafe { GetCurrentThreadId() }, Ordering::SeqCst);
+
         unsafe {
-            // Zakładamy globalnego hooka na zdarzenia powiązane z oknami
             let hook = SetWinEventHook(
                 EVENT_OBJECT_CREATE,
-                EVENT_OBJECT_LOCATIONCHANGE, // Zakres zawiera m.in. CREATE, DESTROY, FOCUS
+                EVENT_OBJECT_LOCATIONCHANGE,
                 None,
                 Some(winevent_proc),
-                0, // Wszystkie procesy
-                0, // Wszystkie wątki
+                0,
+                0,
                 WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
             );
 
             if hook.is_invalid() {
                 error!("Failed to set WinEventHook");
+                HOOK_THREAD_ID.store(0, Ordering::SeqCst);
                 return;
             }
 
-            // Pętla komunikatów wymagana dla hooków out-of-context
+            // Out-of-context hooks require a message pump on this thread.
             let mut msg = MSG::default();
             while GetMessageW(&mut msg, HWND::default(), 0, 0).into() {
                 DispatchMessageW(&msg);
@@ -46,7 +59,24 @@ pub fn start_hook_thread(sender: mpsc::Sender<RailWindowEvent>) {
 
             UnhookWinEvent(hook);
         }
+
+        HOOK_THREAD_ID.store(0, Ordering::SeqCst);
+        info!("WinEvent hook thread exited");
     });
+}
+
+/// Asks the hook thread to exit. Safe to call from any thread, including
+/// before `start_hook_thread` (no-op) and after it has already exited (no-op).
+pub fn request_shutdown() {
+    let tid = HOOK_THREAD_ID.load(Ordering::SeqCst);
+    if tid == 0 {
+        return;
+    }
+    unsafe {
+        if let Err(e) = PostThreadMessageW(tid, WM_QUIT, WPARAM(0), LPARAM(0)) {
+            error!("PostThreadMessageW(WM_QUIT) failed: {e:?}");
+        }
+    }
 }
 
 unsafe extern "system" fn winevent_proc(
@@ -58,31 +88,31 @@ unsafe extern "system" fn winevent_proc(
     _ideventthread: u32,
     _dwmsgeventtime: u32,
 ) {
-    // Interesują nas tylko zdarzenia dotyczące całego okna (OBJID_WINDOW == 0)
+    // OBJID_WINDOW == 0; ignore everything below the window object.
     if idobject != 0 || idchild != 0 || hwnd.is_invalid() {
         return;
     }
 
-    // Filtracja okien potomnych: chcemy tylko okna top-level i popupy (menu kontekstowe)
     let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
     let is_child = (style & WS_CHILD.0) != 0;
-    
-    // Zezwalamy na Top-Level i okna typu POPUP (czyli np. context menu w Win32)
-    // Aby przepuścić dymki/menu, nie odrzucamy WS_POPUP pomimo że bywają ukryte na pasku zadań.
+
+    // Top-level windows and popups (e.g. context menus) pass; ordinary child
+    // controls do not — we only want app-level windows on the host side.
     if is_child && (style & WS_POPUP.0) == 0 {
         return;
     }
 
-    // Dodatkowo wymuszamy widoczność, z wyjątkiem eventu DESTROY (okno może zniknąć znikając z widoku przed destrukcją)
+    // DESTROY arrives after the window has already disappeared; everything
+    // else must be visible to be worth forwarding.
     if event != EVENT_OBJECT_DESTROY && !IsWindowVisible(hwnd).as_bool() {
         return;
     }
 
     if let Some(rail_event) = build_rail_event(event, hwnd) {
         if let Some(sender) = EVENT_SENDER.get() {
-            // Wysyłamy nieblokująco, bo to wątek Win32 z pętlą GetMessage
+            // try_send: this is the Win32 pump thread, so blocking on a full
+            // queue would stall every other window event in the system.
             if let Err(e) = sender.try_send(rail_event) {
-                // Pełna kolejka (backpressure) lub błąd kanału
                 debug!("Failed to send rail event: {:?}", e);
             }
         }

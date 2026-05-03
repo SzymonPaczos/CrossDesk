@@ -1,15 +1,18 @@
+use proto::crossdesk::v1::{rail_window_event::Kind as RailEventKind, RailWindowEvent, Rect};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
+    GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
     EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_FOCUS, EVENT_OBJECT_LOCATIONCHANGE,
-    EVENT_OBJECT_NAMECHANGE, GetWindowThreadProcessId, GetWindowRect, GetWindowTextW, GetWindowTextLengthW,
+    EVENT_OBJECT_NAMECHANGE,
 };
-use proto::crossdesk::v1::{RailWindowEvent, Rect, rail_window_event::Kind as RailEventKind};
 
 pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
     let kind = match event {
         EVENT_OBJECT_CREATE => RailEventKind::Created,
         EVENT_OBJECT_DESTROY => RailEventKind::Destroyed,
-        EVENT_OBJECT_LOCATIONCHANGE => RailEventKind::Moved, // Lub Resized zależnie od delty, na razie wspólne
+        // LOCATIONCHANGE covers both move and resize on the wire; the host
+        // distinguishes by diffing the geometry against the previous event.
+        EVENT_OBJECT_LOCATIONCHANGE => RailEventKind::Moved,
         EVENT_OBJECT_FOCUS => RailEventKind::FocusGained,
         EVENT_OBJECT_NAMECHANGE => RailEventKind::TitleChanged,
         _ => return None,
@@ -57,6 +60,7 @@ pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
         kind: kind.into(),
         geometry,
         title,
-        icon_png: vec![], // TODO w pełnej implementacji
+        // Phase 4 will populate this via ExtractIconExW + PNG-encode.
+        icon_png: vec![],
     })
 }

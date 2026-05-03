@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::io::Write as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::time::SystemTime;
 
@@ -21,15 +21,41 @@ use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
 use proto::crossdesk::v1::heartbeat_service_client::HeartbeatServiceClient;
 
 pub const SERVICE_NAME: &str = "CrossDeskAgent";
-const LOG_PATH: &str = r"C:\CrossDesk\agent.log";
 
-/// PKI material installed by autounattend.xml at first boot.
-const PKI_DIR: &str = r"C:\CrossDesk\pki";
+const DEFAULT_AGENT_DIR: &str = r"C:\CrossDesk";
+const DEFAULT_LOG_FILE: &str = "agent.log";
+const DEFAULT_PKI_SUBDIR: &str = "pki";
 
-/// Host gRPC endpoint. Production target is `vsock://2:50051` once the
-/// AF_HYPERV connector lands; the TCP form below works against the dev host
-/// running on the same Linux/Mac machine through QEMU `-net user` portfwd.
-const HOST_ENDPOINT: &str = "http://127.0.0.1:50051";
+/// Production target is `vsock://2:50051` once the AF_HYPERV connector lands;
+/// the TCP form is what `qemu -net user` portfwd exposes during development.
+const DEFAULT_HOST_ENDPOINT: &str = "http://127.0.0.1:50051";
+
+const ENV_AGENT_DIR: &str = "CROSSDESK_AGENT_DIR";
+const ENV_LOG_PATH: &str = "CROSSDESK_LOG_PATH";
+const ENV_PKI_DIR: &str = "CROSSDESK_PKI_DIR";
+const ENV_HOST_ENDPOINT: &str = "CROSSDESK_HOST_ENDPOINT";
+
+fn agent_dir() -> PathBuf {
+    std::env::var_os(ENV_AGENT_DIR)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_AGENT_DIR))
+}
+
+fn log_path() -> PathBuf {
+    std::env::var_os(ENV_LOG_PATH)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| agent_dir().join(DEFAULT_LOG_FILE))
+}
+
+fn pki_dir() -> PathBuf {
+    std::env::var_os(ENV_PKI_DIR)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| agent_dir().join(DEFAULT_PKI_SUBDIR))
+}
+
+fn host_endpoint() -> String {
+    std::env::var(ENV_HOST_ENDPOINT).unwrap_or_else(|_| DEFAULT_HOST_ENDPOINT.to_string())
+}
 
 define_windows_service!(ffi_service_main, service_main);
 
@@ -81,6 +107,9 @@ pub fn run_service() -> anyhow::Result<()> {
 
     append_log("CrossDeskAgent stopping");
 
+    // Break the rail-bridge Win32 message pump so its thread exits cleanly.
+    rail_bridge::request_shutdown();
+
     status_handle.set_service_status(ServiceStatus {
         service_type: ServiceType::OWN_PROCESS,
         current_state: ServiceState::Stopped,
@@ -100,19 +129,19 @@ pub fn run_service() -> anyhow::Result<()> {
 /// state is per-plane in proto, but the fingerprint+nonce are identical for
 /// the lifetime of this connection).
 async fn run_agent_planes() -> anyhow::Result<()> {
-    let pki = TlsMaterial::from_dir(Path::new(PKI_DIR))?;
-    // The fingerprint stamped onto every outgoing AuthContext is the *host*
-    // cert's, since that is what AuthValidator on the other side compares
-    // against the TLS-extracted leaf. Guest agent reads the host cert it's
-    // pinned against (ca-signed) from its PKI directory.
-    let host_cert_pem = std::fs::read(Path::new(PKI_DIR).join("host.crt"))?;
+    let pki_path = pki_dir();
+    let pki = TlsMaterial::from_dir(&pki_path)?;
+    // The fingerprint stamped onto every outgoing AuthContext is the host
+    // cert's — AuthValidator on the other side compares it against the
+    // TLS-extracted leaf.
+    let host_cert_pem = std::fs::read(pki_path.join("host.crt"))?;
     let host_fp = fingerprint_sha256(&host_cert_pem)?;
 
     let channel = ipc_vsock::channel::connect(
         &pki.ca_pem,
         &pki.cert_pem,
         &pki.key_pem,
-        HOST_ENDPOINT.to_string(),
+        host_endpoint(),
     )
     .await?;
 
@@ -143,8 +172,11 @@ async fn run_agent_planes() -> anyhow::Result<()> {
 }
 
 fn append_log(msg: &str) {
-    let _ = std::fs::create_dir_all(r"C:\CrossDesk");
-    let Ok(mut file) = OpenOptions::new().create(true).append(true).open(LOG_PATH) else {
+    let path = log_path();
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) else {
         // If the log file is inaccessible, drop the message; logging must never
         // panic or unwind the service thread.
         return;

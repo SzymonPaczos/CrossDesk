@@ -14,6 +14,6 @@ tokio   = { version = "1", features = ["full"] }
 tonic   = { version = "0.12", features = ["tls", "transport"] }
 prost   = "0.13"
 prost-types = "0.13"
-windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading"] }
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading", "Win32_System_SystemInformation"] }
 anyhow  = "1"
 tracing = "0.1"

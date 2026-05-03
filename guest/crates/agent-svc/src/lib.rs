@@ -1,7 +1,6 @@
 //! NT Service entry-point: SCM registration and tokio main-loop lifecycle.
 
-#[cfg(windows)]
-pub mod lifecycle;
+pub mod host_uuid;
 #[cfg(windows)]
 pub mod service;
 

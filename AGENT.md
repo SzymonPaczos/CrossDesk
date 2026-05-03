@@ -1,10 +1,22 @@
-# CrossDesk AI Agent Core Directives
-# MANDATORY: Read docs/ARCHITECTURE.md before taking ANY action.
+# Coding rules
 
-- ROLE: You are a Senior Systems Engineer specializing in Linux/Windows cross-compilation, QEMU/KVM virtualization, and bare-metal IPC.
-- CONSTRAINT 1: NO DOCKER. The host environment operates on bare-metal `qemu:///session` libvirt APIs.
-- CONSTRAINT 2: ASYNC ONLY. No `while True: time.sleep()` loops. Use pure event-driven architecture (gRPC streams, Wayland DBus events).
-- CONSTRAINT 3: RUST STRICTNESS. Guest agent code must be idiomatic Rust. No `unwrap()` or `expect()` without block comments explaining why it is infallible.
-- CONSTRAINT 4: PYTHON STRICTNESS. Host orchestrator must use `asyncio`, type hints (`mypy --strict`), and `black` formatting.
-- BEHAVIOR: Do not hallucinate code or use placeholders (`# TODO`). Write production-ready, defensively programmed logic. If a Windows API call via `windows-rs` is undocumented or risky, state the First Principles risk before writing the function.
-- COMMITS: Strict Conventional Commits only.
+Read [ARCHITECTURE.md](ARCHITECTURE.md) before changing anything beyond a
+typo.
+
+## Hard constraints
+
+- **No Docker.** The host runs against `qemu:///session` libvirt directly.
+- **No polling.** Both sides communicate through async gRPC streams. No
+  `while True: time.sleep(...)` loops, no busy waits.
+- **Rust:** idiomatic; `unwrap()` and `expect()` only with a one-line comment
+  explaining why the call is infallible at that point.
+- **Python:** `asyncio` end-to-end, type hints, `mypy --strict`, `black`
+  formatting.
+- **Commits:** Conventional Commits.
+
+## Style
+
+- Don't leave `# TODO` placeholders in merged code. If something is genuinely
+  deferred, file an issue and link it.
+- Comments explain *why*, not *what*. The code already says what it does.
+- Keep diffs scoped: a fix doesn't bundle a refactor.

@@ -1,134 +1,61 @@
 # CrossDesk
 
-> **Run Windows applications as native Linux desktop windows** — bridging two worlds on a single workstation.
+Run Windows applications as native windows on a Linux desktop. The Linux host
+boots a Windows VM under `qemu:///session`, runs an in-VM agent, and renders
+each Windows app as a separate Wayland/X11 window via FreeRDP RAIL.
 
-CrossDesk is a high-performance integration layer that seamlessly connects Linux workstations and Windows environments. It uses hardware virtualization to execute Windows applications on your Linux desktop, rendering them as native windows with zero network overhead.
+Status: pre-release. Phase 1 (VM bootstrap + NT service) is complete; Phase 2
+(transport + mTLS) is in progress. See [ROADMAP.md](ROADMAP.md).
 
-## ✨ Why CrossDesk?
+## Design summary
 
-Windows and Linux don’t have to be enemies. Instead of choosing one or running them in isolation, CrossDesk lets you leverage both ecosystems on the same machine:
+- **Hypervisor:** `qemu:///session` (libvirt user-space). No Docker, no daemon
+  privilege escalation; the host process retains direct access to the user's
+  Wayland/X11 sockets.
+- **Transport:** gRPC over `AF_VSOCK` with mTLS. Each frame carries an
+  `AuthContext` (peer cert fingerprint + stream nonce + monotonic sequence) and
+  is validated server-side; this defends against CID collision and replay
+  independently of the TLS layer.
+- **Display:** FreeRDP in RAIL mode. Per-window events (CREATED / FOCUS /
+  DESTROYED) are forwarded from the guest agent to a host-side window manager.
+- **Storage:** Just-in-time VirtioFS. Host directories are not mapped
+  permanently; libvirt hot-plugs a share when an app needs it and detaches it
+  after the guest sends `ReleaseAck`.
 
-- **Native Integration**: Windows apps appear as native Linux windows in your desktop environment (Wayland/X11)
-- **Zero Network Overhead**: Communication between host and guest happens via CPU sockets (`vsock`), not TCP/IP
-- **Hardware Optimized**: Built on QEMU/libvirt with event-driven architecture—no polling, no wasted cycles
-- **Security-First**: Just-in-time resource mounting means the host directory is only accessible when needed by a specific process
-- **Zero-Touch Provisioning**: Windows VMs self-install via `autounattend.xml` with automated agent deployment
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design and threat model.
 
-## 🏗️ Architecture at a Glance
+## Components
 
+| Path        | Language     | Role                                              |
+| ----------- | ------------ | ------------------------------------------------- |
+| `host/`     | Python 3.9+  | Orchestrator daemon, libvirt control, gRPC server |
+| `guest/`    | Rust         | Windows NT service, RAIL bridge, vsock client     |
+| `gui/`      | Rust + CXX-Qt | Qt6/QML installation wizard                       |
+| `proto/`    | proto3       | gRPC service definitions                          |
+| `infra/`    | Shell + Python | VM bootstrap and PKI generation                  |
+
+## Building
+
+Requires a Linux host with KVM, libvirt, Python 3.9+, a Rust toolchain, and
+Qt6.
+
+```sh
+# Python host daemon
+cd host && pip install -e . && mypy --strict src/ && pytest
+
+# Rust guest agent (cross-compiled to Windows)
+cd guest && cargo build --release --target x86_64-pc-windows-gnu
+
+# Qt installer GUI
+cd gui && cargo run -p crossdesk-gui
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Linux Host                                                 │
-│  ┌──────────────────────┐          ┌────────────────────┐  │
-│  │ Python Orchestrator  │          │  FreeRDP RAIL      │  │
-│  │ (systemd daemon)     │◄────────►│  (display server)  │  │
-│  └──────────────────────┘          └────────────────────┘  │
-│           ▲                                  ▲               │
-│           │ gRPC over vsock                 │               │
-│           │ (async streams)                 │               │
-│  ┌────────┴──────────────────────────────────┴─────────┐   │
-│  │  QEMU/KVM (libvirt session)                         │   │
-│  │                                                     │   │
-│  │  ┌──────────────────────────────────────────────┐  │   │
-│  │  │  Windows Guest VM                            │  │   │
-│  │  │  ┌────────────────────────────────────────┐  │  │   │
-│  │  │  │ Rust NT Service Agent                  │  │  │   │
-│  │  │  │ (gRPC endpoint, process manager)       │  │  │   │
-│  │  │  └────────────────────────────────────────┘  │  │   │
-│  │  │                                              │  │   │
-│  │  │  Windows applications run here              │  │   │
-│  │  └──────────────────────────────────────────────┘  │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
 
-## 🚀 Getting Started
+## Documentation
 
-### Requirements
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system design and security model
+- [ROADMAP.md](ROADMAP.md) — phased implementation plan with SPOF analysis
+- [AGENT.md](AGENT.md) — coding rules for contributors and AI assistants
 
-- Linux host with QEMU/KVM and libvirt support
-- Python 3.9+
-- Rust toolchain (for building the guest agent)
-- Windows ISO for guest installation
+## License
 
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/crossdeskgroup/CrossDesk.git
-   cd CrossDesk
-   ```
-
-2. **Review the architecture documentation**
-   ```bash
-   cat ARCHITECTURE.md
-   ```
-
-3. **Follow the roadmap for implementation progress**
-   ```bash
-   cat ROADMAP.md
-   ```
-
-## 📋 Project Phases
-
-**Phase 1: Bootstrap VM + NT Service**
-- Headless Windows installation via `autounattend.xml`
-- Automatic NT service registration for the Rust agent
-
-**Phase 2: Transport & Security**
-- gRPC over `vsock` with mutual TLS and per-frame authentication
-
-**Phase 3: Session Management & Heartbeat**
-- Adaptive heartbeat protocol with automatic recovery
-- State machine for graceful failure handling
-
-**Phase 4: Display Integration**
-- RAIL (Remote App Integrated Locally) mode rendering
-- Native Wayland/X11 window compositing
-
-**Phase 5: Just-In-Time Storage**
-- Dynamic filesystem mounting based on process needs
-- Automatic cleanup and resource release
-
-## 🏛️ Core Principles
-
-1. **No Docker** — Direct `qemu:///session` libvirt for Wayland/X11 socket access
-2. **Event-Driven Only** — Async gRPC streams, never polling loops
-3. **Zero-Touch Setup** — Automated VM provisioning and agent deployment
-4. **Security by Default** — JIT resource mounting, mTLS authentication, per-frame validation
-
-## 📚 Documentation
-
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design, technology stack, security model
-- **[ROADMAP.md](ROADMAP.md)** — Implementation phases and critical dependencies (SPOFs)
-- **[AGENT.md](AGENT.md)** — AI development directives and code standards
-
-## 🛠️ Development
-
-This project maintains strict code quality standards:
-
-- **Rust**: Idiomatic code, no `unwrap()` without justification
-- **Python**: Type hints (`mypy --strict`), async-only, `black` formatting
-- **Git**: Conventional Commits with clear message structure
-
-See [AGENT.md](AGENT.md) for the full development mandate.
-
-## 📄 License
-
-GPL v3 or later
-
-## 🤝 Contributing
-
-We welcome contributions! Before submitting a PR:
-
-1. Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand the system design
-2. Review [AGENT.md](AGENT.md) for code standards
-3. Ensure your changes align with the [ROADMAP.md](ROADMAP.md)
-
-## 📞 Support & Feedback
-
-For questions, feature requests, or bug reports, please open an issue on GitHub.
-
----
-
-**Status**: Active Development (Phase 1 complete, Phase 2 in progress)
+GPL-3.0-or-later.

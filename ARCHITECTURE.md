@@ -1,25 +1,49 @@
-# CrossDesk: System Architecture & Implementation Guide
+# CrossDesk: Architecture
 
-## 0. Project Manifesto & Vision
-**CrossDesk** is an uncompromising, high-performance integration layer bridging Linux workstations (Host) and Windows environments (Guest). It destroys the boundaries of virtual machines by rendering Windows applications as native Linux desktop windows.
-It operates on First Principles of hardware virtualization: asynchronous event-driven architecture, zero-network overhead via CPU sockets (`vsock`), and Just-In-Time (JIT) storage allocation. 
+CrossDesk runs Windows applications as native windows on a Linux desktop. A
+Linux host boots a Windows VM, an in-VM agent forwards application events, and
+the host renders each Windows window through FreeRDP RAIL. This document
+describes the design and the constraints that shape it.
 
-## 1. Core Principles & Epistemic Constraints
-- **No Docker.** Use native `qemu:///session` (libvirt user-space) to retain host-level Wayland/X11 socket access.
-- **Event-Driven.** No polling/looping. Guest and Host communicate purely via asynchronous gRPC streams.
-- **Zero-Touch Provisioning.** Windows VM is installed headless via `autounattend.xml` and secondary virtual floppy injection.
+## 1. Constraints
 
-## 2. Technology Stack
-- **Orchestrator (Host):** Python 3.9+ (systemd user daemon, asyncio, libvirt API, Wayland DBus parsing).
-- **Guest Agent (Windows):** Rust (NT System Service, windows-rs).
-- **IPC Transport:** gRPC over `vsock` (AF_VSOCK). Bypasses TCP/IP firewall rules.
-- **Display Engine:** FreeRDP (RAIL mode) with `GDK_BACKEND=x11` fallback enforced for Wayland hosts (MVP phase).
+- **No Docker.** The host runs as a regular user under `qemu:///session` so it
+  keeps direct access to the user's Wayland/X11 sockets.
+- **Event-driven.** Host and guest communicate through asynchronous gRPC
+  streams; no polling loops on either side.
+- **Zero-touch provisioning.** The Windows VM installs unattended via
+  `autounattend.xml` plus a secondary virtual floppy carrying the agent.
 
-## 3. Security & Resource Management
-- **JIT VirtioFS Mounting:** Host `~/` directory is NOT permanently mapped. When `document.docx` is clicked, Python hot-plugs ONLY the parent directory to `X:\` via libvirt. Share is instantly destroyed when the process exits.
-- **State Machine & Heartbeat:** Rust agent emits a gRPC heartbeat every 500ms. If the Python host misses 3 beats while libvirt reports VM status as "Running", the host triggers `virsh destroy` and `virsh start`.
-- **Dynamic RAM:** `virtio-balloon` in QEMU scales RAM dynamically based on Guest load.
+## 2. Components
 
-## 4. Bootstrapping Strategy
-- Inject a secondary OEM virtual drive to QEMU containing `autounattend.xml` and `agent.exe`.
-- Use `FirstLogonCommands` to automatically copy `agent.exe` to `C:\Windows\System32\` and execute `sc create CrossDeskAgent` to register the Rust binary as a high-privilege service.
+- **Host orchestrator** — Python 3.9+ (`asyncio`, libvirt API, Wayland DBus).
+  Runs as a systemd user daemon.
+- **Guest agent** — Rust NT service (`windows-rs`).
+- **Transport** — gRPC over `AF_VSOCK`. Avoids TCP/IP and the host firewall
+  entirely.
+- **Display** — FreeRDP in RAIL mode. On Wayland hosts the MVP forces
+  `GDK_BACKEND=x11` until native Wayland support lands.
+
+## 3. Security and resource model
+
+- **Just-in-time VirtioFS.** The host home directory is never mapped
+  wholesale. When the user opens a file, the host hot-plugs only the parent
+  directory to a guest drive and detaches it as soon as the process releases
+  the handle.
+- **Per-frame `AuthContext`.** Every gRPC frame carries a peer-cert
+  fingerprint, stream nonce, and monotonic sequence number. The server rejects
+  the stream on any mismatch — defense in depth against CID collisions and
+  replay attacks, independent of the TLS layer.
+- **Heartbeat and recovery FSM.** The guest emits a heartbeat every 500 ms.
+  If the host misses three consecutive beats while libvirt still reports the
+  VM as `Running`, the host transitions through PROBING → SOFT_RECOVERY
+  (`virsh shutdown`) → HARD_DESTROY (`virsh destroy` + `virsh start`).
+- **Dynamic memory.** `virtio-balloon` resizes guest RAM in response to load.
+
+## 4. Bootstrapping
+
+The installer attaches a secondary OEM virtual disk containing
+`autounattend.xml` and `agent.exe`. `FirstLogonCommands` copies the agent into
+`C:\Windows\System32\` and registers it as a service via
+`sc create CrossDeskAgent`. From the next boot onward the agent starts before
+user login and survives reboots.

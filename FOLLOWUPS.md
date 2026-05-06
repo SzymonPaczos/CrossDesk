@@ -374,6 +374,55 @@ positioning depends on enforcing what we promise.
 - **[P2] Trend analysis** (weekly metric summary over time).
   Lower priority — useful once we have months of history.
 
+## Versioning & compatibility
+
+Three things versioned: the gRPC protocol (`proto/crossdesk/vN/`),
+the host package, and the guest agent. N-1 minor compatibility
+window. `Hello` handshake on first connect. See
+`docs/VERSIONING.md` for the strategy and `docs/DECISIONS.md`
+DEC-0007 for the architectural commitment. WinApps doesn't
+version anything — we are above that bar.
+
+- **[P0] `Hello` message in proto with handshake fields.** Add to
+  `proto/crossdesk/v1/control.proto`:
+  `protocol_version`, `host_version`, `agent_version`,
+  `capabilities` (comma-separated). Sent as the first frame on
+  both sides after mTLS + AuthContext setup.
+- **[P0] Handshake compatibility logic.** Host and guest both
+  parse the peer's Hello, apply N-1 minor rule, refuse on
+  mismatch with structured error pointing at the right next
+  command (`crossdesk upgrade` or full reinstall).
+- **[P0] CLI semver commitment in v1.x.** Document in
+  `docs/VERSIONING.md` and surface in `crossdesk --help`. CI
+  enforces no breaking flag changes within v1.x via a manifest
+  test (compares current `--help` output to a snapshot).
+- **[P1] `crossdesk upgrade` agent hot-swap with handshake-aware
+  sequencing.** Already in Operations FOLLOWUPS. Extend: FSM
+  enters `UPGRADING` state during agent swap (suppresses
+  HARD_DESTROY for ≤60 s); after new agent's first Hello,
+  exits `UPGRADING`.
+- **[P1] Capabilities flag inventory.** Document each capability
+  string (`rail`, `vsock`, `jit-virtiofs`, `credential-rotate`,
+  experimental `exp:*`) with semantics and which side enables it.
+  Lives in `docs/VERSIONING.md` appendix.
+- **[P1] Config schema versioning + migration.** `vm.toml` and
+  others get a `schema_version` field. Host reads older versions,
+  migrates in-memory; `crossdesk config migrate` writes the
+  migration to disk. Adding a field is MINOR (no migration);
+  removing/renaming is MAJOR.
+- **[P1] N-1 agent CI matrix.** GitHub Actions job that builds
+  the previous minor version's agent and runs handshake tests
+  against current host. Catches accidentally-breaking proto
+  changes.
+- **[P2] Deprecation tracking.** When a MINOR adds a field
+  obsoleting an older one, surface a one-time warning at startup
+  until the older one is removed in MAJOR. Tooling: a registry
+  in `proto/DEPRECATED.md` tracking deprecation dates.
+- **[P2] `crossdesk version` command.** Shows host version, agent
+  version (querying live VM), proto version, capabilities. Warns
+  on mismatch even if not refusing connection (e.g., when an
+  experimental flag is missing).
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

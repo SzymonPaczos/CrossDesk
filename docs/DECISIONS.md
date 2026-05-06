@@ -7,6 +7,77 @@ delete history.
 
 ---
 
+## DEC-0005: Mock-driven testing as architectural foundation
+
+**Status:** Accepted — 2026-05-07
+**Owner:** all components touching Linux-or-Windows-only APIs
+**Related:** `docs/CROSS_PLATFORM_DEV.md`; `AGENT.md` "no polling" rule
+
+### Context
+
+CrossDesk's runtime depends on AF_VSOCK, libvirt, FreeRDP RAIL,
+D-Bus, and Windows-only `windows-rs`. None of these run on macOS.
+Periods of development without Linux+KVM hardware (e.g., a month on
+Mac) become unproductive without a mock layer.
+
+Even with hardware, integration-only testing makes CI slow, flaky,
+and dependent on hardware-class runners.
+
+### Decision
+
+Every component touching a Linux-or-Windows-only API is reached
+through a trait (Rust) or Protocol (Python). We ship two
+implementations per trait: the real one and a mock one with
+matching invariants and failure-injection hooks.
+
+Specifically:
+
+1. Transport (`AF_VSOCK`), libvirt client, FreeRDP invocation,
+   guest agent (from host's POV), filesystem hot-plug, D-Bus
+   signals, and Windows registry all sit behind a trait/Protocol.
+2. Mocks enforce the same validation rules as real implementations
+   (e.g., AuthContext rejection, `mount_token` length).
+3. Mocks expose hooks for failure injection (drop-mid-stream,
+   timeout, malformed-response).
+4. CI runs unit tests on macOS and Ubuntu; in-process integration
+   tests on Ubuntu; real-libvirt smoke tests gated behind a label
+   on a self-hosted Linux+KVM runner (when one exists).
+5. Production code never imports a mock module.
+
+### Alternatives considered
+
+- **Integration-only testing on a Linux runner.** Slow CI, hardware-
+  bound, untestable on macOS. Rejected.
+- **No mocks; "test on Linux when you have hardware."** Wastes
+  development time during periods without hardware. Rejected.
+- **Mocks but only at the gRPC layer.** Doesn't help components
+  below gRPC (libvirt, FreeRDP); leaves gaps. Rejected for
+  "every Linux-only API" instead.
+
+### Consequences
+
+- (+) Any developer can build, type-check, and run unit tests on
+  macOS or Windows.
+- (+) CI is fast; integration tests are deterministic on mocks.
+- (+) Failure injection enables testing of error paths real
+  implementations rarely surface.
+- (−) Two implementations per component to maintain. Drift risk
+  managed by reviewer discipline + module docstring noting what's
+  mocked.
+- (−) Real libvirt / real Windows behavior still requires hardware
+  smoke tests. Mocks don't catch everything.
+
+### Reconsider when
+
+- A class of bugs repeatedly slips past mocks and is caught only by
+  hardware smoke tests. May indicate the mock is too lenient and
+  needs to enforce additional invariants (cheaper) or that the
+  abstraction is at the wrong layer (more expensive: refactor).
+- Hardware testing becomes cheap enough (e.g., GitHub Actions ships
+  KVM-capable runners by default) that the cost-benefit shifts.
+
+---
+
 ## DEC-0004: Performance budgets are normative
 
 **Status:** Accepted — 2026-05-07

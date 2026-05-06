@@ -82,13 +82,83 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
 Each item cites its source (winapps file:line or our gap analysis) and
 points at the CrossDesk file or module where the work lands.
 
-Sections that are not yet expanded: cross-platform development &
-testing scaffold, display & forwarding (Wayland-native, GPU
-passthrough), peripherals (audio, clipboard, DnD, mic/cam, smartcard,
-printer), versioning & compatibility, observability, performance
-budgets, security formalization (signing, supply chain),
-distribution & packaging, lifecycle (suspend/resume), i18n. These are
-queued and will be filled in as we work through them.
+Sections still to be expanded: display & forwarding (Wayland-native,
+GPU passthrough), peripherals (audio, clipboard, DnD, mic/cam,
+smartcard, printer), versioning & compatibility, observability,
+performance budgets, distribution & packaging, lifecycle
+(suspend/resume), i18n. These are queued and will be filled in as
+we work through them.
+
+## Cross-platform development & testing scaffold (URGENT)
+
+Foundation work to make `~1 month on macOS without Linux+KVM
+hardware` productive instead of placebo. See
+`docs/CROSS_PLATFORM_DEV.md` for the strategy and `docs/DECISIONS.md`
+DEC-0005 for the architectural commitment.
+
+- **[P0] Cross-compile pipeline working from macOS.** `cargo install
+  cross --git https://github.com/cross-rs/cross` (Docker-backed).
+  Verify `cross build --release --target x86_64-pc-windows-gnu`
+  produces a working `agent.exe` from macOS. Document fallback to
+  native MinGW (`brew install mingw-w64`) for fast iteration.
+  Touches: `guest/Cargo.toml`, `.github/workflows/`,
+  `docs/CROSS_PLATFORM_DEV.md`.
+- **[P0] Transport abstraction (trait + real + mock).** Define
+  `Transport` trait in `guest/crates/ipc-vsock/src/lib.rs`. Move real
+  AF_VSOCK code to `transport/real.rs` (Linux). Add
+  `transport/mock.rs` (TCP loopback, same mTLS + AuthContext stack,
+  failure-injection hooks). Same shape for Python in
+  `host/src/crossdesk_host/abstractions/transport.py` (Protocol) +
+  `transport/real.py` + `transport/mock.py`. Migrate existing
+  `ipc-vsock` consumers to the trait. **Do this first** — every
+  other mock depends on it.
+- **[P0] Libvirt client abstraction.** Protocol in
+  `host/src/crossdesk_host/abstractions/libvirt.py`. Real impl wraps
+  `libvirt-python`. Mock impl returns canned XML, accepts
+  lifecycle commands as no-ops, exposes hooks like
+  `MockLibvirt(simulate_start_failure=True)`. Migrate
+  `infra/launch-vm.py` and `host/.../watchdog/` consumers.
+- **[P0] FreeRDP invocation abstraction.** Protocol in
+  `host/src/crossdesk_host/abstractions/freerdp.py`. Real impl
+  spawns `xfreerdp` subprocess; mock records argv to a list and
+  returns a fake `RAILSession` object. Used in
+  `host/.../display/rail_manager.py` (when Phase 4 lands).
+- **[P0] In-process integration test harness.** Test that drives
+  Python host + spawned Rust guest (via `cargo run --features
+  mock`) over `MockTransport`, exercising
+  `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)`
+  end-to-end on the mock layer. Lives at
+  `host/tests/test_smoke_inprocess.py`.
+- **[P0] CI matrix: macOS + Ubuntu.** Add
+  `.github/workflows/ci.yml`:
+  - `python-host` on `ubuntu-latest` and `macos-latest` —
+    `mypy --strict src/` + `pytest --features mock`.
+  - `rust-guest-cross-compile` on `ubuntu-latest` and
+    `macos-latest` — `cargo check --target x86_64-pc-windows-gnu`
+    + `cargo test --workspace --features mock`.
+  - `in-process-integration` on `ubuntu-latest` — driver runs the
+    smoke test above.
+  - `linux-kvm-smoke` on `self-hosted` (gated by PR label,
+    self-hosted runner doesn't exist yet — wire workflow file
+    anyway).
+- **[P1] Filesystem service abstraction.** Same shape as libvirt
+  client. `MockFilesystem` tracks mount/unmount in-memory state.
+  Lives in `host/src/crossdesk_host/ipc/filesystem.py` neighborhood.
+  Phase 5 dependency.
+- **[P1] D-Bus signals abstraction.** Used for suspend/resume
+  detection. Mock emits scripted `org.freedesktop.login1.PrepareForSleep`
+  events. Tied to lifecycle work.
+- **[P1] Windows registry abstraction (guest side).** Behind
+  `windows-rs` calls in `guest/crates/agent-svc/`. Mock provides
+  builder API for canned registry trees. Used by the future app
+  discovery service.
+- **[P1] Pyproject + Cargo features for mock toggling.** Document
+  in `pyproject.toml` and `Cargo.toml` the `mock`, `linux`, and
+  `windows-real` feature gates. Enforce that production paths
+  cannot import mock modules — add a CI check.
+- **[P2] `cargo deny` rule** preventing direct imports of
+  `libvirt-python`, `socket.socket(AF_VSOCK)`, `tokio::net::VsockStream`
+  outside the abstraction layer.
 
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 

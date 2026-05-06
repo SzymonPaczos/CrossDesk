@@ -7,6 +7,81 @@ delete history.
 
 ---
 
+## DEC-0007: Semver everywhere with N-1 minor compatibility window
+
+**Status:** Accepted — 2026-05-07
+**Owner:** proto schema, host package, guest agent
+**Related:** `docs/VERSIONING.md`; `proto/crossdesk/v1/*.proto`;
+`FOLLOWUPS.md` `crossdesk upgrade` item
+
+### Context
+
+WinApps does not version anything. Re-running their `setup.sh`
+overwrites the install; there's no upgrade story. CrossDesk's
+`crossdesk upgrade` command (in FOLLOWUPS) only works if we can
+answer "is this host compatible with that agent" deterministically.
+
+Without a versioning policy, every upgrade is a wipe-and-reinstall
+which destroys the user's Windows configuration (apps installed,
+settings, files). Unacceptable for a project that expects users to
+spend days configuring their VM.
+
+### Decision
+
+Three things are versioned with semver: the proto schema (per
+`proto/crossdesk/vN/`), the host package, and the guest agent. Each
+has its own version. They coordinate via a `Hello` handshake on
+first connect, exchanging `protocol_version`, `host_version`,
+`agent_version`, and a `capabilities` string.
+
+The host follows an **N-1 minor compatibility rule**: it accepts
+agents at its minor version or one minor below, within the same
+major. Major mismatches refuse with a clear message recommending
+full reinstall.
+
+Field numbers in proto schemas are reserved before use (we already
+do this — commit `b43bb16`); reserved numbers cannot be reused. New
+features ship as either MINOR additions (backwards-compatible) or
+capability flags (opt-in within a version).
+
+The CLI is stable in v1.x: argument order, flag names, exit codes
+held constant; breaking changes go in v2 with a deprecation period.
+
+### Alternatives considered
+
+- **No versioning policy** (WinApps approach). Every upgrade is a
+  wipe; users lose config. Rejected.
+- **N-2 minor compatibility** (more permissive). Adds maintenance
+  burden of supporting older agent versions for longer. Rejected
+  for now; reconsider if release cadence warrants.
+- **Strict same-version-only.** Forces agents to upgrade
+  lockstep with hosts; bad UX for users who upgrade host but
+  haven't restarted VM. Rejected.
+
+### Consequences
+
+- (+) `crossdesk upgrade` becomes safe — users can upgrade hosts
+  without losing in-VM work.
+- (+) Mismatches produce clear, actionable error messages.
+- (+) Capability flags allow experimental features without proto
+  bumps.
+- (−) Adds a Hello handshake to every connection (microseconds, but
+  measurable).
+- (−) Maintaining N-1 compatibility requires testing two versions
+  of the agent against current host on every release.
+
+### Reconsider when
+
+- A class of bugs slips through because tests don't cover the N-1
+  matrix sufficiently. Solution: add a CI matrix testing host vs
+  N-1 agent.
+- We hit a case requiring MAJOR proto bump that's controversial
+  (e.g., transport replacement). The decision-record gets a new
+  ADR superseding this one only on the specific aspect that
+  changes.
+
+---
+
 ## DEC-0006: Structured logging and trace propagation from day one
 
 **Status:** Accepted — 2026-05-07

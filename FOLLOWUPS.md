@@ -519,6 +519,60 @@ clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
   battery-saver / lid-close-suspend policy interactions, with
   recommended `crossdesk` configuration per scenario.
 
+## Internationalization
+
+`gettext` for Python CLI and host messages, Qt's native `tr()` /
+`.ts` for the GUI. English + Polish on first release; community
+adds other languages. WinApps is English-only — easy win for
+CrossDesk's positioning, especially with non-English users
+underserved by the comparable VM-management tooling. See
+`docs/I18N.md` for the full strategy.
+
+- **[P0] `gettext` configured in Python host.** `bindtextdomain`,
+  `textdomain`, `_()` shortcut available everywhere. Every
+  user-facing string marked `_("...")`. Lives in
+  `host/src/crossdesk_host/i18n.py` (initialization) and used
+  from every module emitting user-visible text.
+- **[P0] `qsTr("...")` markers on every QML string in
+  `gui/`.** Buttons, labels, tooltips, error messages.
+- **[P0] `i18n/` directory at repo root with templates.**
+  `crossdesk.pot` (gettext template), `crossdesk_*.ts` (Qt
+  templates per language). Per-language `.po` and `.ts` files
+  in subdirectories.
+- **[P0] Build tooling.** `Makefile` or `scripts/i18n.sh`
+  invoking `pybabel extract` / `pybabel compile` for gettext,
+  `lupdate` / `lrelease` for Qt. Run on PR to verify no
+  uncommitted string changes.
+- **[P0] Distro package install rules.** `.mo` files to
+  `/usr/share/locale/<lang>/LC_MESSAGES/crossdesk.mo`. `.qm`
+  files to `/usr/share/crossdesk/translations/`. Hooked into
+  packaging work (`docs/PACKAGING.md`).
+- **[P0] English-string discipline.** Logs, config field names,
+  component identifiers, and error codes stay English. Only
+  user-facing UI text gets translated. Documented in
+  `docs/I18N.md`; reviewers enforce.
+- **[P1] Polish translations complete.** Project author
+  translates all P0-shipped strings to Polish before first
+  release.
+- **[P1] CI string-extraction job.** On merge to main, re-extract
+  `.pot` / base `.ts` template, open PR if changed (so
+  translators see new strings to translate).
+- **[P1] `CONTRIBUTING.md` translator section.** Workflow for
+  adding a new language: copy template, edit, submit PR. Lists
+  current language coverage and contributors.
+- **[P2] Weblate (or similar) integration.** Hosted translation
+  service so translators don't need git. Decision contingent on
+  whether community contribution volume warrants the setup.
+- **[P2] Plural-form audit.** gettext `ngettext` for strings
+  that pluralize. Currently expected to be few; revisit on first
+  Polish translation pass.
+- **[P2] Locale-aware number/date formatting.** File sizes,
+  timestamps in user-visible output. `locale.format_string`
+  Python; Qt handles GUI side natively.
+- **[P2] RTL language readiness.** When first RTL translation
+  arrives (Arabic / Hebrew), audit GUI layouts for RTL behavior.
+  Qt handles most automatically. Out-of-scope until needed.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

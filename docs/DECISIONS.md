@@ -7,6 +7,72 @@ delete history.
 
 ---
 
+## DEC-0008: Distribution via deb/rpm/AUR/NixOS/PyPI; no Flatpak/AppImage/Snap
+
+**Status:** Accepted — 2026-05-07
+**Owner:** release tooling, packaging
+**Related:** `docs/PACKAGING.md`; `docs/DECISIONS.md` DEC-0003 (no
+Docker)
+
+### Context
+
+Users install CrossDesk via their distro's mechanism. WinApps ships
+`bash <(curl ...)`, NixOS flake, and AUR. That's adequate for their
+audience but leaves out users who want `apt install` or `dnf
+install` from their distro's package manager — exactly the
+trust-by-default audience CrossDesk targets.
+
+Format choice also affects security posture (sandboxed Flatpak vs
+distro package), update story, and per-distro maintenance burden.
+
+### Decision
+
+CrossDesk ships in five formats:
+
+1. **`deb`** for Debian-family (Debian, Ubuntu, Mint, Pop_OS).
+2. **`rpm`** for RPM-family (Fedora, RHEL, openSUSE).
+3. **AUR PKGBUILD** for Arch.
+4. **NixOS flake** for NixOS users.
+5. **PyPI** wheel for the host module (developers, headless).
+
+Skipped formats and reasons:
+
+- **Flatpak**: sandbox model conflicts with our requirements
+  (libvirt session, D-Bus, direct compositor, multi-GB VM disk).
+  Punching the holes erases the sandbox.
+- **AppImage**: no value over deb/rpm; harder updates.
+- **Snap**: same sandbox issue as Flatpak.
+- **Docker / OCI**: contradicts DEC-0003 (no Docker).
+
+### Alternatives considered
+
+- **PyPI-only.** Easiest to release, but expects users to manage a
+  Python environment, doesn't integrate with distro update story.
+  Rejected as primary; kept as supplementary.
+- **bash curl-pipe-installer (WinApps style).** Trust model is
+  bad; users running unknown install scripts as their user is
+  exactly the threat we want to remove. Rejected.
+- **Flatpak with permissive `--filesystem=host`.** Erases the
+  sandbox without simplifying anything. Rejected.
+
+### Consequences
+
+- (+) Native distro integration — `apt`/`dnf`/`pacman`/`nix run`.
+- (+) Native update story per distro.
+- (+) Trust-by-default audience served on their preferred format.
+- (−) Five build paths to maintain. CI complexity.
+- (−) Per-distro repos to host (Copr, PPA, OBS, AUR).
+- (−) GPG/Sigstore signing per format adds setup work.
+
+### Reconsider when
+
+- Flatpak gains a way to expose libvirt session to a sandboxed
+  app without erasing the sandbox. Then revisit Flatpak.
+- A new universal Linux packaging format gains traction with our
+  audience. Today's market is deb/rpm/AUR/Nix; that may shift.
+
+---
+
 ## DEC-0007: Semver everywhere with N-1 minor compatibility window
 
 **Status:** Accepted — 2026-05-07

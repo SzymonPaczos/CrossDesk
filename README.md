@@ -93,6 +93,16 @@ cd gui && cargo run -p crossdesk-gui
 | [docs/COMPETITION.md](docs/COMPETITION.md) | Where we sit in the design space |
 | [docs/COMPARISON_WINAPPS.md](docs/COMPARISON_WINAPPS.md) | Deep comparison with the vendored WinApps |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Architecture decisions (ADRs) |
+| [docs/GPU_PASSTHROUGH.md](docs/GPU_PASSTHROUGH.md) | GPU passthrough deliberation, decision pending |
+| [docs/CROSS_PLATFORM_DEV.md](docs/CROSS_PLATFORM_DEV.md) | Mock-driven testing strategy |
+| [docs/DISPLAY.md](docs/DISPLAY.md) | RAIL pipeline, Wayland-native, multi-monitor, HiDPI |
+| [docs/PERIPHERALS.md](docs/PERIPHERALS.md) | Audio, clipboard, DnD, mic/cam, smartcard, printer |
+| [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) | Structured logs, trace propagation, metrics |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Benchmark harness and SLO enforcement |
+| [docs/VERSIONING.md](docs/VERSIONING.md) | Semver, N-1 compat, Hello handshake |
+| [docs/PACKAGING.md](docs/PACKAGING.md) | Distribution: deb/rpm/AUR/NixOS/PyPI |
+| [docs/LIFECYCLE.md](docs/LIFECYCLE.md) | Suspend/resume coordination, systemd, autostart |
+| [docs/I18N.md](docs/I18N.md) | Internationalization (English + Polish initial) |
 | [FOLLOWUPS.md](FOLLOWUPS.md) | Action items, prioritized by area |
 | [AGENTS.md](AGENTS.md) | Project map for AI agents and new contributors |
 

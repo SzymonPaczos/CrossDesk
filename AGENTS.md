@@ -49,7 +49,17 @@ crossdesk/
 │   ├── THREAT_MODEL.md       # STRIDE per component
 │   ├── COMPETITION.md        # landscape — WinApps, Cassowary, Wine, etc.
 │   ├── COMPARISON_WINAPPS.md # deep comparison with the vendored WinApps
-│   └── DECISIONS.md          # ADRs (DEC-NNNN). Newest at top.
+│   ├── DECISIONS.md          # ADRs (DEC-NNNN). Newest at top.
+│   ├── GPU_PASSTHROUGH.md    # full deliberation, decision pending
+│   ├── CROSS_PLATFORM_DEV.md # mock-driven testing strategy (Mac vacuum + long-term)
+│   ├── DISPLAY.md            # RAIL pipeline, Wayland-native, multi-monitor, HiDPI
+│   ├── PERIPHERALS.md        # audio, clipboard, DnD, mic/cam, smartcard, printer, USB
+│   ├── OBSERVABILITY.md      # structured logs, trace propagation, in-memory metrics
+│   ├── PERFORMANCE.md        # benchmark harness + CI integration for SLO enforcement
+│   ├── VERSIONING.md         # semver, N-1 minor compat window, Hello handshake
+│   ├── PACKAGING.md          # deb/rpm/AUR/NixOS/PyPI; skipped Flatpak/AppImage/Snap
+│   ├── LIFECYCLE.md          # suspend/resume FSM coordination, systemd, autostart
+│   └── I18N.md               # gettext + Qt tr; English + Polish initial
 │
 ├── host/                     # Python 3.9+ host daemon
 │   ├── pyproject.toml

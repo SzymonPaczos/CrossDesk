@@ -160,6 +160,60 @@ DEC-0005 for the architectural commitment.
   `libvirt-python`, `socket.socket(AF_VSOCK)`, `tokio::net::VsockStream`
   outside the abstraction layer.
 
+## Display & forwarding
+
+How RAIL window pixels reach the Linux compositor and how each
+window finds its right monitor with the right scale. See
+`docs/DISPLAY.md` for the strategy. GPU passthrough (a separate
+sub-topic) lives in `docs/GPU_PASSTHROUGH.md` pending user
+decision.
+
+- **[P0] X11 RAIL pipeline (Phase 4 baseline).** Implement
+  `host/src/crossdesk_host/display/rail_manager.py` to launch
+  FreeRDP RAIL with `GDK_BACKEND=x11` (or native X11), translate
+  `RailWindowEvent` messages to compositor operations
+  (CREATED → spawn session + set WM_CLASS; DESTROYED → close
+  session; FOCUS/TITLE/ICON/MOVED/RESIZED → update WM hints).
+  Idempotent and tolerant of out-of-order events.
+- **[P1] Wayland-native RAIL.** Investigate FreeRDP 3.x Wayland
+  support depth; implement missing `xdg-shell`,
+  `xdg-decoration-unstable-v1`, `xdg-foreign-unstable-v2`, and
+  `wlr-foreign-toplevel-management` handlers (upstream FreeRDP
+  contribution preferred). Migrate `rail_manager.py` to launch
+  Wayland-native by default on Wayland sessions, fall back to X11
+  on unknown compositors. Beats winapps' XWayland-via-`GDK_BACKEND`
+  baseline.
+- **[P1] Multi-monitor RAIL window placement.** Enumerate monitors
+  via `xdg_output_manager` (Wayland) or RANDR (X11). Place each
+  RAIL window via `_NET_WM_DESKTOP` / Wayland output hints. On
+  drag-between-monitors with different scale, re-issue
+  `/scale-desktop:N`. WinApps explicitly warns this is broken on
+  their stack — clear win for us if we land it cleanly.
+- **[P1] HiDPI auto-detect.** Read user's effective scale (Wayland
+  `wl_output.scale`, X11 RANDR, GNOME `org.gnome.desktop.interface
+  scaling-factor`, KDE `kreadconfig5`). Map to nearest FreeRDP-
+  supported scale (100/140/180 in 3.x; finer if 4.x). Re-evaluate
+  on monitor change events.
+- **[P1] RAIL window lifecycle event idempotence.** The
+  `RailWindowEvent` consumer in `rail_manager.py` must handle:
+  out-of-order CREATED/FOCUS arrivals, repeated DESTROYED, MOVED
+  for an unknown window_id (race with CREATED). Phase 4 SPOF —
+  see `ROADMAP.md`.
+- **[P2] Per-frame display latency benchmark.** Add to the
+  microbench harness (Perf budgets work) a measurement of "RAIL
+  CREATED event → first frame drawn" on a known-good test app.
+  Track on Wayland-native vs XWayland.
+- **[P2] Looking Glass as documented alternative.** Document its
+  existence in `docs/DISPLAY.md` for power users wanting lower
+  latency than RDP encode/decode at the cost of full-desktop
+  windowing. Don't integrate; users run Looking Glass directly
+  if they want it.
+- **[Pending decision] GPU passthrough.** Full deliberation in
+  `docs/GPU_PASSTHROUGH.md`. Multi-GPU only, NVIDIA modern + AMD
+  RDNA2/3 Tier 1, AMD older + Intel Arc Tier 2, single-GPU
+  unsupported. ~3-4 weeks Tier 1 work. Recommended slot: Phase 4.5
+  / first major post-MVP follow-up.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

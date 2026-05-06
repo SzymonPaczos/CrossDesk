@@ -423,6 +423,49 @@ version anything — we are above that bar.
   on mismatch even if not refusing connection (e.g., when an
   experimental flag is missing).
 
+## Distribution & packaging
+
+Five formats: deb, rpm, AUR, NixOS flake, PyPI. Skipping Flatpak
+/AppImage/Snap/OCI (sandbox conflicts or no value-add). See
+`docs/PACKAGING.md` for the strategy and `docs/DECISIONS.md`
+DEC-0008 for the architectural commitment.
+
+`agent.exe` (Rust cross-compiled) ships bundled inside each Linux
+package. Sigstore-signed initially; EV cert future.
+
+- **[P0] AUR PKGBUILD published.** `crossdesk` package on AUR.
+  Initial maintenance by us; expect community takeover. Lowest-
+  effort first release path for technical users.
+- **[P0] PyPI wheel for `crossdesk-host`.** Host module installable
+  via `pip install --user crossdesk-host`. Useful for developers
+  and headless setups. Wheel does not include `agent.exe` or the
+  GUI — those are in distro packages.
+- **[P0] NixOS flake outputs.** `flake.nix` at repo root with
+  `crossdesk` and `crossdesk-gui` derivations. Reference
+  `third_party/winapps/flake.nix` for pattern.
+- **[P0] CI release matrix on tag.** GitHub Actions builds
+  `agent.exe` (always cross-rs), signs with Sigstore, packages
+  per-format, uploads to GitHub Releases.
+- **[P1] `deb` package + apt repo.** `dh-virtualenv` or `fpm`
+  packaging. Repo at `https://repo.crossdesk.dev/deb/` (or
+  similar) with apt source line documented in install docs.
+  GPG-signed.
+- **[P1] `rpm` package + Copr/OBS repos.** Fedora Copr (free,
+  automated) for Fedora; openSUSE OBS for openSUSE. RPM signing
+  via OBS or a self-hosted key.
+- **[P1] Sigstore signing for `agent.exe`.** Wired into release
+  CI. Public verification key on download page. Documented in
+  install docs ("how to verify your CrossDesk download").
+- **[P2] Update mechanism docs per distro.** README install
+  section explains `apt update`, `dnf upgrade`, `yay -Sua`, etc.
+  Distinct from `crossdesk upgrade` which is about the in-VM
+  agent.
+- **[P2] Distribution-time GPG signing for deb/rpm.** Release key
+  stored offline.
+- **[P2] Community documentation for adding new distros.** Gentoo
+  ebuild template, SBo build script template. We won't ship
+  these but we make it easy for community members to.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

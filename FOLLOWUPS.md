@@ -335,6 +335,45 @@ when `DEBUG=on` — we are doing materially more.
   `launch_duration_seconds` histograms. Tied to perf-budgets
   work.
 
+## Performance budgets — enforcement
+
+The budgets themselves are in `docs/REQUIREMENTS.md` §N1; the
+architectural commitment is in `docs/DECISIONS.md` DEC-0004.
+This section is about *enforcement* — the benchmark harness,
+CI integration, regression detection. See `docs/PERFORMANCE.md`
+for the full strategy.
+
+WinApps and Cassowary publish no SLOs and run no benchmarks. Our
+positioning depends on enforcing what we promise.
+
+- **[P0] `pytest-benchmark` and `criterion` harness configured.**
+  `host/benches/` (Python) and `guest/benches/` (Rust). One bench
+  file per N1.* metric (stubs OK initially). Naming convention:
+  `bench_N1_X_Y_<metric_name>`.
+- **[P0] `bench_check.py` tool.** Loads baseline file
+  (`.github/perf-baselines.json`), compares JSON-format bench
+  results to baselines, fails if any metric regresses by >20%.
+- **[P0] CI job `microbench` on every PR.** Runs Python and Rust
+  microbenches, invokes `bench_check.py`, posts a PR comment
+  summarizing improvements and regressions above noise threshold.
+- **[P0] Initial baselines committed.** First measurements in
+  `.github/perf-baselines.json`. Updates require dedicated
+  `perf: update baselines` PRs with measurement evidence.
+- **[P1] Integration benchmarks.** `host/tests/benchmarks/`:
+  `bench_install_pipeline.py`, `bench_cold_launch_lightweight.py`
+  (N1.1a), `bench_recovery_destroy_start.py` (N1.6a). Slower;
+  gated by PR label `perf-full`. Run on main-branch nightly.
+- **[P1] `tools/bench_report.py`.** Aggregates results across
+  runs into a markdown table for release notes.
+- **[P1] PR comment automation.** GitHub Action post-comment with
+  the perf table.
+- **[P2] Self-hosted KVM runner with `hardware-smoke` workflow.**
+  Real-hardware numbers gated by PR label and hardware
+  availability. Runner doesn't exist yet; wire workflow file
+  ready.
+- **[P2] Trend analysis** (weekly metric summary over time).
+  Lower priority — useful once we have months of history.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

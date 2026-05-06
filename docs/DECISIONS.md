@@ -7,6 +7,78 @@ delete history.
 
 ---
 
+## DEC-0006: Structured logging and trace propagation from day one
+
+**Status:** Accepted — 2026-05-07
+**Owner:** every component that logs
+**Related:** `docs/OBSERVABILITY.md`; `docs/DECISIONS.md` DEC-0002
+(zero telemetry); `docs/REQUIREMENTS.md` N5
+
+### Context
+
+Every audit and bug report starts with logs. If logs are
+unstructured text, support time scales linearly with log volume.
+If logs are JSON with a propagated trace ID, support time is
+constant: filter to the trace, read the events.
+
+Retrofitting structured logging into a project is a refactor of
+every print statement and a re-think of every error path. Doing
+it from day one costs a few hours of setup and a discipline of
+"don't add `print()`."
+
+### Decision
+
+From day one of CrossDesk implementation:
+
+1. **Python** uses `structlog` configured to emit JSON Lines with
+   mandatory fields (`timestamp`, `level`, `component`, `trace_id`,
+   `span_id`, `event`).
+2. **Rust** uses the `tracing` crate with `tracing-subscriber` JSON
+   formatter and `tracing-opentelemetry` for trace export.
+3. **Trace IDs** propagate via gRPC metadata using W3C Trace
+   Context. Every CLI command starts a root trace. Every gRPC call
+   (host↔guest) carries the trace.
+4. **Allow-list redaction** for any field with `password`, `secret`,
+   `token`, etc. in its name. Tests fail if a non-allowed field is
+   logged.
+5. **No `print()`** in merged code. Linter catches it (Ruff
+   `T201`).
+6. **Logs land on local disk only.** Optional OTLP exporter is
+   opt-in (per DEC-0002).
+
+### Alternatives considered
+
+- **Unstructured `logging.info(...)`.** Free initially, expensive
+  forever. Rejected.
+- **Wait until we have integration testing pain, then refactor.**
+  Always slips later than expected. Rejected.
+- **Sentry / external crash reporting.** Conflicts with
+  DEC-0002. Rejected.
+
+### Consequences
+
+- (+) Bug reports become tractable: ask user for
+  `crossdesk logs --trace-id ABC...`.
+- (+) Trace propagation means a single ID covers a user action
+  end-to-end, including across the host↔guest boundary.
+- (+) Redaction allow-list catches accidental secret logging at
+  test time.
+- (−) Every log statement requires choosing a structured event
+  name and field set. Slightly more code than `print()`.
+- (−) `tracing` and `structlog` are dependencies that must be
+  configured early; getting it wrong (e.g., wrong JSON shape
+  initially) is a small but real refactor cost.
+
+### Reconsider when
+
+- A new logging library appears with materially better ergonomics
+  *and* the same structured-output discipline. Migration cost
+  weighed against benefit.
+- A user-visible regression is traced to logging overhead (very
+  unlikely; structlog/tracing are fast).
+
+---
+
 ## DEC-0005: Mock-driven testing as architectural foundation
 
 **Status:** Accepted — 2026-05-07

@@ -272,6 +272,69 @@ strategy and per-peripheral notes.
   describing what the guest can do with the channel and what's
   default-off.
 
+## Observability — structured logs, traces, metrics
+
+Every component emits JSON-shaped events with W3C Trace Context
+propagation across the host↔guest boundary. In-memory metrics
+exposed via gRPC RPC. No automatic upload, opt-in OTLP exporter.
+See `docs/OBSERVABILITY.md` for the full strategy and
+`docs/DECISIONS.md` DEC-0006 for the architectural commitment.
+WinApps logs are an unstructured `winapps.log` file with `echo`
+when `DEBUG=on` — we are doing materially more.
+
+- **[P0] `structlog` (Python) and `tracing` (Rust) JSON-output
+  configuration.** Single facade module per language:
+  `host/src/crossdesk_host/observability/log.py` and
+  `guest/crates/observability/src/lib.rs`. JSON Lines schema with
+  mandatory fields (`timestamp`, `level`, `component`, `trace_id`,
+  `span_id`, `event`). Used by every other module.
+- **[P0] Trace ID propagation via gRPC metadata.** W3C Trace
+  Context (`traceparent` field). CLI commands generate fresh root
+  trace ID; gRPC servicers extract and propagate; guest tags
+  `RailWindowEvent` and other emitted events with the originating
+  trace.
+- **[P0] Redaction allow-list enforced by lint + test.** Frozen
+  list of allowed field names in
+  `host/src/crossdesk_host/observability/redaction.py` and
+  guest equivalent. Logging non-allowed field raises in tests/dev,
+  silently drops in production. Forbidden patterns: `password`,
+  `secret`, `token`, `clipboard_content`, full file paths, raw
+  AuthContext fingerprints.
+- **[P0] In-memory metrics: counters, histograms, gauges.** Use
+  `hdrhistogram` (Python) and `hdrhistogram-rs` (Rust). Lives in
+  `host/src/crossdesk_host/observability/metrics.py`. Counters
+  for `launches_total`, `heartbeat_misses_total`,
+  `mount_attaches_total`, `auth_context_rejections_total`.
+  Histograms for `heartbeat_rtt_seconds`, `launch_duration_seconds`,
+  `mount_lifetime_seconds`. Gauges for `vm_state`,
+  `current_mounts`, `host_rss_bytes`.
+- **[P0] `ControlService.GetMetrics` RPC.** Returns a snapshot
+  of metrics state. Used by `crossdesk metrics` CLI and the
+  microbench harness.
+- **[P0] `print()` lint rule.** Ruff `T201` enabled in
+  `pyproject.toml`. Rust equivalent (clippy `print_stdout`,
+  `print_stderr`) in workspace lints.
+- **[P1] `crossdesk metrics` CLI command.** Calls the RPC, prints
+  human-readable summary or `--json`. Covers heartbeat RTT
+  histogram, launch latency by app class, current FSM state.
+- **[P1] Per-component span coverage.** Audit every module for
+  span instrumentation. `host.installer.*`, `host.watchdog.*`,
+  `host.ipc.*`, `host.libvirt.*`, `host.display.*`,
+  `host.filesystem.*`, `host.credentials.*`, plus mirror set on
+  guest.
+- **[P1] OTLP exporter (opt-in).** Reads
+  `observability.otlp_endpoint` from config. Off by default per
+  DEC-0002. Enables users with their own observability stack
+  (Jaeger, Tempo, Honeycomb) to plug in.
+- **[P2] Optional Prometheus exporter (community).** A small
+  script that polls `GetMetrics` and exposes a `/metrics` HTTP
+  endpoint. Out of core; document the contract for community
+  contribution.
+- **[P2] Microbench harness reads from histograms.** Performance
+  regression checks in CI consume `heartbeat_rtt_seconds` and
+  `launch_duration_seconds` histograms. Tied to perf-budgets
+  work.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

@@ -214,6 +214,64 @@ decision.
   unsupported. ~3-4 weeks Tier 1 work. Recommended slot: Phase 4.5
   / first major post-MVP follow-up.
 
+## Peripherals & host integration
+
+Audio, clipboard, drag-and-drop, microphone, camera, smart cards,
+FIDO2, printers, USB. Default-off opt-in for anything crossing the
+trust boundary; typed config in `~/.config/crossdesk/peripherals.toml`
+mapping to FreeRDP flags + libvirt XML in our host code. WinApps
+exposes none of this as typed config — they put raw FreeRDP flag
+strings in their config file. See `docs/PERIPHERALS.md` for the
+strategy and per-peripheral notes.
+
+- **[P0] Typed config schema for peripherals.** Pydantic model in
+  `host/src/crossdesk_host/config/peripherals.py`. Validates
+  `~/.config/crossdesk/peripherals.toml` at startup. Maps each
+  enabled item to FreeRDP flags + libvirt XML adjustments at VM
+  start. Default-off for everything that crosses the trust
+  boundary; audio default playback-only; clipboard default
+  text-only.
+- **[P1] Audio with PipeWire per-app tagging.** FreeRDP
+  `/sound:sys:pipewire` (or pulse fallback). Tag each RAIL session's
+  audio stream with `PA_PROP_APPLICATION_NAME` so per-window apps
+  show as separate streams in `pavucontrol`/`wpctl`. Used by Word,
+  Outlook, Spotify-on-Windows, etc.
+- **[P1] Clipboard rich-content mode with file-list translation.**
+  FreeRDP `+clipboard` with extended formats. In rich mode,
+  intercept FORMAT_FILELIST going guest→host and translate UNC
+  paths to local equivalents (similar to launch-time path
+  translation). In text-only mode, drop FILELIST entries. Off
+  default mode = isolation.
+- **[P1] Drag-and-drop host-to-guest.** Host compositor initiates
+  drag; FreeRDP RAIL receives drop event with FORMAT_FILELIST;
+  Windows app opens the file via translated path. Direction limited
+  to host→guest; guest→host out of scope.
+- **[P1] Microphone (extends audio).** FreeRDP `/microphone:sys:pulse`
+  or pipewire. Default off; opt-in per VM via typed config.
+- **[P1] Printer redirection via CUPS.** FreeRDP `/printer:CUPS`.
+  Mode `auto` forwards all CUPS printers; mode
+  `named:<printer-name>` forwards just one. Document Easy Print
+  quality caveats (duplex, color may not survive round-trip).
+- **[P2] Smart card / PCSC-Lite passthrough.** FreeRDP `/smartcard`
+  with `pcscd` host package. Required for corporate workflows
+  (banking PKI, government auth). Document host-side `libccid` etc.
+  setup.
+- **[P2] USB allow-list with libudev hotplug.** Host-side libudev
+  watcher attaches/detaches USB devices to the VM via libvirt
+  `virsh attach-device` based on vendor:product allow-list in
+  config. Default `deny-all`.
+- **[P2] Camera USB passthrough.** Default path: pass entire USB
+  webcam to VM via libvirt `<hostdev>`. Document virtual-webcam
+  alternative (`obs-v4l2sink`) for users wanting host+guest shared
+  access.
+- **[P2] FIDO2 best-effort documentation.** No native FreeRDP
+  channel; users rely on USB passthrough of HID device. Document
+  the procedure; don't promise first-class support.
+- **[P2] Threat-model rows for each peripheral.** Update
+  `docs/THREAT_MODEL.md` with one row per enabled peripheral
+  describing what the guest can do with the channel and what's
+  default-off.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

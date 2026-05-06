@@ -466,6 +466,59 @@ package. Sigstore-signed initially; EV cert future.
   ebuild template, SBo build script template. We won't ship
   these but we make it easy for community members to.
 
+## Lifecycle: power, suspend/resume, autostart
+
+Coordinated handling of host suspend / resume / shutdown so the
+heartbeat FSM doesn't false-positive HARD_DESTROY a perfectly fine
+VM that's just paused along with the host. systemd user service
+for the host process. Optional VM autostart on login. WinApps's
+TimeSync.ps1 marker-file polling is reactive and addresses only
+clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
+
+- **[P0] D-Bus listener for power events.** `dbus-next` listener
+  on the host process's asyncio loop, subscribed to
+  `org.freedesktop.login1.Session.PrepareForSleep` (true/false)
+  and `org.freedesktop.login1.Session.PrepareForShutdown`
+  (true/false). Lives in `host/src/crossdesk_host/lifecycle/`.
+- **[P0] FSM `SUSPENDED` state with proper transitions.** Extends
+  the heartbeat FSM (Phase 3) with a `SUSPENDED` state entered
+  from any prior state on suspend signal. While in `SUSPENDED`,
+  missed heartbeats are ignored. Exit on resume with grace period.
+- **[P0] Suspend handler.** Sequence: pause FSM → quiesce
+  in-flight RPCs → `virsh suspend` → release D-Bus inhibitor.
+  Time budget 1-2 s.
+- **[P0] Resume handler.** Sequence: `virsh resume` →
+  `virsh domtime --sync` (or our agent's TimeSync RPC) →
+  AuthContext re-handshake (stream_nonce/sequence may have
+  rolled) → FSM exits `SUSPENDED` → `PROBING` for ~10 s grace
+  period.
+- **[P0] systemd user service unit.** `crossdesk-host.service`
+  shipped in distro packages: `After=graphical-session.target`,
+  `PartOf=graphical-session.target`, `Wants=dbus.socket`,
+  `Type=notify`, `Restart=on-failure`. Enabled per-user via
+  `systemctl --user enable crossdesk-host`.
+- **[P1] Shutdown handler.** `virsh shutdown` (ACPI graceful)
+  with N-second timeout, fallback to `virsh destroy`. Persist
+  install state. Release inhibitor. Default timeout 30 s.
+- **[P1] Autopause × balloon × heartbeat coordination.** Single
+  supervisor in `lifecycle/` owns FSM state across all three
+  mechanisms. Autopause uses the same `SUSPENDED` state path as
+  D-Bus suspend. Balloon adjustments are tolerated by the FSM
+  (brief RTT spikes don't trigger PROBING).
+- **[P1] VM autostart on login (opt-in).** `crossdesk install
+  --autostart` and `crossdesk vm autostart enable|disable`.
+  Default off. When enabled: host starts VM at session start.
+- **[P1] "Missed PrepareForSleep" heuristic detector.** If
+  heartbeat goes healthy → 10 misses → healthy in <30 s,
+  downgrade SOFT_RECOVERY trigger to a warning. Catches
+  configurations where D-Bus signal isn't emitted.
+- **[P2] Hibernation-aware handling.** Detect "resumed after
+  long absence" (e.g., wall-clock jump >1 hour); force more
+  aggressive AuthContext resync.
+- **[P2] Power profile docs.** User-facing docs covering laptop
+  battery-saver / lid-close-suspend policy interactions, with
+  recommended `crossdesk` configuration per scenario.
+
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
 - **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:

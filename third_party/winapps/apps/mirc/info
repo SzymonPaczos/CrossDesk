@@ -1,0 +1,17 @@
+# GNOME shortcut name
+NAME="mIRC"
+
+# Used for descriptions and window class
+FULL_NAME="mIRC"
+
+# The executable inside windows
+WIN_EXECUTABLE="C:\Program Files (x86)\mIRC\mirc.exe"
+
+# GNOME categories
+CATEGORIES="WinApps;Network;IRCclient;"
+
+# GNOME mimetypes
+MIME_TYPES=""
+
+# System Icon
+ICON="mIRC"

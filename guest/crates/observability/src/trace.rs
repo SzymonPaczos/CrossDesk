@@ -96,6 +96,11 @@ pub fn inject_into_metadata(metadata: &mut MetadataMap, ctx: &TraceContext) {
 /// stream has a stable trace ID for its lifetime; callers usually
 /// generate the context with `generate_root()` and clone it across
 /// the planes that share a single trace.
+///
+/// The `result_large_err` clippy is silenced because the return type
+/// is dictated by tonic's interceptor signature — `tonic::Status` is
+/// ~176 bytes and we cannot box it without breaking the API contract.
+#[allow(clippy::result_large_err)]
 pub fn inject_interceptor(
     ctx: TraceContext,
 ) -> impl FnMut(tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> + Clone {

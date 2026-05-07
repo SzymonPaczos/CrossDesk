@@ -17,7 +17,7 @@ prost-types = "0.13"
 windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading", "Win32_System_SystemInformation"] }
 anyhow  = "1"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["fmt", "json"] }
+tracing-subscriber = { version = "0.3", features = ["fmt", "json", "env-filter"] }
 hdrhistogram = "7"
 
 # Lean dev profile to keep target/ disk usage manageable.

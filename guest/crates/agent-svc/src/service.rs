@@ -15,47 +15,17 @@ use windows_service::{
     service_dispatcher,
 };
 
-use ipc_vsock::client::AuthCarrier;
-use ipc_vsock::tls::{fingerprint_sha256, TlsMaterial};
-use proto::crossdesk::v1::control_service_client::ControlServiceClient;
-use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
-use proto::crossdesk::v1::heartbeat_service_client::HeartbeatServiceClient;
+use crate::planes;
 
 pub const SERVICE_NAME: &str = "CrossDeskAgent";
 
-const DEFAULT_AGENT_DIR: &str = r"C:\CrossDesk";
 const DEFAULT_LOG_FILE: &str = "agent.log";
-const DEFAULT_PKI_SUBDIR: &str = "pki";
-
-/// Production target is `vsock://2:50051` once the AF_HYPERV connector lands;
-/// the TCP form is what `qemu -net user` portfwd exposes during development.
-const DEFAULT_HOST_ENDPOINT: &str = "http://127.0.0.1:50051";
-
-const ENV_AGENT_DIR: &str = "CROSSDESK_AGENT_DIR";
 const ENV_LOG_PATH: &str = "CROSSDESK_LOG_PATH";
-const ENV_PKI_DIR: &str = "CROSSDESK_PKI_DIR";
-const ENV_HOST_ENDPOINT: &str = "CROSSDESK_HOST_ENDPOINT";
-
-fn agent_dir() -> PathBuf {
-    std::env::var_os(ENV_AGENT_DIR)
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(DEFAULT_AGENT_DIR))
-}
 
 fn log_path() -> PathBuf {
     std::env::var_os(ENV_LOG_PATH)
         .map(PathBuf::from)
-        .unwrap_or_else(|| agent_dir().join(DEFAULT_LOG_FILE))
-}
-
-fn pki_dir() -> PathBuf {
-    std::env::var_os(ENV_PKI_DIR)
-        .map(PathBuf::from)
-        .unwrap_or_else(|| agent_dir().join(DEFAULT_PKI_SUBDIR))
-}
-
-fn host_endpoint() -> String {
-    std::env::var(ENV_HOST_ENDPOINT).unwrap_or_else(|_| DEFAULT_HOST_ENDPOINT.to_string())
+        .unwrap_or_else(|| planes::agent_dir().join(DEFAULT_LOG_FILE))
 }
 
 define_windows_service!(ffi_service_main, service_main);
@@ -105,7 +75,7 @@ pub fn run_service() -> anyhow::Result<()> {
     let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
 
     rt.spawn(async {
-        if let Err(e) = run_agent_planes().await {
+        if let Err(e) = planes::run().await {
             append_log(&format!("agent planes terminated: {e:#}"));
         }
     });
@@ -128,54 +98,6 @@ pub fn run_service() -> anyhow::Result<()> {
         process_id: None,
     })?;
 
-    Ok(())
-}
-
-/// Top-level driver for the three CrossDesk service planes.
-///
-/// All three share one TLS-secured gRPC channel and one AuthCarrier (sequence
-/// state is per-plane in proto, but the fingerprint+nonce are identical for
-/// the lifetime of this connection).
-async fn run_agent_planes() -> anyhow::Result<()> {
-    let pki_path = pki_dir();
-    let pki = TlsMaterial::from_dir(&pki_path)?;
-    // The fingerprint stamped onto every outgoing AuthContext is the host
-    // cert's — AuthValidator on the other side compares it against the
-    // TLS-extracted leaf.
-    let host_cert_pem = std::fs::read(pki_path.join("host.crt"))?;
-    let host_fp = fingerprint_sha256(&host_cert_pem)?;
-
-    let channel = ipc_vsock::channel::connect(
-        &pki.ca_pem,
-        &pki.cert_pem,
-        &pki.key_pem,
-        host_endpoint(),
-    )
-    .await?;
-
-    let auth = AuthCarrier::new(host_fp);
-
-    let session_handle = tokio::spawn(crate::session::run_control_session(
-        ControlServiceClient::new(channel.clone()),
-        auth.clone(),
-    ));
-    let heartbeat_handle = tokio::spawn(crate::heartbeat::run_heartbeat_loop(
-        HeartbeatServiceClient::new(channel.clone()),
-        auth.clone(),
-    ));
-    let filesystem_handle = tokio::spawn(crate::filesystem::run_filesystem_channel(
-        FilesystemServiceClient::new(channel),
-        auth,
-    ));
-
-    // First plane to die brings the rest down — they all sit on the same
-    // gRPC channel so failure is correlated. SCM stop signal is observed
-    // separately in run_service.
-    tokio::select! {
-        r = session_handle    => r??,
-        r = heartbeat_handle  => r??,
-        r = filesystem_handle => r??,
-    };
     Ok(())
 }
 

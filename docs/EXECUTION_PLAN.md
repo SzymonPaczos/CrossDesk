@@ -52,7 +52,7 @@ Source: *Cross-platform development & testing scaffold (URGENT)* in FOLLOWUPS.
 Items:
 - ✅ **[P0] Cross-compile pipeline working from macOS (native MinGW).** `brew install mingw-w64` + `rustup target add x86_64-pc-windows-gnu` + `cargo build --target x86_64-pc-windows-gnu` from `guest/`. Produces a working `agent.exe` PE32+ binary on Apple Silicon. Cross-rs end-to-end build is a known follow-up (P1 in FOLLOWUPS) — proto-IDL path lives outside the workspace mount cross-rs creates.
 - ✅ **[P0] Transport abstraction** (DEC-0005). `tower::Service<Uri>` is the trait surface. `RealTransport` (TCP loopback today, AF_HYPERV later) and `MockTransport` (TCP loopback + failure-injection hooks, gated `#[cfg(any(test, feature="mock"))]`) both implement it. `channel::connect` uses `RealTransport`; tests use `connect_with_transport(...)` to inject mocks. Python mirror in `host/src/crossdesk_host/abstractions/transport.py` (`Transport` Protocol) + `transport/real.py` + `transport/mock.py`. `daemon.py` migrated; `ipc/server.py` kept as backwards-compat shim. Unit tests for both mocks.
-- **[P0] Initial CI green.** Get `.github/workflows/ci.yml` passing on macOS + Ubuntu. Disable any failing checks via `continue-on-error: true` initially; track in FOLLOWUPS.
+- ✅ **[P0] Initial CI green.** All `cargo` jobs (check + test + clippy `-D warnings`) on macOS + Ubuntu run strict; mypy `--strict` and pytest run strict; GUI `cargo check` runs strict (cxx-qt 0.7 deps verified locally). Only `buf lint`/`format` remain tolerated (`|| true`) until `proto/buf.yaml` rules are finalised — tracked in FOLLOWUPS.
 
 **Depends on:** Phase 0 done.
 **Acceptance:**

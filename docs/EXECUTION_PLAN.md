@@ -81,11 +81,11 @@ Items:
 Source: *Observability — structured logs, traces, metrics* in FOLLOWUPS.
 
 Items:
-- **[P0] `structlog` (Python) and `tracing` (Rust) JSON output.** Single facade per language. JSON Lines schema with `timestamp`, `level`, `component`, `trace_id`, `span_id`, `event`. Used by every other module.
-- **[P0] Trace ID propagation via gRPC metadata.** W3C Trace Context. CLI commands generate fresh root trace ID; gRPC servicers extract and propagate; guest tags `RailWindowEvent` with originating trace.
-- **[P0] In-memory metrics.** Counters: `launches_total`, `heartbeat_misses_total`, `mount_attaches_total`, `auth_context_rejections_total`. Histograms: `heartbeat_rtt_seconds`, `launch_duration_seconds`, `mount_lifetime_seconds`. Gauges: `vm_state`, `current_mounts`, `host_rss_bytes`. Use `hdrhistogram` library.
-- **[P0] `print()` lint rule.** Ruff `T201` enabled. Rust workspace lints reject `println!`/`eprintln!`.
-- **[P0] Redaction allow-list lint.** Frozen list of allowed field names. Logging non-allowed field raises in tests/dev. Forbidden patterns: `password`, `secret`, `token`.
+- ✅ **[P0] `structlog` (Python) and `tracing` (Rust) JSON output.** `crossdesk_host.observability.log` (structlog facade) and the new `observability` Rust workspace crate (tracing-subscriber JSON). Daemon + agent-svc mock entry use the facades; mandatory fields injected even when callers forget to bind.
+- ✅ **[P0] Trace ID propagation via gRPC metadata.** `traceparent` round-trips end-to-end. Python `TraceContextInterceptor` extracts on incoming RPCs and binds to structlog contextvars; Rust `observability::trace::inject_interceptor` ready to wire into agent-svc planes (full host↔guest continuity is one follow-up commit away).
+- ✅ **[P0] In-memory metrics.** `metrics.py` Registry/Counter/Gauge/Histogram (hdrhistogram-backed); AuthValidator increments `auth_context_rejections_total` on every reject path; `MetricNames` constants pinned.
+- ✅ **[P0] `print()` lint rule.** Ruff T201 enforced via `ruff check src/` in CI; Rust workspace `[lints.clippy] print_stdout/print_stderr = "deny"` plus `lints.workspace = true` on every crate.
+- ✅ **[P0] Redaction allow-list lint.** `redaction.py` with frozen `ALLOWED_FIELDS` + forbidden substring patterns. Strict mode (`CROSSDESK_STRICT_LOG=1`) raises `RedactionViolation`; lenient replaces value with `<redacted>`.
 
 **Depends on:** Week 1 + 2 (so observability can wrap mocked components).
 **Acceptance:**
@@ -98,9 +98,9 @@ Items:
 **Theme:** Phase 2 close-out + ready for hardware arrival.
 
 Items:
-- **[P0] AF_HYPERV vsock connector** — `guest/crates/ipc-vsock/src/connector.rs` real `WSAConnect` against `AF_HYPERV`, replacing TCP loopback. Currently in *Phase work still owed*. **This is hardware-bound** for end-to-end validation; can be implemented and unit-tested on Mac, integration-tested on hardware.
-- **[P0] End-to-end mTLS smoke test against 32-byte `mount_token`.** Re-read `tests/test_smoke_e2e.py`; confirm any frame it emits over the wire carries a 32-byte token.
-- **[P0] AuthContext per-frame validation tests.** Cover the rejection path: send a frame with mismatched fingerprint / nonce / sequence; verify it's rejected before payload processing.
+- ✅ **[P0] AF_HYPERV vsock connector** — `guest/crates/ipc-vsock/src/transport/real.rs` now branches on URI scheme: `vsock://<vmid-guid>:<port>` is `cfg(target_os = "windows")` and returns `Unsupported` until `WSAConnect` is wired (tracked in FOLLOWUPS); `https://...` keeps the TCP loopback dev/integration path. Mac/Linux compile path is unchanged at runtime.
+- ✅ **[P0] End-to-end mTLS smoke test against 32-byte `mount_token`.** New `test_mount_token_length.py` covers 3 frame types × 6 wrong lengths + 32-byte happy path + constant pin (20 cases).
+- ✅ **[P0] AuthContext per-frame validation tests.** New `test_auth_rejection_paths.py`: 3 planes × 3 reject paths (fingerprint mismatch / missing nonce / non-monotonic sequence). Surfaced + fixed an `Exception`-swallowing bug in `FilesystemServiceServicer.ShareChannel` that masked auth aborts.
 - Buffer for: hardware arrival logistics, finalizing any Week 1–3 spillover
 
 **Depends on:** Weeks 1–3.

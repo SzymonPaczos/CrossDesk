@@ -7,14 +7,16 @@ except ImportError:
 
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.ipc.control import ControlServiceServicer
-from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
+from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging, get_logger
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
-from crossdesk_host.proto.crossdesk.v1 import control_pb2_grpc
-from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2_grpc
-from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
+from crossdesk_host.proto.crossdesk.v1 import (
+    control_pb2_grpc,
+    filesystem_pb2_grpc,
+    heartbeat_pb2_grpc,
+)
 from crossdesk_host.transport.real import RealTransport
 
 configure_logging()

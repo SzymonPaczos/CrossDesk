@@ -11,6 +11,7 @@ from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging, get_logger
+from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
 from crossdesk_host.proto.crossdesk.v1 import control_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
@@ -30,7 +31,13 @@ async def main() -> None:
     libvirt_ctl = LibvirtControllerMock()
 
     transport = RealTransport()
-    server = transport.create_server(ca_cert, host_cert, host_key, port=50051)
+    server = transport.create_server(
+        ca_cert,
+        host_cert,
+        host_key,
+        port=50051,
+        interceptors=[TraceContextInterceptor()],
+    )
 
     control_pb2_grpc.add_ControlServiceServicer_to_server(
         ControlServiceServicer(auth_validator), server

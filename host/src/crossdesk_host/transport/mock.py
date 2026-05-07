@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import Sequence
 
 import grpc
 
@@ -50,12 +51,15 @@ class MockTransport(Transport):
         host_cert_pem: bytes,
         host_key_pem: bytes,
         port: int,
+        interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
     ) -> grpc.aio.Server:
         if self.hooks.fail_next_bind:
             self.hooks.fail_next_bind = False
             raise RuntimeError("mock-injected bind failure")
 
-        server = grpc.aio.server()
+        server = grpc.aio.server(
+            interceptors=tuple(interceptors) if interceptors else None
+        )
         server_credentials = grpc.ssl_server_credentials(
             [(host_key_pem, host_cert_pem)],
             root_certificates=ca_cert_pem,

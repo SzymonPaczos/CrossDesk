@@ -16,7 +16,7 @@ divergences are:
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Sequence, runtime_checkable
 
 import grpc
 
@@ -37,8 +37,14 @@ class Transport(Protocol):
         host_cert_pem: bytes,
         host_key_pem: bytes,
         port: int,
+        interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
     ) -> grpc.aio.Server:
         """Build a secure gRPC server bound to a transport-specific endpoint.
+
+        ``interceptors`` are wired into the gRPC server before any
+        servicer is registered — used for cross-cutting concerns
+        (W3C Trace Context extraction, redaction enforcement,
+        metrics) per DEC-0006.
 
         Raises ``RuntimeError`` if the bind fails — production paths must
         not silently fall back to a less-isolated transport (Linux refusing

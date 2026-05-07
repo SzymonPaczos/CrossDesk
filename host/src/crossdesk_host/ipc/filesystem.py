@@ -6,8 +6,8 @@ import uuid
 import grpc
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
+from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
-from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from google.protobuf.duration_pb2 import Duration
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ MOUNT_TOKEN_LEN = 32
 
 
 class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
-    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtControllerMock):
+    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtController):
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
         self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = asyncio.Queue()

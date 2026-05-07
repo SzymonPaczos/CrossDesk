@@ -6,13 +6,13 @@ import grpc
 
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2_grpc
+from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
-from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 
 logger = logging.getLogger(__name__)
 
 class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
-    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtControllerMock):
+    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtController):
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
 

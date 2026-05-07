@@ -65,7 +65,7 @@ Items:
 **Theme:** Mock infrastructure — libvirt + FreeRDP + integration harness.
 
 Items:
-- **[P0] Libvirt client abstraction.** Protocol in `host/src/crossdesk_host/abstractions/libvirt.py`. Real implementation wraps `libvirt-python`; mock returns canned XML, accepts lifecycle commands as no-ops. Hooks like `MockLibvirt(simulate_start_failure=True)`. Migrate `infra/launch-vm.py` and `host/.../watchdog/` to the abstraction.
+- ✅ **[P0] Libvirt client abstraction.** `LibvirtController` Protocol in `host/src/crossdesk_host/abstractions/libvirt.py`. `RealLibvirtController` (Linux: wraps `libvirt-python`, lazy connect) and `LibvirtControllerMock` (in-memory state + per-method failure-injection hooks + share-tracking set) both implement it. `ipc/heartbeat.py` and `ipc/filesystem.py` consumers migrated to the Protocol type. Mock unit tests cover hooks + idempotent attach/detach. `infra/launch-vm.py` is plain qemu subprocess today (no libvirt yet) — migration deferred until install pipeline (Week 14).
 - **[P0] FreeRDP invocation abstraction.** Protocol in `host/src/crossdesk_host/abstractions/freerdp.py`. Real spawns subprocess; mock records argv to a list and returns a fake `RAILSession`. Used in (planned) `host/.../display/rail_manager.py`.
 - **[P0] In-process integration test harness.** `host/tests/test_smoke_inprocess.py` drives Python host + spawned Rust guest (via `cargo run --features mock`) over `MockTransport`, exercising `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)` end-to-end.
 

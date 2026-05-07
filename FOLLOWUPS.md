@@ -156,11 +156,16 @@ DEC-0005 for the architectural commitment.
   against the Protocol. `infra/launch-vm.py` is still plain qemu
   subprocess (no libvirt) — migration deferred to Week 14 install
   pipeline.
-- **[P0] FreeRDP invocation abstraction.** Protocol in
-  `host/src/crossdesk_host/abstractions/freerdp.py`. Real impl
-  spawns `xfreerdp` subprocess; mock records argv to a list and
-  returns a fake `RAILSession` object. Used in
-  `host/.../display/rail_manager.py` (when Phase 4 lands).
+- **[✅ DONE 2026-05-08] FreeRDP invocation abstraction.**
+  `FreeRDPInvocation` Protocol with `spawn_rail(argv) -> RailSession`,
+  `terminate(session)`, `is_alive(session)`. Real impl spawns the
+  first binary that resolves on PATH from the chain `xfreerdp` →
+  `xfreerdp3` → `sdl-freerdp3` → `sdl3-freerdp` → `flatpak run
+  com.freerdp.FreeRDP`. Mock impl records argv to
+  `hooks.spawned_argvs` (list of lists), synthesises sequential
+  pids, and exposes `fail_next_spawn` failure injection. Wiring
+  into `rail_manager.py` lands with Phase 4 RAIL command
+  construction (Week 8).
 - **[P0] In-process integration test harness.** Test that drives
   Python host + spawned Rust guest (via `cargo run --features
   mock`) over `MockTransport`, exercising

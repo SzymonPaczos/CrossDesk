@@ -53,10 +53,14 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
                     continue
                 yield frame
         finally:
+            # Cancel the consumer if it's still running; surface any
+            # other exception (e.g. AuthValidator's AbortError) so the
+            # gRPC layer reports the rejection upstream. Pre-fix this
+            # `except Exception: pass` swallowed auth aborts silently.
             consumer_task.cancel()
             try:
                 await consumer_task
-            except (asyncio.CancelledError, Exception):
+            except asyncio.CancelledError:
                 pass
             logger.info(f"[{peer_identity}] Filesystem channel closed")
 

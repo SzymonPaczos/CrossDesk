@@ -63,6 +63,20 @@ class FakeServicerContext:
     def peer(self) -> str:
         return "ipv4:127.0.0.1:0"
 
+    def cancelled(self) -> bool:
+        # Public grpc-python API equivalent to the older private
+        # `core_context.aborted()`. FilesystemService's producer
+        # loop polls this to learn whether the stream was killed
+        # by a downstream abort.
+        return self.aborted
+
+    def invocation_metadata(self) -> tuple[tuple[str, str], ...]:
+        # Empty metadata is fine for the rejection-path tests; the
+        # TraceContextInterceptor only reads `traceparent`, which
+        # these tests don't set. Returning an empty tuple keeps
+        # `extract_from_metadata` happy.
+        return ()
+
     @property
     def core_context(self) -> "_CoreContextShim":
         # Real grpc.aio.ServicerContext exposes a `core_context` with an

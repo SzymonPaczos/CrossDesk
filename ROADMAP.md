@@ -18,3 +18,8 @@ Faza 5 — JIT VirtioFS + ReleaseAck Protocol
 Fundament: minimal-path share → libvirt hot-plug → Guest mount → ReleaseAck → detach
 Dowód: kliknięcie pliku w Linux → share widoczny tylko dla tego procesu → zamknięcie app → LockReport (0 handles) → ReleaseAck → virsh detach-device; path traversal blokowany
 SPOF: handshake ReleaseAck — detach przed flushem = corrupt write; brak ReleaseAck = permanentny leak share'a (łamie inwariant "NIE permanentny mount")
+Faza 4.5 — GPU passthrough (post-MVP P0; decyzja: docs/DECISIONS.md DEC-0009)
+Fundament: vfio-pci binding + libvirt hostdev + multi-GPU host (Tier 1: NVIDIA RTX 20/30/40 driver 465+, AMD RDNA2/3) → Photoshop/Premiere/AutoCAD/Blender hardware-accelerated w VM
+Dowód: Photoshop filtr 4K wykonuje się <1s zamiast >5s software rendering; latencja end-to-end (RAIL CREATED → first frame) ≤ N1.1c budget
+SPOF: AMD reset bug (vendor-reset module zewnętrzny — Tier 2 documented), Code 43 NVIDIA stare (Tier 2 documented), single-GPU NIE WSPIERANE bez Looking Glass; uaktualnienie docs/THREAT_MODEL.md o TA7 (malicious GPU firmware)
+Po Fazie 4.5 — Looking Glass integration (post-Phase 4.5, P0): integracja LG dla Desktop-mode + odzyskanie single-GPU users z hot-switch caveat. Software-rendering fallback documentation równolegle.

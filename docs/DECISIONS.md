@@ -7,6 +7,99 @@ delete history.
 
 ---
 
+## DEC-0009: GPU passthrough scope, tiers, and timing
+
+**Status:** Accepted — 2026-05-07
+**Owner:** Phase 4.5 / post-MVP P0
+**Related:** `docs/GPU_PASSTHROUGH.md` (full deliberation);
+`FOLLOWUPS.md` "GPU passthrough — Phase 4.5"; `ROADMAP.md` Phase 4.5;
+`docs/THREAT_MODEL.md` §C4 (extended on implementation)
+
+### Context
+
+Photoshop, Premiere, AutoCAD, Blender, and Fusion 360 are unusable
+on a software-rendered VM (filters take seconds, video timelines
+crash). Without GPU passthrough, "real Windows apps on Linux"
+ships short of its promise for power-user workloads.
+
+GPU passthrough is mature on Linux (vfio-pci, IOMMU, libvirt
+hostdev) but materially extends scope and is fundamentally
+multi-GPU-only on the RAIL-as-native-windows model we ship.
+
+### Decision
+
+1. **Timing**: GPU passthrough lands as **Phase 4.5 / post-MVP P0**,
+   not in Phase 4 base. MVP demo ships with software rendering;
+   GPU is the immediate first follow-up.
+2. **Tier 1 commitment** (full support, CI smoke-tests when
+   hardware available): NVIDIA RTX 20/30/40-series with driver
+   465+, AMD RDNA2 (RX 6000) and RDNA3 (RX 7000), multi-GPU only.
+3. **Tier 2 documented, not maintained**: AMD Polaris/Vega/RDNA1
+   with `vendor-reset` upstream module; NVIDIA pre-2021 with
+   hide-the-VM tricks. Docs link to upstream; user installs and
+   maintains workarounds themselves.
+4. **Tier 3 explicitly out**: Intel Arc (wait for usage data),
+   single-GPU systems (architecturally incompatible — see DEC-0009
+   §"Single-GPU constraint" via `docs/GPU_PASSTHROUGH.md`).
+5. **Looking Glass integration** is a separate subsequent
+   follow-up (post-Phase 4.5), tracked independently. LG unlocks
+   single-GPU usability via compositor-restart hot-switch and
+   adds a Desktop-mode alternative for users wanting lower
+   latency than RDP encode/decode.
+6. **Software-rendering fallback** is documented as the universal
+   path that always works for productivity apps (Word, Outlook,
+   Visual Studio); not viable for GPU-intensive apps.
+7. **TA7 (malicious GPU firmware)** added to threat model when
+   implementation lands.
+
+### Alternatives considered
+
+- **Phase 4 in-scope (GPU is part of MVP)**: would add ~3-4 weeks
+  before MVP demo ships; combined with Tier 2 follow-up risks 6+
+  week slipage for solo developer; rejected in favor of
+  v0.1 + v0.2 release cadence.
+- **Tier 2 actively maintained (AMD vendor-reset shipped by us)**:
+  too much per-release maintenance burden for a solo developer;
+  rejected in favor of "documented, link to upstream."
+- **Intel Arc Tier 1**: insufficient usage data; treat as Tier 3
+  until first user reports.
+- **No GPU passthrough at all (software-rendered only)**: kills
+  the project's positioning for power-user workloads; rejected.
+
+### Consequences
+
+- (+) MVP ships faster (no GPU dependency on Phase 4 timeline).
+- (+) v0.1 demo (architecture works) and v0.2 demo (GPU
+  acceleration) give two press moments; second is informed by
+  first.
+- (+) Solo-developer scope-creep risk minimized.
+- (+) Power-user workloads explicitly addressed in v0.2.
+- (−) MVP demo is "Notepad as native window" — technically
+  interesting but less impressive than "Photoshop on Linux".
+- (−) Single-GPU users get "unsupported for GPU mode" until
+  Looking Glass integration lands; software-rendering fallback
+  is documented but limited.
+- (−) Tier 2 docs without active maintenance puts AMD older /
+  NVIDIA older users on community ground for workaround
+  reliability.
+
+### Reconsider when
+
+- Most user reports come from Tier 2 or Tier 3 hardware (e.g.,
+  many users on RX 580 or Intel Arc) — may justify lifting them
+  to Tier 1.
+- A single-GPU user demonstrates Looking Glass + hot-switch UX
+  cleanly enough that we can offer it as Tier 1 instead of
+  Tier 2 (requires LG integration to land first).
+- AMD's reset-bug `vendor-reset` module gets upstreamed into the
+  Linux kernel — at which point Tier 2 AMD older becomes
+  effectively Tier 1.
+- A user reports they were locked out by an MVP without GPU
+  passthrough and cancelled adoption — reconsider Phase 4
+  in-scope decision.
+
+---
+
 ## DEC-0008: Distribution via deb/rpm/AUR/NixOS/PyPI; no Flatpak/AppImage/Snap
 
 **Status:** Accepted — 2026-05-07

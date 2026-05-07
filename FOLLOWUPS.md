@@ -135,15 +135,15 @@ DEC-0005 for the architectural commitment.
   `agent.exe` via cross-rs).
 
 [vws]: docs/CROSS_PLATFORM_DEV.md#verified-working-command-sequence-2026-05-08
-- **[P0] Transport abstraction (trait + real + mock).** Define
-  `Transport` trait in `guest/crates/ipc-vsock/src/lib.rs`. Move real
-  AF_VSOCK code to `transport/real.rs` (Linux). Add
-  `transport/mock.rs` (TCP loopback, same mTLS + AuthContext stack,
-  failure-injection hooks). Same shape for Python in
-  `host/src/crossdesk_host/abstractions/transport.py` (Protocol) +
-  `transport/real.py` + `transport/mock.py`. Migrate existing
-  `ipc-vsock` consumers to the trait. **Do this first** — every
-  other mock depends on it.
+- **[✅ DONE 2026-05-08] Transport abstraction (trait + real + mock).**
+  `tower::Service<Uri>` is the Rust abstraction; `RealTransport`
+  (TCP loopback today, AF_HYPERV later) and `MockTransport` (with
+  `MockHooks` failure injection, gated `#[cfg(any(test, feature
+  ="mock"))]`) both implement it. Python mirror: `Transport`
+  Protocol in `abstractions/transport.py` plus
+  `transport/{real,mock}.py`. `daemon.py` migrated; `ipc/server.py`
+  retained as a thin shim for backwards compat. Unit tests cover
+  the failure-injection hooks on both languages.
 - **[P0] Libvirt client abstraction.** Protocol in
   `host/src/crossdesk_host/abstractions/libvirt.py`. Real impl wraps
   `libvirt-python`. Mock impl returns canned XML, accepts

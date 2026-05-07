@@ -18,6 +18,9 @@ tonic   = { workspace = true }
 anyhow  = { workspace = true }
 tracing = { workspace = true }
 tower   = "0.4"
+# Wraps tokio::net::TcpStream so it implements hyper-1's Read/Write,
+# which is what tonic 0.12's `connect_with_connector` requires.
+hyper-util = { version = "0.1", features = ["tokio"] }
 proto   = { path = "../proto" }
 rand    = "0.8"
 hex     = "0.4"

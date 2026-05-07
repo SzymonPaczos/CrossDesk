@@ -6,7 +6,6 @@ try:
 except ImportError:
     systemd_daemon = None
 
-from crossdesk_host.ipc.server import create_vsock_server
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
@@ -15,6 +14,7 @@ from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.proto.crossdesk.v1 import control_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
+from crossdesk_host.transport.real import RealTransport
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,14 +22,15 @@ logger = logging.getLogger(__name__)
 
 async def main() -> None:
     base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    ca_cert = base_dir / "infra" / "certs" / "pki" / "ca.crt"
-    host_cert = base_dir / "infra" / "certs" / "pki" / "host.crt"
-    host_key = base_dir / "infra" / "certs" / "pki" / "host.key"
+    ca_cert = (base_dir / "infra" / "certs" / "pki" / "ca.crt").read_bytes()
+    host_cert = (base_dir / "infra" / "certs" / "pki" / "host.crt").read_bytes()
+    host_key = (base_dir / "infra" / "certs" / "pki" / "host.key").read_bytes()
 
     auth_validator = AuthValidator()
     libvirt_ctl = LibvirtControllerMock()
 
-    server = create_vsock_server(ca_cert, host_cert, host_key)
+    transport = RealTransport()
+    server = transport.create_server(ca_cert, host_cert, host_key, port=50051)
 
     control_pb2_grpc.add_ControlServiceServicer_to_server(
         ControlServiceServicer(auth_validator), server

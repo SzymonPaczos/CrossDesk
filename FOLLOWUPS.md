@@ -112,13 +112,29 @@ hardware` productive instead of placebo. See
 `docs/CROSS_PLATFORM_DEV.md` for the strategy and `docs/DECISIONS.md`
 DEC-0005 for the architectural commitment.
 
-- **[P0] Cross-compile pipeline working from macOS.** `cargo install
-  cross --git https://github.com/cross-rs/cross` (Docker-backed).
-  Verify `cross build --release --target x86_64-pc-windows-gnu`
-  produces a working `agent.exe` from macOS. Document fallback to
-  native MinGW (`brew install mingw-w64`) for fast iteration.
-  Touches: `guest/Cargo.toml`, `.github/workflows/`,
-  `docs/CROSS_PLATFORM_DEV.md`.
+- **[✅ DONE 2026-05-08] Cross-compile pipeline working from macOS
+  (native MinGW).** Verified on Apple Silicon — native `cargo build
+  --target x86_64-pc-windows-gnu` produces a working `agent.exe`
+  PE32+ binary. See [Verified working command sequence][vws] in
+  `docs/CROSS_PLATFORM_DEV.md`. Renamed `[[bin]] name` in
+  `guest/crates/agent-svc/Cargo.toml` from `CrossDeskAgent` to
+  `agent` so the file matches docs (service name remains
+  `CrossDeskAgent`). Vendored `protoc` via `protoc-bin-vendored`
+  in `guest/crates/proto/build.rs` so dev hosts and CI runners
+  build the `proto` crate without a system `protoc`. Fixed three
+  pre-existing Windows-only bugs in `rail-bridge`, `agent-svc`
+  (windows-0.58 API drift surfaced by first real cross-compile).
+- **[P1] Cross-rs end-to-end build for this repo.** Cross-rs runs
+  but fails on this layout: it only mounts the cargo workspace
+  (`guest/`), so `proto/build.rs`'s relative paths to
+  `CrossDesk/proto/crossdesk/v1/*.proto` (one directory above the
+  workspace) escape the container mount. Needs either a
+  `Cross.toml` volume mount, a top-level workspace `Cargo.toml` at
+  the repo root, or a vendored proto-files copy step. Required
+  before Week 22 release pipeline (CI release matrix builds
+  `agent.exe` via cross-rs).
+
+[vws]: docs/CROSS_PLATFORM_DEV.md#verified-working-command-sequence-2026-05-08
 - **[P0] Transport abstraction (trait + real + mock).** Define
   `Transport` trait in `guest/crates/ipc-vsock/src/lib.rs`. Move real
   AF_VSOCK code to `transport/real.rs` (Linux). Add

@@ -50,7 +50,7 @@ No Linux+KVM hardware. Maximum work that can be validated on Mac via mocks and c
 Source: *Cross-platform development & testing scaffold (URGENT)* in FOLLOWUPS.
 
 Items:
-- **[P0] Cross-compile pipeline working from macOS.** `cargo install cross --git https://github.com/cross-rs/cross`. Verify `cross build --release --target x86_64-pc-windows-gnu` produces working `agent.exe` from macOS. Update `docs/CROSS_PLATFORM_DEV.md` with confirmed working command.
+- ✅ **[P0] Cross-compile pipeline working from macOS (native MinGW).** `brew install mingw-w64` + `rustup target add x86_64-pc-windows-gnu` + `cargo build --target x86_64-pc-windows-gnu` from `guest/`. Produces a working `agent.exe` PE32+ binary on Apple Silicon. Cross-rs end-to-end build is a known follow-up (P1 in FOLLOWUPS) — proto-IDL path lives outside the workspace mount cross-rs creates.
 - **[P0] Transport abstraction** (DEC-0005). Define `Transport` trait in `guest/crates/ipc-vsock/src/lib.rs`. Move existing AF_VSOCK code (currently TCP loopback in dev) to `transport/real.rs`. Add `transport/mock.rs` with TCP loopback + same mTLS + AuthContext stack + failure-injection hooks. Same shape in Python: `host/src/crossdesk_host/abstractions/transport.py` Protocol + `transport/real.py` + `transport/mock.py`. Migrate existing consumers to use the trait.
 - **[P0] Initial CI green.** Get `.github/workflows/ci.yml` passing on macOS + Ubuntu. Disable any failing checks via `continue-on-error: true` initially; track in FOLLOWUPS.
 

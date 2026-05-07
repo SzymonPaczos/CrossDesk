@@ -188,6 +188,82 @@ macOS. The only Python-Linux dependency is `libvirt-python` which
 should be `extras` in `pyproject.toml`, optional in dev environments
 on macOS.
 
+## Verified working command sequence (2026-05-08)
+
+Confirmed on macOS Apple Silicon. Native MinGW is the **fast,
+verified path** for local iteration:
+
+```sh
+# Prerequisites (one-time per host):
+#   - Xcode Command Line Tools.
+#   - Rust toolchain via rustup.
+brew install mingw-w64
+rustup target add x86_64-pc-windows-gnu
+
+# Build:
+cd guest
+cargo build --target x86_64-pc-windows-gnu
+file target/x86_64-pc-windows-gnu/release/agent.exe
+# → "PE32+ executable (console) x86-64, for MS Windows"
+```
+
+The `[target.x86_64-pc-windows-gnu]` linker block in
+`.cargo/config.toml` already wires MinGW; no per-build env tweaks
+needed. The produced `agent.exe` lives under
+`guest/target/x86_64-pc-windows-gnu/{debug,release}/agent.exe`. Its
+`[[bin]]` name is `agent` (the NT service it registers as is
+`CrossDeskAgent` — see [REQUIREMENTS.md F1.9](REQUIREMENTS.md)).
+
+### cross-rs status
+
+Cross-rs is documented above as "the source of truth for CI" but
+**does not yet build this repo end-to-end**. Two issues surfaced
+during verification:
+
+1. The default cross-rs image
+   `ghcr.io/cross-rs/x86_64-pc-windows-gnu:main` ships without
+   `protoc`. The `proto` build script now uses
+   [protoc-bin-vendored][pbv] to bundle a `protoc` binary, side-
+   stepping the system-protoc requirement on every host (cross-rs,
+   CI runners, fresh dev machines).
+2. Cross-rs only mounts the cargo workspace directory (`guest/`)
+   into the build container, so `proto/build.rs`'s relative paths
+   `../../../proto/crossdesk/v1/*.proto` land **outside** the
+   container mount and fail. The proto IDL lives at the repo root
+   because the Python host also consumes it; resolving this needs
+   either a `Cross.toml` volume mount, an upgrade to a workspace
+   root at `CrossDesk/`, or a path-vendoring step. Tracked under
+   "Cross-compile pipeline working from macOS" in `FOLLOWUPS.md`
+   (now P1 since native MinGW is verified working).
+
+[pbv]: https://crates.io/crates/protoc-bin-vendored
+
+On Apple Silicon, cross-rs is also intrinsically slow because the
+default image is x86_64-only and runs under emulation (~15× CPU
+overhead per rustc invocation). For day-to-day Mac iteration, native
+MinGW is preferred regardless. CI runners are Linux x86_64 and run
+the cross-rs image natively; the protoc + path-mount issues will
+need to be solved before CI can `cross build` (currently CI uses
+`cargo check --target x86_64-pc-windows-gnu` with native MinGW
+installed via Homebrew/apt — see `.github/workflows/ci.yml`).
+
+### Bugs surfaced by the first cross-compile
+
+The first run also surfaced three pre-existing bugs in
+Windows-only code that `cargo check --workspace` on macOS hadn't
+caught (no Windows target installed locally before this task). Fixed
+in the same commit:
+
+- `windows = "0.58"` moved `SetWinEventHook`, `UnhookWinEvent`, and
+  `HWINEVENTHOOK` from `Win32::UI::WindowsAndMessaging` to
+  `Win32::UI::Accessibility`; `rail-bridge`'s feature list and
+  imports updated.
+- `GetSystemFirmwareTable` now takes a `FIRMWARE_TABLE_PROVIDER`
+  newtype instead of `u32`; `agent-svc/src/host_uuid.rs` updated.
+- `define_windows_service!` macro generates `ffi_service_main` as a
+  private function; the dispatcher call is now wrapped in a public
+  `start_service_dispatcher()` in `agent-svc/src/service.rs`.
+
 ## Pyproject and Cargo features for mock toggling
 
 Python:

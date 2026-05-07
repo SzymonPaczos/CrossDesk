@@ -10,5 +10,27 @@ from crossdesk_host.observability.log import (
     get_logger,
     LOG_SCHEMA_FIELDS,
 )
+from crossdesk_host.observability.trace_ctx import (
+    TraceContext,
+    bind_to_log_context,
+    child_span,
+    clear_log_context,
+    extract_from_metadata,
+    generate_root,
+    metadata_pair,
+    parse_traceparent,
+)
 
-__all__ = ["configure_logging", "get_logger", "LOG_SCHEMA_FIELDS"]
+__all__ = [
+    "LOG_SCHEMA_FIELDS",
+    "TraceContext",
+    "bind_to_log_context",
+    "child_span",
+    "clear_log_context",
+    "configure_logging",
+    "extract_from_metadata",
+    "generate_root",
+    "get_logger",
+    "metadata_pair",
+    "parse_traceparent",
+]

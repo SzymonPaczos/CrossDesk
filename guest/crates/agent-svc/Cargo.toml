@@ -24,6 +24,7 @@ tracing-subscriber = { workspace = true }
 tokio   = { workspace = true }
 tonic   = { workspace = true }
 tokio-stream = "0.1"
+observability = { path = "../observability" }
 proto   = { path = "../proto" }
 ipc-vsock = { path = "../ipc-vsock" }
 rail-bridge = { path = "../rail-bridge" }

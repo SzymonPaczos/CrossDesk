@@ -4,6 +4,10 @@ What the system must do (functional, F\*) and how well it must do it
 (non-functional, N\*). Each requirement is uniquely numbered; phases
 in `ROADMAP.md` and items in `FOLLOWUPS.md` reference these IDs.
 
+**MVP scope:** v0.1.0 = Phases 1–5 (full pipeline including JIT
+VirtioFS) plus supporting cross-cutting work. See `docs/MVP_SCOPE.md`
+for the concrete list and acceptance criteria.
+
 Status legend per requirement: ✅ implemented · 🔄 in progress ·
 ❌ not started.
 

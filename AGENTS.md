@@ -22,13 +22,17 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 |----------|--------|
 | What does CrossDesk *do*? | `README.md` + `docs/GOALS.md` |
 | What must it do, how well? | `docs/REQUIREMENTS.md` |
+| What's in MVP v0.1.0? | `docs/MVP_SCOPE.md` |
+| What's the week-by-week plan to MVP? | `docs/EXECUTION_PLAN.md` |
 | Why this stack? | `docs/TECH_STACK.md` |
 | What does the architecture look like? | `docs/GOALS.md` (vision) + `docs/TECH_STACK.md` (components) |
 | What's the security model? | `docs/THREAT_MODEL.md` |
-| What's the roadmap? | `ROADMAP.md` (phases) + `FOLLOWUPS.md` (action items) |
+| What's the roadmap? | `ROADMAP.md` (phases) + `docs/EXECUTION_PLAN.md` (sequenced) + `FOLLOWUPS.md` (action items) |
 | Why X over Y? | `docs/DECISIONS.md` (ADRs `DEC-NNNN`) |
 | What does the competition look like? | `docs/COMPETITION.md` + `docs/COMPARISON_WINAPPS.md` |
 | Coding rules? | The "Coding rules" section below |
+| How does an agent pick a task? | The "Agent workflow" section below |
+| What can an agent change? | The "File boundaries" section below |
 | Anything in `third_party/`? | `third_party/winapps/` — vendored for reference, AGPLv3, do not copy verbatim |
 
 ## Repository layout
@@ -148,14 +152,95 @@ cd guest && cargo build              # tonic regenerates guest stubs as part of 
   `host/src/crossdesk_host/config.py` (planned). Document in
   `docs/REQUIREMENTS.md`. No bash-source-style config — typed only.
 
+## Agent workflow
+
+When the user asks an agent to "work on the next task":
+
+1. **Find the current week** in `docs/EXECUTION_PLAN.md` (compare today's
+   date to the week ranges).
+2. **Pick the highest-priority unfinished item** in that week's "Items"
+   list. P0 before P1 before P2.
+3. **Cross-reference `FOLLOWUPS.md`** for additional context on the item
+   (specific files to touch, dependencies, acceptance criteria).
+4. **Create a short-named feature branch:** `feat/<task-keyword>` (e.g.,
+   `feat/transport-abstraction`, `feat/structlog-config`).
+5. **Implement** the item against its acceptance criteria. Stay scoped
+   — don't bundle unrelated refactors.
+6. **Commit** with Conventional Commits. Reference the FOLLOWUPS section
+   keyword in the commit message body so the linkage is searchable.
+7. **Wait for the user to explicitly tell you to merge** before merging
+   to `main`. Do not push branches to origin or open PRs unless
+   instructed.
+8. **When the user says "merge"**: `git checkout main && git merge --no-ff
+   <branch> -m "Merge branch '<branch>'"`. Then `git push origin main`
+   only if the user says so. Delete the local branch (`git branch -d`)
+   after merge.
+9. **Update `docs/EXECUTION_PLAN.md`**: mark the item ✅ and, if you
+   discovered new work, add a one-line entry to `FOLLOWUPS.md` under the
+   appropriate section.
+
+The user's preference is **local merges only**, no GitHub PRs, no
+GitHub Issues at this stage. The only sources of truth for "what to do"
+are `docs/EXECUTION_PLAN.md` (this week's work) and `FOLLOWUPS.md`
+(everything queued).
+
+## File boundaries
+
+Agents may freely modify:
+
+- Source code: `host/`, `guest/`, `gui/`, `infra/` (excluding files
+  flagged below).
+- Tests: anywhere under `host/tests/`, `guest/**/tests/`, etc.
+- Build configs: `host/pyproject.toml`, `guest/Cargo.toml`,
+  `gui/Cargo.toml`, lockfiles.
+- `FOLLOWUPS.md` — for marking items complete or adding discovered
+  work. Don't restructure the file without instruction.
+- `docs/EXECUTION_PLAN.md` — for marking items ✅ as completed and for
+  schedule updates after the user reviews.
+
+Agents must NOT modify without explicit instruction:
+
+- `docs/DECISIONS.md` — ADRs are the user's call. If a change is
+  warranted, raise it with the user; the user decides and authors the
+  ADR (or instructs the agent to draft).
+- `docs/THREAT_MODEL.md` — security claims. Same as above.
+- `docs/REQUIREMENTS.md` — F\*/N\* IDs are referenced from many
+  places; renumbering or rewriting needs user approval.
+- `docs/MVP_SCOPE.md` — scope changes are user decisions.
+- `docs/GOALS.md` — vision is the user's call.
+- `proto/**/*.proto` — wire-format changes propagate everywhere; user
+  approval required.
+- `ROADMAP.md` — phase definitions are the user's call.
+- This file (`AGENTS.md`) — workflow conventions are the user's call.
+
+When in doubt, ask the user before changing.
+
+## Pending user-decision reminders
+
+These are open questions the user has parked. Mention them in
+relevant moments (don't spam every conversation, but do raise when
+appropriate):
+
+- **Domain name for hosted package repos** (deb / rpm). Currently
+  the user doesn't have a domain beyond their personal one; thinking
+  about it. *Reasonable cadence to ask: every ~4 weeks, or when work
+  on packaging hosting comes up.* Last asked: 2026-05-07.
+- **Code signing strategy** for `agent.exe` (Sigstore vs EV cert).
+  Deferred per user as not-yet-justified. *Ask before v0.1.0 release
+  packaging work begins.*
+- **Self-hosted Linux+KVM CI runner** — gated on user acquiring a
+  Linux machine. *Ask when hardware acquisition status changes.*
+
 ## What to read first as a new agent
 
 1. This file.
 2. `README.md` — pitch.
 3. `docs/GOALS.md` — what we're trying to do.
-4. `docs/TECH_STACK.md` — components and stack rationale.
-5. `docs/THREAT_MODEL.md` — what we're defending against.
-6. `FOLLOWUPS.md` — what's queued, prioritized.
+4. `docs/MVP_SCOPE.md` — what's in v0.1.0.
+5. `docs/EXECUTION_PLAN.md` — the week-by-week sequence.
+6. `docs/TECH_STACK.md` — components and stack rationale.
+7. `docs/THREAT_MODEL.md` — what we're defending against.
+8. `FOLLOWUPS.md` — what's queued, prioritized.
 
 For any specific question, the navigation table at the top of this
 file should point you at the right doc.

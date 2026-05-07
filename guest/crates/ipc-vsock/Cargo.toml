@@ -26,3 +26,6 @@ rand    = "0.8"
 hex     = "0.4"
 sha2    = "0.10"
 pem     = "3"
+
+[lints]
+workspace = true

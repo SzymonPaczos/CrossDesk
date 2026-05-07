@@ -10,3 +10,6 @@ anyhow  = { workspace = true }
 tracing = { workspace = true }
 tokio   = { workspace = true }
 proto   = { path = "../proto" }
+
+[lints]
+workspace = true

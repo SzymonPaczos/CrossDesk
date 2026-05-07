@@ -18,7 +18,6 @@ from typing import Any, Dict
 
 from hdrh.histogram import HdrHistogram
 
-
 _PERCENTILES = (50.0, 90.0, 99.0, 99.9)
 
 

@@ -1,14 +1,14 @@
-import logging
 import asyncio
-from typing import AsyncIterator, Dict
+import logging
 import uuid
+from typing import AsyncIterator, Dict
 
 import grpc
-from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2
-from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
+from google.protobuf.duration_pb2 import Duration
+
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
-from google.protobuf.duration_pb2 import Duration
+from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2, filesystem_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,11 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = asyncio.Queue()
         self.active_shares: Dict[str, str] = {}
 
-    async def ShareChannel(self, request_iterator: AsyncIterator[filesystem_pb2.ShareGuestFrame], context: grpc.aio.ServicerContext) -> AsyncIterator[filesystem_pb2.ShareHostFrame]:
+    async def ShareChannel(
+        self,
+        request_iterator: AsyncIterator[filesystem_pb2.ShareGuestFrame],
+        context: grpc.aio.ServicerContext,
+    ) -> AsyncIterator[filesystem_pb2.ShareHostFrame]:
         peer_identity = context.peer()
         logger.info(f"[{peer_identity}] Filesystem channel established")
 
@@ -76,7 +80,12 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             rep = frame.lock_report
             if not self._token_ok(rep.mount_token, "lock_report", rep.share_id):
                 return
-            logger.debug(f"[Filesystem] LockReport for share {rep.share_id}: {rep.open_handles} open handles, {rep.pending_writes_bytes} bytes pending")
+            logger.debug(
+                "[Filesystem] LockReport for share %s: %d open handles, %d bytes pending",
+                rep.share_id,
+                rep.open_handles,
+                rep.pending_writes_bytes,
+            )
 
         elif payload_type == "release_ack":
             ack = frame.release_ack

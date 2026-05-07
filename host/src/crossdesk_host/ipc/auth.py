@@ -5,9 +5,11 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
+from crossdesk_host.observability.metrics import REGISTRY, MetricNames
 from crossdesk_host.proto.crossdesk.v1 import common_pb2
 
 logger = logging.getLogger(__name__)
+_REJECTIONS = REGISTRY.counter(MetricNames.AUTH_CONTEXT_REJECTIONS_TOTAL)
 
 
 class AuthValidator:
@@ -45,11 +47,13 @@ class AuthValidator:
         coroutine and the offending request silently passes through.
         """
         if not request_auth_context:
+            _REJECTIONS.inc()
             await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Missing AuthContext")
 
         # 1. Weryfikacja Fingerprintu
         tls_fingerprint = self.extract_peer_fingerprint(context)
         if not tls_fingerprint:
+            _REJECTIONS.inc()
             await context.abort(
                 grpc.StatusCode.UNAUTHENTICATED,
                 "No valid mTLS client certificate found",
@@ -60,6 +64,7 @@ class AuthValidator:
                 f"CID Collision/Spoofing detected! TLS: {tls_fingerprint}, "
                 f"Msg: {request_auth_context.peer_cert_fingerprint}"
             )
+            _REJECTIONS.inc()
             await context.abort(
                 grpc.StatusCode.UNAUTHENTICATED,
                 "Peer certificate fingerprint mismatch",
@@ -70,6 +75,7 @@ class AuthValidator:
         seq = request_auth_context.sequence
 
         if not nonce:
+            _REJECTIONS.inc()
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT,
                 "Missing stream_nonce in AuthContext",
@@ -84,6 +90,7 @@ class AuthValidator:
                     f"Replay attack / Sequence mismatch! Expected: {expected_seq}, Got: {seq}"
                 )
                 del self._active_streams[nonce]
+                _REJECTIONS.inc()
                 await context.abort(
                     grpc.StatusCode.ABORTED,
                     "Sequence mismatch (possible replay attack)",

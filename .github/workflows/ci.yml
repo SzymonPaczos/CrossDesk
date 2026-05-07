@@ -24,10 +24,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Install dependencies (mock + dev extras; skip linux-only on macOS)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]" || pip install -e .
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y libvirt-dev pkg-config
+            pip install -e ".[mock,dev,linux]"
+          else
+            pip install -e ".[mock,dev]"
+          fi
       - name: mypy --strict
         run: mypy --strict src/ || true  # tolerate until baseline established
       - name: pytest
@@ -54,9 +60,13 @@ jobs:
       - name: cargo check (Windows target)
         working-directory: guest
         run: cargo check --workspace --target x86_64-pc-windows-gnu
-      - name: cargo test (host arch, mock features)
+      - name: cargo test (host arch, mock feature where defined)
         working-directory: guest
-        run: cargo test --workspace --no-default-features --features mock || cargo test --workspace
+        # `--features mock` enables mock implementations in crates that
+        # define the feature (currently ipc-vsock; others to follow per
+        # docs/CROSS_PLATFORM_DEV.md). Cargo silently ignores the flag
+        # for crates without the feature, so the workspace builds fine.
+        run: cargo test --workspace --features ipc-vsock/mock
       - name: cargo clippy
         working-directory: guest
         run: cargo clippy --workspace --target x86_64-pc-windows-gnu -- -D warnings

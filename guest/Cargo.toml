@@ -17,3 +17,29 @@ prost-types = "0.13"
 windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading", "Win32_System_SystemInformation"] }
 anyhow  = "1"
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "json"] }
+hdrhistogram = "7"
+
+# Lean dev profile to keep target/ disk usage manageable.
+# Default `debug = true` produces ~4-6× larger artifacts than
+# line-tables-only. We only need stack traces, not full source-level
+# debugging. Per docs/CROSS_PLATFORM_DEV.md § "Disk hygiene".
+[profile.dev]
+debug = "line-tables-only"
+incremental = true
+codegen-units = 256
+
+# Release profile optimized for shipped agent.exe size + startup.
+# LTO + single codegen-unit makes builds slower but binaries materially
+# smaller and faster. Used by the CI release matrix on tagged versions.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
+
+# CI runs benchmarks against this profile so numbers reflect optimized
+# code.
+[profile.bench]
+debug = "line-tables-only"
+lto = "thin"

@@ -1,0 +1,22 @@
+# Workspace-wide cargo configuration.
+#
+# Goals:
+# - Sparse crates.io registry (faster, smaller ~/.cargo/registry).
+# - Use system git for fetching (works through corporate proxies and ssh).
+# - Cross-compile to x86_64-pc-windows-gnu via cross-rs (Docker-backed) on
+#   macOS and Ubuntu CI; plain MinGW available as a fast-iteration fallback.
+
+[net]
+git-fetch-with-cli = true
+
+[registries.crates-io]
+protocol = "sparse"
+
+# Cross-compile target. Activated explicitly via:
+#   cross build --release --target x86_64-pc-windows-gnu
+# from the guest/ directory. The target is also picked up by `cargo check
+# --target x86_64-pc-windows-gnu` for the sanity-check CI job, where MinGW
+# is installed via the workflow.
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+ar = "x86_64-w64-mingw32-ar"

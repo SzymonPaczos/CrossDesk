@@ -18,6 +18,10 @@ from crossdesk_host.observability.metrics import (
     MetricNames,
     Registry,
 )
+from crossdesk_host.observability.redaction import (
+    ALLOWED_FIELDS,
+    RedactionViolation,
+)
 from crossdesk_host.observability.trace_ctx import (
     TraceContext,
     bind_to_log_context,
@@ -30,12 +34,14 @@ from crossdesk_host.observability.trace_ctx import (
 )
 
 __all__ = [
+    "ALLOWED_FIELDS",
     "Counter",
     "Gauge",
     "Histogram",
     "LOG_SCHEMA_FIELDS",
     "MetricNames",
     "REGISTRY",
+    "RedactionViolation",
     "Registry",
     "TraceContext",
     "bind_to_log_context",

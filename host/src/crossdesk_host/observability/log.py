@@ -22,6 +22,8 @@ from typing import Any, MutableMapping
 
 import structlog
 
+from crossdesk_host.observability.redaction import redaction_processor
+
 # Mandatory fields every log line MUST carry. Renderers and tests verify
 # this set is present even when callers forget to bind them — missing
 # fields land as empty strings rather than raising, so a logger never
@@ -75,6 +77,7 @@ def configure_logging(level: str = "INFO", stream: Any = None) -> None:
         _stringify_event,
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        redaction_processor,
     ]
 
     if stream is None:

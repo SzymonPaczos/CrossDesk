@@ -1,10 +1,45 @@
-# GPU Passthrough — analysis and pending decision
+# GPU Passthrough — analysis and accepted plan
 
-Status: **decision pending** (2026-05-07).
-Owner: Phase 4.5 / post-MVP candidate.
-Related: `docs/REQUIREMENTS.md` (no current entry — pending decision),
-`docs/THREAT_MODEL.md` §C4 (would extend on accept), `ROADMAP.md`
-(would add Phase 4.5).
+Status: **Decision accepted — 2026-05-07** (Phase 4.5 / post-MVP P0).
+See `docs/DECISIONS.md` DEC-0009.
+Owner: Phase 4.5 work after MVP demo ships.
+Related: `docs/THREAT_MODEL.md` §C4 (extended on implementation),
+`ROADMAP.md` Phase 4.5 entry, `FOLLOWUPS.md` "GPU passthrough —
+Phase 4.5".
+
+## Accepted plan summary
+
+1. **GPU passthrough lands as Phase 4.5 / post-MVP P0**, not in
+   Phase 4 base. MVP demo ships with software rendering inside the
+   VM (Notepad-class apps); GPU work is the immediate first
+   follow-up that unlocks Photoshop/Premiere/AutoCAD/Blender.
+2. **Tier 1 commitment:** NVIDIA RTX 20/30/40-series (driver 465+)
+   and AMD RDNA2/RDNA3 (RX 6000/7000), multi-GPU systems only.
+3. **Tier 2 documented, not maintained:** AMD Polaris/Vega/RDNA1
+   (with `vendor-reset` upstream module), NVIDIA pre-2021 with
+   hide-the-VM tricks. Docs link to upstream solutions; we don't
+   ship the workarounds.
+4. **Tier 3 explicitly out:** Intel Arc (wait for usage data),
+   single-GPU systems (architecturally incompatible with our RAIL
+   model — see §"The single-GPU showstopper" below).
+5. **Looking Glass integration is a separate subsequent
+   follow-up**, not part of the GPU passthrough Phase 4.5 work
+   itself. LG is what unblocks single-GPU users (with
+   compositor-restart hot-switch caveat) and gives Desktop-mode
+   alternative for power users. See `FOLLOWUPS.md` "Looking Glass
+   integration — post-Phase 4.5".
+6. **Software-rendered fallback documentation** — the path that
+   always works, on every hardware, for productivity apps. Not
+   suitable for Photoshop/Premiere but suitable for Word/Outlook/
+   Visual Studio. Documented as the universal fallback. See
+   `FOLLOWUPS.md` "Software rendering fallback documentation".
+7. **TA7 (malicious GPU firmware)** added to
+   `docs/THREAT_MODEL.md` when GPU passthrough implementation
+   lands. Placeholder documented now.
+
+The remainder of this document is the deliberation that led to
+this decision; preserved for reference and for future
+reconsideration trigger conditions (see DEC-0009).
 
 This document captures the full deliberation about GPU passthrough so
 no context is lost while the user decides scope and priority.
@@ -504,58 +539,36 @@ Total: roughly 6-9 weeks across phases for full vendor support; 3-4
 weeks for "first version that handles the most common modern
 hardware."
 
-## Decision points pending from user
+## Decisions taken (2026-05-07)
 
 1. **Phase 4 in-scope vs Phase 4.5 / post-MVP P0?**
+   → **Phase 4.5 / post-MVP P0.** MVP demo (Notepad-class) ships
+   without GPU; GPU is the immediate first follow-up.
+   Reasoning: solo-developer scope-creep risk; iterating in
+   v0.1 + v0.2 releases gives two press moments and one is
+   informed by the other; Mac vacuum month is productive on
+   non-GPU work regardless.
 
-   Phase 4 in-scope means MVP doesn't ship until GPU passthrough
-   works (adds 3-4 weeks). Post-MVP P0 means we ship MVP with
-   software rendering and the first follow-up work is GPU.
+2. **Single-GPU systems explicitly unsupported — accepted.**
+   This is hardware physics; not a scope choice. `crossdesk
+   doctor` refuses politely with a clear explanation. Looking
+   Glass integration (separate subsequent follow-up) revisits
+   the single-GPU case via compositor-restart hot-switch.
 
-   Author's recommendation: post-MVP P0. MVP demo (Notepad) doesn't
-   need GPU; gating it on Photoshop-class apps delays demo
-   needlessly.
+3. **Tier 2 effort — partial commitment.**
+   - AMD Polaris/Vega/RDNA1: **Tier 2 documented**, not
+     maintained. Link to `vendor-reset` upstream; document the
+     procedure; user is on their own for module installation
+     and DKMS rebuilds.
+   - NVIDIA pre-2021 / hide-the-VM tricks: **Tier 2
+     documented**, not auto-applied.
+   - Intel Arc: **Tier 3 (out)** until first user files an
+     issue with testing data demonstrating demand.
 
-2. **Single-GPU systems explicitly unsupported — accept?**
+4. **TA7 (malicious GPU firmware) — yes, formalize when
+   implementation lands.** Placeholder noted in `docs/THREAT_MODEL.md`
+   §"Out of scope" stub now; full row added with mitigations
+   when Phase 4.5 work begins.
 
-   This is a hard architectural constraint, not a scope choice. The
-   alternative is to throw away "RAIL apps as native windows" for
-   single-GPU users (which contradicts our pitch). Documenting it as
-   unsupported is the honest path.
-
-   Author's recommendation: accept. `crossdesk doctor` refuses
-   politely, links to a "Why CrossDesk needs multi-GPU for full
-   acceleration" doc.
-
-3. **Tier 2 effort — commit to AMD reset-bug support? Intel Arc?**
-
-   Tier 2 takes additional weeks per vendor. Skipping Tier 2
-   leaves a known-bad UX for users on common older hardware (RX
-   580 is still widely deployed; Intel Arc adoption is growing).
-
-   Author's recommendation: Tier 2 AMD = yes, AMD's older cards are
-   too common to leave on the floor. Tier 2 Intel Arc = wait until
-   we see usage data; commit only if Tier 1 user reports indicate
-   demand.
-
-4. **GPU firmware / supply-chain threat (TA7) — formalize in threat
-   model on accept?**
-
-   If GPU passthrough lands, we should add a threat-actor row to
-   `docs/THREAT_MODEL.md` covering malicious GPU firmware. Low
-   probability but documented.
-
-   Author's recommendation: yes, add when implementation lands.
-
----
-
-## What lives in `FOLLOWUPS.md` for now
-
-Until the user decides, FOLLOWUPS.md references this document with a
-single placeholder item under "Action items by area" → a section for
-GPU passthrough that says "decision pending; see
-`docs/GPU_PASSTHROUGH.md`."
-
-Once decided, this document either becomes the implementation
-spec (if accepted) or stays as record of why we considered and
-deferred (if rejected).
+These decisions are encoded as ADR DEC-0009 in
+`docs/DECISIONS.md`. Reconsider triggers documented there.

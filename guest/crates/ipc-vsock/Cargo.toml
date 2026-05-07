@@ -3,6 +3,15 @@ name    = "ipc-vsock"
 version = "0.1.0"
 edition = "2021"
 
+# Feature gating per DEC-0005 (mock-driven testing as architectural
+# foundation). The `mock` feature swaps the real AF_VSOCK transport for
+# an in-process TCP-loopback implementation that preserves the same
+# mTLS + AuthContext semantics so unit tests run on any host (including
+# Macs without VSOCK kernel support).
+[features]
+default = []
+mock = []
+
 [dependencies]
 tokio   = { workspace = true }
 tonic   = { workspace = true }

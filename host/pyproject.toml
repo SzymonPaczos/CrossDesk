@@ -6,12 +6,42 @@ build-backend = "hatchling.build"
 name = "crossdesk-host"
 version = "0.1.0"
 requires-python = ">=3.9"
+
+# Cross-platform-installable core dependencies. Linux-only packages
+# (libvirt-python, systemd-python, dbus-next) live under
+# [project.optional-dependencies] `linux` so that Mac/Windows developers
+# can `pip install -e .[mock,dev]` without compile errors. Production
+# Linux installs use `pip install crossdesk-host[linux]`.
 dependencies = [
     "grpcio>=1.63",
     "grpcio-tools>=1.63",
+    "cryptography>=41.0",
+    "structlog>=24.1",          # JSON-structured logging per DEC-0006
+    "hdrhistogram>=0.10",       # in-memory metrics per docs/OBSERVABILITY.md
+    "tomli>=2.0; python_version<'3.11'",  # TOML config; stdlib in 3.11+
+]
+
+[project.optional-dependencies]
+# Linux-only deps. Required at runtime on Linux hosts; not installable on
+# Mac (libvirt headers unavailable) or Windows.
+linux = [
     "libvirt-python>=10.3",
     "systemd-python>=235",
-    "cryptography>=41.0",
+    "dbus-next>=0.2.3",         # lifecycle suspend/resume per docs/LIFECYCLE.md
+]
+# Mock-driven testing per DEC-0005. Mocks are pure Python; this extra
+# exists as a placeholder for future mock-only test deps and so that
+# `pip install -e .[mock]` is the canonical Mac dev install.
+mock = []
+dev = [
+    "mypy>=1.10",
+    "black>=24.4",
+    "ruff>=0.5",
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "pytest-benchmark>=4.0",    # microbench harness per docs/PERFORMANCE.md
+    "types-protobuf>=4.24",
+    "mypy-protobuf>=3.6",
 ]
 
 [project.scripts]
@@ -41,18 +71,22 @@ target-version = ["py39"]
 
 [tool.ruff]
 target-version = "py39"
-select = ["E", "F", "I"]
+
+[tool.ruff.lint]
+# E/F/I: pycodestyle errors, pyflakes, isort.
+# T201: bans `print(...)` per DEC-0006 (structured logging only). Use
+#       structlog. Tests may opt out via `# noqa: T201` if needed.
+select = ["E", "F", "I", "T201"]
+
+[tool.ruff.lint.per-file-ignores]
+"build_proto.py" = ["T201"]      # one-shot codegen helper, ok to print
+"conftest.py" = ["T201"]          # test bootstrap may print
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-
-[dependency-groups]
-dev = [
-    "mypy>=1.10",
-    "black>=24.4",
-    "ruff>=0.4",
-    "pytest>=8.2",
-    "pytest-asyncio>=0.23",
-    "types-protobuf>=4.24",
-    "mypy-protobuf>=3.6",
+addopts = "--strict-markers"
+markers = [
+    "linux_only: requires real libvirt + KVM (run only on Linux+KVM hardware)",
+    "integration: in-process host+guest mock harness",
+    "benchmark: performance microbenchmark, may be skipped in fast CI",
 ]

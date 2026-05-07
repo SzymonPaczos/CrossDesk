@@ -268,6 +268,56 @@ Order of priority (driven by the Mac vacuum work):
 5. D-Bus signals — needed for lifecycle suspend/resume work.
 6. Windows registry abstraction — needed for app discovery work.
 
+## Disk hygiene
+
+Cargo `target/` directories grow fast — a workspace with several crates,
+multiple targets, and Rust LTO can cross 5 GB of cache. Our defaults
+keep growth under control:
+
+- **Lean dev profile** (`debug = "line-tables-only"` in
+  `guest/Cargo.toml` `[profile.dev]`) cuts debug-info ~50% versus the
+  default `debug = true`. Stack traces still work, full source-level
+  debugging is not provided — fine for our workflow.
+- **Single workspace `target/` per workspace.** `guest/Cargo.toml` and
+  `gui/Cargo.toml` each have their own — no per-crate target dirs.
+- **Sparse crates.io registry** (`.cargo/config.toml`) cuts
+  `~/.cargo/registry` size and speeds up dependency resolution.
+- **Cross-compile target is contained.** `cargo build --target
+  x86_64-pc-windows-gnu` adds about ~500 MB to `guest/target/x86_64-
+  pc-windows-gnu/` but does not bloat the host-arch tree.
+
+Realistic disk usage after a full local build:
+
+| Tree | Typical size |
+|------|-------------|
+| `guest/target/debug/` (host arch) | 200-400 MB |
+| `guest/target/release/` (host arch) | 100-200 MB |
+| `guest/target/x86_64-pc-windows-gnu/release/` | 200-500 MB |
+| `gui/target/debug/` | 400-800 MB (Qt is heavy) |
+| `host/.venv/` | 150-250 MB |
+| **Total typical** | **~1-2 GB** |
+
+To reclaim space, run `./scripts/clean-build.sh`. It clears every Cargo
+`target/` and Python cache (`.mypy_cache`, `.pytest_cache`,
+`.ruff_cache`, `__pycache__`) and prints sizes before and after. The
+`host/.venv/` is left alone (recreating it costs minutes); delete it
+manually if needed.
+
+If `target/` repeatedly grows beyond 5 GB, the standard culprits are:
+
+1. Long-lived branches with old build artifacts → `cargo clean` after
+   merging.
+2. `incremental = true` accumulating compile fragments → run `cargo
+   clean -p <crate>` for individual crates.
+3. Multiple Rust toolchains installed via `rustup` (each pulls down
+   ~1 GB) → `rustup toolchain list` then `rustup toolchain remove
+   <unused>`.
+
+Use `sccache` (`cargo install sccache`) with
+`RUSTC_WRAPPER=sccache` if you build the same code repeatedly across
+different checkouts; the shared cache pays for itself within the
+first rebuild.
+
 ## What this strategy does not solve
 
 - We still cannot run real Windows on macOS to verify Win32 behaviors.

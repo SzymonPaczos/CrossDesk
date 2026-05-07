@@ -10,3 +10,7 @@ prost-types = { workspace = true }
 
 [build-dependencies]
 tonic-build = "0.12"
+# Vendored protoc avoids requiring `protoc` on PATH inside cross-rs
+# build images (which ship without it) and on dev hosts that haven't
+# installed it system-wide.
+protoc-bin-vendored = "3"

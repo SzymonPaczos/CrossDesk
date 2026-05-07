@@ -27,10 +27,14 @@ pub fn read_host_domain_uuid() -> anyhow::Result<String> {
 
 #[cfg(windows)]
 mod smbios {
-    use windows::Win32::System::SystemInformation::GetSystemFirmwareTable;
+    use windows::Win32::System::SystemInformation::{
+        FIRMWARE_TABLE_PROVIDER, GetSystemFirmwareTable,
+    };
 
-    // 'RSMB' little-endian, as the Win32 API expects.
-    const SMBIOS_PROVIDER: u32 = u32::from_le_bytes(*b"RSMB");
+    // 'RSMB' little-endian, as the Win32 API expects. Wrapped in the
+    // FIRMWARE_TABLE_PROVIDER newtype required by `windows` 0.58+.
+    const SMBIOS_PROVIDER: FIRMWARE_TABLE_PROVIDER =
+        FIRMWARE_TABLE_PROVIDER(u32::from_le_bytes(*b"RSMB"));
     const RAW_SMBIOS_HEADER_LEN: usize = 8;
     const TYPE_SYSTEM_INFORMATION: u8 = 1;
     const TYPE_END_OF_TABLE: u8 = 127;

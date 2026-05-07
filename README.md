@@ -15,23 +15,18 @@ crossdesk launch notepad     # Notepad appears as a native Linux window
 complete; Phase 2 (transport + mTLS) is in progress. See
 [ROADMAP.md](ROADMAP.md).
 
-## Why CrossDesk and not WinApps?
+## Why
 
-WinApps and CrossDesk both render Windows apps as Linux windows via
-FreeRDP RAIL. Differences that matter:
+The obvious incumbent here is WinApps, and it works. But its happy
+path runs a privileged Docker container with `NET_ADMIN` and
+`/dev/kvm`, and permanently exposes `$HOME` to the guest via
+`\\tsclient\home`. I wanted the same FreeRDP RAIL trick without
+handing a Windows VM that much of my system, so CrossDesk runs the VM
+under user-session libvirt (`qemu:///session`) and only hot-plugs
+directories on demand.
 
-| | WinApps | CrossDesk |
-|---|---|---|
-| Privileged daemon | Docker for the easy path (privileged container, `NET_ADMIN`, `/dev/kvm`) | None — `qemu:///session` runs as the user |
-| Transport | RDP over TCP `127.0.0.1:3389`, TLS-only auth | gRPC over `AF_VSOCK`, mTLS + per-frame `AuthContext` |
-| Filesystem exposure | Permanent `\\tsclient\home` whole-`$HOME` mount | JIT VirtioFS hot-plugged per file, detached on `ReleaseAck` |
-| Implementation | 1993-line bash, no tests | Python `mypy --strict` + Rust `cargo test`, asyncio end-to-end |
-| Maturity | 5+ years, ~10k stars, 91-app catalog | Pre-release |
-
-We trade WinApps' maturity for an architecture we can defend.
-
-Full comparison: [docs/COMPARISON_WINAPPS.md](docs/COMPARISON_WINAPPS.md).
-Where we sit in the broader landscape: [docs/COMPETITION.md](docs/COMPETITION.md).
+Side-by-side comparison: [docs/COMPARISON_WINAPPS.md](docs/COMPARISON_WINAPPS.md).
+Where this sits in the broader landscape: [docs/COMPETITION.md](docs/COMPETITION.md).
 
 ## Design summary
 

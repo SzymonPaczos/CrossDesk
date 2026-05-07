@@ -38,7 +38,11 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         consumer_task = asyncio.create_task(consume_incoming())
 
         try:
-            while not context.core_context.aborted() and not consumer_task.done():
+            # `cancelled()` is the public grpc-python equivalent of the
+            # internal `core_context.aborted()` that earlier code used —
+            # the latter lives on a private cython attribute that does
+            # not exist in current grpcio releases.
+            while not context.cancelled() and not consumer_task.done():
                 try:
                     frame = await asyncio.wait_for(self.command_queue.get(), timeout=1.0)
                 except asyncio.TimeoutError:

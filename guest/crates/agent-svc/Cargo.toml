@@ -9,9 +9,18 @@ edition = "2021"
 name = "agent"
 path = "src/main.rs"
 
+# `mock` propagates to ipc-vsock so MockTransport is available, and to
+# the binary so `cargo run --features mock` skips the SCM dispatcher
+# even on Windows. Used by the in-process integration harness in
+# host/tests/test_smoke_inprocess.py.
+[features]
+default = []
+mock = ["ipc-vsock/mock"]
+
 [dependencies]
 anyhow  = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 tokio   = { workspace = true }
 tonic   = { workspace = true }
 tokio-stream = "0.1"

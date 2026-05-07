@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Sequence
 
 import grpc
 
@@ -42,8 +43,11 @@ class RealTransport(Transport):
         host_cert_pem: bytes,
         host_key_pem: bytes,
         port: int,
+        interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
     ) -> grpc.aio.Server:
-        server = grpc.aio.server()
+        server = grpc.aio.server(
+            interceptors=tuple(interceptors) if interceptors else None
+        )
 
         server_credentials = grpc.ssl_server_credentials(
             [(host_key_pem, host_cert_pem)],

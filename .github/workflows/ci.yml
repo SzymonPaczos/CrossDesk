@@ -29,7 +29,9 @@ jobs:
           python -m pip install --upgrade pip
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             sudo apt-get update
-            sudo apt-get install -y libvirt-dev pkg-config
+            # libsystemd-dev is required by `systemd-python` (compiled
+            # from sdist on the runner), libvirt-dev by `libvirt-python`.
+            sudo apt-get install -y libvirt-dev libsystemd-dev pkg-config
             pip install -e ".[mock,dev,linux]"
           else
             pip install -e ".[mock,dev]"

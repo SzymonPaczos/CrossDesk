@@ -12,6 +12,8 @@
 //! are empty strings until W3C Trace Context propagation lands
 //! (`trace::install_carrier`).
 
+pub mod trace;
+
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 /// Configure the global subscriber. Idempotent in the sense that

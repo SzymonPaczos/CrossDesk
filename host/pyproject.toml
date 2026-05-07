@@ -40,6 +40,7 @@ dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
     "pytest-benchmark>=4.0",    # microbench harness per docs/PERFORMANCE.md
+    "pytest-timeout>=2.3",      # bounds the in-process integration harness
     "types-protobuf>=4.24",
     "mypy-protobuf>=3.6",
 ]

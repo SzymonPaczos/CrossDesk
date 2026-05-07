@@ -526,6 +526,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "hex",
+ "hyper-util",
  "pem",
  "proto",
  "rand",

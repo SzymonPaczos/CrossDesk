@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 try:
@@ -11,13 +10,14 @@ from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
+from crossdesk_host.observability import configure_logging, get_logger
 from crossdesk_host.proto.crossdesk.v1 import control_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2_grpc
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2_grpc
 from crossdesk_host.transport.real import RealTransport
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+configure_logging()
+logger = get_logger("host.daemon")
 
 
 async def main() -> None:
@@ -47,5 +47,5 @@ async def main() -> None:
     if systemd_daemon is not None:
         systemd_daemon.notify("READY=1")
 
-    logger.info("Server is running. Awaiting connections...")
+    logger.info("Server is running. Awaiting connections.")
     await server.wait_for_termination()

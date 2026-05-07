@@ -35,3 +35,6 @@ fs-mount = { path = "../fs-mount" }
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.6"
 windows         = { workspace = true }
+
+[lints]
+workspace = true

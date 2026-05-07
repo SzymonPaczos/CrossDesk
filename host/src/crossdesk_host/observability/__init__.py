@@ -6,9 +6,9 @@ configure ``logging``/``structlog`` directly.
 """
 
 from crossdesk_host.observability.log import (
+    LOG_SCHEMA_FIELDS,
     configure_logging,
     get_logger,
-    LOG_SCHEMA_FIELDS,
 )
 from crossdesk_host.observability.metrics import (
     REGISTRY,

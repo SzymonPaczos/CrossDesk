@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
 

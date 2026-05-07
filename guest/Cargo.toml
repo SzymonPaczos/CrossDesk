@@ -21,6 +21,14 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "json", "env-filter"] }
 hdrhistogram = "7"
 
+# Workspace-wide clippy lints. `print_stdout`/`print_stderr` are denied
+# per DEC-0006 — every Rust component logs via `tracing` (which the
+# `observability` crate configures). Crates opt in via
+# `lints.workspace = true` in their package table.
+[workspace.lints.clippy]
+print_stdout = "deny"
+print_stderr = "deny"
+
 # Lean dev profile to keep target/ disk usage manageable.
 # Default `debug = true` produces ~4-6× larger artifacts than
 # line-tables-only. We only need stack traces, not full source-level

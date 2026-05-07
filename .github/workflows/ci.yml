@@ -36,6 +36,11 @@ jobs:
           else
             pip install -e ".[mock,dev]"
           fi
+      - name: ruff check
+        # Bans `print()` (T201) per DEC-0006; backstop pycodestyle/
+        # pyflakes/isort. Generated proto modules excluded via
+        # pyproject `extend-exclude`.
+        run: ruff check src/
       - name: mypy --strict
         # Verified locally on macOS Python 3.12: 0 issues across 32 source
         # files (commit 58dad5f). Enforced rather than tolerated.

@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/agent-svc",
     "crates/ipc-vsock",
+    "crates/observability",
     "crates/rail-bridge",
     "crates/fs-mount",
     "crates/proto",

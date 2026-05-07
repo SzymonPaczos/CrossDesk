@@ -53,12 +53,14 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
 
 ## Build & verification
 
-- **Windows cross-compile not verified.** macOS `cargo check --workspace`
-  passes, but `x86_64-pc-windows-gnu` target is not installed locally. Add a
-  CI job that runs `rustup target add x86_64-pc-windows-gnu` and
-  `cargo check --target x86_64-pc-windows-gnu` against `guest/` so the
-  Windows-only modules (`agent-svc/service.rs`, `agent-svc/host_uuid.rs`,
-  `rail-bridge/windows.rs`) are exercised.
+- **[✅ DONE 2026-05-08] Windows cross-compile verified.** Now exercised
+  by both the `rust-guest-cross-compile` CI job (cargo check + clippy
+  with `-D warnings`) and a documented local MinGW path on macOS
+  (see `docs/CROSS_PLATFORM_DEV.md` "Verified working command
+  sequence"). The Windows-only modules (`agent-svc/service.rs`,
+  `agent-svc/host_uuid.rs`, `rail-bridge/windows.rs`) compile clean;
+  three pre-existing API drift bugs in those modules were fixed at
+  the same time.
 - **End-to-end mTLS smoke test against the new 32-byte `mount_token`.**
   Unit tests cover length-rejection (`tests/test_filesystem_service.py`).
   `tests/test_smoke_e2e.py` was green during the audit but should be
@@ -68,10 +70,12 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
 
 ## Phase work still owed
 
-- **AF_HYPERV vsock connector** — `guest/crates/ipc-vsock/src/connector.rs`
+- **AF_HYPERV vsock connector** —
+  `guest/crates/ipc-vsock/src/transport/real.rs::RealTransport`
   still dials TCP loopback. Replace `TcpStream::connect` with a real
-  `WSAConnect` against `AF_HYPERV` once we leave dev. The public
-  `Service<Uri>` surface is already shaped for the swap.
+  `WSAConnect` against `AF_HYPERV` once we leave dev. The
+  `tower::Service<Uri>` shape is already stable across the swap so
+  callers don't change.
 - **Real virtiofs mount/flush** —
   `guest/crates/fs-mount/src/mount.rs::mock_handle_mount_request` and
   `guest/crates/fs-mount/src/flush.rs::mock_generate_lock_report` /
@@ -161,18 +165,31 @@ DEC-0005 for the architectural commitment.
   `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)`
   end-to-end on the mock layer. Lives at
   `host/tests/test_smoke_inprocess.py`.
-- **[P0] CI matrix: macOS + Ubuntu.** Add
-  `.github/workflows/ci.yml`:
-  - `python-host` on `ubuntu-latest` and `macos-latest` —
-    `mypy --strict src/` + `pytest --features mock`.
-  - `rust-guest-cross-compile` on `ubuntu-latest` and
-    `macos-latest` — `cargo check --target x86_64-pc-windows-gnu`
-    + `cargo test --workspace --features mock`.
-  - `in-process-integration` on `ubuntu-latest` — driver runs the
-    smoke test above.
-  - `linux-kvm-smoke` on `self-hosted` (gated by PR label,
-    self-hosted runner doesn't exist yet — wire workflow file
-    anyway).
+- **[✅ DONE 2026-05-08] CI matrix: macOS + Ubuntu.** `.github/workflows/ci.yml`
+  has all the jobs spec'd here, all running strict locally:
+  - `python-host` runs `mypy --strict src/` + `pytest -q` on Python
+    3.9 and 3.12, on Ubuntu and macOS. Both strict-enforced.
+  - `rust-guest-cross-compile` runs `cargo check --workspace
+    --target x86_64-pc-windows-gnu`, `cargo test --workspace
+    --features ipc-vsock/mock`, and `cargo clippy --workspace
+    --target x86_64-pc-windows-gnu -- -D warnings`. All
+    strict-enforced; the clippy-warnings cleanup landed at the same
+    time.
+  - `rust-gui` runs `cargo check --workspace` strict.
+  - `proto` runs `buf lint` and `buf format --diff --exit-code`,
+    both tolerated (`|| true`) until `proto/buf.yaml` rules are
+    finalised — see follow-up below.
+  - `linux-kvm-smoke` is wired but no-op (placeholder for the
+    self-hosted runner that arrives with hardware).
+- **[P1] `proto/buf.yaml` lint + format rules.** Currently
+  default-permissive — `buf lint` passes trivially. Decide on a
+  rule set (BREAKING, DEFAULT, or MINIMAL) and remove `|| true`
+  from the proto CI job once codified.
+- **[P1] In-process Python↔Rust integration test harness.** Spec'd
+  for `host/tests/test_smoke_inprocess.py` driving the host with a
+  `cargo run --features mock` guest over `MockTransport`. Exercises
+  `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)`.
+  Not blocking Week 1; the standalone unit-level mocks now exist.
 - **[P1] Filesystem service abstraction.** Same shape as libvirt
   client. `MockFilesystem` tracks mount/unmount in-memory state.
   Lives in `host/src/crossdesk_host/ipc/filesystem.py` neighborhood.

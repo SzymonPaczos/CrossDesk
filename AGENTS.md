@@ -156,33 +156,53 @@ cd guest && cargo build              # tonic regenerates guest stubs as part of 
 
 When the user asks an agent to "work on the next task":
 
-1. **Find the current week** in `docs/EXECUTION_PLAN.md` (compare today's
-   date to the week ranges).
-2. **Pick the highest-priority unfinished item** in that week's "Items"
-   list. P0 before P1 before P2.
-3. **Cross-reference `FOLLOWUPS.md`** for additional context on the item
-   (specific files to touch, dependencies, acceptance criteria).
-4. **Create a short-named feature branch:** `feat/<task-keyword>` (e.g.,
-   `feat/transport-abstraction`, `feat/structlog-config`).
-5. **Implement** the item against its acceptance criteria. Stay scoped
-   — don't bundle unrelated refactors.
-6. **Commit** with Conventional Commits. Reference the FOLLOWUPS section
-   keyword in the commit message body so the linkage is searchable.
-7. **Wait for the user to explicitly tell you to merge** before merging
-   to `main`. Do not push branches to origin or open PRs unless
-   instructed.
-8. **When the user says "merge"**: `git checkout main && git merge --no-ff
-   <branch> -m "Merge branch '<branch>'"`. Then `git push origin main`
-   only if the user says so. Delete the local branch (`git branch -d`)
-   after merge.
-9. **Update `docs/EXECUTION_PLAN.md`**: mark the item ✅ and, if you
-   discovered new work, add a one-line entry to `FOLLOWUPS.md` under the
-   appropriate section.
+1. **`git pull --rebase origin main`** — see what other agents have
+   already done or claimed.
+2. **Read `WORK_LOG.md`** — scan "Active" entries. If your planned
+   task is claimed by another agent (open START with no END), pick
+   a different task. Scan "Recent" for relevant context that just
+   landed.
+3. **Find the current week** in `docs/EXECUTION_PLAN.md` (compare
+   today's date to the week ranges).
+4. **Pick the highest-priority unfinished item** in that week's
+   "Items" list. P0 before P1 before P2.
+5. **Cross-reference `FOLLOWUPS.md`** for additional context on the
+   item (specific files to touch, dependencies, acceptance
+   criteria).
+6. **Append a START entry to `WORK_LOG.md`** "Active" section, then
+   commit + push that one file directly to `main`. This is the only
+   exception to the no-direct-main-push rule — see `WORK_LOG.md`
+   "Protocol" for full rules and conflict resolution. If push is
+   rejected because another agent claimed the same task, pick a
+   different task.
+7. **Create a short-named feature branch:** `feat/<task-keyword>`
+   (e.g., `feat/transport-abstraction`, `feat/structlog-config`).
+8. **Implement** the item against its acceptance criteria. Stay
+   scoped — don't bundle unrelated refactors.
+9. **Commit** on the feature branch with Conventional Commits.
+   Reference the FOLLOWUPS section keyword in the commit message
+   body so the linkage is searchable.
+10. **Wait for the user to explicitly tell you to merge** before
+    merging to `main`. Do not push the feature branch to origin or
+    open PRs unless instructed.
+11. **When the user says "merge"**: `git checkout main && git merge
+    --no-ff <branch> -m "Merge branch '<branch>'"`. Then `git push
+    origin main` only if the user says so. Delete the local branch
+    (`git branch -d`) after merge.
+12. **Update `docs/EXECUTION_PLAN.md`**: mark the item ✅ in this
+    week's items list. If you discovered new work, add a one-line
+    entry to `FOLLOWUPS.md` under the appropriate section.
+13. **Move your `WORK_LOG.md` START entry to "Recent" and append a
+    matching END entry**. Commit + push directly to main (same
+    exception as step 6).
 
-The user's preference is **local merges only**, no GitHub PRs, no
-GitHub Issues at this stage. The only sources of truth for "what to do"
-are `docs/EXECUTION_PLAN.md` (this week's work) and `FOLLOWUPS.md`
-(everything queued).
+The user's preference is **local merges only for code**, no GitHub
+PRs, no GitHub Issues. The exception is `WORK_LOG.md` — its START/END
+entries are pushed directly so parallel agents see them in real
+time. The only sources of truth for "what to do" are
+`docs/EXECUTION_PLAN.md` (this week's work) and `FOLLOWUPS.md`
+(everything queued); the source of truth for "what's happening right
+now" is `WORK_LOG.md`.
 
 ## File boundaries
 
@@ -195,8 +215,12 @@ Agents may freely modify:
   `gui/Cargo.toml`, lockfiles.
 - `FOLLOWUPS.md` — for marking items complete or adding discovered
   work. Don't restructure the file without instruction.
-- `docs/EXECUTION_PLAN.md` — for marking items ✅ as completed and for
-  schedule updates after the user reviews.
+- `docs/EXECUTION_PLAN.md` — for marking items ✅ as completed and
+  for schedule updates after the user reviews.
+- `WORK_LOG.md` — START / END entries per the protocol in step 6
+  and step 13 of "Agent workflow". This file is the only one an
+  agent may push directly to `main` without explicit user merge
+  instruction.
 
 Agents must NOT modify without explicit instruction:
 

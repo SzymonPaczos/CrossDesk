@@ -24,11 +24,27 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
   - [Phase work still owed](#phase-work-still-owed)
   - [Tech debt](#tech-debt)
 - [Action items by area](#action-items-by-area)
-  - [Phase 1 follow-ups (VM bootstrap)](#phase-1-follow-ups-vm-bootstrap-is-done-but-this-still-needs-to-land-before-phase-4)
-  - [Phase 3 follow-ups (Control FSM / Heartbeat)](#phase-3-follow-ups-control-fsm--heartbeat)
-  - [Phase 4 follow-ups (RAIL Display Integration)](#phase-4-follow-ups-rail-display-integration)
-  - [Post-MVP (cross-phase)](#post-mvp-winapps-parity-features-beyond-phase-5)
-  - [Operations & lifecycle (post-MVP)](#operations--lifecycle-post-mvp)
+  - Cross-cutting / foundation (lands across all phases):
+    - [Cross-platform development & testing scaffold (URGENT)](#cross-platform-development--testing-scaffold-urgent)
+    - [Observability — structured logs, traces, metrics](#observability--structured-logs-traces-metrics)
+    - [Performance budgets — enforcement](#performance-budgets--enforcement)
+    - [Versioning & compatibility](#versioning--compatibility)
+    - [Distribution & packaging](#distribution--packaging)
+    - [Internationalization](#internationalization)
+  - Feature areas:
+    - [Display & forwarding](#display--forwarding)
+    - [Peripherals & host integration](#peripherals--host-integration)
+    - [Lifecycle: power, suspend/resume, autostart](#lifecycle-power-suspendresume-autostart)
+  - GPU work (post-MVP):
+    - [GPU passthrough — Phase 4.5 (post-MVP P0)](#gpu-passthrough--phase-45-post-mvp-p0)
+    - [Looking Glass integration — post-Phase 4.5 (P0)](#looking-glass-integration--post-phase-45-p0)
+    - [Software rendering fallback — post-Phase 4.5 (P1)](#software-rendering-fallback--post-phase-45-p1)
+  - Phase-aligned follow-ups:
+    - [Phase 1 follow-ups (VM bootstrap)](#phase-1-follow-ups-vm-bootstrap-is-done-but-this-still-needs-to-land-before-phase-4)
+    - [Phase 3 follow-ups (Control FSM / Heartbeat)](#phase-3-follow-ups-control-fsm--heartbeat)
+    - [Phase 4 follow-ups (RAIL Display Integration)](#phase-4-follow-ups-rail-display-integration)
+    - [Post-MVP (cross-phase, winapps parity)](#post-mvp-winapps-parity-features-beyond-phase-5)
+    - [Operations & lifecycle (post-MVP)](#operations--lifecycle-post-mvp)
 - [Skipped on purpose](#skipped-on-purpose-do-not-implement)
 
 ---
@@ -572,6 +588,124 @@ underserved by the comparable VM-management tooling. See
 - **[P2] RTL language readiness.** When first RTL translation
   arrives (Arabic / Hebrew), audit GUI layouts for RTL behavior.
   Qt handles most automatically. Out-of-scope until needed.
+
+## GPU passthrough — Phase 4.5 (post-MVP P0)
+
+Decision accepted 2026-05-07: GPU passthrough lands as Phase 4.5 /
+post-MVP P0; Tier 1 = NVIDIA RTX 20/30/40 driver 465+ and AMD RDNA2/3
+multi-GPU; Tier 2 documented (AMD older with `vendor-reset`, NVIDIA
+old with hide-the-VM); Tier 3 out (Intel Arc + single-GPU). Full
+deliberation in `docs/GPU_PASSTHROUGH.md`; ADR `docs/DECISIONS.md`
+DEC-0009.
+
+- **[P0] `crossdesk doctor` GPU detection.** Enumerate GPUs
+  (`lspci -nnk`), identify vendor + chip, check IOMMU enabled
+  (`/sys/class/iommu/`), check IOMMU group composition
+  (`/sys/kernel/iommu_groups/`), classify into Tier 1/2/3.
+  Output structured: `{tier, host_gpu, available_for_passthrough,
+  warnings, blockers}`. ~200-400 lines in
+  `host/src/crossdesk_host/diagnostics.py`. Wired into `crossdesk
+  install` as a pre-step.
+- **[P0] `crossdesk gpu setup` helper.** Walks user through
+  per-distro kernel cmdline params (GRUB, systemd-boot, NixOS),
+  per-distro initramfs binding (mkinitcpio, dracut,
+  initramfs-tools), GPU + audio function PCI ID identification,
+  optional `--commit` to write changes vs `--dry-run` default.
+  Plus `crossdesk gpu verify` to confirm post-reboot binding.
+- **[P0] libvirt domain XML extension for `<hostdev>`.**
+  `infra/launch-vm.py` adds GPU + audio function `<hostdev>`
+  blocks based on detected configuration. Plus
+  `<features><kvm><hidden state='on'/></kvm></features>` for old
+  NVIDIA + `hv_vendor_id` QEMU args when needed.
+- **[P0] Tier 1 vendor smoke tests.** Manual QA matrix per
+  release: at least one Tier 1 NVIDIA host and one Tier 1 AMD
+  host. CI cannot run these without dedicated hardware runners
+  (gated separately).
+- **[P1] AMD reset-bug Tier 2 docs.** Detection (probe
+  `lsmod | grep vendor_reset`); warning surfaced via doctor;
+  link to upstream <https://github.com/gnif/vendor-reset>
+  installation instructions; we don't ship the module.
+- **[P1] NVIDIA pre-2021 Tier 2 hide-the-VM docs.** Explain Code
+  43 history; document `<hidden>` flag opt-in; warn that newer
+  NVIDIA drivers (465+) make this obsolete; for users stuck on
+  old drivers explain the workaround.
+- **[P1] TA7 row in `docs/THREAT_MODEL.md`.** Malicious GPU
+  firmware threat with mitigations (signed firmware verification,
+  no ACS override, IOMMU enforcement). Adds when implementation
+  lands per DEC-0009.
+- **[P2] Per-distro automated setup support beyond docs.** Auto-
+  apply kernel cmdline + initramfs config via `crossdesk gpu
+  setup --commit` for the four primary distros. Each distro
+  module in `infra/gpu_setup/<distro>/`.
+- **[P2] GPU performance benchmarks.** Add to `host/benches/`
+  (Performance work) `bench_gpu_filter_latency.py` that measures
+  Photoshop-class filter completion time on a known image.
+  Real-hardware-only; gated behind `hardware-smoke` workflow.
+
+## Looking Glass integration — post-Phase 4.5 (P0)
+
+Decision deferred to after GPU passthrough lands. LG integration
+unlocks single-GPU users via compositor-restart hot-switch and
+adds a Desktop-mode alternative giving sub-5ms latency for power
+users. See `docs/GPU_PASSTHROUGH.md` §"Crucial: how GPU
+passthrough interacts with our RAIL model" and the prior
+deliberation in conversation history (turns about Looking Glass
+integration).
+
+- **[P0] Bundle LG client in distro packages.** ~5 MB Linux
+  binary added to deb/rpm/AUR/NixOS/PyPI artifacts. License
+  GPL-2.0+ (compatible with our GPL-3.0). Update
+  `docs/PACKAGING.md` packaging item to include.
+- **[P0] LG host installer in our Windows install pipeline.**
+  Optional component (`crossdesk install --gpu --with-lg`)
+  copying LG host to the secondary OEM disk and registering it
+  for autostart on Windows side.
+- **[P0] IVSHMEM device in `infra/launch-vm.py`.** Add IVSHMEM
+  device (8 MB shared memory region typical) to libvirt domain
+  XML when LG is enabled.
+- **[P0] Scream audio bundling.** LG itself has no audio; Scream
+  is the standard companion (low-latency network audio). Bundle
+  Scream client + server with the LG package set.
+- **[P0] `crossdesk launch --mode=desktop` CLI.** Per-app config
+  knob `mode = "rail" | "desktop"` in
+  `~/.config/crossdesk/peripherals.toml` or app-specific. When
+  `desktop` mode is selected, host spawns LG client instead of
+  FreeRDP RAIL session.
+- **[P1] Single-GPU hot-switch path.** When `crossdesk doctor`
+  detects single-GPU + user requests Desktop mode: orchestrate
+  compositor stop, GPU rebind to vfio-pci, VM start with LG host,
+  LG client spawn on iGPU/vesa fallback compositor, reverse on
+  exit.
+- **[P1] C8 IVSHMEM channel in `docs/THREAT_MODEL.md`.** New
+  component row covering IVSHMEM as a non-VSOCK trust surface.
+  Different from gRPC because no per-frame AuthContext; threat
+  is reduced because it's a unidirectional pixel firehose. Document.
+- **[P2] Docs/USER_GUIDE_DESKTOP_MODE.md.** When to use RAIL vs
+  Desktop, what the trade-offs are, troubleshooting LG audio
+  delays via Scream, etc.
+
+## Software rendering fallback — post-Phase 4.5 (P1)
+
+For users whose hardware fundamentally cannot support GPU
+passthrough (cheap motherboards with bad IOMMU groups, non-MUX
+laptops with dGPU routed through iGPU, iGPU-only systems), we
+document software rendering as the always-works fallback.
+
+- **[P1] Document supported app classes per render path.** Word,
+  Outlook, Excel, Visual Studio: software rendering fine.
+  Photoshop, Premiere, AutoCAD, Blender: software rendering
+  unusable. Concrete table in
+  `docs/USER_GUIDE_HARDWARE_COMPAT.md` so users can self-assess
+  before installing.
+- **[P1] `crossdesk doctor` recommends app categories per
+  hardware tier.** "Your hardware is Tier 3 for GPU mode but
+  fully supports productivity apps via software rendering. We
+  recommend CrossDesk for [list]; for [Photoshop, Premiere], use
+  Wine, CrossOver, or a cloud GPU service."
+- **[P2] Investigate llvmpipe optimizations.** llvmpipe is the
+  Mesa software rasterizer. Some apps that "don't work" on
+  software rendering may work with newer llvmpipe versions or
+  with specific Mesa tuning. Light investigation, no commitment.
 
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 

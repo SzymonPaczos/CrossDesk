@@ -103,8 +103,10 @@ cd gui && cargo run -p crossdesk-gui
 | [docs/PACKAGING.md](docs/PACKAGING.md) | Distribution: deb/rpm/AUR/NixOS/PyPI |
 | [docs/LIFECYCLE.md](docs/LIFECYCLE.md) | Suspend/resume coordination, systemd, autostart |
 | [docs/I18N.md](docs/I18N.md) | Internationalization (English + Polish initial) |
+| [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md) | What ships in v0.1.0 (Phases 1–5 full) |
+| [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) | Week-by-week sequence to MVP |
 | [FOLLOWUPS.md](FOLLOWUPS.md) | Action items, prioritized by area |
-| [AGENTS.md](AGENTS.md) | Project map for AI agents and new contributors |
+| [AGENTS.md](AGENTS.md) | Project map + agent workflow + file boundaries |
 
 ## Contributing
 

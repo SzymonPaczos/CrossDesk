@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use tonic::transport::{Channel, ClientTlsConfig, Certificate, Identity};
 use rand::RngCore;
+use tonic::transport::{Certificate, ClientTlsConfig, Endpoint, Identity};
 
 use proto::crossdesk::v1::AuthContext;
 
@@ -42,12 +42,15 @@ impl AuthCarrier {
     }
 }
 
-pub async fn create_secure_channel(
+/// Build a tonic `Endpoint` with the mTLS config used by the guest. Returned
+/// by itself so callers can choose between `.connect()` (default connector)
+/// and `.connect_with_connector(transport)` (explicit Transport impl).
+pub fn build_endpoint(
     ca_cert_pem: &[u8],
     guest_cert_pem: &[u8],
     guest_key_pem: &[u8],
     endpoint_url: String,
-) -> Result<Channel, anyhow::Error> {
+) -> anyhow::Result<Endpoint> {
     let ca = Certificate::from_pem(ca_cert_pem);
     let identity = Identity::from_pem(guest_cert_pem, guest_key_pem);
 
@@ -58,10 +61,5 @@ pub async fn create_secure_channel(
         .identity(identity)
         .domain_name("crossdesk-host");
 
-    let channel = Channel::from_shared(endpoint_url)?
-        .tls_config(tls)?
-        .connect()
-        .await?;
-
-    Ok(channel)
+    Ok(Endpoint::from_shared(endpoint_url)?.tls_config(tls)?)
 }

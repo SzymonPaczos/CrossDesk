@@ -1,12 +1,6 @@
 #[cfg(windows)]
-use {
-    agent_svc::service::{ffi_service_main, SERVICE_NAME},
-    windows_service::service_dispatcher,
-};
-
-#[cfg(windows)]
 fn main() -> anyhow::Result<()> {
-    service_dispatcher::start(SERVICE_NAME, ffi_service_main)?;
+    agent_svc::service::start_service_dispatcher()?;
     Ok(())
 }
 

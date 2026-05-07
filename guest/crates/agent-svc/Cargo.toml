@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "CrossDeskAgent"
+# Binary name is `agent` (→ agent.exe); the NT service name is
+# `CrossDeskAgent`, registered at install time. See REQUIREMENTS F1.9.
+name = "agent"
 path = "src/main.rs"
 
 [dependencies]

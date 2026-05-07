@@ -12,6 +12,7 @@ use windows_service::{
         ServiceType,
     },
     service_control_handler::{self, ServiceControlHandlerResult},
+    service_dispatcher,
 };
 
 use ipc_vsock::client::AuthCarrier;
@@ -62,6 +63,13 @@ define_windows_service!(ffi_service_main, service_main);
 fn service_main(_args: Vec<OsString>) {
     // Errors from run_service are already written to agent.log before returning.
     let _ = run_service();
+}
+
+/// Entry point for the NT service binary. Hands the SCM the
+/// macro-generated `ffi_service_main`, which is private by construction
+/// of `define_windows_service!`.
+pub fn start_service_dispatcher() -> Result<(), windows_service::Error> {
+    service_dispatcher::start(SERVICE_NAME, ffi_service_main)
 }
 
 pub fn run_service() -> anyhow::Result<()> {

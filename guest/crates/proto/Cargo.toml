@@ -14,3 +14,6 @@ tonic-build = "0.12"
 # build images (which ship without it) and on dev hosts that haven't
 # installed it system-wide.
 protoc-bin-vendored = "3"
+
+[lints]
+workspace = true

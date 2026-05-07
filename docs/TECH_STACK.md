@@ -127,8 +127,8 @@ picked this. Recurring criterion: type-checked async by default.
 
 ## What we explicitly avoid in our stack
 
-- **Bash for orchestration logic** — see `ARCHITECTURE.md` hard
-  constraints.
+- **Bash for orchestration logic** — see `AGENTS.md` "Coding rules"
+  + `docs/DECISIONS.md` DEC-0003.
 - **Polling loops** — every wait is async-event-driven.
 - **TODO comments in merged code** — file an issue, link it.
 - **Unscoped diffs** — a bug fix doesn't bundle a refactor.

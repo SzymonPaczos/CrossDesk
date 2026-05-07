@@ -51,7 +51,8 @@ Where we sit in the broader landscape: [docs/COMPETITION.md](docs/COMPETITION.md
 - **Recovery:** Adaptive heartbeat FSM with explicit
   HEALTHY → DEGRADED → PROBING → SOFT_RECOVERY → HARD_DESTROY states.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and
+See [docs/GOALS.md](docs/GOALS.md) for the vision and
+[docs/TECH_STACK.md](docs/TECH_STACK.md) for the stack rationale, plus
 [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what we defend
 against (and what we don't).
 
@@ -84,7 +85,6 @@ cd gui && cargo run -p crossdesk-gui
 
 | Doc | What |
 |-----|------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design summary |
 | [ROADMAP.md](ROADMAP.md) | 5 phases with SPOFs called out |
 | [docs/GOALS.md](docs/GOALS.md) | Vision, success criteria, non-goals |
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Functional + non-functional, numbered |
@@ -108,8 +108,8 @@ cd gui && cargo run -p crossdesk-gui
 
 ## Contributing
 
-Read [AGENT.md](AGENT.md) for coding rules and [AGENTS.md](AGENTS.md)
-for navigation. Conventional Commits. Type-checked async Python on
+Read [AGENTS.md](AGENTS.md) — it's the navigation map *and* contains
+the coding rules. Conventional Commits. Type-checked async Python on
 the host (`mypy --strict`). Idiomatic Rust on the guest (`cargo
 clippy`).
 

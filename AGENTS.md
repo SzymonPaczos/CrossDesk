@@ -23,12 +23,12 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 | What does CrossDesk *do*? | `README.md` + `docs/GOALS.md` |
 | What must it do, how well? | `docs/REQUIREMENTS.md` |
 | Why this stack? | `docs/TECH_STACK.md` |
-| What does the architecture look like? | `ARCHITECTURE.md` |
+| What does the architecture look like? | `docs/GOALS.md` (vision) + `docs/TECH_STACK.md` (components) |
 | What's the security model? | `docs/THREAT_MODEL.md` |
 | What's the roadmap? | `ROADMAP.md` (phases) + `FOLLOWUPS.md` (action items) |
 | Why X over Y? | `docs/DECISIONS.md` (ADRs `DEC-NNNN`) |
 | What does the competition look like? | `docs/COMPETITION.md` + `docs/COMPARISON_WINAPPS.md` |
-| Coding rules? | `AGENT.md` (legacy file kept for now) + the "Coding rules" section below |
+| Coding rules? | The "Coding rules" section below |
 | Anything in `third_party/`? | `third_party/winapps/` — vendored for reference, AGPLv3, do not copy verbatim |
 
 ## Repository layout
@@ -36,11 +36,9 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 ```
 crossdesk/
 ├── README.md                 # pitch + quick start
-├── ARCHITECTURE.md           # design summary
 ├── ROADMAP.md                # 5 phases, terse
 ├── FOLLOWUPS.md              # action-item tracking, prioritized by area
-├── AGENTS.md                 # this file — navigation
-├── AGENT.md                  # coding rules (legacy filename, kept)
+├── AGENTS.md                 # this file — navigation + coding rules
 │
 ├── docs/
 │   ├── GOALS.md              # vision, primary goals, non-goals, success criteria
@@ -116,7 +114,7 @@ cd host && python build_proto.py     # regenerates host stubs
 cd guest && cargo build              # tonic regenerates guest stubs as part of build
 ```
 
-## Coding rules (also in `AGENT.md`)
+## Coding rules
 
 - **No Docker.** Host runs against `qemu:///session` libvirt directly.
   See `docs/DECISIONS.md` DEC-0003.
@@ -154,8 +152,8 @@ cd guest && cargo build              # tonic regenerates guest stubs as part of 
 
 1. This file.
 2. `README.md` — pitch.
-3. `ARCHITECTURE.md` — design summary.
-4. `docs/GOALS.md` — what we're trying to do.
+3. `docs/GOALS.md` — what we're trying to do.
+4. `docs/TECH_STACK.md` — components and stack rationale.
 5. `docs/THREAT_MODEL.md` — what we're defending against.
 6. `FOLLOWUPS.md` — what's queued, prioritized.
 
@@ -169,7 +167,7 @@ The docs are the source of truth in roughly this order of authority:
 1. `docs/THREAT_MODEL.md` for security claims.
 2. `docs/REQUIREMENTS.md` for "what must this do."
 3. `docs/DECISIONS.md` for "why X over Y."
-4. `ARCHITECTURE.md` for the overall design summary.
+4. `docs/TECH_STACK.md` for component-level design.
 5. `docs/GOALS.md` for vision and scope.
 6. `ROADMAP.md` for phase ordering.
 7. `FOLLOWUPS.md` for queued work.

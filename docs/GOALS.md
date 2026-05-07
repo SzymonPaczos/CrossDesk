@@ -36,7 +36,7 @@ nothing more — and the user never has to think about the VM.
 | NG3 | Non-VM execution (Wine / CrossOver / Bottles). | Different paradigm with different strengths and limits. We deliberately use a real VM. |
 | NG4 | Multi-user shared VM. | Single Linux user, single Windows VM. Adding sharing breaks our credential model and threat model. |
 | NG5 | Headless / server / kiosk deployments. | We assume an interactive Linux desktop with a logged-in user. |
-| NG6 | Docker / Podman backends. | Architectural — see `ARCHITECTURE.md` and `docs/DECISIONS.md` DEC-0007. |
+| NG6 | Docker / Podman backends. | Architectural — see `docs/DECISIONS.md` DEC-0003. |
 | NG7 | Shipping pre-installed Windows VMs. | License + hosting cost. We help users download official Microsoft ISOs. |
 | NG8 | Activation key management. | The user owns their Windows licensing. |
 

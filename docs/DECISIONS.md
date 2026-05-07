@@ -224,7 +224,7 @@ From day one of CrossDesk implementation:
 
 **Status:** Accepted — 2026-05-07
 **Owner:** all components touching Linux-or-Windows-only APIs
-**Related:** `docs/CROSS_PLATFORM_DEV.md`; `AGENT.md` "no polling" rule
+**Related:** `docs/CROSS_PLATFORM_DEV.md`; `AGENTS.md` "no polling" rule
 
 ### Context
 
@@ -351,7 +351,7 @@ decision, not a new one.
 
 **Status:** Accepted — 2026-05-07
 **Owner:** install pipeline, transport, security
-**Related:** `ARCHITECTURE.md` §1; `docs/THREAT_MODEL.md` §C4;
+**Related:** `docs/THREAT_MODEL.md` §C4; `docs/GOALS.md` NG6;
 `docs/COMPARISON_WINAPPS.md`; `FOLLOWUPS.md` "Skipped on purpose"
 
 ### Context
@@ -373,7 +373,8 @@ permanently — not "later when we have time." `qemu:///system` is
 also rejected because it requires root and a session-bus daemon,
 removing the direct `$WAYLAND_DISPLAY` access we rely on.
 
-This is also captured as a top-level constraint in `AGENT.md`.
+This is also captured as a top-level constraint in `AGENTS.md`
+"Coding rules".
 
 ### Alternatives considered
 

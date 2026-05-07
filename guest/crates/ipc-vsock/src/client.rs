@@ -16,9 +16,10 @@ pub struct AuthCarrier {
 }
 
 impl AuthCarrier {
-    /// `peer_cert_fingerprint` is the SHA-256 of the host leaf cert, lowercase
-    /// hex, no separators — matches `AuthValidator.extract_peer_fingerprint`
-    /// on the server side.
+    /// `peer_cert_fingerprint` is the SHA-256 of *our own* mTLS leaf
+    /// cert — the field in proto/AuthContext is the sender's cert
+    /// (the server compares it to its TLS-layer view of our peer).
+    /// Lowercase hex, no separators.
     pub fn new(peer_cert_fingerprint: String) -> Self {
         let mut nonce = vec![0u8; 16];
         rand::thread_rng().fill_bytes(&mut nonce);

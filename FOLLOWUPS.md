@@ -166,12 +166,27 @@ DEC-0005 for the architectural commitment.
   pids, and exposes `fail_next_spawn` failure injection. Wiring
   into `rail_manager.py` lands with Phase 4 RAIL command
   construction (Week 8).
-- **[P0] In-process integration test harness.** Test that drives
-  Python host + spawned Rust guest (via `cargo run --features
-  mock`) over `MockTransport`, exercising
-  `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)`
-  end-to-end on the mock layer. Lives at
-  `host/tests/test_smoke_inprocess.py`.
+- **[✅ DONE 2026-05-08] In-process integration test harness.**
+  `host/tests/test_smoke_inprocess.py` spawns a real Rust agent
+  binary (`cargo build -p agent-svc --features mock`) against a
+  Python host gRPC server on a free TCP port. Exercises the full
+  mTLS + AuthContext + ClientHello → ServerAccept handshake. Surfaced
+  three pre-existing bugs fixed in the same commit:
+  1. `agent-svc/src/planes.rs::AuthCarrier::new` was being seeded
+     with the host cert fingerprint instead of the agent's own
+     guest cert fingerprint, which the server's `AuthValidator`
+     rejected as a CID-collision spoof.
+  2. `agent-svc/src/planes.rs::DEFAULT_HOST_ENDPOINT` was
+     `http://` — tonic's `tls_config` only triggers under `https`,
+     so the connection was silently plaintext and the host's mTLS
+     listener tore it down with a confusing
+     `WRONG_VERSION_NUMBER` SSL error.
+  3. `host/src/crossdesk_host/ipc/filesystem.py::ShareChannel`
+     called `context.core_context.aborted()` — a private
+     cython attribute that does not exist in current grpcio
+     releases. Replaced with the public `context.cancelled()`.
+  Stretch flow (`Installer.run() → Launch(notepad) →
+  RailWindowEvent(CREATED)`) deferred until Phase 4 RAIL lands.
 - **[✅ DONE 2026-05-08] CI matrix: macOS + Ubuntu.** `.github/workflows/ci.yml`
   has all the jobs spec'd here, all running strict locally:
   - `python-host` runs `mypy --strict src/` + `pytest -q` on Python

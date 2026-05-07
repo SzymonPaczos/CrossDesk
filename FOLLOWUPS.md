@@ -148,12 +148,14 @@ DEC-0005 for the architectural commitment.
   `transport/{real,mock}.py`. `daemon.py` migrated; `ipc/server.py`
   retained as a thin shim for backwards compat. Unit tests cover
   the failure-injection hooks on both languages.
-- **[P0] Libvirt client abstraction.** Protocol in
-  `host/src/crossdesk_host/abstractions/libvirt.py`. Real impl wraps
-  `libvirt-python`. Mock impl returns canned XML, accepts
-  lifecycle commands as no-ops, exposes hooks like
-  `MockLibvirt(simulate_start_failure=True)`. Migrate
-  `infra/launch-vm.py` and `host/.../watchdog/` consumers.
+- **[✅ DONE 2026-05-08] Libvirt client abstraction.** `LibvirtController`
+  Protocol with `RealLibvirtController` (lazy `libvirt-python`
+  connection, qemu:///session) and `LibvirtControllerMock` (per-method
+  `fail_next_*` hooks, call counters, share-tracking set). Consumers
+  migrated: `ipc/heartbeat.py` and `ipc/filesystem.py` now type
+  against the Protocol. `infra/launch-vm.py` is still plain qemu
+  subprocess (no libvirt) — migration deferred to Week 14 install
+  pipeline.
 - **[P0] FreeRDP invocation abstraction.** Protocol in
   `host/src/crossdesk_host/abstractions/freerdp.py`. Real impl
   spawns `xfreerdp` subprocess; mock records argv to a list and

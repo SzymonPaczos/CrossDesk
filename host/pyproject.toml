@@ -63,7 +63,7 @@ follow_imports = "skip"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["grpc", "grpc.*", "google.protobuf.*", "systemd", "systemd.*"]
+module = ["grpc", "grpc.*", "google.protobuf.*", "systemd", "systemd.*", "libvirt"]
 ignore_missing_imports = true
 
 [tool.black]

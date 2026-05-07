@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::fs::OpenOptions;
 use std::io::Write as _;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::time::SystemTime;
 

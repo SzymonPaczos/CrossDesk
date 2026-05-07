@@ -69,19 +69,23 @@ pub async fn run_with_pki(pki_path: &Path, endpoint: String) -> anyhow::Result<(
     )
     .await?;
 
-    let auth = AuthCarrier::new(own_fp);
-
+    // Each plane is a separate gRPC stream; the host's AuthValidator
+    // tracks expected sequence numbers keyed by `stream_nonce`. We
+    // therefore need three distinct AuthCarriers (each gets its own
+    // random nonce + counter) — sharing one carrier across planes
+    // races the validator's sequence check and yields spurious
+    // "replay attack" rejections under load.
     let session_handle = tokio::spawn(crate::session::run_control_session(
         ControlServiceClient::new(channel.clone()),
-        auth.clone(),
+        AuthCarrier::new(own_fp.clone()),
     ));
     let heartbeat_handle = tokio::spawn(crate::heartbeat::run_heartbeat_loop(
         HeartbeatServiceClient::new(channel.clone()),
-        auth.clone(),
+        AuthCarrier::new(own_fp.clone()),
     ));
     let filesystem_handle = tokio::spawn(crate::filesystem::run_filesystem_channel(
         FilesystemServiceClient::new(channel),
-        auth,
+        AuthCarrier::new(own_fp),
     ));
 
     // First plane to die brings the rest down — they all sit on the same

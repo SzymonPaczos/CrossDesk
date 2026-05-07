@@ -15,14 +15,12 @@ fn main() -> anyhow::Result<()> {
 
 #[cfg(any(not(windows), feature = "mock"))]
 fn main() -> anyhow::Result<()> {
-    use tracing_subscriber::{fmt, EnvFilter};
-    // Mock/dev binary writes structured logs to stderr so the
-    // integration harness can grep for handshake markers. Production
-    // (Windows SCM path) logs to %CROSSDESK_LOG_PATH% via append_log.
-    fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
-        .with_writer(std::io::stderr)
-        .init();
+    // Mock/dev binary emits the same JSON Lines schema as the Python
+    // host; the integration harness greps stderr for handshake markers.
+    // Production (Windows SCM path) logs through `append_log` to
+    // %CROSSDESK_LOG_PATH%; switching that to JSON is tracked
+    // separately so this commit stays scoped to the dev path.
+    let _ = observability::init();
 
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(agent_svc::planes::run())

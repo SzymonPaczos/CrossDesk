@@ -267,7 +267,8 @@ authentication beyond TLS handshake — replay defense relies entirely on TLS.
 **CrossDesk advantage:** `AF_VSOCK` skips the network stack entirely.
 mTLS + per-frame `AuthContext` (peer cert fingerprint + stream nonce + monotonic
 sequence) defends against CID collisions and replay independent of the TLS
-layer. Documented in `ARCHITECTURE.md`.
+layer. Documented in `docs/THREAT_MODEL.md` §C3 and
+`docs/REQUIREMENTS.md` F4.
 
 ### 3.3 Static `\\tsclient\home` exposure
 
@@ -277,7 +278,7 @@ user's documents. WinApps treats this as acceptable; we should not.
 
 **CrossDesk advantage:** just-in-time VirtioFS — the host hot-plugs only the
 parent directory of the file the user opens, and detaches it on `ReleaseAck`
-from the guest. This is in `ARCHITECTURE.md` §3 and is one of CrossDesk's
+from the guest. This is in `docs/THREAT_MODEL.md` §C5 and is one of CrossDesk's
 distinguishing security features.
 
 ### 3.4 Docker as a backend at all
@@ -360,7 +361,8 @@ end-to-end tests. CrossDesk should have a minimum CI matrix from day one
 | **Dynamic memory** | `virtio-balloon` integrated vs static RAM_SIZE |
 
 These are all design-level, not features-to-build — they're already in
-ARCHITECTURE.md. Our job is to keep them as constraints when adding
+`docs/GOALS.md`, `docs/REQUIREMENTS.md`, and `docs/THREAT_MODEL.md`.
+Our job is to keep them as constraints when adding
 parity-with-winapps features.
 
 ---

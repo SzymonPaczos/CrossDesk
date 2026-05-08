@@ -35,6 +35,27 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 | What can an agent change? | The "File boundaries" section below |
 | Anything in `third_party/`? | `third_party/winapps/` — vendored for reference, AGPLv3, do not copy verbatim |
 
+## Generic agent loadout (`.claude/`)
+
+Stack-agnostic guardrails extracted from `universals.md` (kept in
+the repo as a reference template). Auto-loaded by Claude Code via
+`CLAUDE.md`:
+
+- [.claude/rules/general.md](.claude/rules/general.md) — universal
+  prohibitions, Conventional Commits, branch-per-agent rule,
+  pointer to the `WORK_LOG.md` coordination protocol.
+- [.claude/rules/backend.md](.claude/rules/backend.md) — Python
+  (`host/**`) + Rust (`guest/**`) path-specific rules; proto-first
+  RPC pattern; secrets / mTLS guidance.
+- [.claude/architecture.md](.claude/architecture.md) — short stack
+  snapshot; defers to this file's "Repository layout" for the full
+  map. `Last Updated:` is bumped by the post-commit hook.
+- [.claude/ignorefiles.md](.claude/ignorefiles.md) — generated
+  artifacts and reference-only paths agents should not analyze.
+
+The git hooks under `.githooks/` are activated per-clone; see the
+"One-time setup per clone" block in [CLAUDE.md](CLAUDE.md).
+
 ## Repository layout
 
 ```
@@ -256,6 +277,10 @@ appropriate):
   Linux machine. *Ask when hardware acquisition status changes.*
 
 ## What to read first as a new agent
+
+If you are a Claude Code session, [CLAUDE.md](CLAUDE.md) auto-loads
+the rule files under `.claude/rules/` for you. Read this file
+(`AGENTS.md`) for project specifics, then in order:
 
 1. This file.
 2. `README.md` — pitch.

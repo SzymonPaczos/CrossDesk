@@ -1,0 +1,60 @@
+#!/bin/sh
+# Pre-commit: hybrid Python + Rust typecheck for CrossDesk.
+# Skips a check if no relevant files are staged (no slowdown on
+# docs-only commits). Stops the commit on any failure.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# nvm/pyenv path safety — don't source full rc files (they break
+# `cd` / zoxide / direnv inside hooks).
+export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
+[ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh" --no-use 2>/dev/null || true
+
+CHANGED="$(git diff --cached --name-only --diff-filter=ACM)"
+
+if [ -z "$CHANGED" ]; then
+    exit 0
+fi
+
+# --- Host: mypy --strict (only if a .py under host/ is staged) ---
+if echo "$CHANGED" | grep -qE '^host/.*\.py$'; then
+    echo "🔍 mypy --strict host/src/ ..."
+    if [ -d "host/.venv" ] && [ -x "host/.venv/bin/mypy" ]; then
+        ( cd "$REPO_ROOT/host" && .venv/bin/mypy --strict src/ ) \
+            || { echo "❌ mypy failed — fix type errors before commit."; exit 1; }
+    elif command -v mypy >/dev/null 2>&1; then
+        ( cd "$REPO_ROOT/host" && mypy --strict src/ ) \
+            || { echo "❌ mypy failed — fix type errors before commit."; exit 1; }
+    else
+        echo "⚠️  mypy not on PATH and host/.venv/bin/mypy missing — skipping host typecheck."
+        echo "   Install: cd host && pip install -e '.[dev]'"
+    fi
+fi
+
+# --- Guest: cargo check (only if a .rs under guest/ is staged) ---
+if echo "$CHANGED" | grep -qE '^guest/.*\.rs$'; then
+    echo "🔍 cargo check guest/ ..."
+    if command -v cargo >/dev/null 2>&1; then
+        ( cd "$REPO_ROOT/guest" && cargo check --workspace --quiet ) \
+            || { echo "❌ cargo check (guest) failed — fix before commit."; exit 1; }
+    else
+        echo "⚠️  cargo not on PATH — skipping guest typecheck."
+    fi
+fi
+
+# --- GUI: cargo check (only if a .rs under gui/ is staged) ---
+if echo "$CHANGED" | grep -qE '^gui/.*\.rs$'; then
+    echo "🔍 cargo check gui/ ..."
+    if command -v cargo >/dev/null 2>&1; then
+        ( cd "$REPO_ROOT/gui" && cargo check --quiet ) \
+            || { echo "❌ cargo check (gui) failed — fix before commit."; exit 1; }
+    else
+        echo "⚠️  cargo not on PATH — skipping gui typecheck."
+    fi
+fi
+
+echo "✅ pre-commit OK."
+exit 0

@@ -46,8 +46,15 @@ infra/certs/pki/
 *.csr
 *.srl
 
-# Claude Code per-project state
-.claude/
+# Claude Code per-project state — per-user / per-machine bits stay
+# ignored (settings.json contains absolute paths like
+# Read(//Users/<you>/.cargo/...)). Shared agent rules
+# (.claude/rules/, architecture.md, ignorefiles.md) ARE tracked.
+.claude/settings.json
+.claude/settings.local.json
+.claude/state/
+.claude/cache/
+.claude/projects/
 
 # Large local recordings
 *.mov

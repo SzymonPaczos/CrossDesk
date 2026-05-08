@@ -27,6 +27,10 @@ import subprocess
 from collections.abc import AsyncIterator
 from pathlib import Path
 
+import io
+import json
+import re
+
 import grpc
 import pytest
 
@@ -35,6 +39,8 @@ from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
+from crossdesk_host.observability import configure_logging
+from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
 from crossdesk_host.proto.crossdesk.v1 import (
     control_pb2_grpc,
     filesystem_pb2_grpc,
@@ -101,9 +107,14 @@ def cargo_built_agent() -> Path:
 
 
 @pytest.fixture
-async def host_with_port():
-    """Boot the host gRPC server on a free TCP port and yield ``port``."""
-    server = grpc.aio.server()
+async def host_with_port_and_logs():
+    """Boot the host gRPC server on a free TCP port, mount the
+    TraceContextInterceptor, and pipe structlog output into a buffer
+    the test can inspect. Yields ``(port, log_buffer)``."""
+    log_buffer = io.StringIO()
+    configure_logging(stream=log_buffer)
+
+    server = grpc.aio.server(interceptors=[TraceContextInterceptor()])
 
     creds = grpc.ssl_server_credentials(
         [
@@ -132,9 +143,17 @@ async def host_with_port():
     assert port != 0
     await server.start()
     try:
-        yield port
+        yield port, log_buffer
     finally:
         await server.stop(grace=0.5)
+
+
+@pytest.fixture
+async def host_with_port(host_with_port_and_logs):
+    """Backwards-compatible alias for tests that don't care about the
+    log buffer — returns just the port."""
+    port, _ = host_with_port_and_logs
+    yield port
 
 
 async def _drain_subprocess_logs(
@@ -219,6 +238,93 @@ async def test_agent_connects_and_completes_handshake(
                 f"agent exited prematurely (rc={proc.returncode}) after "
                 f"handshake markers fired; stderr:\n{agent_stderr}"
             )
+    finally:
+        if proc.returncode is None:
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+        drain_task.cancel()
+        try:
+            await drain_task
+        except asyncio.CancelledError:
+            pass
+
+
+_TRACE_ID_AGENT_RE = re.compile(rb"trace_id[=:\s\"]+([0-9a-f]{32})")
+
+
+async def test_traceparent_propagates_from_agent_to_host_logs(
+    host_with_port_and_logs: "tuple[int, io.StringIO]",
+    cargo_built_agent: Path,
+    tmp_path: Path,
+) -> None:
+    """End-to-end W3C Trace Context propagation per DEC-0006:
+
+    - Agent's `agent-svc::planes::run_with_pki` mints a root
+      TraceContext and passes it via `inject_interceptor` to all
+      three planes' tonic clients.
+    - Host's `TraceContextInterceptor` extracts ``traceparent`` on
+      every RPC and binds the trace_id+span_id to structlog
+      contextvars for the duration of the handler.
+    - This test asserts the same `trace_id` shows up on both sides.
+    """
+    port, log_buffer = host_with_port_and_logs
+    pki = _stage_agent_pki(tmp_path)
+
+    env = {
+        **os.environ,
+        "CROSSDESK_PKI_DIR": str(pki),
+        "CROSSDESK_HOST_ENDPOINT": f"https://127.0.0.1:{port}",
+        "CROSSDESK_DOMAIN_UUID": "trace-prop-test",
+        "RUST_LOG": "info",
+    }
+
+    proc = await asyncio.create_subprocess_exec(
+        str(cargo_built_agent),
+        env=env,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stderr_sink: list[bytes] = []
+    drain_task = asyncio.create_task(_drain_subprocess_logs(proc, stderr_sink))
+
+    async def _wait_until_host_saw_trace() -> str | None:
+        deadline = asyncio.get_event_loop().time() + 30.0
+        while asyncio.get_event_loop().time() < deadline:
+            for line in log_buffer.getvalue().splitlines():
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                tid = rec.get("trace_id", "")
+                if isinstance(tid, str) and len(tid) == 32 and tid != "0" * 32:
+                    return tid
+            await asyncio.sleep(0.1)
+        return None
+
+    try:
+        host_trace_id = await _wait_until_host_saw_trace()
+        assert host_trace_id is not None, (
+            "host structlog never bound a non-empty trace_id; "
+            f"buffer:\n{log_buffer.getvalue()[:2000]}"
+        )
+
+        agent_stderr_blob = b"".join(stderr_sink)
+        agent_match = _TRACE_ID_AGENT_RE.search(agent_stderr_blob)
+        assert agent_match is not None, (
+            "agent never logged its minted trace_id; agent stderr:\n"
+            + agent_stderr_blob.decode("utf-8", errors="replace")[:2000]
+        )
+        agent_trace_id = agent_match.group(1).decode("ascii")
+
+        assert host_trace_id == agent_trace_id, (
+            f"trace_id mismatch: agent={agent_trace_id!r} "
+            f"host={host_trace_id!r}"
+        )
     finally:
         if proc.returncode is None:
             proc.terminate()

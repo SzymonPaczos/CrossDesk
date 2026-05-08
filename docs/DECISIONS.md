@@ -7,6 +7,449 @@ delete history.
 
 ---
 
+## DEC-0015: Windows Home is not a supported guest edition
+
+**Status:** Accepted — 2026-05-08
+**Owner:** install wizard / Phase 4
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §3 Screen 2; DEC-0010
+(Pro fixed in express install)
+
+### Context
+
+Windows 11 Home does not include the RDP **server** — only the RDP
+client. CrossDesk's architecture connects from the Linux host to the
+guest's RDP server to deliver RAIL apps. A Home guest installs
+successfully but cannot serve any RAIL app: Screen 5 of the wizard
+and every subsequent app launch would fail.
+
+Third-party workarounds exist (RDP Wrapper most notably) but:
+- are unsupported by Microsoft;
+- regularly break across Windows cumulative updates;
+- trigger malware-detection false positives in the guest;
+- tie our reliability to a third-party project we do not control.
+
+When a user supplies a Windows Home ISO via "From ISO", three
+options exist: (a) silently install Home and let the user discover
+the broken state, (b) warn but permit override, or (c) refuse the
+edition and redirect to Pro.
+
+### Decision
+
+**Windows Home is rejected as a guest edition. No override path.**
+
+When ISO detection identifies a Home-class edition, the wizard shows
+a blocking modal before Screen 3:
+
+- Heading: *"Windows 11 Home is not compatible with CrossDesk"*
+- Body: *"Home does not include the Remote Desktop server, which
+  CrossDesk uses to display Windows applications as Linux windows.
+  Pro, Enterprise, and Education editions are supported."*
+- Two buttons:
+  - **Download Windows 11 Pro from Microsoft** (primary, switches
+    to express path → Screen 2a EULA → Screen 3 with Pro fixed)
+  - **Cancel** (returns to Screen 2)
+
+There is **no "install Home anyway"** option.
+
+**Edition matrix:**
+
+| Edition | Detected as | Wizard behaviour |
+|---|---|---|
+| Home | Home-class | Blocked. Modal redirects to Pro. |
+| Home N | Home-class | Blocked. |
+| Home Single Language | Home-class | Blocked. |
+| Home in S Mode | Home-class | Blocked. |
+| Pro | Pro-class | Accepted. |
+| Pro for Workstations | Pro-class | Accepted. |
+| Enterprise | Enterprise-class | Accepted. |
+| Enterprise LTSC | Enterprise-class | Accepted. |
+| Education | Education-class | Accepted. |
+
+The express path (DEC-0010) is unaffected — it pulls Pro from
+Microsoft regardless of any Home consideration.
+
+### Alternatives considered
+
+- **Allow override with warning.** Rejected: a predictably broken
+  state that the user clicks past once and then carries forward as a
+  support burden. The support load of "I clicked past the warning,
+  now nothing works" outweighs the autonomy of allowing the click.
+- **Implement RDP Wrapper integration.** Rejected per the third-
+  party caveats above. Not appropriate for a project that promises
+  reliable behaviour.
+- **Silently substitute Pro when Home detected.** Rejected: the user
+  picked their ISO deliberately; substituting without consent is
+  overreach. The blocking modal is the consent surface.
+- **Allow Home for non-RAIL use cases.** Out of scope for MVP.
+  CrossDesk is a RAIL product; non-RAIL guests would be a separate
+  guest-mode workstream and can revisit Home at that time.
+
+### When to reconsider
+
+- Microsoft adds the RDP server to Home edition (extremely unlikely;
+  this is a Pro/Enterprise differentiator established for a decade).
+- A vendor-supported, licence-clean RDP-server alternative becomes
+  available for Home.
+- A non-RAIL guest mode enters scope and Home becomes meaningful in
+  that mode. At that point this DEC splits per guest-mode.
+
+---
+
+## DEC-0014: Microsoft Windows EULA shown in-wizard before ISO download
+
+**Status:** Accepted — 2026-05-07
+**Owner:** install wizard / Phase 4
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §3 Screen 2/3, §4.2;
+DEC-0012 (Microsoft as ISO source)
+
+### Context
+
+DEC-0012 fixed Microsoft as the source for Windows ISOs and relies on
+public consumer download URLs. Two adjacent concerns remain:
+1. **Legal posture.** CrossDesk programmatically retrieving Microsoft
+   media and provisioning a Windows guest needs the user — not us —
+   to be the party accepting Microsoft's licensing terms. Otherwise
+   we operate as redistributor without licence.
+2. **`unattended.xml`** skips the in-Windows EULA acceptance screen
+   that Setup normally renders during first boot (`f_0190` in the
+   Parallels reference). The EULA must be presented somewhere — if
+   not by Setup, then by us.
+
+Combining these: present Microsoft's Windows EULA in the wizard,
+require explicit user acceptance, and only then trigger the ISO
+download. The user is the party accepting; the unattended flow stays
+unattended.
+
+### Decision
+
+1. **Express Windows path only.** When the user picks "Install
+   Windows 11" on Screen 2, the wizard inserts an EULA step
+   immediately after Screen 2 and before Screen 3 (Configuration).
+2. **EULA content** is bundled with the CrossDesk release as a static
+   text/RTF file shipped in the package, version-tagged against the
+   Windows release we install (Windows 11 24H2 → bundle 24H2 EULA
+   text). A `Read latest online` link points to Microsoft's current
+   live URL.
+3. **Acceptance UI:**
+   - Heading: *"Microsoft Software Licence Terms — Windows 11"*.
+   - Scrollable text area (full EULA).
+   - Below the text: explicit checkbox *"I have read and agree to
+     the Microsoft Software Licence Terms"*. **No pre-check.**
+   - Footer buttons: **Decline** (returns to Screen 2),
+     **Accept and continue** (advances to Screen 3, disabled until
+     checkbox set).
+4. **Audit trail:** acceptance is logged to
+   `~/.local/state/crossdesk/eula-acceptance.log` with timestamp,
+   user, EULA version, and the SHA256 of the bundled EULA text.
+   This is local-only — it is **not** transmitted anywhere
+   (DEC-0002).
+5. **"From ISO" path is exempt.** Users who supply their own ISO
+   already accepted Microsoft's terms when they obtained it; the
+   wizard does not re-prompt.
+
+### Alternatives considered
+
+- **No EULA in wizard, rely on Setup's EULA screen.** Rejected:
+  `unattended.xml` skips Setup's EULA, so it is never shown.
+- **Show EULA on first launch of CrossDesk.** Rejected: a user who
+  never installs Windows (e.g. CrossDesk for an existing imported
+  guest, post-MVP) would still see Microsoft's EULA, which is
+  irrelevant to them. Tying it to the express Windows path is
+  cleaner.
+- **Live EULA fetch from Microsoft.** Rejected for MVP: introduces a
+  network dependency before any download starts, and the EULA URL
+  changes with Microsoft's site. Bundled snapshot + "read latest
+  online" link is more reliable.
+
+### When to reconsider
+
+- Microsoft changes its licensing model (e.g. requires online
+  acceptance via a Microsoft account before download).
+- Bundled EULA text drifts more than one Windows release behind the
+  ISO version we actually pull.
+- Legal review concludes that the bundled-snapshot approach is
+  insufficient and live fetch is required.
+
+---
+
+## DEC-0013: Windows password storage, surfacing, and desktop copy
+
+**Status:** Accepted — 2026-05-07
+**Owner:** install pipeline / credential management
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §4.4; **amends** DEC-0001
+(Windows password lifecycle)
+
+### Context
+
+DEC-0001 fixed the storage location for the auto-generated Windows
+password at `~/.config/crossdesk/vm.toml` mode `0600`. It did not
+specify how the user is informed where the password is stored after a
+successful install, nor what happens when the primary path is
+unwritable.
+
+The install wizard (`docs/INSTALL_WIZARD_PLAN.md` Screen 4 → Screen 5
+transition) is the natural surfacing point. Beyond surfacing: the
+config-dir location is hidden from non-technical users, and Linux
+notifications are ephemeral. A discoverable copy of the password —
+on the desktop of the user who created the guest — is worth the
+modest extra exposure: the user already has read access to that
+config file, and the desktop copy gives them an obvious place to look
+weeks later when they've forgotten where it was.
+
+### Decision
+
+1. **Primary location** is unchanged from DEC-0001:
+   `~/.config/crossdesk/vm.toml` mode `0600`. This is the
+   authoritative copy that the auth health-check (DEC-0001 §5) and
+   RAIL launcher read from.
+2. **Desktop copy is always written**, not only as a fallback:
+   `<xdg-DESKTOP-dir>/crossdesk-windows-password.txt` mode `0600`,
+   on every fresh install. (Polish locale → `~/Pulpit/`, English →
+   `~/Desktop/`, etc., resolved via `xdg-user-dirs`.) Header text:
+   > *"This file is a copy of the password CrossDesk generated for
+   > your Windows machine. The authoritative copy lives in
+   > ~/.config/crossdesk/vm.toml. You can move or delete this file
+   > once you've saved the password somewhere safe."*
+3. **Surfacing on first install** uses **both** channels:
+   - **Modal** at the Screen 4 → Screen 5 transition showing the
+     password once (with a copy-to-clipboard button) plus the
+     paths to *both* the config file and the desktop copy. Modal
+     is non-dismissable until acknowledged.
+   - **Native Linux notification** in parallel:
+     *"Windows password saved to <desktop-path>"*. Notifications are
+     ephemeral and distro-dependent — the modal is the load-bearing
+     channel.
+4. **Fallback when desktop is unresolvable** (no `xdg-user-dirs`,
+   read-only home): skip the desktop copy and surface the
+   config-file path in both modal and notification with a warning
+   noting the desktop copy was not written.
+5. **Password mutation events** (re-install, manual rotation post-
+   MVP) refresh `vm.toml` immediately. The desktop copy is **not**
+   automatically refreshed — it is written once at install and left
+   for the user to manage. We do not own files on the user's desktop
+   after creation.
+
+### Alternatives considered
+
+- **Desktop copy only as fallback.** Original framing of this
+  decision earlier in the same conversation. Rejected in favour of
+  always-write because the discovery problem (config dir is hidden,
+  notifications are ephemeral) exists regardless of whether the
+  primary path succeeded.
+- **OS keyring (Secret Service / KWallet / GNOME Keyring).** Rejected
+  for MVP: cross-distro packaging and behaviour differences outweigh
+  the benefit at this stage. Revisit when keyring access is worth a
+  separate workstream.
+- **Notification only, no modal.** Rejected: notifications are
+  ephemeral and distro-dependent.
+- **Modal only, no desktop copy.** Rejected: a modal acknowledged and
+  forgotten leaves the user hunting in `~/.config/` weeks later.
+
+### Supersedes / amends
+
+Amends **DEC-0001** §2 by extending its storage clause with a desktop
+copy on every install plus a user-surfacing protocol. DEC-0001 §1
+(account name), §3 (gpedit lockdown), §4 (no expiration), and §5
+(auth health-check) are unchanged. The auth health-check continues to
+read from `vm.toml`, never from the desktop copy.
+
+### Security trade-off
+
+The desktop copy increases blast radius slightly: anyone with brief
+shoulder-surf access to the user's machine can read it. The mitigation
+is the explicit header inviting the user to delete or relocate the
+file. We judge the discoverability benefit (users know where the
+password is) outweighs the marginal exposure (someone with desktop
+access already has access to the config dir too — both at mode 0600
+under the same `$HOME`).
+
+### When to reconsider
+
+- A real OS keyring integration becomes worth the cross-distro
+  packaging cost.
+- User research shows desktop clutter from this file is friction.
+- Security review escalates the desktop-copy exposure ahead of the
+  discoverability benefit.
+
+---
+
+## DEC-0012: Windows ISO sourced from Microsoft, no CrossDesk CDN
+
+**Status:** Accepted — 2026-05-07
+**Owner:** install pipeline
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §4.2; DEC-0002 (zero
+telemetry, zero phone-home)
+
+### Context
+
+The install wizard needs a Windows ISO to provision a guest. Two
+options:
+1. Pull directly from Microsoft's public consumer download URLs each
+   install (with local cache).
+2. Operate a CrossDesk-hosted CDN that mirrors Microsoft's ISOs.
+
+Option 2 buys faster downloads (potentially) and reliability against
+Microsoft URL churn, at the cost of operating infrastructure, paying
+egress, taking on legal exposure for redistributing Microsoft media,
+and introducing a CrossDesk-hosted dependency that conflicts with
+DEC-0002's "no phone-home" posture.
+
+### Decision
+
+**Always pull from Microsoft directly.** No CrossDesk CDN.
+
+- Local cache at `~/.cache/crossdesk/iso/`, keyed by
+  `windows-{version}-{arch}-{lang}.iso`. Reused on subsequent
+  installs without re-download.
+- SHA256 verified against Microsoft's published hash before mounting.
+- Microsoft's URLs are signed and short-lived (~24 h); the
+  implementation re-resolves the URL on each download attempt and
+  does not persist signed URLs.
+- If URL discovery fails, the wizard falls back to a clear error
+  pointing the user at the "From ISO" path with a link to
+  Microsoft's official download page.
+
+### Alternatives considered
+
+- **CrossDesk CDN.** Rejected per above (cost, legal, trust, conflicts
+  with DEC-0002).
+- **BitTorrent / P2P delivery.** Rejected: introduces an external
+  dependency the user did not consent to, and Microsoft's hashes are
+  the trust anchor regardless of transport.
+
+### When to reconsider
+
+- Microsoft's public download path becomes locked behind sign-in (it
+  is not today for consumer Windows 11 ISOs).
+- User research shows non-trivial download failure rates from
+  Microsoft's CDN that a co-located CrossDesk mirror would solve.
+- Legal review concludes that a signed mirror under licence is
+  feasible and cheaper than direct downloads at scale.
+
+---
+
+## DEC-0011: Orphan cleanup is automatic, not prompted
+
+**Status:** Accepted — 2026-05-07
+**Owner:** install pipeline / GUI startup
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §4.1; DEC-0002 (no
+telemetry — no signal to detect repeat-offender bugs)
+
+### Context
+
+When a CrossDesk install is interrupted (user cancels mid-install,
+process killed, host reboots, etc.), it can leave behind: a libvirt
+domain in `shut off` state with our `crossdesk-*` prefix, and / or
+an orphan qcow2 file in `~/.local/share/crossdesk/disks/`. These
+artefacts must be cleaned up before the next install attempt, both
+to free resources and to prevent name collisions.
+
+The question is whether to clean them silently or prompt the user.
+
+### Decision
+
+**Automatic cleanup at GUI cold start, before the wizard renders.**
+
+1. List libvirt domains matching `crossdesk-*` prefix.
+2. Cross-reference against the state-store
+   (`~/.config/crossdesk/state.toml` or equivalent).
+3. **Orphan domain** = domain with our prefix, not in state-store, in
+   `shut off` state, with `install-incomplete: true` metadata
+   (written at the start of every install, cleared on success).
+4. **Orphan disk** = qcow2 in our managed disks directory with no
+   corresponding domain.
+5. **Action:** `virsh undefine` the domain, delete the qcow2, log to
+   `~/.local/state/crossdesk/cleanup.log`. **No user prompt.**
+6. **Repeat-offender mitigation:** if the same orphan name reappears
+   more than 3 times in a rolling week, surface a non-blocking
+   notification: *"CrossDesk repeatedly cleaned up failed installs;
+   consider reporting an issue."* This catches silent bugs without
+   per-install prompt fatigue.
+
+### Alternatives considered
+
+- **Prompt user every time.** Rejected: a user who abandoned an
+  install is not in a state to make an informed cleanup choice; the
+  prompt is friction without benefit. Real (non-orphan) VMs are
+  identifiable via state-store membership and are never touched.
+- **Prompt on first orphan, then remember preference.** Rejected: the
+  added complexity (preference UI, clearing it, etc.) is not worth it
+  vs the simple repeat-offender heuristic.
+- **Lazy cleanup (delete only when the next install would collide).**
+  Rejected: leaves disk space tied up indefinitely, and surfaces the
+  failure later when it's harder to diagnose.
+
+### When to reconsider
+
+- The metadata tag (`install-incomplete: true`) proves unreliable
+  (e.g. concurrent crashes leave it set on a domain that is actually
+  in use).
+- User research shows the silent-deletion behaviour surprises users
+  in a problematic way.
+
+---
+
+## DEC-0010: Express install fixes Windows edition to Pro
+
+**Status:** Accepted — 2026-05-07
+**Owner:** install wizard / Phase 4
+**Related:** `docs/INSTALL_WIZARD_PLAN.md` §3 Screen 3 and §5
+
+### Context
+
+The install wizard could expose a Windows-edition picker (Home / Pro
+/ Enterprise) on the configuration screen, or it could fix a default.
+Windows in-place edition switching supports **upgrades** (Home → Pro
+→ Enterprise via `changepk.exe` / `DISM /Online /Set-Edition:...`)
+but **does not** support downgrades — Pro → Home requires a clean
+reinstall.
+
+This asymmetry makes the default choice load-bearing: pick too high
+and the user is stuck if they wanted Home for cost reasons; pick too
+low and the user has to act later to upgrade.
+
+### Decision
+
+1. **Express mode fixes Pro.** No edition picker. Pro is the safest
+   default given the upgrade-only constraint: any user wanting
+   Enterprise can upgrade later without reinstall; almost no users
+   want to downgrade to Home.
+2. **Manual mode** (entered when "From ISO" detects a non-Pro Windows
+   edition) shows only the editions present on the supplied ISO and
+   installs as detected.
+3. **Post-install edition switch** is exposed in Machine Settings as
+   *"Change Windows edition"*. The action invokes `changepk.exe` /
+   `DISM` in the guest, supports upgrades only, and surfaces a clear
+   warning if the user requests a downgrade ("Downgrading requires
+   reinstalling Windows. Continue?").
+4. The wizard does **not** ask for a Windows licence key. Activation
+   is left to Machine Settings post-install. Express install
+   produces an unactivated Pro guest the user can activate with their
+   own licence at their convenience.
+
+### Alternatives considered
+
+- **Picker in express mode.** Rejected: every user pays the
+  decision-making cost for a choice that fewer than ~10% are
+  expected to want to deviate from. Manual mode and Machine
+  Settings cover the deviation cases.
+- **Default to Home.** Rejected: Home → Pro upgrade requires a new
+  product key + `changepk.exe`, but Pro → Home requires reinstall.
+  Defaulting to Home creates more dead-end paths.
+- **Default to Enterprise.** Rejected: Enterprise activation requires
+  volume licensing; not appropriate for individual users.
+
+### When to reconsider
+
+- Microsoft changes the in-place edition-switch mechanics (e.g.
+  enables Pro → Home in-place).
+- User research shows >10% of users actually want Home (cost-driven
+  segment).
+- Enterprise becomes the more common default for our target
+  audience.
+
+---
+
 ## DEC-0009: GPU passthrough scope, tiers, and timing
 
 **Status:** Accepted — 2026-05-07
@@ -569,6 +1012,7 @@ them — they are not transmitted automatically.
 ## DEC-0001: Windows password lifecycle — single account, gpedit-locked, health-check fallback
 
 **Status:** Accepted — 2026-05-06
+**Amended by:** DEC-0013 (fallback location and surfacing)
 **Owner:** install pipeline / credential management
 **Related:** `FOLLOWUPS.md` items "VM credential management" and
 "Auth health-check before every RAIL launch"

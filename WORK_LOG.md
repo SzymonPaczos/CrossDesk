@@ -80,13 +80,15 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-- [2026-05-08 22:10] START · agent: claude-code · branch: chore/bootstrap-claude-architecture · task: bootstrap-claude-architecture · note: extract universals.md templates into .claude/rules/{general,backend}.md + .claude/{architecture,ignorefiles}.md + .githooks/{pre-commit,pre-push,post-commit} + thin CLAUDE.md shim; overlay only — keep AGENTS.md/WORK_LOG.md/THREAT_MODEL.md as canonical
+(none)
 
 ## Recent
 
 <!-- Newest first. Trim entries older than ~30 days into RELEASE_NOTES
      or just delete; this log is operational, not historical. -->
 
+- [2026-05-08 22:32] END · agent: claude-code · branch: chore/bootstrap-claude-architecture · task: bootstrap-claude-architecture · note: result: success → merged as ac0fe11 (8 new files + AGENTS.md & .gitignore updates; universals.md tracked with 7-item enrichment). mypy --strict and cargo check --workspace both pass.
+- [2026-05-08 22:10] START · agent: claude-code · branch: chore/bootstrap-claude-architecture · task: bootstrap-claude-architecture · note: extract universals.md templates into .claude/rules/{general,backend}.md + .claude/{architecture,ignorefiles}.md + .githooks/{pre-commit,pre-push,post-commit} + thin CLAUDE.md shim; overlay only — keep AGENTS.md/WORK_LOG.md/THREAT_MODEL.md as canonical
 - [2026-05-07 22:30] END · agent: claude-anthropic-conversation · branch: feat/build-config-lean-and-mock-features · task: build-config-lean-mock-features · note: result: success → merged as cb4a23f
 - [2026-05-07 22:15] END · agent: claude-anthropic-conversation · branch: feat/pre-agent-setup · task: pre-agent-setup · note: result: success → merged as b8abc71 (CI workflow + MVP_SCOPE + EXECUTION_PLAN + agent workflow rules)
 - [2026-05-07 21:00] END · agent: claude-anthropic-conversation · branch: feat/gpu-decision · task: gpu-passthrough-decision · note: result: success → merged as a9c1f5f (DEC-0009)

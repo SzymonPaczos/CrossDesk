@@ -16,9 +16,18 @@ pub mod trace;
 
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
+const OTLP_ENV_VAR: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
+const SERVICE_NAME: &str = "crossdesk-guest";
+
 /// Configure the global subscriber. Idempotent in the sense that
 /// `try_init` quietly errors when called twice — second calls become
 /// no-ops, which is what we want for tests that boot multiple agents.
+///
+/// Per DEC-0006 §6 + DEC-0002, the OTLP exporter is opt-in: the
+/// OpenTelemetry layer is wired into the subscriber stack only when
+/// `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Without it, no spans leave
+/// the process and no extra goroutines are spawned. With it, every
+/// `tracing` span is exported to that endpoint via OTLP-over-gRPC.
 pub fn init() -> Result<(), tracing_subscriber::util::TryInitError> {
     let env_filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("info"));
@@ -29,10 +38,72 @@ pub fn init() -> Result<(), tracing_subscriber::util::TryInitError> {
         .with_span_list(false)
         .with_writer(std::io::stderr);
 
-    tracing_subscriber::registry()
+    let registry = tracing_subscriber::registry()
         .with(env_filter)
-        .with(json_layer)
-        .try_init()
+        .with(json_layer);
+
+    if let Some(otel_layer) = build_otlp_layer() {
+        registry.with(otel_layer).try_init()
+    } else {
+        registry.try_init()
+    }
+}
+
+/// If `OTEL_EXPORTER_OTLP_ENDPOINT` is set, build the OpenTelemetry
+/// layer that exports `tracing` spans to that endpoint via
+/// OTLP-over-gRPC. Returns `None` when no endpoint is configured —
+/// the call site adds nothing to the subscriber stack.
+///
+/// We swallow exporter-build errors and log them via `tracing` rather
+/// than aborting init: a misconfigured OTLP endpoint must never
+/// prevent the agent from starting.
+fn build_otlp_layer<S>() -> Option<tracing_opentelemetry::OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>>
+where
+    S: tracing::Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+{
+    use opentelemetry::trace::TracerProvider as _;
+    use opentelemetry::KeyValue;
+    use opentelemetry_otlp::{SpanExporter, WithExportConfig};
+    use opentelemetry_sdk::{runtime::Tokio, trace::TracerProvider, Resource};
+
+    let endpoint = std::env::var(OTLP_ENV_VAR).ok()?;
+    if endpoint.is_empty() {
+        return None;
+    }
+
+    let exporter = match SpanExporter::builder()
+        .with_tonic()
+        .with_endpoint(&endpoint)
+        .build()
+    {
+        Ok(e) => e,
+        Err(err) => {
+            // Don't crash on OTLP misconfig — DEC-0006 lists OTLP as
+            // opt-in, not load-bearing. The tracing subscriber isn't
+            // installed yet here so stderr is the only viable channel;
+            // the workspace `print_stderr` ban exists to keep the rest
+            // of the codebase routing through `tracing`.
+            #[allow(clippy::print_stderr)]
+            {
+                eprintln!("observability: OTLP exporter build failed: {err}");
+            }
+            return None;
+        }
+    };
+
+    let provider = TracerProvider::builder()
+        .with_batch_exporter(exporter, Tokio)
+        .with_resource(Resource::new(vec![KeyValue::new(
+            "service.name",
+            SERVICE_NAME,
+        )]))
+        .build();
+    let tracer = provider.tracer(SERVICE_NAME);
+    // Hand the provider to the OTel global so tonic and other
+    // ecosystem libraries that talk to the OTel API see the same one.
+    opentelemetry::global::set_tracer_provider(provider);
+
+    Some(tracing_opentelemetry::OpenTelemetryLayer::new(tracer))
 }
 
 /// Variant for tests that need to capture output. The caller supplies

@@ -11,10 +11,16 @@ use proto::crossdesk::v1::client_frame::Payload;
 
 use crate::host_uuid::read_host_domain_uuid;
 
-pub async fn run_control_session(
-    mut client: ControlServiceClient<tonic::transport::Channel>,
+pub async fn run_control_session<T>(
+    mut client: ControlServiceClient<T>,
     auth: AuthCarrier,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), anyhow::Error>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::Error: Into<tonic::codegen::StdError>,
+    T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
+{
     info!("Starting Control Session FSM");
 
     let host_domain_uuid = read_host_domain_uuid()?;

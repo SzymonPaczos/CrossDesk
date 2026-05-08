@@ -10,10 +10,16 @@ use proto::crossdesk::v1::{
 };
 use proto::crossdesk::v1::guest_frame::Payload;
 
-pub async fn run_heartbeat_loop(
-    mut client: HeartbeatServiceClient<tonic::transport::Channel>,
+pub async fn run_heartbeat_loop<T>(
+    mut client: HeartbeatServiceClient<T>,
     auth: AuthCarrier,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), anyhow::Error>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::Error: Into<tonic::codegen::StdError>,
+    T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
+{
     info!("Starting Heartbeat Loop");
 
     let (tx, rx) = mpsc::channel::<GuestFrame>(32);

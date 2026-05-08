@@ -1,0 +1,63 @@
+#!/bin/bash
+# Pre-push: stack-agnostic security review using grep.
+# Hard-fails on hardcoded secrets in changed files. Soft-warns on
+# console.log / print() / TODO+FIXME in newly added lines.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "🔍 pre-push: security review"
+echo "─────────────────────────────────────────────"
+
+# Detect default upstream branch (origin/main is the convention here).
+DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
+    | sed 's@^refs/remotes/origin/@@' || echo main)"
+
+CHANGED_FILES="$(git diff --name-only "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
+    || git diff --name-only HEAD)"
+
+if [ -z "$CHANGED_FILES" ]; then
+    echo "ℹ  No changes vs origin/$DEFAULT_BRANCH — skipping."
+    exit 0
+fi
+
+# === 1. Hardcoded secrets (HARD FAIL) =====================================
+echo "🔐 hardcoded secrets ..."
+SECRET_PATTERNS='password\s*=\s*["'"'"'][^"'"'"']\{4,\}|api[_-]?key\s*=\s*["'"'"'][^"'"'"']\{8,\}|secret\s*=\s*["'"'"'][^"'"'"']\{8,\}|token\s*=\s*["'"'"'][^"'"'"']\{16,\}'
+
+FOUND="$(echo "$CHANGED_FILES" | xargs -I{} sh -c '[ -f "{}" ] && grep -l -E '"'"$SECRET_PATTERNS"'"' "{}" 2>/dev/null || true' \
+    | grep -v -E '(node_modules|\.env|test|spec|mock|fixture|generate_mtls\.sh|\.githooks/)' \
+    || true)"
+
+if [ -n "$FOUND" ]; then
+    echo "❌ potential hardcoded secrets in:"
+    echo "$FOUND" | sed 's/^/    /'
+    echo "   Move them to env vars or a gitignored .env, then retry."
+    exit 1
+fi
+
+# === 2. console.log in TS/JS hot paths (WARN) =============================
+echo "🖨  console.log in TS/JS ..."
+echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' \
+    | xargs -I{} sh -c '[ -f "{}" ] && grep -H -n -E "console\.(log|debug|warn)" "{}" 2>/dev/null || true' \
+    | grep -v -E '(test|\.spec|mock|fixture)' \
+    | head -5 || true
+
+# === 3. print() in Python hot paths (WARN) ================================
+echo "🐍 print() in Python ..."
+echo "$CHANGED_FILES" | grep -E '\.py$' \
+    | xargs -I{} sh -c '[ -f "{}" ] && grep -H -n -E "^\s*print\(" "{}" 2>/dev/null || true' \
+    | grep -v -E '(test_|conftest|build_proto\.py|scripts/|tools/)' \
+    | head -5 || true
+
+# === 4. TODO/FIXME added in this push (INFO) ==============================
+echo "📝 TODO/FIXME added vs origin/$DEFAULT_BRANCH ..."
+git diff "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
+    | grep -E '^\+.*TODO|^\+.*FIXME' \
+    | head -10 || true
+
+echo "─────────────────────────────────────────────"
+echo "✅ pre-push checks done."
+exit 0

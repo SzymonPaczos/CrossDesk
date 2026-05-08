@@ -48,3 +48,9 @@ infra/certs/pki/
 
 # Claude Code per-project state
 .claude/
+
+# Large local recordings
+*.mov
+
+# Extracted video frames (local analysis artefacts)
+frames/

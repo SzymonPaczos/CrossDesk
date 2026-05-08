@@ -1,0 +1,98 @@
+#!/bin/bash
+# Pre-push: stack-agnostic security review using grep.
+# Hard-fails on hardcoded secrets in changed files. Soft-warns on
+# console.log / print() / TODO+FIXME in newly added lines.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "🔍 pre-push: security review"
+echo "─────────────────────────────────────────────"
+
+DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
+    | sed 's@^refs/remotes/origin/@@' || echo main)"
+
+CHANGED_FILES="$(git diff --name-only "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
+    || git diff --name-only HEAD)"
+
+if [ -z "$CHANGED_FILES" ]; then
+    echo "ℹ  No changes vs origin/$DEFAULT_BRANCH — skipping."
+    exit 0
+fi
+
+# Skip helper: returns 0 if path is a test/fixture/known-allowed file.
+is_excluded() {
+    case "$1" in
+        node_modules/*|*.env|*/test/*|*/tests/*|test_*|*_test.*|*.spec.*|*spec.ts|*spec.tsx|*spec.js|*mock*|*fixture*|*conftest*|infra/certs/generate_mtls.sh|.githooks/*|guest/crates/proto/*|host/src/crossdesk_host/proto/*) return 0 ;;
+    esac
+    return 1
+}
+
+# === 1. Hardcoded secrets (HARD FAIL) =====================================
+echo "🔐 hardcoded secrets ..."
+SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'
+SECRET_HITS=""
+for f in $CHANGED_FILES; do
+    [ -f "$f" ] || continue
+    is_excluded "$f" && continue
+    if grep -E -l "$SECRET_PATTERNS" "$f" >/dev/null 2>&1; then
+        SECRET_HITS="$SECRET_HITS $f"
+    fi
+done
+if [ -n "$SECRET_HITS" ]; then
+    echo "❌ potential hardcoded secrets in:"
+    for f in $SECRET_HITS; do
+        echo "    $f"
+    done
+    echo "   Move them to env vars or a gitignored .env, then retry."
+    exit 1
+fi
+
+# === 2. console.log in TS/JS hot paths (WARN) =============================
+echo "🖨  console.log in TS/JS ..."
+COUNT=0
+for f in $CHANGED_FILES; do
+    [ -f "$f" ] || continue
+    is_excluded "$f" && continue
+    case "$f" in
+        *.ts|*.tsx|*.js|*.jsx) ;;
+        *) continue ;;
+    esac
+    while IFS= read -r line; do
+        echo "    $f:$line"
+        COUNT=$((COUNT + 1))
+        [ $COUNT -ge 5 ] && break 2
+    done < <(grep -n -E 'console\.(log|debug|warn)' "$f" 2>/dev/null || true)
+done
+
+# === 3. print() in Python hot paths (WARN) ================================
+echo "🐍 print() in Python ..."
+COUNT=0
+for f in $CHANGED_FILES; do
+    [ -f "$f" ] || continue
+    is_excluded "$f" && continue
+    case "$f" in
+        *.py) ;;
+        *) continue ;;
+    esac
+    case "$f" in
+        build_proto.py|scripts/*|tools/*) continue ;;
+    esac
+    while IFS= read -r line; do
+        echo "    $f:$line"
+        COUNT=$((COUNT + 1))
+        [ $COUNT -ge 5 ] && break 2
+    done < <(grep -n -E '^\s*print\(' "$f" 2>/dev/null || true)
+done
+
+# === 4. TODO/FIXME added in this push (INFO) ==============================
+echo "📝 TODO/FIXME added vs origin/$DEFAULT_BRANCH ..."
+git diff "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
+    | grep -E '^\+.*(TODO|FIXME)' \
+    | head -10 || true
+
+echo "─────────────────────────────────────────────"
+echo "✅ pre-push checks done."
+exit 0

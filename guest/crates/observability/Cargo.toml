@@ -10,6 +10,14 @@ tonic = { workspace = true }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Per DEC-0006 §2 + §6: `tracing-opentelemetry` bridges our `tracing`
+# spans to OpenTelemetry. The OTLP exporter itself is opt-in: it
+# only initialises when `OTEL_EXPORTER_OTLP_ENDPOINT` is set
+# (DEC-0002 — zero telemetry by default).
+tracing-opentelemetry = "0.28"
+opentelemetry = "0.27"
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
 
 [lints]
 workspace = true

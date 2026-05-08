@@ -6,10 +6,16 @@ use tokio::task::JoinSet;
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{debug, error, info};
 
-pub async fn run_filesystem_channel(
-    mut client: FilesystemServiceClient<tonic::transport::Channel>,
+pub async fn run_filesystem_channel<T>(
+    mut client: FilesystemServiceClient<T>,
     auth: AuthCarrier,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), anyhow::Error>
+where
+    T: tonic::client::GrpcService<tonic::body::BoxBody>,
+    T::Error: Into<tonic::codegen::StdError>,
+    T::ResponseBody: tonic::codegen::Body<Data = tonic::codegen::Bytes> + Send + 'static,
+    <T::ResponseBody as tonic::codegen::Body>::Error: Into<tonic::codegen::StdError> + Send,
+{
     info!("Starting Filesystem JIT Service");
 
     let (tx, rx) = mpsc::channel::<ShareGuestFrame>(32);

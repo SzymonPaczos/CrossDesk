@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use ipc_vsock::client::AuthCarrier;
 use ipc_vsock::tls::{fingerprint_sha256, TlsMaterial};
+use observability::trace::{generate_root, inject_interceptor};
 use proto::crossdesk::v1::control_service_client::ControlServiceClient;
 use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
 use proto::crossdesk::v1::heartbeat_service_client::HeartbeatServiceClient;
@@ -75,16 +76,34 @@ pub async fn run_with_pki(pki_path: &Path, endpoint: String) -> anyhow::Result<(
     // random nonce + counter) — sharing one carrier across planes
     // races the validator's sequence check and yields spurious
     // "replay attack" rejections under load.
+    //
+    // All three planes share one root W3C trace context so a host-
+    // side log filter on `trace_id` returns every event for this
+    // agent session across control, heartbeat, and filesystem.
+    // `inject_interceptor` stamps `traceparent` on every outgoing
+    // request via tonic's `InterceptedService`.
+    let trace_root = generate_root();
+    tracing::info!(trace_id = %trace_root.trace_id, "agent-svc opening planes");
+
     let session_handle = tokio::spawn(crate::session::run_control_session(
-        ControlServiceClient::new(channel.clone()),
+        ControlServiceClient::with_interceptor(
+            channel.clone(),
+            inject_interceptor(trace_root.clone()),
+        ),
         AuthCarrier::new(own_fp.clone()),
     ));
     let heartbeat_handle = tokio::spawn(crate::heartbeat::run_heartbeat_loop(
-        HeartbeatServiceClient::new(channel.clone()),
+        HeartbeatServiceClient::with_interceptor(
+            channel.clone(),
+            inject_interceptor(trace_root.clone()),
+        ),
         AuthCarrier::new(own_fp.clone()),
     ));
     let filesystem_handle = tokio::spawn(crate::filesystem::run_filesystem_channel(
-        FilesystemServiceClient::new(channel),
+        FilesystemServiceClient::with_interceptor(
+            channel,
+            inject_interceptor(trace_root),
+        ),
         AuthCarrier::new(own_fp),
     ));
 

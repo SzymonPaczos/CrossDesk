@@ -16,10 +16,7 @@ pub fn total_steps() -> usize {
 }
 
 pub fn step_duration_ms(index: usize) -> u32 {
-    INSTALL_STEPS
-        .get(index)
-        .map(|(ms, _)| *ms)
-        .unwrap_or(0)
+    INSTALL_STEPS.get(index).map(|(ms, _)| *ms).unwrap_or(0)
 }
 
 pub fn step_label(index: usize) -> &'static str {

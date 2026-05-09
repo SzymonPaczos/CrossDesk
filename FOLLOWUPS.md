@@ -102,13 +102,6 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
 Each item cites its source (winapps file:line or our gap analysis) and
 points at the CrossDesk file or module where the work lands.
 
-Sections still to be expanded: display & forwarding (Wayland-native,
-GPU passthrough), peripherals (audio, clipboard, DnD, mic/cam,
-smartcard, printer), versioning & compatibility, observability,
-performance budgets, distribution & packaging, lifecycle
-(suspend/resume), i18n. These are queued and will be filled in as
-we work through them.
-
 ## Cross-platform development & testing scaffold (URGENT)
 
 Foundation work to make `~1 month on macOS without Linux+KVM

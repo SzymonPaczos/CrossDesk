@@ -153,6 +153,6 @@ Detailed week-by-week in `docs/EXECUTION_PLAN.md`. High level:
 - ~3-4 weeks: Phase 5 VirtioFS
 - ~2-3 weeks: integration + polish + i18n + doctor + uninstall
 
-Total: ~5-6 months from today (2026-05-07) → MVP target around
+Total: ~5-6 months from 2026-05-09 → MVP target around
 **2026-10 / 2026-11**, depending on hardware-arrival date and
 whether categories run in parallel.

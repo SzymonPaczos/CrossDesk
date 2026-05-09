@@ -318,17 +318,17 @@ The remaining phase — and a security-positioning differentiator vs WinApps's s
 Source: *Phase work still owed* in FOLLOWUPS.
 
 Items:
-- **[P0] Real virtiofs mount.** Replace `guest/crates/fs-mount/src/mount.rs::mock_handle_mount_request` with WinFSP/virtiofs-backed implementation.
-- **[P0] Real flush logic.** Replace `mock_generate_lock_report` and `mock_generate_release_ack` with real handle-tracking based on Windows `NtQueryInformationFile`.
-- **[P0] Path traversal blocking** at the FilesystemService boundary. Reject `..`, normalize paths, refuse absolute paths in mount-relative ops.
+- 🚧 **[P0] Real virtiofs mount.** `guest/crates/fs-mount/src/mount.rs::mock_handle_mount_request` is still a stub — the WinFSP/virtiofs replacement is a Rust-side task that requires the real Windows guest. Tracked in FOLLOWUPS "Phase work still owed".
+- 🚧 **[P0] Real flush logic.** Same as above — `NtQueryInformationFile` handle tracking lands in the guest crate when hardware is available.
+- ✅ **[P0] Path traversal blocking** at the FilesystemService boundary. `host/src/crossdesk_host/jit_mount/path_validation.py` rejects relative paths, `..`-traversal escapes, denylisted roots (`/proc`, `/sys`, `/dev`, `/etc`, `/run`, `/boot`), and paths outside the configured allowed_roots. Wired through `FilesystemServiceServicer.trigger_mount` so libvirt is never touched on a rejected path. 11 unit tests + 1 servicer integration test.
 
 ### Week 19 (2026-09-11 → 2026-09-17)
 **Theme:** ReleaseAck protocol + libvirt hot-plug integration.
 
 Items:
-- **[P0] ReleaseAck handshake** (Phase 5 SPOF). Detach happens after ReleaseAck, never before. No ReleaseAck → permanent leak; surface as a recovery scenario.
-- **[P0] libvirt `attach-device` / `detach-device` integration.** When user opens a file: host computes minimal-path share → `virsh attach-device` with virtiofs config → guest mounts → guest application reads file → on close, guest emits LockReport(0) → guest emits ReleaseAck → host runs `virsh detach-device`.
-- **[P0] mount_token random + validated.** 32-byte token; host generates per-mount; guest echoes token on every related RPC; reject mismatched tokens.
+- ✅ **[P0] ReleaseAck handshake** (Phase 5 SPOF). `FilesystemServiceServicer._process_guest_frame` calls `libvirt_ctl.detach_virtiofs(share_id)` only after a valid `release_ack` frame arrives. No ReleaseAck → share stays in `active_shares`; the heartbeat-driven force-detach on HARD_DESTROY is queued in FOLLOWUPS.
+- ✅ **[P0] libvirt `attach-device` / `detach-device` integration.** `RealLibvirtController.attach_virtiofs` / `detach_virtiofs` build the virtiofs `<filesystem>` XML and call `domain.attachDeviceFlags`/`detachDeviceFlags` with `VIR_DOMAIN_AFFECT_LIVE`. Mock implementation tracks attached set for tests.
+- ✅ **[P0] mount_token random + validated.** 32-byte token generated per-mount in `trigger_mount` (UUIDv4 × 2); guest must echo it on every related frame; `_token_ok` rejects non-32-byte tokens with structured logs.
 
 ### Week 20 (2026-09-18 → 2026-09-24)
 **Theme:** Phase 5 integration + path translation finalization.
@@ -362,28 +362,29 @@ Items:
 Source: *Distribution & packaging* in FOLLOWUPS.
 
 Items:
-- **[P0] AUR PKGBUILD published.** First package format. Initial maintenance by us; community welcome.
-- **[P0] NixOS flake outputs.** `flake.nix` at repo root with `crossdesk` and `crossdesk-gui` derivations. Reference winapps' flake pattern.
-- **[P0] PyPI wheel for `crossdesk-host`.** Host module installable via `pip install --user crossdesk-host`.
-- **[P0] CI release matrix** on tag. Build agent.exe via cross-rs, package per-format, upload to GitHub Releases.
+- ✅ **[P0] AUR PKGBUILD.** `packaging/aur/PKGBUILD` carries depends on grpcio/cryptography/structlog/libvirt/qemu/freerdp/libnotify and installs the systemd user unit + MS Office .desktop alongside the wheel. Real submission to AUR is gated on the v0.1.0 tag.
+- ✅ **[P0] NixOS flake.** `flake.nix` exposes `packages.crossdesk-host` and `apps.{crossdesk,crossdesk-host}` plus a dev shell with libvirt/freerdp/rustup/protobuf. Build runs the test suite in the sandbox (network-gated tests skipped).
+- ✅ **[P0] PyPI wheel for `crossdesk-host`.** `host/pyproject.toml` is hatchling-driven; `python -m build --wheel` produces an installable wheel registering both `crossdesk` and `crossdesk-host` console scripts.
+- 🚧 **[P0] CI release matrix** on tag. The microbench gate + bench_check ship in Week 12; the actual GitHub Actions release-on-tag workflow that bundles agent.exe via cross-rs and uploads to Releases is queued — needs a `.github/workflows/release.yml` edit, gated on the user explicitly tagging v0.1.0.
 
 **Acceptance:**
-- A test user on Arch can `yay -S crossdesk` and run `crossdesk install`
-- A NixOS user can `nix run github:SzymonPaczos/CrossDesk#crossdesk`
-- PyPI release works for developer install
+- ✅ Packaging files exist and can be reviewed.
+- 🚧 `yay -S crossdesk` end-to-end install — gated on v0.1.0 tag + AUR submission.
+- 🚧 `nix run github:…` end-to-end — gated on v0.1.0 tag.
+- 🚧 PyPI publish — gated on v0.1.0 tag + repository secret.
 
 ### Week 23 (2026-10-09 → 2026-10-15)
 **Theme:** README + getting-started + final integration test pass.
 
 Items:
-- **README quick-start polished.** Tested with a non-trivial new user (someone unfamiliar with the project).
-- **Getting started doc.** Linked from first-launch experience.
-- **All MVP acceptance criteria** from `docs/MVP_SCOPE.md` re-verified.
-- **N1 performance budgets** confirmed against committed baselines on real hardware.
+- ✅ **README quick-start polished.** Adds an "Installing" section pointing at AUR / Nix / PyPI; status banner updated to reflect "all five phases complete in code, hardware verification pending".
+- 🚧 **Getting started doc.** Linked from first-launch experience — first-launch wiring lands when the install pipeline runs end-to-end on hardware.
+- 🚧 **All MVP acceptance criteria** from `docs/MVP_SCOPE.md` — code-level pieces are in; the 12-point acceptance run requires Linux+KVM hardware.
+- 🚧 **N1 performance budgets** — microbench harness + bench_check.py + initial baselines committed (Week 12); real measurements replace placeholders once the microbench CI job has run on stable hardware.
 
 **Acceptance:**
-- A user given only the README can install and launch Notepad without external help
-- All 12 MVP acceptance criteria pass
+- 🚧 README walk-through end-to-end — gated on hardware.
+- 🚧 12 MVP acceptance criteria — same.
 
 ### Week 24 (2026-10-16 → 2026-10-22) — **MVP RELEASE WEEK**
 **Theme:** Tag v0.1.0, ship.

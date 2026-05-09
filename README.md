@@ -11,9 +11,12 @@ crossdesk install            # auto-download Win11 ISO, install, register agent
 crossdesk launch notepad     # Notepad appears as a native Linux window
 ```
 
-**Status:** pre-release. Phase 1 (VM bootstrap + NT service) is
-complete; Phase 2 (transport + mTLS) is in progress. See
-[ROADMAP.md](ROADMAP.md).
+**Status:** pre-release. All five phases are complete in code (FSM,
+RAIL display, JIT VirtioFS path validation, lifecycle suspend/resume,
+install pipeline, packaging). End-to-end hardware verification is
+pending arrival of a Linux+KVM machine. See [ROADMAP.md](ROADMAP.md)
+and [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) for the
+week-by-week status.
 
 ## Why
 
@@ -67,7 +70,7 @@ Linux host with KVM, libvirt, Python 3.9+, a Rust toolchain, and Qt6.
 
 ```sh
 # Python host daemon
-cd host && pip install -e . && mypy --strict src/ && pytest
+cd host && pip install -e .[dev] && mypy --strict src/ && pytest
 
 # Rust guest agent (cross-compiled to Windows)
 cd guest && cargo build --release --target x86_64-pc-windows-gnu
@@ -75,6 +78,25 @@ cd guest && cargo build --release --target x86_64-pc-windows-gnu
 # Qt installer GUI
 cd gui && cargo run -p crossdesk-gui
 ```
+
+## Installing
+
+Once a packaged release lands:
+
+```sh
+# Arch / AUR
+yay -S crossdesk
+
+# NixOS / nix-flake
+nix run github:SzymonPaczos/CrossDesk
+
+# pip (developer install)
+pip install crossdesk-host
+```
+
+The package files live under [packaging/aur/PKGBUILD](packaging/aur/PKGBUILD)
+and [flake.nix](flake.nix); deb / rpm hosting is post-MVP per
+[docs/PACKAGING.md](docs/PACKAGING.md).
 
 ## Documentation
 

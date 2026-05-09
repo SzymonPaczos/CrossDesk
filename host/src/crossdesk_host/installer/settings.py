@@ -18,6 +18,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
+import contextlib
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib  # type: ignore[import-not-found,unused-ignore]
@@ -65,10 +66,8 @@ def _atomic_write(path: Path, payload: str) -> None:
             os.fsync(f.fileno())
         os.rename(tmp, path)
     except Exception:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp)
-        except OSError:
-            pass
         raise
 
 

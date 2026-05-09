@@ -8,6 +8,8 @@ edition = "2021"
 # an in-process TCP-loopback implementation that preserves the same
 # mTLS + AuthContext semantics so unit tests run on any host (including
 # Macs without VSOCK kernel support).
+license.workspace = true
+repository.workspace = true
 [features]
 default = []
 mock = []

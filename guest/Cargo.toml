@@ -11,6 +11,12 @@ members = [
     "xtask",
 ]
 
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/SzymonPaczos/CrossDesk"
+
 [workspace.dependencies]
 tokio   = { version = "1", features = ["full"] }
 tonic   = { version = "0.12", features = ["tls", "transport"] }

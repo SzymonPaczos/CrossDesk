@@ -8,6 +8,7 @@ import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import List, Optional
+import contextlib
 
 
 @dataclass(frozen=True)
@@ -42,10 +43,8 @@ def save_user_app(app: UserApp, directory: Optional[Path] = None) -> Path:
             os.fsync(f.fileno())
         os.rename(tmp, target)
     except Exception:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp)
-        except OSError:
-            pass
         raise
     return target
 

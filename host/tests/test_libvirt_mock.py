@@ -6,6 +6,7 @@ libvirt behaviour is exercised only on hardware via the
 ``linux_only``-marked smoke tests; this file is the unit-level
 contract that mock and real share.
 """
+
 from __future__ import annotations
 
 import pytest

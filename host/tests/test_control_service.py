@@ -4,6 +4,7 @@ Phase 3 surface: validates the HANDSHAKE → READY → APP_RUNNING → DRAINING
 transitions over the OpenSession bidi stream, plus the invariant that every
 incoming frame goes through AuthValidator before payload dispatch.
 """
+
 from __future__ import annotations
 
 from typing import AsyncIterator, List
@@ -35,7 +36,9 @@ def _hello() -> control_pb2.ClientFrame:
     )
 
 
-def _launch(req_id: str = "req-1", path: str = "C:\\Windows\\notepad.exe") -> control_pb2.ClientFrame:
+def _launch(
+    req_id: str = "req-1", path: str = "C:\\Windows\\notepad.exe"
+) -> control_pb2.ClientFrame:
     return control_pb2.ClientFrame(
         auth=_auth(),
         launch=control_pb2.AppLaunchRequest(
@@ -64,7 +67,9 @@ def _terminate() -> control_pb2.ClientFrame:
     )
 
 
-async def _async_iter(frames: List[control_pb2.ClientFrame]) -> AsyncIterator[control_pb2.ClientFrame]:
+async def _async_iter(
+    frames: List[control_pb2.ClientFrame],
+) -> AsyncIterator[control_pb2.ClientFrame]:
     for f in frames:
         yield f
 
@@ -96,6 +101,7 @@ async def _drive(
 # Handshake
 # ---------------------------------------------------------------------------
 
+
 async def test_hello_yields_server_accept() -> None:
     out, _, _ = await _drive([_hello()])
     assert len(out) == 1
@@ -115,6 +121,7 @@ async def test_first_frame_other_than_hello_aborts_failed_precondition() -> None
 # READY state — launch & rail event
 # ---------------------------------------------------------------------------
 
+
 async def test_launch_in_ready_yields_app_launched_with_request_id() -> None:
     out, _, _ = await _drive([_hello(), _launch(req_id="abc-123")])
     payloads = [sf.WhichOneof("payload") for sf in out]
@@ -131,7 +138,9 @@ async def test_rail_event_in_ready_is_forwarded_to_rail_manager() -> None:
 
 
 async def test_terminate_yields_session_closed_and_stops_stream() -> None:
-    out, _, _ = await _drive([_hello(), _terminate(), _launch()])  # launch never reached
+    out, _, _ = await _drive(
+        [_hello(), _terminate(), _launch()]
+    )  # launch never reached
     payloads = [sf.WhichOneof("payload") for sf in out]
     assert payloads == ["accept", "closed"]
     assert out[1].closed.reason == control_pb2.SessionTerminate.Reason.REASON_USER_QUIT
@@ -140,6 +149,7 @@ async def test_terminate_yields_session_closed_and_stops_stream() -> None:
 # ---------------------------------------------------------------------------
 # Per-frame auth enforcement
 # ---------------------------------------------------------------------------
+
 
 async def test_auth_validator_called_for_every_frame() -> None:
     _, _, validator = await _drive([_hello(), _launch(), _rail_create()])

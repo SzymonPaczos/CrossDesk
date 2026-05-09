@@ -39,9 +39,14 @@ def test_load_missing_file_returns_none(tmp_path: Path) -> None:
 
 
 def test_load_malformed_raises(tmp_path: Path) -> None:
+    """Garbled TOML fails out — exact exception comes from the
+    backend (tomllib raises TOMLDecodeError; older tomli raises
+    a subclass). Pinning to the abstract base lets us match both."""
+    import tomllib
+
     target = tmp_path / "vm.toml"
     target.write_text("garbage =")
-    with pytest.raises(Exception):
+    with pytest.raises(tomllib.TOMLDecodeError):
         credentials.load(target)
 
 

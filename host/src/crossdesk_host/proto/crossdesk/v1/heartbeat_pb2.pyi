@@ -23,7 +23,9 @@ class _GuestState:
     ValueType = _typing.NewType("ValueType", _builtins.int)
     V: _TypeAlias = ValueType  # noqa: Y015
 
-class _GuestStateEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_GuestState.ValueType], _builtins.type):
+class _GuestStateEnumTypeWrapper(
+    _enum_type_wrapper._EnumTypeWrapper[_GuestState.ValueType], _builtins.type
+):
     DESCRIPTOR: _descriptor.EnumDescriptor
     GUEST_STATE_UNSPECIFIED: _GuestState.ValueType  # 0
     GUEST_STATE_BOOTING: _GuestState.ValueType  # 1
@@ -50,7 +52,9 @@ class _RecoveryAction:
     ValueType = _typing.NewType("ValueType", _builtins.int)
     V: _TypeAlias = ValueType  # noqa: Y015
 
-class _RecoveryActionEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_RecoveryAction.ValueType], _builtins.type):
+class _RecoveryActionEnumTypeWrapper(
+    _enum_type_wrapper._EnumTypeWrapper[_RecoveryAction.ValueType], _builtins.type
+):
     DESCRIPTOR: _descriptor.EnumDescriptor
     RECOVERY_ACTION_UNSPECIFIED: _RecoveryAction.ValueType  # 0
     RECOVERY_ACTION_NONE: _RecoveryAction.ValueType  # 1
@@ -93,13 +97,41 @@ class HostFrame(_message.Message):
         directive: Global___HostDirective | None = ...,
         profile_update: Global___AdaptiveProfile | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "directive", b"directive", "payload", b"payload", "ping", b"ping", "profile_update", b"profile_update"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "auth",
+        b"auth",
+        "directive",
+        b"directive",
+        "payload",
+        b"payload",
+        "ping",
+        b"ping",
+        "profile_update",
+        b"profile_update",
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "directive", b"directive", "payload", b"payload", "ping", b"ping", "profile_update", b"profile_update"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "auth",
+        b"auth",
+        "directive",
+        b"directive",
+        "payload",
+        b"payload",
+        "ping",
+        b"ping",
+        "profile_update",
+        b"profile_update",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["ping", "directive", "profile_update"]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
-    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
+        "ping", "directive", "profile_update"
+    ]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
+        "payload", b"payload"
+    ]  # noqa: Y015
+    def WhichOneof(
+        self, oneof_group: _WhichOneofArgType_payload
+    ) -> _WhichOneofReturnType_payload | None: ...
 
 Global___HostFrame: _TypeAlias = HostFrame  # noqa: Y015
 
@@ -123,13 +155,23 @@ class GuestFrame(_message.Message):
         pong: Global___Pong | None = ...,
         signal: Global___GuestSignal | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "payload", b"payload", "pong", b"pong", "signal", b"signal"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "auth", b"auth", "payload", b"payload", "pong", b"pong", "signal", b"signal"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "payload", b"payload", "pong", b"pong", "signal", b"signal"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "auth", b"auth", "payload", b"payload", "pong", b"pong", "signal", b"signal"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["pong", "signal"]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
-    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
+        "pong", "signal"
+    ]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
+        "payload", b"payload"
+    ]  # noqa: Y015
+    def WhichOneof(
+        self, oneof_group: _WhichOneofArgType_payload
+    ) -> _WhichOneofReturnType_payload | None: ...
 
 Global___GuestFrame: _TypeAlias = GuestFrame  # noqa: Y015
 
@@ -155,9 +197,18 @@ class Ping(_message.Message):
         host_send_monotonic_ns: _builtins.int = ...,
         last_observed_rtt: _duration_pb2.Duration | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["last_observed_rtt", b"last_observed_rtt"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "last_observed_rtt", b"last_observed_rtt"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["host_send_monotonic_ns", b"host_send_monotonic_ns", "last_observed_rtt", b"last_observed_rtt", "sequence", b"sequence"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "host_send_monotonic_ns",
+        b"host_send_monotonic_ns",
+        "last_observed_rtt",
+        b"last_observed_rtt",
+        "sequence",
+        b"sequence",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -194,9 +245,24 @@ class Pong(_message.Message):
         state: Global___GuestState.ValueType = ...,
         pressure: Global___ResourcePressure | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["pressure", b"pressure"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "pressure", b"pressure"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["guest_recv_monotonic_ns", b"guest_recv_monotonic_ns", "guest_send_monotonic_ns", b"guest_send_monotonic_ns", "host_send_monotonic_ns", b"host_send_monotonic_ns", "pressure", b"pressure", "sequence", b"sequence", "state", b"state"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "guest_recv_monotonic_ns",
+        b"guest_recv_monotonic_ns",
+        "guest_send_monotonic_ns",
+        b"guest_send_monotonic_ns",
+        "host_send_monotonic_ns",
+        b"host_send_monotonic_ns",
+        "pressure",
+        b"pressure",
+        "sequence",
+        b"sequence",
+        "state",
+        b"state",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -224,7 +290,14 @@ class ResourcePressure(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["cpu_percent", b"cpu_percent", "disk_io_pressure", b"disk_io_pressure", "memory_percent", b"memory_percent"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "cpu_percent",
+        b"cpu_percent",
+        "disk_io_pressure",
+        b"disk_io_pressure",
+        "memory_percent",
+        b"memory_percent",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -272,9 +345,35 @@ class AdaptiveProfile(_message.Message):
         next_action: Global___RecoveryAction.ValueType = ...,
         next_action_after: _duration_pb2.Duration | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["current_ping_interval", b"current_ping_interval", "ewma_rtt", b"ewma_rtt", "jitter", b"jitter", "miss_threshold", b"miss_threshold", "next_action_after", b"next_action_after"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "current_ping_interval",
+        b"current_ping_interval",
+        "ewma_rtt",
+        b"ewma_rtt",
+        "jitter",
+        b"jitter",
+        "miss_threshold",
+        b"miss_threshold",
+        "next_action_after",
+        b"next_action_after",
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["consecutive_miss_count", b"consecutive_miss_count", "current_ping_interval", b"current_ping_interval", "ewma_rtt", b"ewma_rtt", "jitter", b"jitter", "miss_threshold", b"miss_threshold", "next_action", b"next_action", "next_action_after", b"next_action_after"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "consecutive_miss_count",
+        b"consecutive_miss_count",
+        "current_ping_interval",
+        b"current_ping_interval",
+        "ewma_rtt",
+        b"ewma_rtt",
+        "jitter",
+        b"jitter",
+        "miss_threshold",
+        b"miss_threshold",
+        "next_action",
+        b"next_action",
+        "next_action_after",
+        b"next_action_after",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -288,7 +387,10 @@ class HostDirective(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[HostDirective._Kind.ValueType], _builtins.type):
+    class _KindEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[HostDirective._Kind.ValueType],
+        _builtins.type,
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: HostDirective._Kind.ValueType  # 0
         KIND_REQUEST_DIAG_DUMP: HostDirective._Kind.ValueType  # 1
@@ -315,7 +417,9 @@ class HostDirective(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "kind", b"kind"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "detail", b"detail", "kind", b"kind"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -333,7 +437,9 @@ class GuestSignal(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[GuestSignal._Kind.ValueType], _builtins.type):
+    class _KindEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[GuestSignal._Kind.ValueType], _builtins.type
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: GuestSignal._Kind.ValueType  # 0
         KIND_SELF_DETECTED_DEGRADATION: GuestSignal._Kind.ValueType  # 1
@@ -362,9 +468,13 @@ class GuestSignal(_message.Message):
         detail: _builtins.str = ...,
         observed_at: _common_pb2.TimingMark | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["observed_at", b"observed_at"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "observed_at", b"observed_at"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "kind", b"kind", "observed_at", b"observed_at"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "detail", b"detail", "kind", b"kind", "observed_at", b"observed_at"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

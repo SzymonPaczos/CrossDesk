@@ -5,6 +5,7 @@ what we test here are the mock-only hooks (failure injection, server-create
 counter) so callers can rely on them when scripting deterministic test
 scenarios per DEC-0005.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,7 +15,6 @@ import pytest
 
 from crossdesk_host.abstractions.transport import Transport
 from crossdesk_host.transport.mock import MockTransport
-
 
 PKI_DIR = Path(__file__).resolve().parent.parent.parent / "infra" / "certs" / "pki"
 

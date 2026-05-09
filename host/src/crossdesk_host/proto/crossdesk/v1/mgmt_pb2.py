@@ -4,18 +4,15 @@
 # source: crossdesk/v1/mgmt.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    6,
-    31,
-    1,
-    '',
-    'crossdesk/v1/mgmt.proto'
+    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "crossdesk/v1/mgmt.proto"
 )
 # @@protoc_insertion_point(imports)
 
@@ -25,60 +22,61 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x63rossdesk/v1/mgmt.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x07\n\x05\x45mpty\"\xae\x02\n\x0bStatusFrame\x12\"\n\x02vm\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.VmStatus\x12\x30\n\theartbeat\x18\x02 \x01(\x0b\x32\x1d.crossdesk.v1.HeartbeatStatus\x12.\n\tresources\x18\x03 \x01(\x0b\x32\x1b.crossdesk.v1.ResourceUsage\x12\x32\n\x0crunning_apps\x18\x04 \x03(\x0b\x32\x1c.crossdesk.v1.RailAppRunning\x12\x35\n\x0frecent_activity\x18\x05 \x03(\x0b\x32\x1c.crossdesk.v1.RecentActivity\x12.\n\nemitted_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x9f\x02\n\x08VmStatus\x12+\n\x05state\x18\x01 \x01(\x0e\x32\x1c.crossdesk.v1.VmStatus.State\x12)\n\x06uptime\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x35\n\x11last_hard_destroy\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x83\x01\n\x05State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\r\n\tSTATE_OFF\x10\x01\x12\x11\n\rSTATE_BOOTING\x10\x02\x12\x11\n\rSTATE_RUNNING\x10\x03\x12\x13\n\x0fSTATE_SUSPENDED\x10\x04\x12\x19\n\x15STATE_HARD_DESTROYING\x10\x05\"\xa9\x01\n\x0fHeartbeatStatus\x12\x11\n\tfsm_state\x18\x01 \x01(\t\x12+\n\x08\x65wma_rtt\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1e\n\x16\x63onsecutive_miss_count\x18\x03 \x01(\r\x12\x15\n\rsoft_attempts\x18\x04 \x01(\r\x12\x1f\n\x17\x61uth_context_rejections\x18\x05 \x01(\x04\"\x80\x01\n\rResourceUsage\x12\x13\n\x0b\x63pu_percent\x18\x01 \x01(\r\x12\x13\n\x0bram_percent\x18\x02 \x01(\r\x12\x16\n\x0eram_used_bytes\x18\x03 \x01(\x04\x12\x17\n\x0fram_total_bytes\x18\x04 \x01(\x04\x12\x14\n\x0c\x64isk_percent\x18\x05 \x01(\r\"\x9c\x01\n\x0eRailAppRunning\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x0c\n\x04hwnd\x18\x03 \x01(\x04\x12\x12\n\nprocess_id\x18\x04 \x01(\r\x12\x11\n\tram_bytes\x18\x05 \x01(\x04\x12/\n\x0blaunched_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xe5\x02\n\x0eRecentActivity\x12/\n\x04kind\x18\x01 \x01(\x0e\x32!.crossdesk.v1.RecentActivity.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xe2\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x15\n\x11KIND_APP_LAUNCHED\x10\x01\x12\x13\n\x0fKIND_APP_EXITED\x10\x02\x12\x17\n\x13KIND_FSM_TRANSITION\x10\x03\x12\x15\n\x11KIND_MOUNT_OPENED\x10\x04\x12\x15\n\x11KIND_MOUNT_CLOSED\x10\x05\x12\x10\n\x0cKIND_SUSPEND\x10\x06\x12\x0f\n\x0bKIND_RESUME\x10\x07\x12\x15\n\x11KIND_HARD_DESTROY\x10\x08\x12\x17\n\x13KIND_AUTH_REJECTION\x10\t\"\xc5\x02\n\x08\x41ppEntry\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x1d\n\x15\x65xecutable_guest_path\x18\x03 \x01(\t\x12\x12\n\nmime_types\x18\x04 \x03(\t\x12\x15\n\ricon_data_uri\x18\x05 \x01(\t\x12\x1b\n\x13\x63ompatibility_stars\x18\x06 \x01(\r\x12\x1b\n\x13\x63ompatibility_notes\x18\x07 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x08 \x01(\t\x12)\n\x04tier\x18\t \x01(\x0e\x32\x1b.crossdesk.v1.AppEntry.Tier\"R\n\x04Tier\x12\x14\n\x10TIER_UNSPECIFIED\x10\x00\x12\x10\n\x0cTIER_CURATED\x10\x01\x12\x13\n\x0fTIER_DISCOVERED\x10\x02\x12\r\n\tTIER_USER\x10\x03\"\xcd\x01\n\nMountEntry\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x11\n\thost_path\x18\x02 \x01(\t\x12\x12\n\nguest_path\x18\x03 \x01(\t\x12\x0e\n\x06\x61pp_id\x18\x04 \x01(\t\x12\x12\n\nprocess_id\x18\x05 \x01(\r\x12.\n\nmounted_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0copen_handles\x18\x07 \x01(\r\x12\x1c\n\x14pending_writes_bytes\x18\x08 \x01(\x04\"2\n\rLaunchRequest\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x11\n\tfile_path\x18\x02 \x01(\t\"?\n\x0eLaunchResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x12\n\nrequest_id\x18\x03 \x01(\t\"\'\n\tActionAck\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\"n\n\x13\x43redentialsResponse\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x13\n\x0bkeyring_key\x18\x02 \x01(\t\x12\x30\n\x0clast_rotated\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"W\n\x11\x44iagnosticsReport\x12.\n\x06\x63hecks\x18\x01 \x03(\x0b\x32\x1e.crossdesk.v1.DiagnosticsCheck\x12\x12\n\nany_failed\x18\x02 \x01(\x08\"\xbb\x01\n\x10\x44iagnosticsCheck\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x06status\x18\x02 \x01(\x0e\x32%.crossdesk.v1.DiagnosticsCheck.Status\x12\x0f\n\x07message\x18\x03 \x01(\t\"Q\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\r\n\tSTATUS_OK\x10\x01\x12\x0f\n\x0bSTATUS_WARN\x10\x02\x12\x0f\n\x0bSTATUS_FAIL\x10\x03\"k\n\x10\x44iagnosticBundle\x12\x13\n\x0bzip_payload\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x30\n\x0cgenerated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\":\n\x0fSettingsRequest\x12\'\n\x07\x64\x65sired\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.Settings\";\n\x10SettingsResponse\x12\'\n\x07\x63urrent\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.Settings\"\xce\x03\n\x08Settings\x12\x10\n\x08language\x18\x01 \x01(\t\x12\r\n\x05theme\x18\x02 \x01(\t\x12\x19\n\x11telemetry_enabled\x18\x03 \x01(\x08\x12\x17\n\x0fkeyring_enabled\x18\x04 \x01(\x08\x12\x11\n\tlean_mode\x18\x05 \x01(\x08\x12\x14\n\x0cnetwork_mode\x18\x06 \x01(\t\x12\x13\n\x0bhidpi_scale\x18\x07 \x01(\r\x12\x1f\n\x17multi_monitor_placement\x18\x08 \x01(\x08\x12\x1c\n\x14\x61uto_suspend_on_idle\x18\t \x01(\x08\x12\x35\n\x12\x61uto_suspend_after\x18\n \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1b\n\x13\x61uto_suspend_on_lid\x18\x0b \x01(\x08\x12\x1d\n\x15\x61uto_resume_on_launch\x18\x0c \x01(\x08\x12\x16\n\x0emiss_threshold\x18\r \x01(\r\x12\x16\n\x0erecovery_ticks\x18\x0e \x01(\r\x12\x32\n\x0f\x62\x61\x63koff_initial\x18\x0f \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x19\n\x11max_soft_attempts\x18\x10 \x01(\r2\xfb\x06\n\x11ManagementService\x12:\n\x06Status\x12\x13.crossdesk.v1.Empty\x1a\x19.crossdesk.v1.StatusFrame0\x01\x12\x39\n\x08ListApps\x12\x13.crossdesk.v1.Empty\x1a\x16.crossdesk.v1.AppEntry0\x01\x12\x43\n\x12ListDiscoveredApps\x12\x13.crossdesk.v1.Empty\x1a\x16.crossdesk.v1.AppEntry0\x01\x12=\n\nListMounts\x12\x13.crossdesk.v1.Empty\x1a\x18.crossdesk.v1.MountEntry0\x01\x12\x43\n\x06Launch\x12\x1b.crossdesk.v1.LaunchRequest\x1a\x1c.crossdesk.v1.LaunchResponse\x12\x37\n\x07Suspend\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12\x36\n\x06Resume\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12;\n\x0bHardDestroy\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12K\n\x11RotateCredentials\x12\x13.crossdesk.v1.Empty\x1a!.crossdesk.v1.CredentialsResponse\x12\x46\n\x0eRunDiagnostics\x12\x13.crossdesk.v1.Empty\x1a\x1f.crossdesk.v1.DiagnosticsReport\x12M\n\x16\x45xportDiagnosticBundle\x12\x13.crossdesk.v1.Empty\x1a\x1e.crossdesk.v1.DiagnosticBundle\x12O\n\x0eUpdateSettings\x12\x1d.crossdesk.v1.SettingsRequest\x1a\x1e.crossdesk.v1.SettingsResponse\x12\x43\n\x0cReadSettings\x12\x13.crossdesk.v1.Empty\x1a\x1e.crossdesk.v1.SettingsResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x17\x63rossdesk/v1/mgmt.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto"\x07\n\x05\x45mpty"\xae\x02\n\x0bStatusFrame\x12"\n\x02vm\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.VmStatus\x12\x30\n\theartbeat\x18\x02 \x01(\x0b\x32\x1d.crossdesk.v1.HeartbeatStatus\x12.\n\tresources\x18\x03 \x01(\x0b\x32\x1b.crossdesk.v1.ResourceUsage\x12\x32\n\x0crunning_apps\x18\x04 \x03(\x0b\x32\x1c.crossdesk.v1.RailAppRunning\x12\x35\n\x0frecent_activity\x18\x05 \x03(\x0b\x32\x1c.crossdesk.v1.RecentActivity\x12.\n\nemitted_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\x9f\x02\n\x08VmStatus\x12+\n\x05state\x18\x01 \x01(\x0e\x32\x1c.crossdesk.v1.VmStatus.State\x12)\n\x06uptime\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x35\n\x11last_hard_destroy\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\x83\x01\n\x05State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\r\n\tSTATE_OFF\x10\x01\x12\x11\n\rSTATE_BOOTING\x10\x02\x12\x11\n\rSTATE_RUNNING\x10\x03\x12\x13\n\x0fSTATE_SUSPENDED\x10\x04\x12\x19\n\x15STATE_HARD_DESTROYING\x10\x05"\xa9\x01\n\x0fHeartbeatStatus\x12\x11\n\tfsm_state\x18\x01 \x01(\t\x12+\n\x08\x65wma_rtt\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1e\n\x16\x63onsecutive_miss_count\x18\x03 \x01(\r\x12\x15\n\rsoft_attempts\x18\x04 \x01(\r\x12\x1f\n\x17\x61uth_context_rejections\x18\x05 \x01(\x04"\x80\x01\n\rResourceUsage\x12\x13\n\x0b\x63pu_percent\x18\x01 \x01(\r\x12\x13\n\x0bram_percent\x18\x02 \x01(\r\x12\x16\n\x0eram_used_bytes\x18\x03 \x01(\x04\x12\x17\n\x0fram_total_bytes\x18\x04 \x01(\x04\x12\x14\n\x0c\x64isk_percent\x18\x05 \x01(\r"\x9c\x01\n\x0eRailAppRunning\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x0c\n\x04hwnd\x18\x03 \x01(\x04\x12\x12\n\nprocess_id\x18\x04 \x01(\r\x12\x11\n\tram_bytes\x18\x05 \x01(\x04\x12/\n\x0blaunched_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\xe5\x02\n\x0eRecentActivity\x12/\n\x04kind\x18\x01 \x01(\x0e\x32!.crossdesk.v1.RecentActivity.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\xe2\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x15\n\x11KIND_APP_LAUNCHED\x10\x01\x12\x13\n\x0fKIND_APP_EXITED\x10\x02\x12\x17\n\x13KIND_FSM_TRANSITION\x10\x03\x12\x15\n\x11KIND_MOUNT_OPENED\x10\x04\x12\x15\n\x11KIND_MOUNT_CLOSED\x10\x05\x12\x10\n\x0cKIND_SUSPEND\x10\x06\x12\x0f\n\x0bKIND_RESUME\x10\x07\x12\x15\n\x11KIND_HARD_DESTROY\x10\x08\x12\x17\n\x13KIND_AUTH_REJECTION\x10\t"\xc5\x02\n\x08\x41ppEntry\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x02 \x01(\t\x12\x1d\n\x15\x65xecutable_guest_path\x18\x03 \x01(\t\x12\x12\n\nmime_types\x18\x04 \x03(\t\x12\x15\n\ricon_data_uri\x18\x05 \x01(\t\x12\x1b\n\x13\x63ompatibility_stars\x18\x06 \x01(\r\x12\x1b\n\x13\x63ompatibility_notes\x18\x07 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x08 \x01(\t\x12)\n\x04tier\x18\t \x01(\x0e\x32\x1b.crossdesk.v1.AppEntry.Tier"R\n\x04Tier\x12\x14\n\x10TIER_UNSPECIFIED\x10\x00\x12\x10\n\x0cTIER_CURATED\x10\x01\x12\x13\n\x0fTIER_DISCOVERED\x10\x02\x12\r\n\tTIER_USER\x10\x03"\xcd\x01\n\nMountEntry\x12\x10\n\x08share_id\x18\x01 \x01(\t\x12\x11\n\thost_path\x18\x02 \x01(\t\x12\x12\n\nguest_path\x18\x03 \x01(\t\x12\x0e\n\x06\x61pp_id\x18\x04 \x01(\t\x12\x12\n\nprocess_id\x18\x05 \x01(\r\x12.\n\nmounted_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0copen_handles\x18\x07 \x01(\r\x12\x1c\n\x14pending_writes_bytes\x18\x08 \x01(\x04"2\n\rLaunchRequest\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\t\x12\x11\n\tfile_path\x18\x02 \x01(\t"?\n\x0eLaunchResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x12\n\nrequest_id\x18\x03 \x01(\t"\'\n\tActionAck\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t"n\n\x13\x43redentialsResponse\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x13\n\x0bkeyring_key\x18\x02 \x01(\t\x12\x30\n\x0clast_rotated\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"W\n\x11\x44iagnosticsReport\x12.\n\x06\x63hecks\x18\x01 \x03(\x0b\x32\x1e.crossdesk.v1.DiagnosticsCheck\x12\x12\n\nany_failed\x18\x02 \x01(\x08"\xbb\x01\n\x10\x44iagnosticsCheck\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x06status\x18\x02 \x01(\x0e\x32%.crossdesk.v1.DiagnosticsCheck.Status\x12\x0f\n\x07message\x18\x03 \x01(\t"Q\n\x06Status\x12\x16\n\x12STATUS_UNSPECIFIED\x10\x00\x12\r\n\tSTATUS_OK\x10\x01\x12\x0f\n\x0bSTATUS_WARN\x10\x02\x12\x0f\n\x0bSTATUS_FAIL\x10\x03"k\n\x10\x44iagnosticBundle\x12\x13\n\x0bzip_payload\x18\x01 \x01(\x0c\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x30\n\x0cgenerated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp":\n\x0fSettingsRequest\x12\'\n\x07\x64\x65sired\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.Settings";\n\x10SettingsResponse\x12\'\n\x07\x63urrent\x18\x01 \x01(\x0b\x32\x16.crossdesk.v1.Settings"\xce\x03\n\x08Settings\x12\x10\n\x08language\x18\x01 \x01(\t\x12\r\n\x05theme\x18\x02 \x01(\t\x12\x19\n\x11telemetry_enabled\x18\x03 \x01(\x08\x12\x17\n\x0fkeyring_enabled\x18\x04 \x01(\x08\x12\x11\n\tlean_mode\x18\x05 \x01(\x08\x12\x14\n\x0cnetwork_mode\x18\x06 \x01(\t\x12\x13\n\x0bhidpi_scale\x18\x07 \x01(\r\x12\x1f\n\x17multi_monitor_placement\x18\x08 \x01(\x08\x12\x1c\n\x14\x61uto_suspend_on_idle\x18\t \x01(\x08\x12\x35\n\x12\x61uto_suspend_after\x18\n \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1b\n\x13\x61uto_suspend_on_lid\x18\x0b \x01(\x08\x12\x1d\n\x15\x61uto_resume_on_launch\x18\x0c \x01(\x08\x12\x16\n\x0emiss_threshold\x18\r \x01(\r\x12\x16\n\x0erecovery_ticks\x18\x0e \x01(\r\x12\x32\n\x0f\x62\x61\x63koff_initial\x18\x0f \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x19\n\x11max_soft_attempts\x18\x10 \x01(\r2\xfb\x06\n\x11ManagementService\x12:\n\x06Status\x12\x13.crossdesk.v1.Empty\x1a\x19.crossdesk.v1.StatusFrame0\x01\x12\x39\n\x08ListApps\x12\x13.crossdesk.v1.Empty\x1a\x16.crossdesk.v1.AppEntry0\x01\x12\x43\n\x12ListDiscoveredApps\x12\x13.crossdesk.v1.Empty\x1a\x16.crossdesk.v1.AppEntry0\x01\x12=\n\nListMounts\x12\x13.crossdesk.v1.Empty\x1a\x18.crossdesk.v1.MountEntry0\x01\x12\x43\n\x06Launch\x12\x1b.crossdesk.v1.LaunchRequest\x1a\x1c.crossdesk.v1.LaunchResponse\x12\x37\n\x07Suspend\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12\x36\n\x06Resume\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12;\n\x0bHardDestroy\x12\x13.crossdesk.v1.Empty\x1a\x17.crossdesk.v1.ActionAck\x12K\n\x11RotateCredentials\x12\x13.crossdesk.v1.Empty\x1a!.crossdesk.v1.CredentialsResponse\x12\x46\n\x0eRunDiagnostics\x12\x13.crossdesk.v1.Empty\x1a\x1f.crossdesk.v1.DiagnosticsReport\x12M\n\x16\x45xportDiagnosticBundle\x12\x13.crossdesk.v1.Empty\x1a\x1e.crossdesk.v1.DiagnosticBundle\x12O\n\x0eUpdateSettings\x12\x1d.crossdesk.v1.SettingsRequest\x1a\x1e.crossdesk.v1.SettingsResponse\x12\x43\n\x0cReadSettings\x12\x13.crossdesk.v1.Empty\x1a\x1e.crossdesk.v1.SettingsResponseb\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.mgmt_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "crossdesk.v1.mgmt_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_EMPTY']._serialized_start=106
-  _globals['_EMPTY']._serialized_end=113
-  _globals['_STATUSFRAME']._serialized_start=116
-  _globals['_STATUSFRAME']._serialized_end=418
-  _globals['_VMSTATUS']._serialized_start=421
-  _globals['_VMSTATUS']._serialized_end=708
-  _globals['_VMSTATUS_STATE']._serialized_start=577
-  _globals['_VMSTATUS_STATE']._serialized_end=708
-  _globals['_HEARTBEATSTATUS']._serialized_start=711
-  _globals['_HEARTBEATSTATUS']._serialized_end=880
-  _globals['_RESOURCEUSAGE']._serialized_start=883
-  _globals['_RESOURCEUSAGE']._serialized_end=1011
-  _globals['_RAILAPPRUNNING']._serialized_start=1014
-  _globals['_RAILAPPRUNNING']._serialized_end=1170
-  _globals['_RECENTACTIVITY']._serialized_start=1173
-  _globals['_RECENTACTIVITY']._serialized_end=1530
-  _globals['_RECENTACTIVITY_KIND']._serialized_start=1304
-  _globals['_RECENTACTIVITY_KIND']._serialized_end=1530
-  _globals['_APPENTRY']._serialized_start=1533
-  _globals['_APPENTRY']._serialized_end=1858
-  _globals['_APPENTRY_TIER']._serialized_start=1776
-  _globals['_APPENTRY_TIER']._serialized_end=1858
-  _globals['_MOUNTENTRY']._serialized_start=1861
-  _globals['_MOUNTENTRY']._serialized_end=2066
-  _globals['_LAUNCHREQUEST']._serialized_start=2068
-  _globals['_LAUNCHREQUEST']._serialized_end=2118
-  _globals['_LAUNCHRESPONSE']._serialized_start=2120
-  _globals['_LAUNCHRESPONSE']._serialized_end=2183
-  _globals['_ACTIONACK']._serialized_start=2185
-  _globals['_ACTIONACK']._serialized_end=2224
-  _globals['_CREDENTIALSRESPONSE']._serialized_start=2226
-  _globals['_CREDENTIALSRESPONSE']._serialized_end=2336
-  _globals['_DIAGNOSTICSREPORT']._serialized_start=2338
-  _globals['_DIAGNOSTICSREPORT']._serialized_end=2425
-  _globals['_DIAGNOSTICSCHECK']._serialized_start=2428
-  _globals['_DIAGNOSTICSCHECK']._serialized_end=2615
-  _globals['_DIAGNOSTICSCHECK_STATUS']._serialized_start=2534
-  _globals['_DIAGNOSTICSCHECK_STATUS']._serialized_end=2615
-  _globals['_DIAGNOSTICBUNDLE']._serialized_start=2617
-  _globals['_DIAGNOSTICBUNDLE']._serialized_end=2724
-  _globals['_SETTINGSREQUEST']._serialized_start=2726
-  _globals['_SETTINGSREQUEST']._serialized_end=2784
-  _globals['_SETTINGSRESPONSE']._serialized_start=2786
-  _globals['_SETTINGSRESPONSE']._serialized_end=2845
-  _globals['_SETTINGS']._serialized_start=2848
-  _globals['_SETTINGS']._serialized_end=3310
-  _globals['_MANAGEMENTSERVICE']._serialized_start=3313
-  _globals['_MANAGEMENTSERVICE']._serialized_end=4204
+    DESCRIPTOR._loaded_options = None
+    _globals["_EMPTY"]._serialized_start = 106
+    _globals["_EMPTY"]._serialized_end = 113
+    _globals["_STATUSFRAME"]._serialized_start = 116
+    _globals["_STATUSFRAME"]._serialized_end = 418
+    _globals["_VMSTATUS"]._serialized_start = 421
+    _globals["_VMSTATUS"]._serialized_end = 708
+    _globals["_VMSTATUS_STATE"]._serialized_start = 577
+    _globals["_VMSTATUS_STATE"]._serialized_end = 708
+    _globals["_HEARTBEATSTATUS"]._serialized_start = 711
+    _globals["_HEARTBEATSTATUS"]._serialized_end = 880
+    _globals["_RESOURCEUSAGE"]._serialized_start = 883
+    _globals["_RESOURCEUSAGE"]._serialized_end = 1011
+    _globals["_RAILAPPRUNNING"]._serialized_start = 1014
+    _globals["_RAILAPPRUNNING"]._serialized_end = 1170
+    _globals["_RECENTACTIVITY"]._serialized_start = 1173
+    _globals["_RECENTACTIVITY"]._serialized_end = 1530
+    _globals["_RECENTACTIVITY_KIND"]._serialized_start = 1304
+    _globals["_RECENTACTIVITY_KIND"]._serialized_end = 1530
+    _globals["_APPENTRY"]._serialized_start = 1533
+    _globals["_APPENTRY"]._serialized_end = 1858
+    _globals["_APPENTRY_TIER"]._serialized_start = 1776
+    _globals["_APPENTRY_TIER"]._serialized_end = 1858
+    _globals["_MOUNTENTRY"]._serialized_start = 1861
+    _globals["_MOUNTENTRY"]._serialized_end = 2066
+    _globals["_LAUNCHREQUEST"]._serialized_start = 2068
+    _globals["_LAUNCHREQUEST"]._serialized_end = 2118
+    _globals["_LAUNCHRESPONSE"]._serialized_start = 2120
+    _globals["_LAUNCHRESPONSE"]._serialized_end = 2183
+    _globals["_ACTIONACK"]._serialized_start = 2185
+    _globals["_ACTIONACK"]._serialized_end = 2224
+    _globals["_CREDENTIALSRESPONSE"]._serialized_start = 2226
+    _globals["_CREDENTIALSRESPONSE"]._serialized_end = 2336
+    _globals["_DIAGNOSTICSREPORT"]._serialized_start = 2338
+    _globals["_DIAGNOSTICSREPORT"]._serialized_end = 2425
+    _globals["_DIAGNOSTICSCHECK"]._serialized_start = 2428
+    _globals["_DIAGNOSTICSCHECK"]._serialized_end = 2615
+    _globals["_DIAGNOSTICSCHECK_STATUS"]._serialized_start = 2534
+    _globals["_DIAGNOSTICSCHECK_STATUS"]._serialized_end = 2615
+    _globals["_DIAGNOSTICBUNDLE"]._serialized_start = 2617
+    _globals["_DIAGNOSTICBUNDLE"]._serialized_end = 2724
+    _globals["_SETTINGSREQUEST"]._serialized_start = 2726
+    _globals["_SETTINGSREQUEST"]._serialized_end = 2784
+    _globals["_SETTINGSRESPONSE"]._serialized_start = 2786
+    _globals["_SETTINGSRESPONSE"]._serialized_end = 2845
+    _globals["_SETTINGS"]._serialized_start = 2848
+    _globals["_SETTINGS"]._serialized_end = 3310
+    _globals["_MANAGEMENTSERVICE"]._serialized_start = 3313
+    _globals["_MANAGEMENTSERVICE"]._serialized_end = 4204
 # @@protoc_insertion_point(module_scope)

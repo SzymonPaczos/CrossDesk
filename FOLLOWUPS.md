@@ -925,6 +925,19 @@ document software rendering as the always-works fallback.
 
 ## Phase 3 follow-ups (Control FSM / Heartbeat)
 
+- **[P0 — BLOCKED on proto approval] Auth health-check before every launch.**
+  Needs a new `ControlService.VerifyCredentials` RPC in
+  `proto/control.proto` (see "File boundaries" in AGENTS.md — owner
+  approves proto edits). Host calls the new RPC with credentials from
+  `~/.config/crossdesk/vm.toml`; guest's `agent-svc` runs `LogonUserW`
+  and returns OK/FAIL. On FAIL the host surfaces a clear pointer to
+  `crossdesk vm credentials repair`. Originally Week 6 P0; deferred
+  until proto edit lands.
+- **[✅ DONE 2026-05-09] AdaptiveProfile broadcast before recovery action.**
+  Per heartbeat.proto contract. Host emits `HostFrame.profile_update`
+  carrying the impending `RecoveryAction` and exponential-backoff hint
+  BEFORE calling libvirt. Lives in
+  `host/src/crossdesk_host/ipc/heartbeat.py::HeartbeatServiceServicer.Channel`.
 - **[P1] Two-layer health check before declaring the VM ready.** Source:
   `third_party/winapps/setup.sh:1040-1195`. They probe TCP port + run a
   marker-file round-trip via FreeRDP before considering RDP usable. Our

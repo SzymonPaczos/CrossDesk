@@ -75,7 +75,7 @@ class TickInput:
 @dataclass(frozen=True)
 class TickOutput:
     state: State
-    recovery_action: int
+    recovery_action: "heartbeat_pb2.RecoveryAction.ValueType"
     consecutive_miss_count: int
     healthy_streak: int
     soft_attempts: int
@@ -189,7 +189,9 @@ class HeartbeatFsm:
         seconds: float = self.config.backoff_initial_seconds * float(2 ** (attempt - 1))
         return min(seconds, self.config.backoff_max_seconds)
 
-    def _snapshot(self, action: int, next_after: float) -> TickOutput:
+    def _snapshot(
+        self, action: "heartbeat_pb2.RecoveryAction.ValueType", next_after: float
+    ) -> TickOutput:
         return TickOutput(
             state=self._state,
             recovery_action=action,

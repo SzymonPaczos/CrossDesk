@@ -1,0 +1,258 @@
+syntax = "proto3";
+
+package crossdesk.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// =============================================================================
+// CrossDesk Management Plane — local IPC between the GUI / tray / KCM and the
+// crossdesk-host daemon. Bound to ``$XDG_RUNTIME_DIR/crossdesk-host.sock``
+// (Unix domain socket) — Unix permissions (0600) ARE the authentication.
+//
+// This is intentionally a separate proto from the guest-facing plane
+// (control / heartbeat / filesystem) so changes here can't accidentally
+// break wire-format compatibility with the guest agent.
+//
+// No mTLS, no AuthContext per frame: the socket is owned by the same UID
+// as the daemon, and PolicyKit gates privileged actions (HardDestroy,
+// SettingsLeanModeChange).
+// =============================================================================
+
+service ManagementService {
+  // Streaming overview of the host's current state. The GUI subscribes
+  // once when it opens; the daemon pushes a new frame on every state
+  // change (FSM transition, mount appearing/disappearing, RAIL window
+  // event, recovery action). Plain HEALTHY ticks are coalesced to at
+  // most one push per second to avoid wire churn.
+  rpc Status(Empty) returns (stream StatusFrame);
+
+  // List apps the host is willing to launch. ``ListApps`` returns the
+  // curated + user-added tiers; ``ListDiscoveredApps`` returns the
+  // guest-side registry-scan result.
+  rpc ListApps(Empty) returns (stream AppEntry);
+  rpc ListDiscoveredApps(Empty) returns (stream AppEntry);
+
+  // Active JIT VirtioFS shares. Stream so the GUI's Storage pane sees
+  // mounts appear and disappear in real time.
+  rpc ListMounts(Empty) returns (stream MountEntry);
+
+  // Imperative actions.
+  rpc Launch(LaunchRequest) returns (LaunchResponse);
+  rpc Suspend(Empty) returns (ActionAck);
+  rpc Resume(Empty) returns (ActionAck);
+  rpc HardDestroy(Empty) returns (ActionAck);
+  rpc RotateCredentials(Empty) returns (CredentialsResponse);
+  rpc RunDiagnostics(Empty) returns (DiagnosticsReport);
+  rpc ExportDiagnosticBundle(Empty) returns (DiagnosticBundle);
+
+  // Settings round-trip: GUI sends the desired settings, daemon writes
+  // them to disk, replies with the resulting state (so the GUI can
+  // see what was clamped/normalised).
+  rpc UpdateSettings(SettingsRequest) returns (SettingsResponse);
+  rpc ReadSettings(Empty) returns (SettingsResponse);
+}
+
+message Empty {}
+
+// -----------------------------------------------------------------------------
+// Status stream
+// -----------------------------------------------------------------------------
+
+message StatusFrame {
+  // Snapshot at this instant. The daemon emits one whenever any field
+  // changes; identical consecutive snapshots are deduplicated.
+  VmStatus vm = 1;
+  HeartbeatStatus heartbeat = 2;
+  ResourceUsage resources = 3;
+  repeated RailAppRunning running_apps = 4;
+  repeated RecentActivity recent_activity = 5;
+  google.protobuf.Timestamp emitted_at = 6;
+}
+
+message VmStatus {
+  enum State {
+    STATE_UNSPECIFIED = 0;
+    STATE_OFF = 1;
+    STATE_BOOTING = 2;
+    STATE_RUNNING = 3;
+    STATE_SUSPENDED = 4;
+    STATE_HARD_DESTROYING = 5;
+  }
+  State state = 1;
+  google.protobuf.Duration uptime = 2;
+  google.protobuf.Timestamp last_hard_destroy = 3;  // unset if never
+}
+
+message HeartbeatStatus {
+  // Mirror of crossdesk_host.watchdog.State. String rather than enum
+  // because the Python side already uses string-valued enums and the
+  // GUI just renders the label.
+  string fsm_state = 1;
+  google.protobuf.Duration ewma_rtt = 2;
+  uint32 consecutive_miss_count = 3;
+  uint32 soft_attempts = 4;
+  uint64 auth_context_rejections = 5;
+}
+
+message ResourceUsage {
+  uint32 cpu_percent = 1;       // 0-100
+  uint32 ram_percent = 2;
+  uint64 ram_used_bytes = 3;
+  uint64 ram_total_bytes = 4;
+  uint32 disk_percent = 5;
+}
+
+message RailAppRunning {
+  string app_id = 1;
+  string display_name = 2;
+  uint64 hwnd = 3;
+  uint32 process_id = 4;
+  uint64 ram_bytes = 5;
+  google.protobuf.Timestamp launched_at = 6;
+}
+
+message RecentActivity {
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_APP_LAUNCHED = 1;
+    KIND_APP_EXITED = 2;
+    KIND_FSM_TRANSITION = 3;
+    KIND_MOUNT_OPENED = 4;
+    KIND_MOUNT_CLOSED = 5;
+    KIND_SUSPEND = 6;
+    KIND_RESUME = 7;
+    KIND_HARD_DESTROY = 8;
+    KIND_AUTH_REJECTION = 9;
+  }
+  Kind kind = 1;
+  string detail = 2;       // human-readable, already i18n'd by the daemon
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+// -----------------------------------------------------------------------------
+// App catalog
+// -----------------------------------------------------------------------------
+
+message AppEntry {
+  string app_id = 1;
+  string display_name = 2;
+  string executable_guest_path = 3;
+  repeated string mime_types = 4;
+  string icon_data_uri = 5;     // "data:image/png;base64,..." or empty
+  uint32 compatibility_stars = 6;  // 0-5; 0 = no rating
+  string compatibility_notes = 7;
+  string category = 8;          // "Office", "Adobe", "Built-in", ...
+  Tier tier = 9;
+  enum Tier {
+    TIER_UNSPECIFIED = 0;
+    TIER_CURATED = 1;
+    TIER_DISCOVERED = 2;
+    TIER_USER = 3;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Mounts (Storage pane)
+// -----------------------------------------------------------------------------
+
+message MountEntry {
+  string share_id = 1;
+  string host_path = 2;
+  string guest_path = 3;
+  string app_id = 4;            // which RAIL app holds it
+  uint32 process_id = 5;
+  google.protobuf.Timestamp mounted_at = 6;
+  uint32 open_handles = 7;
+  uint64 pending_writes_bytes = 8;
+}
+
+// -----------------------------------------------------------------------------
+// Imperative actions
+// -----------------------------------------------------------------------------
+
+message LaunchRequest {
+  string app_id = 1;
+  string file_path = 2;          // optional; triggers JIT mount
+}
+
+message LaunchResponse {
+  bool ok = 1;
+  string error = 2;              // populated when ok=false
+  string request_id = 3;         // correlates with AppLaunchRequest on guest plane
+}
+
+message ActionAck {
+  bool ok = 1;
+  string detail = 2;
+}
+
+message CredentialsResponse {
+  string username = 1;
+  // Password intentionally NOT returned in plain over the wire; the
+  // GUI uses the keyring abstraction to fetch it directly.
+  string keyring_key = 2;
+  google.protobuf.Timestamp last_rotated = 3;
+}
+
+// -----------------------------------------------------------------------------
+// Diagnostics
+// -----------------------------------------------------------------------------
+
+message DiagnosticsReport {
+  repeated DiagnosticsCheck checks = 1;
+  bool any_failed = 2;
+}
+
+message DiagnosticsCheck {
+  string name = 1;
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_OK = 1;
+    STATUS_WARN = 2;
+    STATUS_FAIL = 3;
+  }
+  Status status = 2;
+  string message = 3;
+}
+
+message DiagnosticBundle {
+  bytes zip_payload = 1;          // capped server-side at 16 MB
+  string filename = 2;
+  google.protobuf.Timestamp generated_at = 3;
+}
+
+// -----------------------------------------------------------------------------
+// Settings
+// -----------------------------------------------------------------------------
+
+message SettingsRequest {
+  Settings desired = 1;
+}
+
+message SettingsResponse {
+  Settings current = 1;
+}
+
+message Settings {
+  string language = 1;            // "en", "pl", or "auto"
+  string theme = 2;               // "system", "light", "dark"
+  bool telemetry_enabled = 3;
+  bool keyring_enabled = 4;
+  bool lean_mode = 5;
+  string network_mode = 6;        // "nat", "bridged"
+  uint32 hidpi_scale = 7;         // 100/140/180; 0 = auto-detect
+  bool multi_monitor_placement = 8;
+
+  // Auto-suspend
+  bool auto_suspend_on_idle = 9;
+  google.protobuf.Duration auto_suspend_after = 10;
+  bool auto_suspend_on_lid = 11;
+  bool auto_resume_on_launch = 12;
+
+  // FSM tuning (Advanced)
+  uint32 miss_threshold = 13;
+  uint32 recovery_ticks = 14;
+  google.protobuf.Duration backoff_initial = 15;
+  uint32 max_soft_attempts = 16;
+}

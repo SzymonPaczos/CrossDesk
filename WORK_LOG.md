@@ -80,10 +80,11 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-- [2026-05-09 16:04] START · agent: claude-code · branch: feat/heartbeat-fsm-wire · task: heartbeat-fsm-stage-2 · note: replace inline FSM in ipc/heartbeat.py with watchdog.HeartbeatFsm; switch to structlog facade; English-only comments; update pin-tests in test_heartbeat_fsm.py to align with new FSM defaults.
+(none — autonomous run; entries collapsed to recent below)
 
 ## Recent
 
+- [2026-05-09 16:07] END · agent: claude-code · branch: feat/heartbeat-fsm-wire · task: heartbeat-fsm-stage-2 · note: result: success → merged (servicer wired to FSM; old inline state machine removed; structlog logging; pytest 157/157)
 - [2026-05-09 15:42] END · agent: claude-code · branch: feat/heartbeat-fsm · task: heartbeat-fsm-stage-1 · note: result: success → merged as df8363c (watchdog/{ewma,fsm,__init__}.py + 19 unit tests; mypy --strict 46 files clean; pytest 157/157)
 - [2026-05-09 15:18] START · agent: claude-code · branch: feat/heartbeat-fsm · task: heartbeat-fsm-stage-1 · note: Week 5 P0 pulled forward (no hardware needed for FSM correctness). Stage 1 of 3: pure FSM module under host/src/crossdesk_host/watchdog/ — State enum, EWMA RTT calc, exponential backoff, transitions HEALTHY→DEGRADED→PROBING→SOFT_RECOVERY→HARD_DESTROY per heartbeat.proto. No wiring to ipc/heartbeat.py yet (Stage 2). Unit tests cover every transition with mocked time.
 

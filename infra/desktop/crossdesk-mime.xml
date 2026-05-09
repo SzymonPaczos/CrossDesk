@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+
+  <!--
+    Custom MIME types CrossDesk introduces for its app catalog.
+    Standard Office / image / text MIME types are claimed via
+    <MimeType=...> in the per-app .desktop files; what lives here is
+    the ms-* URL scheme handlers (already shipped in
+    crossdesk-ms-office-protocol-handler.desktop) plus any CrossDesk-
+    native types we want the system to know about.
+
+    Phase 7 intentionally keeps this minimal; Phase 8's app-catalog
+    work introduces per-app .desktop entries that claim their own
+    MIME types directly.
+  -->
+
+  <mime-type type="application/x-crossdesk-bundle">
+    <comment>CrossDesk diagnostic bundle</comment>
+    <comment xml:lang="pl">Paczka diagnostyczna CrossDesk</comment>
+    <icon name="crossdesk"/>
+    <glob pattern="crossdesk-diag-*.zip"/>
+  </mime-type>
+
+</mime-info>

@@ -1,0 +1,24 @@
+{
+  "KPlugin": {
+    "Authors": [
+      {
+        "Email": "szymon-paczos@protonmail.com",
+        "Name": "Szymon Paczos"
+      }
+    ],
+    "Category": "Hardware",
+    "Description": "Run Windows applications as native Linux windows",
+    "Description[pl]": "Uruchamiaj aplikacje Windows jako natywne okna Linux",
+    "Icon": "crossdesk",
+    "Id": "kcm_crossdesk",
+    "License": "GPL-3.0-or-later",
+    "Name": "Windows Apps",
+    "Name[pl]": "Aplikacje Windows",
+    "ServiceTypes": ["KCModule"],
+    "Version": "0.1.0",
+    "Website": "https://github.com/SzymonPaczos/CrossDesk"
+  },
+  "X-KDE-Keywords": "windows,vm,libvirt,wine,winapps,virtualization,office",
+  "X-KDE-Keywords[pl]": "windows,maszyna,libvirt,wine,winapps,wirtualizacja,office",
+  "X-KDE-System-Settings-Parent-Category": "system-administration"
+}

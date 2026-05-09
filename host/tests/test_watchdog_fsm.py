@@ -239,6 +239,48 @@ def test_high_rtt_before_warmup_does_not_trip() -> None:
 
 
 # ---------------------------------------------------------------------------
+# SUSPENDED state (Week 7 lifecycle)
+# ---------------------------------------------------------------------------
+
+
+def test_suspend_moves_state_to_suspended() -> None:
+    fsm = HeartbeatFsm()
+    fsm.suspend()
+    assert fsm.state == State.SUSPENDED
+
+
+def test_suspended_ignores_misses() -> None:
+    fsm = HeartbeatFsm()
+    fsm.suspend()
+    for _ in range(50):
+        out = fsm.tick(MISS)
+    # No transition out of SUSPENDED, no recovery action emitted
+    # despite 50 consecutive missed heartbeats.
+    assert out.state == State.SUSPENDED
+    assert out.recovery_action == RecoveryAction.RECOVERY_ACTION_NONE
+
+
+def test_resume_from_suspended_enters_probing() -> None:
+    fsm = HeartbeatFsm()
+    fsm.suspend()
+    fsm.resume()
+    assert fsm.state == State.PROBING
+
+
+def test_resume_grants_grace_window_before_recovery() -> None:
+    cfg = FsmConfig(miss_threshold=3, probing_extra=2, max_soft_attempts=3)
+    fsm = HeartbeatFsm(cfg)
+    fsm.suspend()
+    fsm.resume()
+    # PROBING state on resume; first miss does not arm SOFT_RECOVERY
+    # because miss_count starts at 0 and needs to reach miss_threshold +
+    # probing_extra = 5.
+    out = fsm.tick(MISS)
+    assert out.state == State.PROBING
+    assert out.recovery_action == RecoveryAction.RECOVERY_ACTION_NONE
+
+
+# ---------------------------------------------------------------------------
 # EWMA helper
 # ---------------------------------------------------------------------------
 

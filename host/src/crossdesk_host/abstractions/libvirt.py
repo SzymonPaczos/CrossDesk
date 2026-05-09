@@ -36,6 +36,19 @@ class LibvirtController(Protocol):
         """Polite shutdown: ``virsh shutdown`` (ACPI signal)."""
         ...
 
+    def suspend(self) -> None:
+        """Pause the running domain (``virsh suspend``). Heartbeat traffic
+        will stop; the lifecycle layer must move the FSM into
+        ``SUSPENDED`` first so misses across the pause don't trip
+        false-positive HARD_DESTROY."""
+        ...
+
+    def resume(self) -> None:
+        """Unpause the domain (``virsh resume``). Caller is responsible
+        for re-handshaking AuthContext and moving the FSM out of
+        ``SUSPENDED`` (typically into ``PROBING``)."""
+        ...
+
     def attach_virtiofs(self, share_id: str, host_path: str) -> bool:
         """Hot-plug a virtiofs share. Returns ``True`` on success or
         if the share was already attached (idempotent)."""

@@ -50,6 +50,7 @@ class RealLibvirtController(LibvirtController):
 
     def _domain(self) -> "_libvirt_t.virDomain":
         import libvirt
+
         try:
             return self._connect().lookupByName(self.domain_name)
         except libvirt.libvirtError as exc:
@@ -59,6 +60,7 @@ class RealLibvirtController(LibvirtController):
 
     def hard_destroy(self) -> None:
         import libvirt
+
         domain = self._domain()
         logger.warning("hard_destroy: virsh destroy %s", self.domain_name)
         try:
@@ -73,6 +75,7 @@ class RealLibvirtController(LibvirtController):
 
     def graceful_shutdown(self) -> None:
         import libvirt
+
         domain = self._domain()
         logger.info("graceful_shutdown: virsh shutdown %s", self.domain_name)
         try:
@@ -80,8 +83,29 @@ class RealLibvirtController(LibvirtController):
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"shutdown failed: {exc}") from exc
 
+    def suspend(self) -> None:
+        import libvirt
+
+        domain = self._domain()
+        logger.info("suspend: virsh suspend %s", self.domain_name)
+        try:
+            domain.suspend()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"suspend failed: {exc}") from exc
+
+    def resume(self) -> None:
+        import libvirt
+
+        domain = self._domain()
+        logger.info("resume: virsh resume %s", self.domain_name)
+        try:
+            domain.resume()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"resume failed: {exc}") from exc
+
     def attach_virtiofs(self, share_id: str, host_path: str) -> bool:
         import libvirt
+
         domain = self._domain()
         device_xml = (
             f"<filesystem type='mount' accessmode='passthrough'>"
@@ -101,6 +125,7 @@ class RealLibvirtController(LibvirtController):
 
     def detach_virtiofs(self, share_id: str) -> bool:
         import libvirt
+
         domain = self._domain()
         # libvirt detach matches by target tag, so we only need the
         # share_id to identify which device to remove.

@@ -1,0 +1,42 @@
+Windows Registry Editor Version 5.00
+
+; Critical Windows registry tweaks for RAIL (RemoteApp Integrated Locally).
+; Ported from third_party/winapps/oem/RDPApps.reg per docs/COMPARISON_WINAPPS.md
+; §2.1 — without these the FreeRDP RAIL session attaches but no app windows
+; appear. Wired into <FirstLogonCommands> in infra/autounattend.xml so the
+; registry is patched before agent.exe ever starts.
+;
+; NOTE: regedit prefers UTF-16 LE for "Version 5.00" files. Most modern
+; Windows builds also accept this UTF-8 encoding via `reg import`; the
+; install pipeline (Week 14) re-encodes at deploy time if needed.
+
+; Enable Remote Desktop
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server]
+"fDenyTSConnections"=dword:00000000
+
+; Require Network Level Authentication (NLA)
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp]
+"UserAuthentication"=dword:00000001
+
+; Disable RemoteApp allow-list so any binary can run as a RAIL app
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Terminal Server\TSAppAllowList]
+"fDisabledAllowList"=dword:00000001
+
+; Allow unlisted programs (mirrors WinApps default)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services]
+"fAllowUnlistedRemotePrograms"=dword:00000001
+
+; Disable the Win11 snap-bar overlay (interferes with RAIL window framing)
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"EnableSnapBar"=dword:00000000
+
+; Disable AutoAdminLogon — credentials live in vm.toml on the host side
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon]
+"AutoAdminLogon"="0"
+
+; Always use the server's keyboard layout (forwards Linux layout cleanly)
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+"IgnoreRemoteKeyboardLayout"=dword:00000001
+
+; Suppress "Do you want your PC to be discoverable?" prompt
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff]

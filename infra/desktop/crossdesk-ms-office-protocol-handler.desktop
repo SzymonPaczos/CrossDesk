@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=CrossDesk Office Protocol Handler
+Comment=Route Microsoft Office URL schemes (ms-word://, ms-excel://, ...) through CrossDesk
+Exec=crossdesk launch ms-office-uri %u
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/ms-word;x-scheme-handler/ms-excel;x-scheme-handler/ms-powerpoint;x-scheme-handler/ms-outlook;x-scheme-handler/ms-access;x-scheme-handler/ms-visio;x-scheme-handler/ms-project;x-scheme-handler/ms-teams;x-scheme-handler/ms-whiteboard;x-scheme-handler/ms-officeapp;
+NoDisplay=true
+Categories=Office;Utility;

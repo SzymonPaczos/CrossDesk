@@ -123,14 +123,26 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
 
         Returns the freshly-minted `share_id` so callers can correlate the
         eventual MountResult back to this attach.
+
+        Phase 5 SPOF: any path that enters the mount flow MUST go
+        through ``validate_mount_path`` first; without that we'd be
+        the bypass for docs/THREAT_MODEL.md TA3 (path traversal).
         """
+        from crossdesk_host.jit_mount import MountPathError, validate_mount_path
+
+        try:
+            validated = validate_mount_path(host_path)
+        except MountPathError as exc:
+            logger.error("trigger_mount rejected %r: %s", host_path, exc)
+            raise
+
         share_id = str(uuid.uuid4())
         logger.info(
             "Triggering mount for %s (focal: %s) -> share %s",
-            host_path, focal_filename, share_id,
+            validated.canonical, focal_filename, share_id,
         )
 
-        self.libvirt_ctl.attach_virtiofs(share_id, host_path)
+        self.libvirt_ctl.attach_virtiofs(share_id, str(validated.canonical))
         self.active_shares[share_id] = "ATTACHED"
 
         # 32-byte random token bound to this share. Real deployments rotate

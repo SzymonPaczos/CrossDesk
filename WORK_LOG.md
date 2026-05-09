@@ -80,7 +80,7 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-(none)
+- [2026-05-09 14:57] START · agent: claude-code · branch: chore/tidy-plan-docs · task: tidy-plan-docs · note: refresh stale "Today: 2026-05-07" markers (EXECUTION_PLAN, MVP_SCOPE, INSTALL_WIZARD_PLAN) → 2026-05-09; remove obsolete "sections still to be expanded" claim in FOLLOWUPS:105-110; translate ROADMAP.md PL→EN preserving Foundation/Proof/SPOF structure + ✅ Phase 1
 
 ## Recent
 

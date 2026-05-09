@@ -26,6 +26,7 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 | What's the week-by-week plan to MVP? | `docs/EXECUTION_PLAN.md` |
 | Why this stack? | `docs/TECH_STACK.md` |
 | What does the architecture look like? | `docs/GOALS.md` (vision) + `docs/TECH_STACK.md` (components) |
+| How does distribution + updates look? | `docs/DISTRIBUTION.md` (visual) → `docs/PACKAGING.md` (deep-dive) |
 | What's the security model? | `docs/THREAT_MODEL.md` |
 | What's the roadmap? | `ROADMAP.md` (phases) + `docs/EXECUTION_PLAN.md` (sequenced) + `FOLLOWUPS.md` (action items) |
 | Why X over Y? | `docs/DECISIONS.md` (ADRs `DEC-NNNN`) |

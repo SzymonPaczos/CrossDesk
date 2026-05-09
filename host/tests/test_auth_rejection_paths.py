@@ -72,7 +72,7 @@ async def test_control_rejects_fingerprint_mismatch(make_cert) -> None:
     async def frames() -> AsyncIterator[control_pb2.ClientFrame]:
         yield control_pb2.ClientFrame(
             auth=_bad_fingerprint_auth(),
-            hello=control_pb2.ClientHello(host_version="x"),
+            hello=control_pb2.ClientHello(host_version="v0.1.0"),
         )
 
     with pytest.raises(AbortError) as exc:
@@ -90,7 +90,7 @@ async def test_control_rejects_missing_nonce(make_cert) -> None:
     async def frames() -> AsyncIterator[control_pb2.ClientFrame]:
         yield control_pb2.ClientFrame(
             auth=_missing_nonce_auth(fp),
-            hello=control_pb2.ClientHello(host_version="x"),
+            hello=control_pb2.ClientHello(host_version="v0.1.0"),
         )
 
     with pytest.raises(AbortError) as exc:
@@ -109,7 +109,7 @@ async def test_control_rejects_non_monotonic_sequence(make_cert) -> None:
         # First frame primes the seq for nonce=b"r"
         yield control_pb2.ClientFrame(
             auth=_good_auth(fp, b"r", sequence=1),
-            hello=control_pb2.ClientHello(host_version="x"),
+            hello=control_pb2.ClientHello(host_version="v0.1.0"),
         )
         # Second frame replays sequence=1 — must abort.
         yield control_pb2.ClientFrame(

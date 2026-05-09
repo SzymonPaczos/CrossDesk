@@ -126,7 +126,7 @@ async def test_control_session_full_lifecycle(host_server, channel_factory) -> N
             auth=common_pb2.AuthContext(
                 peer_cert_fingerprint=fp, stream_nonce=nonce, sequence=1
             ),
-            hello=control_pb2.ClientHello(host_version="smoke-test"),
+            hello=control_pb2.ClientHello(host_version="v0.1.0"),
         )
         # Tiny pause so server can yield ServerAccept before we pile up next frame
         await asyncio.sleep(0.05)
@@ -180,7 +180,7 @@ async def test_control_rejects_fingerprint_spoof(host_server, channel_factory) -
                 stream_nonce=b"spoof-stream-001",
                 sequence=1,
             ),
-            hello=control_pb2.ClientHello(host_version="spoof"),
+            hello=control_pb2.ClientHello(host_version="v0.1.0"),
         )
 
     async with channel_factory(host_server) as channel:

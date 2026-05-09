@@ -163,15 +163,21 @@ def test_incident_logs_at_error_level(
 # ---------------------------------------------------------------------------
 
 async def test_trigger_mount_attaches_libvirt_and_queues_request(
-    servicer: FilesystemServiceServicer, libvirt: MagicMock
+    servicer: FilesystemServiceServicer,
+    libvirt: MagicMock,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    await servicer.trigger_mount("/tmp/work", "report.docx")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    work_dir = tmp_path / "work"
+    work_dir.mkdir()
+    await servicer.trigger_mount(str(work_dir), "report.docx")
 
     # 1. libvirt was hot-plugged
     libvirt.attach_virtiofs.assert_called_once()
     args, _ = libvirt.attach_virtiofs.call_args
     share_id, host_path = args
-    assert host_path == "/tmp/work"
+    assert host_path == str(work_dir.resolve())
     assert servicer.active_shares[share_id] == "ATTACHED"
 
     # 2. A MountRequest frame was queued for the producer to send
@@ -183,11 +189,28 @@ async def test_trigger_mount_attaches_libvirt_and_queues_request(
 
 async def test_trigger_mount_assigns_unique_share_ids(
     servicer: FilesystemServiceServicer,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """share_id must be unique per call to prevent collisions in active_shares."""
-    await servicer.trigger_mount("/tmp/a", "a.txt")
-    await servicer.trigger_mount("/tmp/b", "b.txt")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    a_dir = tmp_path / "a"
+    b_dir = tmp_path / "b"
+    a_dir.mkdir()
+    b_dir.mkdir()
+    await servicer.trigger_mount(str(a_dir), "a.txt")
+    await servicer.trigger_mount(str(b_dir), "b.txt")
     assert len(servicer.active_shares) == 2
+
+
+async def test_trigger_mount_rejects_traversal(
+    servicer: FilesystemServiceServicer, tmp_path
+) -> None:
+    """Phase 5 SPOF: any '..' escape MUST be rejected before libvirt is touched."""
+    from crossdesk_host.jit_mount import MountPathError
+
+    with pytest.raises(MountPathError):
+        await servicer.trigger_mount("/etc/passwd", "shadow")
 
 
 # NOTE: per-frame auth enforcement on ShareChannel is verified via the smoke

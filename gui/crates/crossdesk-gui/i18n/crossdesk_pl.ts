@@ -58,4 +58,95 @@
     <message><source>Applying autounattend.xml…</source><translation>Stosowanie autounattend.xml…</translation></message>
     <message><source>Registering CrossDesk agent NT service…</source><translation>Rejestrowanie usługi NT agenta CrossDesk…</translation></message>
 </context>
+<context>
+    <name>Manager</name>
+    <message><source>Dashboard</source><translation>Panel główny</translation></message>
+    <message><source>Apps</source><translation>Aplikacje</translation></message>
+    <message><source>Storage</source><translation>Pamięć</translation></message>
+    <message><source>Lifecycle</source><translation>Cykl życia</translation></message>
+    <message><source>Diagnose</source><translation>Diagnoza</translation></message>
+    <message><source>Logs</source><translation>Dzienniki</translation></message>
+    <message><source>Settings</source><translation>Ustawienia</translation></message>
+    <message><source>About</source><translation>O programie</translation></message>
+    <message><source>Welcome to CrossDesk</source><translation>Witaj w CrossDesk</translation></message>
+    <message><source>Provision a Windows guest to get started, or open the Manager if you've already installed.</source><translation>Zainstaluj system Windows aby rozpocząć, lub otwórz Menedżera jeśli już go masz.</translation></message>
+    <message><source>Open Manager</source><translation>Otwórz Menedżera</translation></message>
+</context>
+<context>
+    <name>Dashboard</name>
+    <message><source>Uptime: %1</source><translation>Czas działania: %1</translation></message>
+    <message><source>Heartbeat RTT: %1 ms</source><translation>RTT heartbeat: %1 ms</translation></message>
+    <message><source>AuthContext rejections: %1</source><translation>Odrzucenia AuthContext: %1</translation></message>
+    <message><source>Active mounts: %1</source><translation>Aktywne mounty: %1</translation></message>
+    <message><source>Resources</source><translation>Zasoby</translation></message>
+    <message><source>CPU</source><translation>CPU</translation></message>
+    <message><source>Recent activity</source><translation>Ostatnia aktywność</translation></message>
+    <message><source>Launch app...</source><translation>Uruchom aplikację...</translation></message>
+    <message><source>Suspend VM</source><translation>Uśpij maszynę</translation></message>
+    <message><source>View logs</source><translation>Pokaż dzienniki</translation></message>
+</context>
+<context>
+    <name>Apps</name>
+    <message><source>Curated apps</source><translation>Wyselekcjonowane aplikacje</translation></message>
+    <message><source>Discovered (%1)</source><translation>Wykryte (%1)</translation></message>
+    <message><source>No apps discovered yet. Auto-discovery runs after VM is running.</source><translation>Brak wykrytych aplikacji. Wykrywanie uruchamia się po starcie maszyny.</translation></message>
+    <message><source>+ Add custom .exe</source><translation>+ Dodaj własny .exe</translation></message>
+    <message><source>Refresh discovery</source><translation>Odśwież wykrywanie</translation></message>
+    <message><source>Launch</source><translation>Uruchom</translation></message>
+</context>
+<context>
+    <name>Storage</name>
+    <message><source>Active JIT mounts (%1)</source><translation>Aktywne JIT mounty (%1)</translation></message>
+    <message><source>No active mounts.
+Mounts appear here when you open a file in a Windows app and disappear when the app closes.</source><translation>Brak aktywnych mountów.
+Mounty pojawiają się tu po otwarciu pliku w aplikacji Windows i znikają po jej zamknięciu.</translation></message>
+    <message><source>Recent mount history</source><translation>Historia mountów</translation></message>
+    <message><source>History empties when you uninstall.</source><translation>Historia czyści się przy odinstalowaniu.</translation></message>
+</context>
+<context>
+    <name>Lifecycle</name>
+    <message><source>VM controls</source><translation>Sterowanie maszyną</translation></message>
+    <message><source>Suspend</source><translation>Uśpij</translation></message>
+    <message><source>Resume</source><translation>Wznów</translation></message>
+    <message><source>Force HARD_DESTROY</source><translation>Wymuś HARD_DESTROY</translation></message>
+    <message><source>Force HARD_DESTROY?</source><translation>Wymusić HARD_DESTROY?</translation></message>
+    <message><source>This will force-restart the VM. Any unsaved Windows app state will be lost.</source><translation>Spowoduje to wymuszony restart maszyny. Niezapisany stan aplikacji Windows zostanie utracony.</translation></message>
+    <message><source>FSM state</source><translation>Stan FSM</translation></message>
+    <message><source>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</source><translation>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</translation></message>
+</context>
+<context>
+    <name>Diagnose</name>
+    <message><source>Pre-flight check</source><translation>Sprawdzenie wstępne</translation></message>
+    <message><source>Re-run</source><translation>Uruchom ponownie</translation></message>
+    <message><source>Export diagnostic bundle</source><translation>Eksportuj paczkę diagnostyczną</translation></message>
+</context>
+<context>
+    <name>Logs</name>
+    <message><source>Filter:</source><translation>Filtr:</translation></message>
+    <message><source>Search…</source><translation>Szukaj…</translation></message>
+    <message><source>Follow</source><translation>Śledź</translation></message>
+</context>
+<context>
+    <name>Settings</name>
+    <message><source>General</source><translation>Ogólne</translation></message>
+    <message><source>Theme:</source><translation>Motyw:</translation></message>
+    <message><source>Anonymous telemetry</source><translation>Anonimowa telemetria</translation></message>
+    <message><source>VM</source><translation>Maszyna</translation></message>
+    <message><source>Credentials:</source><translation>Poświadczenia:</translation></message>
+    <message><source>Show</source><translation>Pokaż</translation></message>
+    <message><source>Rotate</source><translation>Zmień</translation></message>
+    <message><source>Repair</source><translation>Napraw</translation></message>
+    <message><source>Lean mode</source><translation>Tryb Lean</translation></message>
+    <message><source>Display</source><translation>Wyświetlanie</translation></message>
+    <message><source>HiDPI scale:</source><translation>Skala HiDPI:</translation></message>
+    <message><source>Advanced (FSM tuning)</source><translation>Zaawansowane (strojenie FSM)</translation></message>
+    <message><source>These knobs balance false-positive HARD_DESTROY against false-negative hung sessions. Defaults are safe for most users.</source><translation>Te ustawienia balansują między fałszywym HARD_DESTROY a niewykrytą zawieszoną sesją. Domyślne wartości są bezpieczne dla większości użytkowników.</translation></message>
+</context>
+<context>
+    <name>About</name>
+    <message><source>Version 0.1.0 (pre-release)</source><translation>Wersja 0.1.0 (przed-wydanie)</translation></message>
+    <message><source>Run Windows applications as native Wayland or X11 windows.</source><translation>Uruchamiaj aplikacje Windows jako natywne okna Wayland lub X11.</translation></message>
+    <message><source>License: GPL-3.0-or-later</source><translation>Licencja: GPL-3.0-or-later</translation></message>
+    <message><source>Phase 4 SPOF</source><translation>Phase 4 SPOF</translation></message>
+</context>
 </TS>

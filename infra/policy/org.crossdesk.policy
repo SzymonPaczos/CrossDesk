@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+
+  <vendor>CrossDesk</vendor>
+  <vendor_url>https://github.com/SzymonPaczos/CrossDesk</vendor_url>
+  <icon_name>crossdesk</icon_name>
+
+  <action id="io.crossdesk.create-domain">
+    <description>Create the CrossDesk libvirt domain</description>
+    <description xml:lang="pl">Utwórz domenę libvirt CrossDesk</description>
+    <message>Authentication is required to create the Windows VM.</message>
+    <message xml:lang="pl">Wymagane uwierzytelnienie do utworzenia maszyny Windows.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="io.crossdesk.hard-destroy">
+    <description>Force-restart the CrossDesk Windows VM</description>
+    <description xml:lang="pl">Wymuś restart maszyny Windows CrossDesk</description>
+    <message>Authentication is required to forcibly restart the VM. Unsaved data may be lost.</message>
+    <message xml:lang="pl">Wymagane uwierzytelnienie do wymuszonego restartu maszyny. Niezapisane dane mogą zostać utracone.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_self_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="io.crossdesk.lean-mode-rebake">
+    <description>Rebake the Windows VM image with Lean profile</description>
+    <description xml:lang="pl">Przebuduj obraz maszyny Windows z profilem Lean</description>
+    <message>Authentication is required to rebuild the VM image.</message>
+    <message xml:lang="pl">Wymagane uwierzytelnienie do przebudowy obrazu maszyny.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+</policyconfig>

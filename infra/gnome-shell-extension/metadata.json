@@ -1,0 +1,8 @@
+{
+  "uuid": "crossdesk@szymonpaczos.io",
+  "name": "CrossDesk",
+  "description": "Tray indicator and quick launcher for CrossDesk-managed Windows applications.",
+  "shell-version": ["45", "46", "47"],
+  "url": "https://github.com/SzymonPaczos/CrossDesk",
+  "settings-schema": "org.gnome.shell.extensions.crossdesk"
+}

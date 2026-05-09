@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=CrossDesk Manager
+Name[pl]=Menedżer CrossDesk
+GenericName=Windows app launcher
+GenericName[pl]=Uruchamianie aplikacji Windows
+Comment=Run Windows applications as native Linux windows
+Comment[pl]=Uruchamiaj aplikacje Windows jako natywne okna Linux
+Exec=crossdesk-gui
+Icon=crossdesk
+Terminal=false
+Categories=System;Settings;
+StartupNotify=true
+StartupWMClass=crossdesk-gui
+X-GNOME-UsesNotifications=true

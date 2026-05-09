@@ -47,6 +47,7 @@ dev = [
 
 [project.scripts]
 crossdesk-host = "crossdesk_host.__main__:main"
+crossdesk = "crossdesk_host.cli.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crossdesk_host"]

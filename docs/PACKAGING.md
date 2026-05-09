@@ -1,5 +1,11 @@
 # Distribution & packaging
 
+> Looking for the visual overview (diagrams of the format matrix,
+> release pipeline, and dual-layer update flow)? Start at
+> [`DISTRIBUTION.md`](DISTRIBUTION.md). This file is the prose
+> deep-dive — per-format analysis, decision rationale, signing,
+> sequencing.
+
 How users get CrossDesk on their Linux box. Per-format analysis,
 chosen primary path, and the bundling story for `agent.exe` (a
 Windows binary that must ship inside a Linux package).

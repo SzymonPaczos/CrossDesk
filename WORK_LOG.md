@@ -80,7 +80,7 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-(none)
+- [2026-05-09 15:18] START · agent: claude-code · branch: feat/heartbeat-fsm · task: heartbeat-fsm-stage-1 · note: Week 5 P0 pulled forward (no hardware needed for FSM correctness). Stage 1 of 3: pure FSM module under host/src/crossdesk_host/watchdog/ — State enum, EWMA RTT calc, exponential backoff, transitions HEALTHY→DEGRADED→PROBING→SOFT_RECOVERY→HARD_DESTROY per heartbeat.proto. No wiring to ipc/heartbeat.py yet (Stage 2). Unit tests cover every transition with mocked time.
 
 ## Recent
 

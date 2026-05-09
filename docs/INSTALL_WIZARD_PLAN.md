@@ -1,6 +1,6 @@
 # Install Wizard Plan — first-launch UX
 
-Today: **2026-05-07**.
+Today: **2026-05-09**.
 Phase: **Phase 4 (UX)** — first-run flow that takes a fresh CrossDesk
 install from "user just launched the app" to "Windows app running as a
 native Linux window".

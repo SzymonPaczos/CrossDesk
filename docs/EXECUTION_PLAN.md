@@ -1,6 +1,6 @@
 # Execution Plan to MVP (v0.1.0)
 
-Today: **2026-05-07**.
+Today: **2026-05-09**.
 Target: **MVP-pełny-z-VirtioFS** (Phases 1–5 + supporting cross-cutting work) — see `docs/MVP_SCOPE.md` for the full scope.
 Estimated MVP date: **late 2026-10 / early 2026-11** (~24 weeks; assumes Linux+KVM hardware arrives by **2026-06-04** and one solo developer + AI agents working steadily).
 

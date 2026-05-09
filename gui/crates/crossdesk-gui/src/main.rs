@@ -1,4 +1,6 @@
 mod i18n;
+mod manager;
+mod qobjects;
 mod wizard;
 
 use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QString, QUrl};

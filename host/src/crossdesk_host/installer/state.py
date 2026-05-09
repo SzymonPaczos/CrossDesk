@@ -25,10 +25,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
 
-_DEFAULT_STATE_DIR = Path.home() / ".local" / "state" / "crossdesk"
-_DEFAULT_STATE_FILE = _DEFAULT_STATE_DIR / "install.state.json"
-
 _SCHEMA_VERSION = 1
+
+
+def _default_state_file() -> Path:
+    # Resolve at call time, not at import — tests monkey-patch ``HOME`` and
+    # expect the new value to take effect; baking ``Path.home()`` into a
+    # module constant would freeze the path at first import.
+    return Path.home() / ".local" / "state" / "crossdesk" / "install.state.json"
 
 
 @dataclass
@@ -84,7 +88,9 @@ def _atomic_write(path: Path, payload: str) -> None:
         raise
 
 
-def save(state: InstallState, path: Path = _DEFAULT_STATE_FILE) -> None:
+def save(state: InstallState, path: Optional[Path] = None) -> None:
+    if path is None:
+        path = _default_state_file()
     payload = json.dumps(
         {
             "schema_version": state.schema_version,
@@ -97,7 +103,9 @@ def save(state: InstallState, path: Path = _DEFAULT_STATE_FILE) -> None:
     _atomic_write(path, payload)
 
 
-def load(path: Path = _DEFAULT_STATE_FILE) -> InstallState:
+def load(path: Optional[Path] = None) -> InstallState:
+    if path is None:
+        path = _default_state_file()
     if not path.exists():
         return InstallState()
     with path.open("r", encoding="utf-8") as f:
@@ -116,4 +124,4 @@ def load(path: Path = _DEFAULT_STATE_FILE) -> InstallState:
 
 
 def default_state_file() -> Path:
-    return _DEFAULT_STATE_FILE
+    return _default_state_file()

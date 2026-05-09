@@ -31,8 +31,14 @@ else:  # pragma: no cover
     import tomli as _tomllib  # type: ignore[import-not-found]
 
 
-_DEFAULT_PATH = Path.home() / ".config" / "crossdesk" / "vm.toml"
 _DEFAULT_USERNAME = "crossdesk"
+
+
+def _default_path() -> Path:
+    # Resolve at call time so tests monkey-patching ``HOME`` are honoured.
+    return Path.home() / ".config" / "crossdesk" / "vm.toml"
+
+
 _PASSWORD_ALPHABET = string.ascii_letters + string.digits + "!@#$%^&*-_=+"
 _PASSWORD_LENGTH = 20
 
@@ -64,7 +70,9 @@ def generate(username: str = _DEFAULT_USERNAME) -> VmCredentials:
     return VmCredentials(username=username, password=password)
 
 
-def save(creds: VmCredentials, path: Path = _DEFAULT_PATH) -> None:
+def save(creds: VmCredentials, path: Optional[Path] = None) -> None:
+    if path is None:
+        path = _default_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_path = tempfile.mkstemp(
         dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
@@ -84,7 +92,9 @@ def save(creds: VmCredentials, path: Path = _DEFAULT_PATH) -> None:
         raise
 
 
-def load(path: Path = _DEFAULT_PATH) -> Optional[VmCredentials]:
+def load(path: Optional[Path] = None) -> Optional[VmCredentials]:
+    if path is None:
+        path = _default_path()
     if not path.exists():
         return None
     with path.open("rb") as f:
@@ -97,4 +107,4 @@ def load(path: Path = _DEFAULT_PATH) -> Optional[VmCredentials]:
 
 
 def default_path() -> Path:
-    return _DEFAULT_PATH
+    return _default_path()

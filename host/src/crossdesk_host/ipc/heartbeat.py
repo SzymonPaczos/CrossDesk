@@ -1,84 +1,131 @@
+"""HeartbeatService gRPC servicer.
+
+Stage 2 of the Phase 3 watchdog: the servicer no longer carries its own
+inline state machine. Each pong (or timeout) feeds ``HeartbeatFsm.tick``
+and the FSM emits the next state plus an advisory ``RecoveryAction``
+that the servicer dispatches against ``LibvirtController``.
+
+What lives here vs. in ``crossdesk_host/watchdog/``: the FSM module is
+purely synchronous and has no I/O; this servicer owns the asyncio
+plumbing — sending pings, awaiting pongs with a timeout, calling
+``libvirt_ctl.graceful_shutdown``/``hard_destroy`` when the FSM emits
+the corresponding ``RecoveryAction``. ``AdaptiveProfile`` broadcast
+back to the guest is queued for Stage 3 (Week 6).
+"""
+
+from __future__ import annotations
+
 import asyncio
-import logging
 import time
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import grpc
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
+from crossdesk_host.observability.log import get_logger
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2, heartbeat_pb2_grpc
+from crossdesk_host.watchdog import (
+    FsmConfig,
+    HeartbeatFsm,
+    RecoveryAction,
+    State,
+    TickInput,
+)
 
-logger = logging.getLogger(__name__)
+logger = get_logger("host.ipc.heartbeat")
+
 
 class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
-    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtController):
+    def __init__(
+        self,
+        auth_validator: AuthValidator,
+        libvirt_ctl: LibvirtController,
+        config: Optional[FsmConfig] = None,
+        ping_interval_seconds: float = 1.0,
+        pong_timeout_seconds: float = 2.0,
+    ) -> None:
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
+        self.config = config or FsmConfig()
+        self.ping_interval_seconds = ping_interval_seconds
+        self.pong_timeout_seconds = pong_timeout_seconds
 
     async def Channel(
         self,
         request_iterator: AsyncIterator[heartbeat_pb2.GuestFrame],
         context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[heartbeat_pb2.HostFrame]:
-        logger.info("Heartbeat Channel opened.")
+        logger.info("heartbeat_channel_opened")
 
-        state = "HEALTHY"
-        miss_count = 0
-        miss_threshold = 3
+        fsm = HeartbeatFsm(self.config)
         seq = 1
+        last_state: State = fsm.state
+
         try:
             while True:
                 start_ns = time.monotonic_ns()
-                
-                # Wysyłamy PING
                 yield heartbeat_pb2.HostFrame(
                     ping=heartbeat_pb2.Ping(
                         sequence=seq,
                         host_send_monotonic_ns=start_ns,
                     )
                 )
-                
-                # Oczekujemy PONG
+
                 try:
-                    # Timeout 2 sekundy na Ping
-                    guest_frame = await asyncio.wait_for(request_iterator.__anext__(), timeout=2.0)
-                    await self.auth_validator.verify_auth_context(context, guest_frame.auth)
-                    
-                    if guest_frame.WhichOneof('payload') == 'pong':
-                        rtt_ns = time.monotonic_ns() - start_ns
-                        logger.debug(f"Received Pong seq={seq}, RTT={rtt_ns / 1_000_000:.2f}ms")
-                        
-                        if state != "HEALTHY":
-                            logger.info(f"Recovered from {state} to HEALTHY")
-                            state = "HEALTHY"
-                            miss_count = 0
-                    else:
-                        logger.warning("Expected pong, got different frame")
-                        
+                    guest_frame = await asyncio.wait_for(
+                        request_iterator.__anext__(),
+                        timeout=self.pong_timeout_seconds,
+                    )
                 except asyncio.TimeoutError:
-                    miss_count += 1
-                    logger.warning(f"Missed heartbeat! Count: {miss_count}")
-                    
-                    if state == "SOFT_RECOVERY" and miss_count > miss_threshold + 5:
-                        logger.critical("Guest completely dead. Initiating HARD_DESTROY")
-                        self.libvirt_ctl.hard_destroy()
-                        break
-                    elif state == "PROBING" and miss_count > miss_threshold + 2:
-                        logger.error("Guest unresponsive. Transitioning to SOFT_RECOVERY")
-                        state = "SOFT_RECOVERY"
-                        self.libvirt_ctl.graceful_shutdown()
-                    elif state == "DEGRADED" and miss_count > miss_threshold:
-                        state = "PROBING"
-                    elif state == "HEALTHY":
-                        state = "DEGRADED"
-                        
+                    out = fsm.tick(TickInput(pong_received=False))
                 except StopAsyncIteration:
-                    logger.info("Client closed heartbeat channel")
+                    logger.info("heartbeat_client_closed")
                     break
-                    
+                else:
+                    await self.auth_validator.verify_auth_context(
+                        context, guest_frame.auth
+                    )
+                    if guest_frame.WhichOneof("payload") == "pong":
+                        rtt_ns = time.monotonic_ns() - start_ns
+                        out = fsm.tick(TickInput(pong_received=True, rtt_ns=rtt_ns))
+                    else:
+                        # GuestSignal arrived in place of a Pong — counts as
+                        # a missed measurement window; the signal kind is
+                        # logged but doesn't bypass the FSM.
+                        logger.info(
+                            "heartbeat_unexpected_payload",
+                            kind=guest_frame.WhichOneof("payload"),
+                        )
+                        out = fsm.tick(TickInput(pong_received=False))
+
+                if out.state != last_state:
+                    logger.info(
+                        "heartbeat_state_transition",
+                        from_state=last_state.value,
+                        to_state=out.state.value,
+                        miss_count=out.consecutive_miss_count,
+                        ewma_rtt_ns=out.ewma_rtt_ns,
+                    )
+                    last_state = out.state
+
+                if (
+                    out.recovery_action
+                    == RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN
+                ):
+                    logger.warning(
+                        "heartbeat_graceful_shutdown_dispatched",
+                        attempt=out.soft_attempts,
+                        backoff_seconds=out.next_action_after_seconds,
+                    )
+                    self.libvirt_ctl.graceful_shutdown()
+                elif out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
+                    logger.critical("heartbeat_hard_destroy_dispatched")
+                    self.libvirt_ctl.hard_destroy()
+                    break
+
                 seq += 1
-                await asyncio.sleep(1.0) # Ping interval
-                
+                await asyncio.sleep(self.ping_interval_seconds)
+
         except grpc.RpcError as e:
-            logger.error(f"Heartbeat RPC Error: {e}")
+            logger.error("heartbeat_rpc_error", error=str(e))

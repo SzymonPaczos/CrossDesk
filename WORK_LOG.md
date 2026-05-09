@@ -80,7 +80,7 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-(none)
+- [2026-05-09 16:04] START · agent: claude-code · branch: feat/heartbeat-fsm-wire · task: heartbeat-fsm-stage-2 · note: replace inline FSM in ipc/heartbeat.py with watchdog.HeartbeatFsm; switch to structlog facade; English-only comments; update pin-tests in test_heartbeat_fsm.py to align with new FSM defaults.
 
 ## Recent
 

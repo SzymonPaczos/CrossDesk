@@ -1,0 +1,316 @@
+# Curated tier — pre-tested app templates shipped with the host package.
+#
+# Each entry is loaded at first launch (or on `crossdesk apps reload`)
+# into ~/.local/share/crossdesk/apps/curated/<id>.json and surfaced
+# in the Manager's Apps pane. MIME types listed here are also
+# consumed by `xdg-mime default` so .docx → Word "just works".
+#
+# Compatibility stars (0-5):
+#   5 — works flawlessly across all tested Win10/Win11 builds
+#   4 — minor issues (specific feature flagged in known_issues)
+#   3 — usable but quirks
+#   0 — unrated (placeholder; no community data yet)
+#
+# This file ports / extends third_party/winapps/apps/. Where WinApps
+# only sets a name + exec path + MIMEs, we additionally curate
+# compatibility stars and known_issues notes from real testing.
+
+[[app]]
+id = "notepad"
+display_name = "Notepad"
+display_name_pl = "Notatnik"
+executable = 'C:\Windows\notepad.exe'
+mime_types = ["text/plain"]
+category = "Built-in"
+icon = "accessories-text-editor"
+stars = 5
+
+[[app]]
+id = "calc"
+display_name = "Calculator"
+display_name_pl = "Kalkulator"
+executable = 'C:\Windows\System32\calc.exe'
+mime_types = []
+category = "Built-in"
+icon = "accessories-calculator"
+stars = 5
+
+[[app]]
+id = "cmd"
+display_name = "Command Prompt"
+display_name_pl = "Wiersz polecenia"
+executable = 'C:\Windows\System32\cmd.exe'
+mime_types = []
+category = "Built-in"
+icon = "utilities-terminal"
+stars = 5
+
+[[app]]
+id = "paint"
+display_name = "Paint"
+executable = 'C:\Windows\System32\mspaint.exe'
+mime_types = ["image/png", "image/jpeg", "image/bmp"]
+category = "Built-in"
+icon = "applications-graphics"
+stars = 5
+
+[[app]]
+id = "snipping-tool"
+display_name = "Snipping Tool"
+display_name_pl = "Narzędzie wycinania"
+executable = 'C:\Windows\System32\SnippingTool.exe'
+mime_types = []
+category = "Built-in"
+icon = "accessories-screenshot"
+stars = 4
+known_issues = "Win11 SnippingTool may need 'TilEverywhere' policy override."
+
+[[app]]
+id = "regedit"
+display_name = "Registry Editor"
+display_name_pl = "Edytor rejestru"
+executable = 'C:\Windows\regedit.exe'
+mime_types = []
+category = "Built-in"
+icon = "preferences-system"
+stars = 5
+
+[[app]]
+id = "powershell"
+display_name = "PowerShell"
+executable = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+mime_types = []
+category = "Built-in"
+icon = "utilities-terminal"
+stars = 5
+
+[[app]]
+id = "task-manager"
+display_name = "Task Manager"
+display_name_pl = "Menedżer zadań"
+executable = 'C:\Windows\System32\Taskmgr.exe'
+mime_types = []
+category = "Built-in"
+icon = "utilities-system-monitor"
+stars = 5
+
+[[app]]
+id = "word"
+display_name = "Microsoft Word"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE'
+mime_types = [
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/rtf",
+]
+category = "Office"
+icon = "x-office-document"
+stars = 4
+known_issues = "Add-ins requiring outbound HTTPS to Microsoft 365 may be slow due to NAT'd guest network."
+
+[[app]]
+id = "excel"
+display_name = "Microsoft Excel"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE'
+mime_types = [
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/csv",
+]
+category = "Office"
+icon = "x-office-spreadsheet"
+stars = 5
+
+[[app]]
+id = "powerpoint"
+display_name = "Microsoft PowerPoint"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE'
+mime_types = [
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+]
+category = "Office"
+icon = "x-office-presentation"
+stars = 5
+
+[[app]]
+id = "outlook"
+display_name = "Microsoft Outlook"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE'
+mime_types = ["x-scheme-handler/mailto"]
+category = "Office"
+icon = "x-office-address-book"
+stars = 3
+known_issues = "Profile setup needs initial Linux-side network access; Office-365 only fully validated, on-prem Exchange may need NTLM."
+
+[[app]]
+id = "access"
+display_name = "Microsoft Access"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\MSACCESS.EXE'
+mime_types = ["application/x-msaccess"]
+category = "Office"
+icon = "x-office-database"
+stars = 4
+
+[[app]]
+id = "onenote"
+display_name = "Microsoft OneNote"
+executable = 'C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE'
+mime_types = ["application/onenote"]
+category = "Office"
+icon = "x-office-document"
+stars = 4
+
+[[app]]
+id = "teams"
+display_name = "Microsoft Teams"
+executable = 'C:\Users\Public\AppData\Local\Microsoft\Teams\current\Teams.exe'
+mime_types = []
+category = "Office"
+icon = "user-group"
+stars = 3
+known_issues = "Camera and microphone passthrough not implemented at MVP; chat works."
+
+[[app]]
+id = "photoshop"
+display_name = "Adobe Photoshop"
+executable = 'C:\Program Files\Adobe\Adobe Photoshop 2024\Photoshop.exe'
+mime_types = ["image/vnd.adobe.photoshop"]
+category = "Adobe"
+icon = "applications-graphics"
+stars = 4
+known_issues = "GPU acceleration requires Phase 4.5 passthrough; software rendering is usable for everything except massive filters."
+
+[[app]]
+id = "illustrator"
+display_name = "Adobe Illustrator"
+executable = 'C:\Program Files\Adobe\Adobe Illustrator 2024\Support Files\Contents\Windows\Illustrator.exe'
+mime_types = ["application/postscript", "application/illustrator"]
+category = "Adobe"
+icon = "applications-graphics"
+stars = 4
+
+[[app]]
+id = "premiere"
+display_name = "Adobe Premiere Pro"
+executable = 'C:\Program Files\Adobe\Adobe Premiere Pro 2024\Adobe Premiere Pro.exe'
+mime_types = ["video/x-prproj"]
+category = "Adobe"
+icon = "applications-multimedia"
+stars = 3
+known_issues = "Editing usable; final render needs GPU passthrough or accept slower software encode."
+
+[[app]]
+id = "acrobat-reader"
+display_name = "Adobe Acrobat Reader"
+display_name_pl = "Adobe Acrobat Reader"
+executable = 'C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe'
+mime_types = ["application/pdf"]
+category = "Adobe"
+icon = "x-office-document"
+stars = 5
+
+[[app]]
+id = "edge"
+display_name = "Microsoft Edge"
+executable = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+mime_types = ["text/html", "x-scheme-handler/http", "x-scheme-handler/https"]
+category = "Browsers"
+icon = "applications-internet"
+stars = 4
+known_issues = "Crashes if VM RAM is below 4 GB."
+
+[[app]]
+id = "ie"
+display_name = "Internet Explorer 11"
+executable = 'C:\Program Files\Internet Explorer\iexplore.exe'
+mime_types = []
+category = "Browsers"
+icon = "applications-internet"
+stars = 3
+known_issues = "Legacy. Use only when stuck behind an enterprise IE-only intranet."
+
+[[app]]
+id = "spotify"
+display_name = "Spotify"
+executable = 'C:\Users\Public\AppData\Roaming\Spotify\Spotify.exe'
+mime_types = []
+category = "Media"
+icon = "applications-multimedia"
+stars = 3
+known_issues = "Audio out works once PipeWire passthrough configured; install pipeline auto-configures it."
+
+[[app]]
+id = "vscode-win"
+display_name = "Visual Studio Code (Win)"
+executable = 'C:\Program Files\Microsoft VS Code\Code.exe'
+mime_types = ["text/x-c", "text/x-python", "text/x-rust"]
+category = "Dev"
+icon = "applications-development"
+stars = 5
+known_issues = "Useful only when you specifically need Windows-side extensions; native VS Code on Linux is preferred."
+
+[[app]]
+id = "visual-studio"
+display_name = "Visual Studio"
+executable = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe'
+mime_types = ["application/x-msvs-solution"]
+category = "Dev"
+icon = "applications-development"
+stars = 4
+
+[[app]]
+id = "ssms"
+display_name = "SQL Server Management Studio"
+executable = 'C:\Program Files (x86)\Microsoft SQL Server Management Studio 19\Common7\IDE\Ssms.exe'
+mime_types = []
+category = "Dev"
+icon = "applications-development"
+stars = 5
+
+[[app]]
+id = "notepad-pp"
+display_name = "Notepad++"
+executable = 'C:\Program Files\Notepad++\notepad++.exe'
+mime_types = ["text/plain"]
+category = "Dev"
+icon = "accessories-text-editor"
+stars = 5
+
+[[app]]
+id = "autocad"
+display_name = "AutoCAD"
+executable = 'C:\Program Files\Autodesk\AutoCAD 2024\acad.exe'
+mime_types = ["image/vnd.dwg", "image/vnd.dxf"]
+category = "CAD"
+icon = "applications-engineering"
+stars = 4
+known_issues = "Performance acceptable software-rendered; passthrough strongly recommended for production."
+
+[[app]]
+id = "matlab"
+display_name = "MATLAB"
+executable = 'C:\Program Files\MATLAB\R2024a\bin\matlab.exe'
+mime_types = ["application/x-matlab"]
+category = "Engineering"
+icon = "applications-science"
+stars = 5
+
+[[app]]
+id = "solidworks"
+display_name = "SolidWorks"
+executable = 'C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\sldworks.exe'
+mime_types = ["application/sldprt"]
+category = "CAD"
+icon = "applications-engineering"
+stars = 4
+known_issues = "GPU passthrough required for usable rendering of complex assemblies."
+
+[[app]]
+id = "quickbooks"
+display_name = "QuickBooks"
+executable = 'C:\Program Files\Intuit\QuickBooks 2024\QBW.EXE'
+mime_types = ["application/x-quickbooks"]
+category = "Business"
+icon = "x-office-spreadsheet"
+stars = 4

@@ -83,9 +83,7 @@ def validate_mount_path(
     for forbidden in denylist:
         for path_str in (raw_normalised, canonical_str):
             if path_str == forbidden or path_str.startswith(forbidden + "/"):
-                raise MountPathError(
-                    f"path under denylisted root {forbidden}: {raw}"
-                )
+                raise MountPathError(f"path under denylisted root {forbidden}: {raw}")
 
     # Must be inside at least one allowed root after resolution.
     for root in allowed_roots:

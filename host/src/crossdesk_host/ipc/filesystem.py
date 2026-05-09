@@ -9,6 +9,7 @@ from google.protobuf.duration_pb2 import Duration
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2, filesystem_pb2_grpc
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
     def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtController):
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
-        self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = asyncio.Queue()
+        self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = (
+            asyncio.Queue()
+        )
         self.active_shares: Dict[str, str] = {}
 
     async def ShareChannel(
@@ -48,7 +51,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             # not exist in current grpcio releases.
             while not context.cancelled() and not consumer_task.done():
                 try:
-                    frame = await asyncio.wait_for(self.command_queue.get(), timeout=1.0)
+                    frame = await asyncio.wait_for(
+                        self.command_queue.get(), timeout=1.0
+                    )
                 except asyncio.TimeoutError:
                     continue
                 yield frame
@@ -58,10 +63,8 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             # gRPC layer reports the rejection upstream. Pre-fix this
             # `except Exception: pass` swallowed auth aborts silently.
             consumer_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await consumer_task
-            except asyncio.CancelledError:
-                pass
             logger.info(f"[{peer_identity}] Filesystem channel closed")
 
     def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:
@@ -76,7 +79,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             res = frame.mount_result
             if not self._token_ok(res.mount_token, "mount_result", res.share_id):
                 return
-            logger.info(f"[Filesystem] MountResult for share {res.share_id}: {res.status}")
+            logger.info(
+                f"[Filesystem] MountResult for share {res.share_id}: {res.status}"
+            )
             if res.status == filesystem_pb2.MountResult.Status.STATUS_MOUNTED:
                 self.active_shares[res.share_id] = "MOUNTED"
 
@@ -95,7 +100,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             ack = frame.release_ack
             if not self._token_ok(ack.mount_token, "release_ack", ack.share_id):
                 return
-            logger.info(f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching...")
+            logger.info(
+                f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching..."
+            )
             self.libvirt_ctl.detach_virtiofs(ack.share_id)
 
             if ack.share_id in self.active_shares:
@@ -103,7 +110,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
 
         elif payload_type == "incident":
             inc = frame.incident
-            logger.error(f"[Filesystem] Incident on share {inc.share_id}: {inc.kind} - {inc.detail}")
+            logger.error(
+                f"[Filesystem] Incident on share {inc.share_id}: {inc.kind} - {inc.detail}"
+            )
 
         else:
             logger.warning(f"Unhandled payload type: {payload_type}")
@@ -113,7 +122,10 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         if len(token) != MOUNT_TOKEN_LEN:
             logger.error(
                 "[Filesystem] %s for share %s rejected: mount_token len=%d (expected %d)",
-                frame_kind, share_id, len(token), MOUNT_TOKEN_LEN,
+                frame_kind,
+                share_id,
+                len(token),
+                MOUNT_TOKEN_LEN,
             )
             return False
         return True
@@ -139,7 +151,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         share_id = str(uuid.uuid4())
         logger.info(
             "Triggering mount for %s (focal: %s) -> share %s",
-            validated.canonical, focal_filename, share_id,
+            validated.canonical,
+            focal_filename,
+            share_id,
         )
 
         self.libvirt_ctl.attach_virtiofs(share_id, str(validated.canonical))

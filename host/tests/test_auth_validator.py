@@ -4,6 +4,7 @@ Phase 2 SPOF: per-frame fingerprint+nonce+sequence enforcement is the only
 thing standing between a malicious peer and the control plane. Bugs here
 silently bypass mTLS — every branch needs explicit coverage.
 """
+
 from __future__ import annotations
 
 import grpc
@@ -20,7 +21,9 @@ def validator() -> AuthValidator:
     return AuthValidator()
 
 
-def _auth(fp: str, nonce: bytes = b"nonce-1", sequence: int = 1) -> common_pb2.AuthContext:
+def _auth(
+    fp: str, nonce: bytes = b"nonce-1", sequence: int = 1
+) -> common_pb2.AuthContext:
     return common_pb2.AuthContext(
         peer_cert_fingerprint=fp, stream_nonce=nonce, sequence=sequence
     )
@@ -29,6 +32,7 @@ def _auth(fp: str, nonce: bytes = b"nonce-1", sequence: int = 1) -> common_pb2.A
 # ---------------------------------------------------------------------------
 # Fingerprint extraction
 # ---------------------------------------------------------------------------
+
 
 def test_extract_fingerprint_returns_lowercase_hex(
     validator: AuthValidator, make_cert
@@ -62,6 +66,7 @@ def test_extract_fingerprint_handles_malformed_pem(
 # ---------------------------------------------------------------------------
 # verify_auth_context — happy path & sequence bookkeeping
 # ---------------------------------------------------------------------------
+
 
 async def test_first_frame_initializes_sequence_state(
     validator: AuthValidator, make_cert
@@ -97,6 +102,7 @@ async def test_fingerprint_match_is_case_insensitive(
 # ---------------------------------------------------------------------------
 # verify_auth_context — rejection paths
 # ---------------------------------------------------------------------------
+
 
 async def test_missing_tls_cert_aborts_unauthenticated(
     validator: AuthValidator,
@@ -163,9 +169,8 @@ async def test_sequence_skip_forward_is_also_rejected(
 # Stream lifecycle
 # ---------------------------------------------------------------------------
 
-async def test_remove_stream_cleans_state(
-    validator: AuthValidator, make_cert
-) -> None:
+
+async def test_remove_stream_cleans_state(validator: AuthValidator, make_cert) -> None:
     pem, fp = make_cert()
     ctx = context_with_cert(pem)
     await validator.verify_auth_context(ctx, _auth(fp, b"clean", sequence=1))

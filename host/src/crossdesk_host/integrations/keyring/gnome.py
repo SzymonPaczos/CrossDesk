@@ -11,9 +11,12 @@ False`` and the picker falls back to file/mock.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional, cast
 
 from crossdesk_host.integrations.keyring.base import Keyring, KeyringError
+
+_logger = logging.getLogger(__name__)
 
 _ATTRIBUTE_KEY = "crossdesk.key"
 
@@ -83,5 +86,9 @@ class GnomeKeyring(Keyring):
         for item in collection.search_items({_ATTRIBUTE_KEY: key}):
             try:
                 item.delete()
-            except Exception:
-                pass
+            except Exception as exc:
+                # libsecret can fail mid-iteration if another client races
+                # us to the same item. Logging keeps the broken-keyring
+                # case visible without aborting the cleanup loop — we
+                # still want to delete every other matching entry.
+                _logger.warning("gnome_keyring_delete_failed: %s (key=%r)", exc, key)

@@ -18,7 +18,9 @@ else:
 
 _T = _typing.TypeVar("_T")
 
-class _MaybeAsyncIterator(_abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta): ...
+class _MaybeAsyncIterator(
+    _abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta
+): ...
 
 class _ServicerContext(_grpc.ServicerContext, _aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
@@ -74,7 +76,9 @@ class FilesystemServiceStub:
     def __new__(cls, channel: _grpc.Channel) -> _Self: ...
     @_typing.overload
     def __new__(cls, channel: _aio.Channel) -> FilesystemServiceAsyncStub: ...
-    ShareChannel: _grpc.StreamStreamMultiCallable[_filesystem_pb2.ShareGuestFrame, _filesystem_pb2.ShareHostFrame]
+    ShareChannel: _grpc.StreamStreamMultiCallable[
+        _filesystem_pb2.ShareGuestFrame, _filesystem_pb2.ShareHostFrame
+    ]
     """Bidirectional. Host pushuje komendy share'a; Guest pushuje raporty stanu
     (mount results, lock reports, release acks, incydenty).
     """
@@ -179,9 +183,15 @@ class FilesystemServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request_iterator: _MaybeAsyncIterator[_filesystem_pb2.ShareGuestFrame],
         context: _ServicerContext,
-    ) -> _typing.Union[_abc.Iterator[_filesystem_pb2.ShareHostFrame], _abc.AsyncIterator[_filesystem_pb2.ShareHostFrame]]:
+    ) -> _typing.Union[
+        _abc.Iterator[_filesystem_pb2.ShareHostFrame],
+        _abc.AsyncIterator[_filesystem_pb2.ShareHostFrame],
+    ]:
         """Bidirectional. Host pushuje komendy share'a; Guest pushuje raporty stanu
         (mount results, lock reports, release acks, incydenty).
         """
 
-def add_FilesystemServiceServicer_to_server(servicer: FilesystemServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...
+def add_FilesystemServiceServicer_to_server(
+    servicer: FilesystemServiceServicer,
+    server: _typing.Union[_grpc.Server, _aio.Server],
+) -> None: ...

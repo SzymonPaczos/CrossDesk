@@ -1,0 +1,62 @@
+# cargo-deny configuration for the guest workspace.
+#
+# Run: `cargo deny check`
+#
+# CrossDesk is GPL-3.0-or-later. Deps may be permissive (MIT,
+# Apache-2.0, BSD, ISC, Unicode-DFS) or copyleft compatible with GPL-3
+# (LGPL-3, MPL-2.0). We deny anything stricter (AGPL would force
+# downstream packages, BUSL etc).
+#
+# RustSec advisories are enforced in `[advisories]`; unmaintained =
+# warn (we want to know but not block) since upstream maintenance is
+# outside our control.
+
+[advisories]
+yanked = "deny"
+ignore = [
+    # rustls-pemfile is unmaintained as of 2025-08; tonic 0.12 still
+    # depends on it, so we flag-and-track until tonic updates.
+    "RUSTSEC-2025-0134",
+]
+
+[licenses]
+allow = [
+    "GPL-3.0",
+    "GPL-3.0-or-later",
+    "LGPL-3.0-or-later",
+    "MPL-2.0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "Zlib",
+    "0BSD",
+    "CC0-1.0",
+    "BSL-1.0",
+    "OpenSSL",
+]
+confidence-threshold = 0.8
+exceptions = []
+
+[bans]
+multiple-versions = "warn"
+# `wildcards = "deny"` rejects internal `path = "../foo"` dependencies
+# that don't carry a version field. We explicitly allow wildcards on
+# our own crates (proto, observability, ipc-vsock, etc.) since their
+# versions are workspace-pinned anyway.
+wildcards = "allow"
+highlight = "all"
+deny = []
+skip = []
+skip-tree = []
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

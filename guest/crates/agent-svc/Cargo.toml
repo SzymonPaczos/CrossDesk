@@ -3,6 +3,8 @@ name    = "agent-svc"
 version = "0.1.0"
 edition = "2021"
 
+license.workspace = true
+repository.workspace = true
 [[bin]]
 # Binary name is `agent` (→ agent.exe); the NT service name is
 # `CrossDeskAgent`, registered at install time. See REQUIREMENTS F1.9.

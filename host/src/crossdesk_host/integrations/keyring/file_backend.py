@@ -20,6 +20,7 @@ else:  # pragma: no cover
     import tomli as _tomllib  # type: ignore[import-not-found]
 
 from crossdesk_host.integrations.keyring.base import Keyring
+import contextlib
 
 
 class FileKeyring(Keyring):
@@ -58,10 +59,8 @@ class FileKeyring(Keyring):
             os.chmod(tmp, 0o600)
             os.rename(tmp, path)
         except Exception:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp)
-            except OSError:
-                pass
             raise
 
     def get(self, key: str) -> Optional[str]:

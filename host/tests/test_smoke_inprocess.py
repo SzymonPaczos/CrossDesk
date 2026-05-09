@@ -18,6 +18,7 @@ Skip conditions:
 - The smoke build has been disabled via the ``CROSSDESK_SKIP_INPROCESS``
   env var (set by CI lanes that lack the Rust toolchain).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -46,7 +47,7 @@ from crossdesk_host.proto.crossdesk.v1 import (
     filesystem_pb2_grpc,
     heartbeat_pb2_grpc,
 )
-
+import contextlib
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKI = _REPO_ROOT / "infra" / "certs" / "pki"
@@ -247,10 +248,8 @@ async def test_agent_connects_and_completes_handshake(
                 proc.kill()
                 await proc.wait()
         drain_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await drain_task
-        except asyncio.CancelledError:
-            pass
 
 
 _TRACE_ID_AGENT_RE = re.compile(rb"trace_id[=:\s\"]+([0-9a-f]{32})")
@@ -322,8 +321,7 @@ async def test_traceparent_propagates_from_agent_to_host_logs(
         agent_trace_id = agent_match.group(1).decode("ascii")
 
         assert host_trace_id == agent_trace_id, (
-            f"trace_id mismatch: agent={agent_trace_id!r} "
-            f"host={host_trace_id!r}"
+            f"trace_id mismatch: agent={agent_trace_id!r} " f"host={host_trace_id!r}"
         )
     finally:
         if proc.returncode is None:
@@ -334,7 +332,5 @@ async def test_traceparent_propagates_from_agent_to_host_logs(
                 proc.kill()
                 await proc.wait()
         drain_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await drain_task
-        except asyncio.CancelledError:
-            pass

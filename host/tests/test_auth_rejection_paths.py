@@ -14,6 +14,7 @@ A regression on any of these would let a malicious peer past mTLS
 into the FSM / virtiofs surface — explicit per-plane coverage
 prevents the silent-bypass class of bug we hit before.
 """
+
 from __future__ import annotations
 
 from typing import AsyncIterator
@@ -35,7 +36,9 @@ from crossdesk_host.proto.crossdesk.v1 import (
 from tests.conftest import AbortError, context_with_cert
 
 
-def _good_auth(fp: str, nonce: bytes = b"good", sequence: int = 1) -> common_pb2.AuthContext:
+def _good_auth(
+    fp: str, nonce: bytes = b"good", sequence: int = 1
+) -> common_pb2.AuthContext:
     return common_pb2.AuthContext(
         peer_cert_fingerprint=fp, stream_nonce=nonce, sequence=sequence
     )
@@ -57,6 +60,7 @@ def _missing_nonce_auth(fp: str) -> common_pb2.AuthContext:
 # Control plane
 # ---------------------------------------------------------------------------
 
+
 async def _consume(stream: AsyncIterator) -> None:
     async for _ in stream:
         pass
@@ -65,9 +69,11 @@ async def _consume(stream: AsyncIterator) -> None:
 async def test_control_rejects_fingerprint_mismatch(make_cert) -> None:
     pem, _ = make_cert()
     ctx = context_with_cert(pem)
-    servicer = ControlServiceServicer(auth_validator=__import__(
-        "crossdesk_host.ipc.auth", fromlist=["AuthValidator"]
-    ).AuthValidator())
+    servicer = ControlServiceServicer(
+        auth_validator=__import__(
+            "crossdesk_host.ipc.auth", fromlist=["AuthValidator"]
+        ).AuthValidator()
+    )
 
     async def frames() -> AsyncIterator[control_pb2.ClientFrame]:
         yield control_pb2.ClientFrame(
@@ -83,9 +89,11 @@ async def test_control_rejects_fingerprint_mismatch(make_cert) -> None:
 async def test_control_rejects_missing_nonce(make_cert) -> None:
     pem, fp = make_cert()
     ctx = context_with_cert(pem)
-    servicer = ControlServiceServicer(auth_validator=__import__(
-        "crossdesk_host.ipc.auth", fromlist=["AuthValidator"]
-    ).AuthValidator())
+    servicer = ControlServiceServicer(
+        auth_validator=__import__(
+            "crossdesk_host.ipc.auth", fromlist=["AuthValidator"]
+        ).AuthValidator()
+    )
 
     async def frames() -> AsyncIterator[control_pb2.ClientFrame]:
         yield control_pb2.ClientFrame(
@@ -127,6 +135,7 @@ async def test_control_rejects_non_monotonic_sequence(make_cert) -> None:
 # ---------------------------------------------------------------------------
 # Heartbeat plane
 # ---------------------------------------------------------------------------
+
 
 async def test_heartbeat_rejects_fingerprint_mismatch(make_cert) -> None:
     pem, _ = make_cert()
@@ -189,6 +198,7 @@ async def test_heartbeat_rejects_non_monotonic_sequence(make_cert) -> None:
 # ---------------------------------------------------------------------------
 # Filesystem plane
 # ---------------------------------------------------------------------------
+
 
 async def test_filesystem_rejects_fingerprint_mismatch(make_cert) -> None:
     pem, _ = make_cert()

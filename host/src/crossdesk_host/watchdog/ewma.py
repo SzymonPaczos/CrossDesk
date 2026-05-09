@@ -34,6 +34,16 @@ class EwmaRtt:
     _warmup_sum_ns: int = 0
 
     def update(self, rtt_ns: int) -> int:
+        """Feed a new RTT sample and return the current smoothed value.
+
+        First ``warmup`` samples accumulate into an arithmetic mean
+        (the baseline). After warmup, samples feed the EWMA proper:
+        ``new = (1 - alpha) * old + alpha * sample``.
+
+        Raises ``ValueError`` on negative inputs — RTT is duration,
+        never negative; passing a signed delta is a caller bug we
+        prefer to fail loudly.
+        """
         if rtt_ns < 0:
             raise ValueError("rtt_ns must be non-negative")
         self._samples_seen += 1
@@ -49,15 +59,25 @@ class EwmaRtt:
 
     @property
     def value_ns(self) -> Optional[int]:
+        """Current smoothed RTT in ns, or ``None`` before any samples."""
         return None if self._value_ns is None else int(self._value_ns)
 
     @property
     def baseline_ns(self) -> Optional[int]:
+        """Frozen arithmetic mean of the warmup samples, or ``None``
+        before warmup completes. Used by the FSM as the reference for
+        the ``ewma > k1 * baseline`` HEALTHY → DEGRADED trip."""
         return None if self._baseline_ns is None else int(self._baseline_ns)
 
     @property
     def samples(self) -> int:
+        """Total samples seen, including warmup."""
         return self._samples_seen
 
     def is_warm(self) -> bool:
+        """True once at least ``warmup`` samples have been ingested.
+
+        Callers gate threshold checks on this so we don't trip
+        DEGRADED on a single-sample blip while baseline isn't set yet.
+        """
         return self._samples_seen >= self.warmup

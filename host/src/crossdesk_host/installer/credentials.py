@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Optional
 
 import sys
+import contextlib
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib  # type: ignore[import-not-found,unused-ignore]
@@ -85,10 +86,8 @@ def save(creds: VmCredentials, path: Optional[Path] = None) -> None:
         os.chmod(tmp_path, 0o600)
         os.rename(tmp_path, path)
     except Exception:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
         raise
 
 

@@ -9,10 +9,11 @@ The Servicer's `Channel` coroutine sleeps + waits internally; we patch both
 `asyncio.sleep` and `asyncio.wait_for` in the heartbeat module so tests run in
 milliseconds and we can script which pings get a pong vs. time out.
 """
+
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, Callable, List
+from typing import AsyncIterator, List
 from unittest.mock import AsyncMock, MagicMock  # noqa: F401
 
 import pytest
@@ -20,7 +21,6 @@ import pytest
 from crossdesk_host.ipc import heartbeat as heartbeat_module
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.proto.crossdesk.v1 import common_pb2, heartbeat_pb2
-
 from tests.conftest import FakeServicerContext
 
 
@@ -91,6 +91,7 @@ async def _drive(
 # Happy path
 # ---------------------------------------------------------------------------
 
+
 async def test_all_pongs_received_no_libvirt_action(monkeypatch) -> None:
     libvirt = MagicMock()
     out = await _drive(
@@ -109,6 +110,7 @@ async def test_all_pongs_received_no_libvirt_action(monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 # Recovery FSM
 # ---------------------------------------------------------------------------
+
 
 async def test_single_miss_does_not_trigger_libvirt(monkeypatch) -> None:
     libvirt = MagicMock()
@@ -131,11 +133,17 @@ async def test_soft_recovery_triggers_graceful_shutdown(monkeypatch) -> None:
 
 
 async def test_hard_destroy_triggers_after_sustained_silence(monkeypatch) -> None:
-    """HARD_DESTROY fires when miss_count > miss_threshold + 5 (>8 misses)."""
+    """HARD_DESTROY fires after max_soft_attempts (default 3) graceful retries.
+
+    With FsmConfig defaults (miss_threshold=3, probing_extra=2,
+    max_soft_attempts=3): 5 misses → SOFT attempt 1, 7 → attempt 2,
+    9 → attempt 3, 11 → attempt 4 > max → HARD_DESTROY.
+    """
     libvirt = MagicMock()
-    # 9 misses > 8 → HARD_DESTROY → break (no StopAsyncIteration needed)
-    await _drive([asyncio.TimeoutError] * 9, libvirt, monkeypatch)
+    # 11 misses → HARD_DESTROY → break (no StopAsyncIteration needed)
+    await _drive([asyncio.TimeoutError] * 11, libvirt, monkeypatch)
     assert libvirt.hard_destroy.call_count == 1
+    assert libvirt.graceful_shutdown.call_count == 3
 
 
 async def test_recovery_resets_state_after_pong(monkeypatch) -> None:
@@ -148,9 +156,9 @@ async def test_recovery_resets_state_after_pong(monkeypatch) -> None:
             _pong(1),
             asyncio.TimeoutError,  # → DEGRADED, miss=1
             asyncio.TimeoutError,  # miss=2
-            _pong(2),              # → HEALTHY, miss reset to 0
+            _pong(2),  # → HEALTHY, miss reset to 0
             asyncio.TimeoutError,  # → DEGRADED, miss=1 again
-            _pong(3),              # → HEALTHY again
+            _pong(3),  # → HEALTHY again
             StopAsyncIteration,
         ],
         libvirt,
@@ -163,6 +171,7 @@ async def test_recovery_resets_state_after_pong(monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 # Auth enforcement on every pong
 # ---------------------------------------------------------------------------
+
 
 async def test_auth_validator_called_for_every_pong(monkeypatch) -> None:
     libvirt = MagicMock()

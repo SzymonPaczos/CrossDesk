@@ -57,6 +57,16 @@ the repo as a reference template). Auto-loaded by Claude Code via
 The git hooks under `.githooks/` are activated per-clone; see the
 "One-time setup per clone" block in [CLAUDE.md](CLAUDE.md).
 
+The pre-push hook auto-detects optional security scanners
+(`cargo-audit`, `cargo-deny`, `gitleaks`) and runs them when
+present — installs documented in
+[docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) "How to re-run".
+Set `CROSSDESK_FULL_AUDIT=1` to additionally run pip-audit + bandit
+on every push (adds ~5s). The full sweep — gitleaks history scan,
+semgrep + SARIF, CodeQL, bandit, pip-audit, cargo audit, cargo deny
+— always runs in CI via `.github/workflows/security.yml` on every
+push, every PR, and weekly on Mondays.
+
 ## Repository layout
 
 ```

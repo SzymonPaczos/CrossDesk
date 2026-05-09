@@ -1,0 +1,18 @@
+{
+  "_README": "Initial perf baselines for crossdesk microbench gates. Values in nanoseconds; pytest-benchmark JSON output keys these by test id. Update via dedicated PR; bench_check.py fails if a test runs >20% slower than the matching baseline. First wave: heartbeat FSM hot path. Real measurements replace these placeholders once the microbench CI job has run on a stable runner.",
+  "_threshold_pct": 20,
+  "tests": {
+    "test_bench_pong_tick_healthy": {
+      "ns_mean": 5000,
+      "comment": "Single FSM.tick() with a healthy pong. Should stay sub-microsecond on commodity hardware; 5us baseline gives slack for slow CI runners until real numbers replace it."
+    },
+    "test_bench_miss_tick": {
+      "ns_mean": 5000,
+      "comment": "Single FSM.tick() with a miss. Same shape as pong path."
+    },
+    "test_bench_full_recovery_cycle": {
+      "ns_mean": 100000,
+      "comment": "16 misses driving HEALTHY -> HARD_DESTROY. Aggregates per-tick cost; tighter than 16 * single-tick because the FSM short-circuits in HARD_DESTROY."
+    }
+  }
+}

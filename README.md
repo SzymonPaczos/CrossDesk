@@ -11,12 +11,15 @@ crossdesk install            # auto-download Win11 ISO, install, register agent
 crossdesk launch notepad     # Notepad appears as a native Linux window
 ```
 
-**Status:** pre-release. All five phases are complete in code (FSM,
-RAIL display, JIT VirtioFS path validation, lifecycle suspend/resume,
-install pipeline, packaging). End-to-end hardware verification is
-pending arrival of a Linux+KVM machine. See [ROADMAP.md](ROADMAP.md)
-and [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) for the
-week-by-week status.
+**Status:** pre-release. v0.1.0 (Phases 1–5) and v1.0 (Phases 6–9 —
+Manager GUI, KDE/GNOME integrations, app catalog, recovery
+diagnostics) are both complete in code; end-to-end hardware
+verification is pending arrival of a Linux+KVM machine. See
+[ROADMAP.md](ROADMAP.md) for phase definitions,
+[docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) for the v0.1.0
+week-by-week, and [docs/GUI_PLAN.md](docs/GUI_PLAN.md) for v1.0
+scope. Post-1.0 ideas live in
+[docs/POST_1_0_IDEAS.md](docs/POST_1_0_IDEAS.md).
 
 ## Why
 

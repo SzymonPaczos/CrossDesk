@@ -7,7 +7,8 @@ rules in [`VERSIONING.md`](VERSIONING.md).
 
 ## TL;DR
 
-Five package formats, one user command per distro:
+Five distro-native package formats plus a cross-distro Flathub
+channel — one user command each:
 
 ```
 apt install crossdesk         # Debian / Ubuntu / Mint / Pop_OS
@@ -15,15 +16,19 @@ dnf install crossdesk         # Fedora / RHEL / openSUSE
 yay -S crossdesk              # Arch / Manjaro / EndeavourOS
 nix run github:SzymonPaczos/CrossDesk#crossdesk    # NixOS
 pip install crossdesk-host    # headless / dev / any distro
+flatpak install flathub dev.crossdesk.CrossDesk    # any distro (post-MVP)
 ```
 
 Two independent update layers:
-1. **Linux host** — distro package manager (`apt upgrade`, etc.).
+1. **Linux host** — distro package manager (`apt upgrade`, etc.)
+   or `flatpak update`.
 2. **In-VM agent.exe** — separate `crossdesk upgrade` RPC, hot-swap
    without restarting the VM.
 
-Flatpak / Snap / AppImage are intentionally **not** supported —
-see §5 for the contrast.
+Flatpak is shipped for **distribution reach**, not as a security
+boundary — see §5 for the honest trade-off. Snap is deferred
+(classic-confinement review path is slow); AppImage stays out of
+scope (no store, no auto-update).
 
 ## 1. Distribution matrix — who picks what
 
@@ -55,13 +60,31 @@ see §5 for the contrast.
                    │                        │                        │
               nix flake                  pip install             cargo build +
               update                     --upgrade               python -m build
+
+   ─────────────────────  cross-distro store channel  ──────────────────────
+
+                              ┌──────────────────┐
+                              │     Flathub      │  ◄── any distro with
+                              │    (Flatpak)     │      Flatpak runtime
+                              └────────┬─────────┘      (Fedora Silverblue,
+                                       │                 SteamOS, elementary,
+                                  flatpak update         Pop_OS, …)
+                                       │
+                          (+ portal prompts on first launch;
+                           NOT a security boundary — see §5)
 ```
 
-One package per distro family. Each uses its native package manager
-to update the **host layer**. PyPI is for developers and headless
-setups (no GUI, no systemd auto-install). Source build is the
-permanent fallback. Details: [`PACKAGING.md`](PACKAGING.md)
-"Format-by-format analysis".
+One package per distro family for the native channel. Each uses
+its native package manager to update the **host layer**. PyPI is
+for developers and headless setups (no GUI, no systemd
+auto-install). Source build is the permanent fallback.
+
+The Flathub channel is **additional, not primary** — a discovery /
+ease-of-install play for users who live in their distro's
+software center (GNOME Software, KDE Discover, Pop!_Shop) and
+expect to find apps there. Details:
+[`PACKAGING.md`](PACKAGING.md) "Format-by-format analysis" + §5
+below for the trade-off.
 
 ## 2. Release pipeline — tag → channels
 
@@ -186,6 +209,14 @@ Details: [`PACKAGING.md`](PACKAGING.md) "Update story per format",
      EV cert      —                       —                      ⏸ deferred
                                                                     (user-
                                                                     decision)
+     Flatpak      *.flatpak               Flathub                🚧 Phase 6+
+                  + manifest                                       (post-MVP
+                  dev.crossdesk.            (cross-distro reach)    add-on)
+                  CrossDesk.json
+     Snap         —                       Snap Store             ⏸ deferred
+                                                                    (classic
+                                                                    confinement
+                                                                    review)
 ```
 
 Three formats are code-complete (`packaging/aur/PKGBUILD`,
@@ -193,77 +224,102 @@ Three formats are code-complete (`packaging/aur/PKGBUILD`,
 matrix land in Week 22 of
 [`docs/EXECUTION_PLAN.md`](EXECUTION_PLAN.md). EV certificate for
 `agent.exe` is intentionally deferred — Sigstore keyless covers
-v0.1.0; EV moves once funding/scale justify it.
+v0.1.0; EV moves once funding/scale justify it. Flatpak is a
+post-MVP Phase 6+ add-on for distribution reach (see §5); Snap is
+deferred until the Canonical classic-confinement path is worth
+the wait.
 
-## 5. Why Flatpak / Snap / AppImage don't fit
+## 5. The Flatpak trade-off; why Snap and AppImage stay out
 
-This is the question every modern packaging review raises, so the
-answer gets a diagram. The decision is in
-[`DECISIONS.md`](DECISIONS.md) DEC-0008; the core argument is
-that CrossDesk's runtime requirements punch every hole the
-sandbox has, leaving nothing for it to actually isolate.
+Flatpak ships, but it's worth being honest about what's
+sandboxed and what isn't. The diagram below is the reality;
+treat it as **disclaimer, not deal-breaker**.
 
 ```
    ┌──────────────────── Flatpak sandbox ────────────────────┐
    │                                                         │
    │   crossdesk (host)                                      │
    │                                                         │
-   │   ┌─ requires ──────────────────────────────────────┐   │
+   │   ┌─ holes we punch ────────────────────────────────┐   │
    │   │  • libvirt session daemon (org.libvirt.…)       │   │
    │   │    → --talk-name=org.libvirt.* (full D-Bus)     │   │
    │   │  • $WAYLAND_DISPLAY direct (RAIL compositor)    │   │
    │   │    → --socket=wayland (no portal)               │   │
-   │   │  • multi-GB qcow2 VM disks in ~/.local/share    │   │
-   │   │    → --filesystem=home (entire home)            │   │
+   │   │  • multi-GB qcow2 VM disks                      │   │
+   │   │    → land in ~/.var/app/dev.crossdesk.…/data/   │   │
+   │   │      (Flatpak-managed, not ~/.local/share)      │   │
    │   │  • spawn child process FreeRDP /usr/bin/xfreerdp│   │
    │   │    → --talk-name=org.freedesktop.Flatpak        │   │
-   │   │      (host-spawn, i.e. exit the sandbox)        │   │
+   │   │      (host-spawn — exits the sandbox)           │   │
    │   │  • systemd user unit (status, restart)          │   │
-   │   │    → --system-talk-name=org.freedesktop.systemd1│   │
+   │   │    → portal: org.freedesktop.background          │
+   │   │      (one-time consent, not auto-installed)     │   │
    │   └─────────────────────────────────────────────────┘   │
    │                                                         │
-   │   Sum: full D-Bus + entire home + direct Wayland +      │
-   │        host-spawn = the sandbox technically exists      │
-   │        but isolates nothing.                            │
+   │   Sum: D-Bus + Wayland + host-spawn permissions are     │
+   │        all present. The sandbox isolates very little.   │
    │                                                         │
-   │   "Flatpak in name only" — manifest maintenance cost    │
-   │   is real; security benefit is zero.                    │
+   │   But: Flathub is THE store for Fedora Silverblue,      │
+   │        SteamOS, elementaryOS, GNOME OS users — without  │
+   │        being on Flathub we don't reach them at all.     │
+   │        Industry precedent: Bottles, GNOME Boxes, Heroic │
+   │        Launcher all ship on Flathub with comparable     │
+   │        permission lists. It works. Users use it.        │
    └─────────────────────────────────────────────────────────┘
 
-   Snap:     same problem + Canonical-centric infrastructure.
-   AppImage: no distro-level update mechanism; bundling
-             Qt/FreeRDP/libvirt-client balloons the file
-             past 200 MB; no systemd integration (no install
-             phase to register a user unit).
+   Snap:     same sandbox profile as Flatpak, BUT also requires
+             "classic" confinement (libvirt access + child-spawn
+             needs it). Classic confinement = manual Canonical
+             review, often weeks/months. Ubuntu users have apt
+             anyway. Effort/reach ratio worst of the three;
+             deferred, not permanently rejected.
+
+   AppImage: not a store, just a file. No auto-update
+             (AppImageUpdate is a separate project users won't
+             install). Self-contained = ~250 MB binary
+             (Qt6+FreeRDP+libvirt-client all bundled). Worse UX
+             than `apt install`. Skipped permanently.
+
    Docker:   contradicts DEC-0003 (qemu:///session, not
-             qemu:///system; no privileged daemon).
+             qemu:///system; no privileged daemon). Skipped
+             permanently.
 ```
 
-This isn't sandbox-bashing. CrossDesk talks to system daemons
-(libvirt), the compositor (Wayland direct, no portal), holds
-multi-GB state in the user's home, and spawns external processes.
-A useful sandbox would block at least one of those — but blocking
-any of them breaks the product. The honest path is a normal
-distro package the user trusts the way they trust every other
-package on their system.
+The honest position: Flatpak is **a distribution channel, not a
+security boundary**. Users who install from Flathub get the
+convenience of a software center, auto-update via `flatpak
+update`, and one-line install on any distro — same value
+proposition as deb/rpm, plus reach into immutable distros where
+deb/rpm don't apply (Silverblue, Kinoite, SteamOS, GNOME OS).
+What they don't get is meaningful sandboxing, because CrossDesk
+is structurally incompatible with sandboxing. README and Flathub
+listing will say so plainly; we're not selling a security claim
+we can't deliver.
 
-Details: [`PACKAGING.md`](PACKAGING.md) "Flatpak", "AppImage",
-"Snap" sections; [`DECISIONS.md`](DECISIONS.md) DEC-0008.
+Snap stays deferred until Canonical's classic-confinement review
+path becomes worth the wait, or Snap Store reach grows beyond
+Ubuntu desktop. Easy to add later; not blocking MVP.
+
+Details: [`PACKAGING.md`](PACKAGING.md) "Flatpak", "Snap",
+"AppImage" sections; [`DECISIONS.md`](DECISIONS.md) DEC-0008
+(amended 2026-05-09).
 
 ## 6. Quick reference — install + update commands
 
 ```
-Distro family       Install                       Update
-──────────────────  ───────────────────────────  ───────────────────
-Debian / Ubuntu     sudo apt install crossdesk   sudo apt upgrade
-Fedora / openSUSE   sudo dnf install crossdesk   sudo dnf upgrade
-                    sudo zypper install …          sudo zypper update
-Arch / Manjaro      yay -S crossdesk             yay -Sua
-NixOS               (add flake input)            nix flake update +
-                                                   nixos-rebuild switch
-Headless / dev      pip install crossdesk-host   pip install --upgrade …
+Distro family       Install                          Update
+──────────────────  ──────────────────────────────  ──────────────────────
+Debian / Ubuntu     sudo apt install crossdesk      sudo apt upgrade
+Fedora / openSUSE   sudo dnf install crossdesk      sudo dnf upgrade
+                    sudo zypper install …             sudo zypper update
+Arch / Manjaro      yay -S crossdesk                yay -Sua
+NixOS               (add flake input)               nix flake update +
+                                                      nixos-rebuild switch
+Headless / dev      pip install crossdesk-host      pip install --upgrade …
+Any distro          flatpak install flathub         flatpak update
+(Flathub)             dev.crossdesk.CrossDesk         dev.crossdesk.CrossDesk
 
-In-VM agent (any distro):  crossdesk upgrade
+In-VM agent (any channel):  crossdesk upgrade
 ```
 
 The host layer is whatever your distro provides. The agent layer

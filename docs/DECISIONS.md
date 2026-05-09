@@ -543,12 +543,12 @@ multi-GPU-only on the RAIL-as-native-windows model we ship.
 
 ---
 
-## DEC-0008: Distribution via deb/rpm/AUR/NixOS/PyPI; no Flatpak/AppImage/Snap
+## DEC-0008: Distribution via deb/rpm/AUR/NixOS/PyPI plus Flatpak (Tier 2); Snap deferred; AppImage skipped
 
-**Status:** Accepted — 2026-05-07
+**Status:** Amended — 2026-05-09 (originally Accepted 2026-05-07; see Amendment 1 below)
 **Owner:** release tooling, packaging
-**Related:** `docs/PACKAGING.md`; `docs/DECISIONS.md` DEC-0003 (no
-Docker)
+**Related:** `docs/PACKAGING.md`; `docs/DISTRIBUTION.md`;
+`docs/DECISIONS.md` DEC-0003 (no Docker)
 
 ### Context
 
@@ -602,10 +602,86 @@ Skipped formats and reasons:
 
 ### Reconsider when
 
-- Flatpak gains a way to expose libvirt session to a sandboxed
-  app without erasing the sandbox. Then revisit Flatpak.
 - A new universal Linux packaging format gains traction with our
-  audience. Today's market is deb/rpm/AUR/Nix; that may shift.
+  audience. Today's market is deb/rpm/AUR/Nix/Flathub; that may
+  shift.
+- Snap Store reach grows beyond Ubuntu desktop, or Canonical's
+  classic-confinement review path becomes faster — see Amendment 1.
+
+### Amendment 1 (2026-05-09): Flatpak accepted as Tier 2 add-on; Snap deferred
+
+**What changed**
+
+- **Flatpak**: moved from "skipped (sandbox erasure)" to **Tier 2
+  add-on, post-MVP (Phase 6+)**. Shipped via Flathub as
+  `dev.crossdesk.CrossDesk`. Treated as a *distribution channel*,
+  not a security boundary. README and Flathub listing will say so
+  plainly.
+- **Snap**: moved from "skipped (same as Flatpak)" to **deferred,
+  not permanently rejected**. Revisit when Canonical's
+  classic-confinement review eases, Snap Store reach grows beyond
+  Ubuntu desktop, or Ubuntu specifically pushes Snap over apt for
+  desktop apps.
+- **AppImage**: unchanged — still skipped permanently.
+- **Docker / OCI**: unchanged — still skipped per DEC-0003.
+
+**Why the rethink**
+
+The original 2026-05-07 verdict ("Flatpak punches every sandbox
+hole, so skip") is technically correct but was framed as a
+security argument. Reframing as a *reach* argument changes the
+calculation:
+
+1. Flathub is the dominant — sometimes only — install path on
+   immutable distros (Fedora Silverblue/Kinoite, SteamOS, GNOME
+   OS, elementaryOS) where deb/rpm don't apply at all. Skipping
+   Flatpak skips those users entirely.
+2. Industry precedent: Bottles (Wine VMs), GNOME Boxes (libvirt!),
+   Heroic Launcher all ship on Flathub today with comparable
+   permission lists (`--talk-name=org.libvirt.*`,
+   `--socket=wayland`, `--filesystem=home`, host-spawn). They are
+   accepted, they get reviews, users install them.
+3. The honest sandbox claim was always weak for CrossDesk — we
+   talk to system daemons (libvirt), the compositor (Wayland
+   direct), hold multi-GB state in `~/`, and spawn external
+   processes. A useful sandbox would block at least one of those,
+   and any of them being blocked breaks the product. So we accept
+   that the sandbox is decoration here, document the trade-off
+   plainly, and take the reach.
+4. Maintenance cost is bounded: one `dev.crossdesk.CrossDesk.json`
+   manifest, Flathub CI integration, occasional permission tweaks
+   on Flatpak runtime upgrades. Not a separate product surface.
+
+Snap is held back because its classic-confinement review path is
+manual and slow at Canonical, and Ubuntu users already have apt.
+Reach win is small relative to integration friction; defer until
+that ratio changes.
+
+**Trade-offs explicitly accepted (Flatpak)**
+
+- VM disks (multi-GB) live in `~/.var/app/dev.crossdesk.CrossDesk/
+  data/` instead of `~/.local/share/crossdesk/`. `flatpak
+  uninstall --delete-data` will nuke them — document this as
+  expected behaviour.
+- systemd user unit cannot be auto-installed; first launch will
+  ask for `org.freedesktop.background.RequestBackground` portal
+  consent. One-time UX hiccup.
+- First launch may show further portal prompts ("Allow CrossDesk
+  to talk to libvirt?"). Cosmetic, but present.
+- README and Flathub listing must explicitly state: "Flatpak
+  packaging exists for ease of install. CrossDesk requires broad
+  permissions (libvirt, compositor, host filesystem, host-spawn)
+  that bypass typical Flatpak sandboxing. Treat Flatpak install
+  as equivalent to a deb/rpm install in terms of trust."
+
+**Implementation pointers**
+
+- New work item in `docs/PACKAGING.md` "Sequencing of work" P2:
+  Flatpak manifest + Flathub submission. Add to
+  `docs/EXECUTION_PLAN.md` Phase 6+ when sequencing post-MVP.
+- `docs/DISTRIBUTION.md` already reflects this (matrix has
+  Flathub as cross-distro channel; §5 carries the disclaimer
+  diagram and prose).
 
 ---
 

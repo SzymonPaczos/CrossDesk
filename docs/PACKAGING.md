@@ -105,23 +105,39 @@ in `third_party/winapps/flake.nix` we can study.
 
 ### Flatpak
 
-**Pros:** sandbox + Flathub auto-update + cross-distro single
-binary. Modern packaging ergonomics.
+**Pros:** Flathub is *the* one-stop store for users on immutable
+distros (Fedora Silverblue/Kinoite, SteamOS, GNOME OS, elementary)
+where deb/rpm aren't usable. Cross-distro single artifact,
+auto-update via `flatpak update`, one-line install
+(`flatpak install flathub dev.crossdesk.CrossDesk`). Software-
+center discoverability (GNOME Software, KDE Discover, Pop!_Shop,
+elementary AppCenter all surface Flathub apps).
 
-**Cons:** the sandbox is a serious problem. CrossDesk needs:
-- libvirt access (talk to host's libvirt daemon)
-- D-Bus session bus access
-- Direct compositor access ($WAYLAND_DISPLAY, $DISPLAY)
-- Filesystem access for `~/.config/crossdesk/`,
-  `~/.local/state/crossdesk/`, the VM disk image (often
-  GB-sized), the user's home directory for file forwarding
-- Spawn child processes (FreeRDP)
+**Cons:** the sandbox model conflicts with what CrossDesk needs:
+- libvirt session daemon access (`--talk-name=org.libvirt.*`).
+- Direct compositor (`--socket=wayland`, no portal — RAIL needs
+  it).
+- VM disks (multi-GB) live in `~/.var/app/dev.crossdesk.CrossDesk/
+  data/` instead of `~/.local/share/crossdesk/` — managed by
+  Flatpak, removed by `flatpak uninstall --delete-data`.
+- Child-process spawn for FreeRDP via `--talk-name=
+  org.freedesktop.Flatpak` (host-spawn, i.e. leaving the
+  sandbox).
+- systemd user unit cannot be auto-installed; needs portal
+  (`org.freedesktop.background.RequestBackground`) — one-time
+  consent dialog on first launch.
 
-Each of these requires Flatpak permissions that effectively erase
-the sandbox. By the time we have all the holes punched, we get
-"Flatpak in name only" with worse UX than a normal package.
+Sum: the sandbox "exists" but isolates very little. **Industry
+precedent shows this is acceptable**: Bottles (Wine VMs), GNOME
+Boxes (libvirt!), Heroic Launcher all ship on Flathub with
+similar permission lists. They work, users use them.
 
-**Verdict:** **skip.** The sandbox model is wrong for our use case.
+**Verdict:** **Tier 2 add-on, post-MVP.** Ship after the
+distro-native channels are stable (Phase 6+). Treat as a
+distribution-reach play, not a security boundary — README +
+Flathub listing must say so plainly. Maintenance cost: one
+manifest, Flathub CI integration, occasional permission tweaks
+on Flatpak runtime upgrades.
 
 ### AppImage
 
@@ -137,11 +153,21 @@ audience.
 
 ### Snap
 
-**Pros:** cross-distro, sandboxed.
+**Pros:** cross-distro, sandboxed, default on Ubuntu desktop.
 
-**Cons:** same sandbox issues as Flatpak. Plus Canonical-centric.
+**Cons:** same sandbox profile as Flatpak, but additionally
+requires **classic confinement** for our use case (libvirt
+access, child-spawn, direct compositor). Classic confinement
+needs **manual Canonical review** which often takes
+weeks-to-months. Snap Store treats classic apps as second-tier.
+Ubuntu users have apt anyway. Effort/reach ratio is the worst of
+the three sandboxed formats.
 
-**Verdict:** **skip** for the same reasons as Flatpak.
+**Verdict:** **deferred, not permanently rejected.** Revisit when
+either (a) Canonical's classic-review path becomes faster, (b)
+Snap Store reach grows beyond Ubuntu desktop, or (c) Ubuntu
+specifically pushes users toward Snap over apt for desktop apps
+in a way that hurts reach. None of those are true today.
 
 ### Container (Docker / Podman / OCI)
 
@@ -152,7 +178,7 @@ contradicts our "no privileged daemon" stance and adds nothing.
 
 ## Chosen distribution matrix
 
-**Tier 1 (we ship and maintain):**
+**Tier 1 (we ship and maintain from MVP):**
 - `deb` for Debian/Ubuntu (PPA on launchpad.net or third-party
   repo with apt source).
 - `rpm` for Fedora (Copr repo) and openSUSE (OBS repo).
@@ -160,15 +186,21 @@ contradicts our "no privileged daemon" stance and adds nothing.
 - NixOS flake.
 - PyPI for the host module (developers, headless).
 
-**Tier 2 (community welcome):**
+**Tier 2 (we ship post-MVP, Phase 6+):**
+- **Flatpak on Flathub.** Cross-distro reach, especially
+  immutable distros (Silverblue, Kinoite, SteamOS, GNOME OS,
+  elementary) where deb/rpm don't apply. Distribution channel,
+  not a security boundary — see Flatpak section above.
+
+**Tier 3 (community welcome, we don't ship):**
 - Gentoo ebuild.
 - Slackware build script (SBo).
-- Distro-specific Snap if a community member wants it (we won't
-  block it but we don't ship it).
 
-**Skipped:**
-- Flatpak (sandbox incompatible).
-- AppImage (no value-add).
+**Deferred (revisit later, not in pipeline):**
+- Snap (classic-confinement review is slow; Ubuntu has apt).
+
+**Skipped permanently:**
+- AppImage (no store, no auto-update, ~250 MB bundle).
 - Docker / OCI container (DEC-0003).
 
 ## Bundling `agent.exe` inside the Linux package
@@ -235,6 +267,7 @@ technical audience). deb + rpm follow within a release or two.
 | AUR | `yay -Sua` (community standard) |
 | NixOS | `flake update` + rebuild |
 | PyPI | `pip install --upgrade crossdesk-host` |
+| Flatpak | `flatpak update dev.crossdesk.CrossDesk` (Flathub auto-suggests) |
 
 `crossdesk upgrade` (the in-app command) is **about the in-VM agent**,
 not about the host package. The host package is updated via the
@@ -283,3 +316,9 @@ formalization work — overlap with future security work).
 - GPG signing of distribution packages.
 - Community documentation for adding distro support (Gentoo,
   Slackware, etc.).
+- **Flatpak manifest + Flathub submission** (`dev.crossdesk.
+  CrossDesk.json`). Bundle libvirt-client and freerdp3-x11; wire
+  systemd unit registration through `org.freedesktop.background`
+  portal; Flathub review (~1–2 weeks lead time). README + Flathub
+  description must call out: distribution channel, not a security
+  boundary.

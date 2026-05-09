@@ -1,16 +1,18 @@
 """HeartbeatService gRPC servicer.
 
-Stage 2 of the Phase 3 watchdog: the servicer no longer carries its own
-inline state machine. Each pong (or timeout) feeds ``HeartbeatFsm.tick``
-and the FSM emits the next state plus an advisory ``RecoveryAction``
-that the servicer dispatches against ``LibvirtController``.
+Stage 2 wired the pure ``HeartbeatFsm`` into the servicer; Stage 3 (this
+file, Week 6) adds the ``AdaptiveProfile`` broadcast that the proto
+contract demands the host emit ``BEFORE`` firing a recovery action so
+a supervisor can veto (e.g. user actively interacting). Profiles are
+also emitted on state changes as advisory hints so the guest can adapt
+its scheduling — keeping plain HEALTHY ticks quiet to avoid wire churn.
 
-What lives here vs. in ``crossdesk_host/watchdog/``: the FSM module is
-purely synchronous and has no I/O; this servicer owns the asyncio
-plumbing — sending pings, awaiting pongs with a timeout, calling
-``libvirt_ctl.graceful_shutdown``/``hard_destroy`` when the FSM emits
-the corresponding ``RecoveryAction``. ``AdaptiveProfile`` broadcast
-back to the guest is queued for Stage 3 (Week 6).
+Why the FSM stays sync and the broadcast lives here: ``HeartbeatFsm``
+returns a ``TickOutput`` snapshot per tick; the servicer translates
+that snapshot into proto messages on the wire. Keeping the snapshot →
+``AdaptiveProfile`` mapping in one place means future proto fields
+(``jitter``, additional recovery hints) only need wiring here, not in
+the FSM core.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import time
 from typing import AsyncIterator, Optional
 
 import grpc
+from google.protobuf import duration_pb2
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
@@ -31,9 +34,25 @@ from crossdesk_host.watchdog import (
     RecoveryAction,
     State,
     TickInput,
+    TickOutput,
 )
 
 logger = get_logger("host.ipc.heartbeat")
+
+
+def _ns_to_duration(ns: Optional[int]) -> duration_pb2.Duration:
+    if ns is None or ns < 0:
+        return duration_pb2.Duration(seconds=0, nanos=0)
+    seconds, nanos = divmod(int(ns), 1_000_000_000)
+    return duration_pb2.Duration(seconds=seconds, nanos=nanos)
+
+
+def _seconds_to_duration(s: float) -> duration_pb2.Duration:
+    if s < 0:
+        return duration_pb2.Duration(seconds=0, nanos=0)
+    seconds = int(s)
+    nanos = int((s - seconds) * 1_000_000_000)
+    return duration_pb2.Duration(seconds=seconds, nanos=nanos)
 
 
 class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
@@ -50,6 +69,16 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         self.config = config or FsmConfig()
         self.ping_interval_seconds = ping_interval_seconds
         self.pong_timeout_seconds = pong_timeout_seconds
+
+    def _build_profile(self, out: TickOutput) -> heartbeat_pb2.AdaptiveProfile:
+        return heartbeat_pb2.AdaptiveProfile(
+            ewma_rtt=_ns_to_duration(out.ewma_rtt_ns),
+            current_ping_interval=_seconds_to_duration(self.ping_interval_seconds),
+            miss_threshold=_seconds_to_duration(self.pong_timeout_seconds),
+            consecutive_miss_count=out.consecutive_miss_count,
+            next_action=out.recovery_action,
+            next_action_after=_seconds_to_duration(out.next_action_after_seconds),
+        )
 
     async def Channel(
         self,
@@ -90,16 +119,14 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         rtt_ns = time.monotonic_ns() - start_ns
                         out = fsm.tick(TickInput(pong_received=True, rtt_ns=rtt_ns))
                     else:
-                        # GuestSignal arrived in place of a Pong — counts as
-                        # a missed measurement window; the signal kind is
-                        # logged but doesn't bypass the FSM.
                         logger.info(
                             "heartbeat_unexpected_payload",
                             kind=guest_frame.WhichOneof("payload"),
                         )
                         out = fsm.tick(TickInput(pong_received=False))
 
-                if out.state != last_state:
+                state_changed = out.state != last_state
+                if state_changed:
                     logger.info(
                         "heartbeat_state_transition",
                         from_state=last_state.value,
@@ -108,6 +135,18 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         ewma_rtt_ns=out.ewma_rtt_ns,
                     )
                     last_state = out.state
+
+                # AdaptiveProfile broadcast: emit BEFORE any libvirt action so
+                # a supervisor (or the guest itself) can observe the impending
+                # recovery and react. Also emit on state changes as advisory
+                # hints; skip plain HEALTHY ticks to avoid wire churn.
+                if (
+                    state_changed
+                    or out.recovery_action != RecoveryAction.RECOVERY_ACTION_NONE
+                ):
+                    yield heartbeat_pb2.HostFrame(
+                        profile_update=self._build_profile(out)
+                    )
 
                 if (
                     out.recovery_action

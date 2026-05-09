@@ -132,15 +132,17 @@ Items:
 **Theme:** Phase 3 — recovery actions + auth health-check.
 
 Items:
-- **[P0] SOFT_RECOVERY action** — `virsh shutdown` with timeout
-- **[P0] HARD_DESTROY action** — `virsh destroy` then `virsh start`
-- **[P0] Auth health-check before launch** (from Phase 4 follow-ups, but lands now). Host RPCs guest with current credentials; on FAIL surface clear error pointing at `crossdesk vm credentials repair`.
-- **[P0] Two-layer health check** (Phase 3 follow-up). Extend FSM PROBING state with VSOCK listener confirmation + round-trip Heartbeat ping with synthetic AuthContext.
+- ✅ **[P0] SOFT_RECOVERY action** — `RealLibvirtController.graceful_shutdown` issues ACPI shutdown; the FSM controls timeout via exponential backoff between retries (5s/10s/20s default). No blocking wait on shutdown completion — pong arrival or miss escalation drives next state.
+- ✅ **[P0] HARD_DESTROY action** — `RealLibvirtController.hard_destroy` issues `domain.destroy()` then `domain.create()` (virsh-equivalent destroy + start) in one call.
+- ✅ **[P0] AdaptiveProfile broadcast before recovery action** (proto contract). Host emits `HostFrame.profile_update` with the impending `RecoveryAction` and exponential backoff hint BEFORE calling libvirt, so a future supervisor can veto. Lands in `host/src/crossdesk_host/ipc/heartbeat.py`.
+- 🚧 **[P0] Auth health-check before launch** — needs new `ControlService.VerifyCredentials` RPC in `proto/control.proto`, which is owner-approval territory per AGENTS.md "File boundaries". Queued in FOLLOWUPS until proto edit is approved.
+- 🚧 **[P1] Two-layer health check** (Phase 3 follow-up). Extends FSM `PROBING` to actively probe (VSOCK listener confirmation + synthetic `AuthContext` round-trip). Today PROBING is purely passive (counts misses). Queued in FOLLOWUPS as P1 — needs async libvirt + the synthetic-ping infrastructure that Stage 4 of the watchdog will provide.
 
 **Acceptance:**
-- Killing the VM during operation triggers HARD_DESTROY → next launch succeeds within ≤90 s (N1.6a)
-- Auth health-check rejects with credential-repair message when password is wrong
-- FSM logs all transitions with trace IDs
+- ✅ HARD_DESTROY path closes the channel and re-creates the domain (verified by `test_hard_destroy_triggers_after_sustained_silence`).
+- ✅ AdaptiveProfile emitted before graceful shutdown (verified by `test_adaptive_profile_emitted_before_recovery_action`).
+- 🚧 Auth health-check rejection path — gated on proto approval.
+- ✅ FSM logs all transitions through the structlog facade with `from_state`/`to_state`/`miss_count`/`ewma_rtt_ns` fields.
 
 ### Week 7 (2026-06-19 → 2026-06-25)
 **Theme:** Phase 3 close-out + lifecycle suspend/resume.

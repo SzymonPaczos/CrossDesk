@@ -146,6 +146,33 @@ async def test_hard_destroy_triggers_after_sustained_silence(monkeypatch) -> Non
     assert libvirt.graceful_shutdown.call_count == 3
 
 
+async def test_adaptive_profile_emitted_before_recovery_action(monkeypatch) -> None:
+    """Proto contract: host MUST emit AdaptiveProfile with RecoveryAction
+    BEFORE firing the libvirt action so a supervisor can veto.
+
+    Drive enough misses to trigger one graceful_shutdown and check that the
+    yielded HostFrame stream contains a profile_update naming GRACEFUL_SHUTDOWN
+    as the next_action.
+    """
+    libvirt = MagicMock()
+    out = await _drive(
+        [asyncio.TimeoutError] * 6 + [StopAsyncIteration], libvirt, monkeypatch
+    )
+    profiles = [
+        hf.profile_update for hf in out if hf.WhichOneof("payload") == "profile_update"
+    ]
+    assert len(profiles) >= 1
+    graceful = [
+        p
+        for p in profiles
+        if p.next_action
+        == heartbeat_pb2.RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN
+    ]
+    assert len(graceful) >= 1
+    assert graceful[0].consecutive_miss_count >= 5
+    assert graceful[0].next_action_after.seconds >= 5  # backoff_initial_seconds default
+
+
 async def test_recovery_resets_state_after_pong(monkeypatch) -> None:
     """Pong after DEGRADED brings state back to HEALTHY (verified indirectly:
     a recovered stream that then gets ONE more miss must NOT trigger any

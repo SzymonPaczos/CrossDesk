@@ -50,6 +50,10 @@ class State(Enum):
     PROBING = "PROBING"
     SOFT_RECOVERY = "SOFT_RECOVERY"
     HARD_DESTROY = "HARD_DESTROY"
+    # Entered when the host is suspending (e.g. laptop lid close); ticks
+    # are no-ops while in this state so that the FSM can't false-positive
+    # HARD_DESTROY just because heartbeats stalled across the sleep.
+    SUSPENDED = "SUSPENDED"
 
 
 @dataclass(frozen=True)
@@ -102,7 +106,29 @@ class HeartbeatFsm:
     def state(self) -> State:
         return self._state
 
+    def suspend(self) -> None:
+        """Move the FSM into ``SUSPENDED``. Ticks become no-ops until
+        :meth:`resume` is called. Idempotent.
+        """
+        self._state = State.SUSPENDED
+        self._healthy_streak = 0
+
+    def resume(self) -> None:
+        """Exit ``SUSPENDED`` and re-enter ``PROBING`` with a clean slate.
+
+        Resume goes through PROBING (rather than straight to HEALTHY) so
+        the next round of pongs has to actually demonstrate liveness
+        before the system claims health — defends against the resume-
+        and-immediately-launch race.
+        """
+        self._state = State.PROBING
+        self._miss_count = 0
+        self._healthy_streak = 0
+        self._soft_attempts = 0
+
     def tick(self, input: TickInput) -> TickOutput:
+        if self._state == State.SUSPENDED:
+            return self._snapshot(RecoveryAction.RECOVERY_ACTION_NONE, 0.0)
         if input.pong_received:
             return self._handle_pong(input)
         return self._handle_miss(input)

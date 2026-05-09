@@ -25,13 +25,18 @@ class MockHooks:
 
     fail_next_hard_destroy: bool = False
     fail_next_graceful_shutdown: bool = False
+    fail_next_suspend: bool = False
+    fail_next_resume: bool = False
     fail_next_attach_virtiofs: bool = False
     fail_next_detach_virtiofs: bool = False
 
     hard_destroy_count: int = 0
     graceful_shutdown_count: int = 0
+    suspend_count: int = 0
+    resume_count: int = 0
     attach_virtiofs_count: int = 0
     detach_virtiofs_count: int = 0
+    suspended: bool = False
 
     attached_shares: set[str] = field(default_factory=set)
     """Shares currently attached. Tests assert this matches the
@@ -73,12 +78,26 @@ class LibvirtControllerMock(LibvirtController):
         )
         self.hooks.graceful_shutdown_count += 1
 
+    def suspend(self) -> None:
+        if self.hooks.fail_next_suspend:
+            self.hooks.fail_next_suspend = False
+            raise RuntimeError("mock-injected suspend failure")
+        logger.info("[LIBVIRT MOCK] suspend: virsh suspend %s", self.domain_name)
+        self.hooks.suspended = True
+        self.hooks.suspend_count += 1
+
+    def resume(self) -> None:
+        if self.hooks.fail_next_resume:
+            self.hooks.fail_next_resume = False
+            raise RuntimeError("mock-injected resume failure")
+        logger.info("[LIBVIRT MOCK] resume: virsh resume %s", self.domain_name)
+        self.hooks.suspended = False
+        self.hooks.resume_count += 1
+
     def attach_virtiofs(self, share_id: str, host_path: str) -> bool:
         if self.hooks.fail_next_attach_virtiofs:
             self.hooks.fail_next_attach_virtiofs = False
-            raise RuntimeError(
-                f"mock-injected attach_virtiofs({share_id!r}) failure"
-            )
+            raise RuntimeError(f"mock-injected attach_virtiofs({share_id!r}) failure")
         if share_id in self.hooks.attached_shares:
             logger.info(
                 "[LIBVIRT MOCK] attach_virtiofs: %s already attached",
@@ -98,9 +117,7 @@ class LibvirtControllerMock(LibvirtController):
     def detach_virtiofs(self, share_id: str) -> bool:
         if self.hooks.fail_next_detach_virtiofs:
             self.hooks.fail_next_detach_virtiofs = False
-            raise RuntimeError(
-                f"mock-injected detach_virtiofs({share_id!r}) failure"
-            )
+            raise RuntimeError(f"mock-injected detach_virtiofs({share_id!r}) failure")
         if share_id not in self.hooks.attached_shares:
             logger.info(
                 "[LIBVIRT MOCK] detach_virtiofs: %s not attached, no-op",

@@ -1,0 +1,18 @@
+[Unit]
+Description=CrossDesk host daemon (orchestrates the Windows VM and RAIL display)
+Documentation=https://github.com/SzymonPaczos/CrossDesk
+After=graphical-session.target libvirtd.service
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/crossdesk-host
+Restart=on-failure
+RestartSec=5s
+# Heartbeat FSM coordinates with logind PrepareForSleep on the system bus;
+# do NOT add `PrivateUsers=yes` or it loses access to the libvirt session.
+TimeoutStopSec=30s
+KillMode=mixed
+
+[Install]
+WantedBy=graphical-session.target

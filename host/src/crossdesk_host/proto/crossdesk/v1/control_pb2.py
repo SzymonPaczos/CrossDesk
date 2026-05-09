@@ -4,18 +4,15 @@
 # source: crossdesk/v1/control.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    6,
-    31,
-    1,
-    '',
-    'crossdesk/v1/control.proto'
+    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "crossdesk/v1/control.proto"
 )
 # @@protoc_insertion_point(imports)
 
@@ -24,52 +21,55 @@ _sym_db = _symbol_database.Default()
 
 from crossdesk.v1 import common_pb2 as crossdesk_dot_v1_dot_common__pb2
 
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1a\x63rossdesk/v1/control.proto\x12\x0c\x63rossdesk.v1\x1a\x19\x63rossdesk/v1/common.proto\"\xa0\x03\n\x0b\x43lientFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12*\n\x05hello\x18\n \x01(\x0b\x32\x19.crossdesk.v1.ClientHelloH\x00\x12\x30\n\x06launch\x18\x0b \x01(\x0b\x32\x1e.crossdesk.v1.AppLaunchRequestH\x00\x12.\n\x05\x66ocus\x18\x0c \x01(\x0b\x32\x1d.crossdesk.v1.AppFocusRequestH\x00\x12.\n\x05\x63lose\x18\r \x01(\x0b\x32\x1d.crossdesk.v1.AppCloseRequestH\x00\x12\x33\n\tterminate\x18\x0e \x01(\x0b\x32\x1e.crossdesk.v1.SessionTerminateH\x00\x12\x33\n\nrail_event\x18\x0f \x01(\x0b\x32\x1d.crossdesk.v1.RailWindowEventH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x1e\x10(\"Y\n\x0b\x43lientHello\x12\x14\n\x0chost_version\x18\x01 \x01(\t\x12\x1a\n\x12supported_features\x18\x02 \x03(\t\x12\x18\n\x10host_domain_uuid\x18\x03 \x01(\t\"\x89\x01\n\x10\x41ppLaunchRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x1d\n\x15\x65xecutable_guest_path\x18\x02 \x01(\t\x12\x0c\n\x04\x61rgv\x18\x03 \x03(\t\x12\x19\n\x11required_share_id\x18\x04 \x01(\t\x12\x19\n\x11working_directory\x18\x05 \x01(\t\"8\n\x0f\x41ppFocusRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\twindow_id\x18\x02 \x01(\x04\"G\n\x0f\x41ppCloseRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\twindow_id\x18\x02 \x01(\x04\x12\r\n\x05\x66orce\x18\x03 \x01(\x08\"\xdf\x01\n\x10SessionTerminate\x12\x35\n\x06reason\x18\x01 \x01(\x0e\x32%.crossdesk.v1.SessionTerminate.Reason\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\"\x83\x01\n\x06Reason\x12\x16\n\x12REASON_UNSPECIFIED\x10\x00\x12\x14\n\x10REASON_USER_QUIT\x10\x01\x12\x18\n\x14REASON_HOST_SHUTDOWN\x10\x02\x12\x19\n\x15REASON_PROTOCOL_ERROR\x10\x03\x12\x16\n\x12REASON_AUTH_FAILED\x10\x04\"\xab\x03\n\x0bServerFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12,\n\x06\x61\x63\x63\x65pt\x18\n \x01(\x0b\x32\x1a.crossdesk.v1.ServerAcceptH\x00\x12\x31\n\x0c\x61uth_failure\x18\x0b \x01(\x0b\x32\x19.crossdesk.v1.AuthFailureH\x00\x12-\n\x08launched\x18\x0c \x01(\x0b\x32\x19.crossdesk.v1.AppLaunchedH\x00\x12\x36\n\rlaunch_failed\x18\r \x01(\x0b\x32\x1d.crossdesk.v1.AppLaunchFailedH\x00\x12\x34\n\tapp_event\x18\x0e \x01(\x0b\x32\x1f.crossdesk.v1.AppLifecycleEventH\x00\x12-\n\x06\x63losed\x18\x10 \x01(\x0b\x32\x1b.crossdesk.v1.SessionClosedH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x0f\x10\x10J\x04\x08\x1e\x10(\"]\n\x0cServerAccept\x12\x15\n\rguest_version\x18\x01 \x01(\t\x12\x1b\n\x13negotiated_features\x18\x02 \x03(\t\x12\x19\n\x11guest_smbios_uuid\x18\x03 \x01(\t\"\xfa\x01\n\x0b\x41uthFailure\x12,\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x1e.crossdesk.v1.AuthFailure.Code\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\"\xac\x01\n\x04\x43ode\x12\x14\n\x10\x43ODE_UNSPECIFIED\x10\x00\x12\x1d\n\x19\x43ODE_FINGERPRINT_MISMATCH\x10\x01\x12\x14\n\x10\x43ODE_NONCE_REUSE\x10\x02\x12\x1c\n\x18\x43ODE_SEQUENCE_REGRESSION\x10\x03\x12\x16\n\x12\x43ODE_UUID_MISMATCH\x10\x04\x12#\n\x1f\x43ODE_FEATURE_NEGOTIATION_FAILED\x10\x05\"5\n\x0b\x41ppLaunched\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x12\n\nprocess_id\x18\x02 \x01(\r\"F\n\x0f\x41ppLaunchFailed\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x10\n\x08ntstatus\x18\x03 \x01(\r\"\xc1\x01\n\x11\x41ppLifecycleEvent\x12\x12\n\nprocess_id\x18\x01 \x01(\r\x12\x32\n\x04kind\x18\x02 \x01(\x0e\x32$.crossdesk.v1.AppLifecycleEvent.Kind\x12\x11\n\texit_code\x18\x03 \x01(\x05\"Q\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x10\n\x0cKIND_STARTED\x10\x01\x12\x0f\n\x0bKIND_EXITED\x10\x02\x12\x10\n\x0cKIND_CRASHED\x10\x03\"\xae\x03\n\x0fRailWindowEvent\x12\x11\n\twindow_id\x18\x01 \x01(\x04\x12\x12\n\nprocess_id\x18\x02 \x01(\r\x12\x30\n\x04kind\x18\x03 \x01(\x0e\x32\".crossdesk.v1.RailWindowEvent.Kind\x12$\n\x08geometry\x18\x04 \x01(\x0b\x32\x12.crossdesk.v1.Rect\x12\r\n\x05title\x18\x05 \x01(\t\x12\x10\n\x08icon_png\x18\x06 \x01(\x0c\"\xfa\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x10\n\x0cKIND_CREATED\x10\x01\x12\x12\n\x0eKIND_DESTROYED\x10\x02\x12\x0e\n\nKIND_MOVED\x10\x03\x12\x10\n\x0cKIND_RESIZED\x10\x04\x12\x12\n\x0eKIND_MINIMIZED\x10\x05\x12\x12\n\x0eKIND_MAXIMIZED\x10\x06\x12\x11\n\rKIND_RESTORED\x10\x07\x12\x15\n\x11KIND_FOCUS_GAINED\x10\x08\x12\x13\n\x0fKIND_FOCUS_LOST\x10\t\x12\x16\n\x12KIND_TITLE_CHANGED\x10\n\x12\x15\n\x11KIND_ICON_CHANGED\x10\x0b\";\n\x04Rect\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r\"V\n\rSessionClosed\x12\x35\n\x06reason\x18\x01 \x01(\x0e\x32%.crossdesk.v1.SessionTerminate.Reason\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t2Y\n\x0e\x43ontrolService\x12G\n\x0bOpenSession\x12\x19.crossdesk.v1.ClientFrame\x1a\x19.crossdesk.v1.ServerFrame(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x1a\x63rossdesk/v1/control.proto\x12\x0c\x63rossdesk.v1\x1a\x19\x63rossdesk/v1/common.proto"\xa0\x03\n\x0b\x43lientFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12*\n\x05hello\x18\n \x01(\x0b\x32\x19.crossdesk.v1.ClientHelloH\x00\x12\x30\n\x06launch\x18\x0b \x01(\x0b\x32\x1e.crossdesk.v1.AppLaunchRequestH\x00\x12.\n\x05\x66ocus\x18\x0c \x01(\x0b\x32\x1d.crossdesk.v1.AppFocusRequestH\x00\x12.\n\x05\x63lose\x18\r \x01(\x0b\x32\x1d.crossdesk.v1.AppCloseRequestH\x00\x12\x33\n\tterminate\x18\x0e \x01(\x0b\x32\x1e.crossdesk.v1.SessionTerminateH\x00\x12\x33\n\nrail_event\x18\x0f \x01(\x0b\x32\x1d.crossdesk.v1.RailWindowEventH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x1e\x10("Y\n\x0b\x43lientHello\x12\x14\n\x0chost_version\x18\x01 \x01(\t\x12\x1a\n\x12supported_features\x18\x02 \x03(\t\x12\x18\n\x10host_domain_uuid\x18\x03 \x01(\t"\x89\x01\n\x10\x41ppLaunchRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x1d\n\x15\x65xecutable_guest_path\x18\x02 \x01(\t\x12\x0c\n\x04\x61rgv\x18\x03 \x03(\t\x12\x19\n\x11required_share_id\x18\x04 \x01(\t\x12\x19\n\x11working_directory\x18\x05 \x01(\t"8\n\x0f\x41ppFocusRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\twindow_id\x18\x02 \x01(\x04"G\n\x0f\x41ppCloseRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\twindow_id\x18\x02 \x01(\x04\x12\r\n\x05\x66orce\x18\x03 \x01(\x08"\xdf\x01\n\x10SessionTerminate\x12\x35\n\x06reason\x18\x01 \x01(\x0e\x32%.crossdesk.v1.SessionTerminate.Reason\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t"\x83\x01\n\x06Reason\x12\x16\n\x12REASON_UNSPECIFIED\x10\x00\x12\x14\n\x10REASON_USER_QUIT\x10\x01\x12\x18\n\x14REASON_HOST_SHUTDOWN\x10\x02\x12\x19\n\x15REASON_PROTOCOL_ERROR\x10\x03\x12\x16\n\x12REASON_AUTH_FAILED\x10\x04"\xab\x03\n\x0bServerFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12)\n\x07sent_at\x18\x02 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\x12,\n\x06\x61\x63\x63\x65pt\x18\n \x01(\x0b\x32\x1a.crossdesk.v1.ServerAcceptH\x00\x12\x31\n\x0c\x61uth_failure\x18\x0b \x01(\x0b\x32\x19.crossdesk.v1.AuthFailureH\x00\x12-\n\x08launched\x18\x0c \x01(\x0b\x32\x19.crossdesk.v1.AppLaunchedH\x00\x12\x36\n\rlaunch_failed\x18\r \x01(\x0b\x32\x1d.crossdesk.v1.AppLaunchFailedH\x00\x12\x34\n\tapp_event\x18\x0e \x01(\x0b\x32\x1f.crossdesk.v1.AppLifecycleEventH\x00\x12-\n\x06\x63losed\x18\x10 \x01(\x0b\x32\x1b.crossdesk.v1.SessionClosedH\x00\x42\t\n\x07payloadJ\x04\x08\x03\x10\nJ\x04\x08\x0f\x10\x10J\x04\x08\x1e\x10("]\n\x0cServerAccept\x12\x15\n\rguest_version\x18\x01 \x01(\t\x12\x1b\n\x13negotiated_features\x18\x02 \x03(\t\x12\x19\n\x11guest_smbios_uuid\x18\x03 \x01(\t"\xfa\x01\n\x0b\x41uthFailure\x12,\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x1e.crossdesk.v1.AuthFailure.Code\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t"\xac\x01\n\x04\x43ode\x12\x14\n\x10\x43ODE_UNSPECIFIED\x10\x00\x12\x1d\n\x19\x43ODE_FINGERPRINT_MISMATCH\x10\x01\x12\x14\n\x10\x43ODE_NONCE_REUSE\x10\x02\x12\x1c\n\x18\x43ODE_SEQUENCE_REGRESSION\x10\x03\x12\x16\n\x12\x43ODE_UUID_MISMATCH\x10\x04\x12#\n\x1f\x43ODE_FEATURE_NEGOTIATION_FAILED\x10\x05"5\n\x0b\x41ppLaunched\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x12\n\nprocess_id\x18\x02 \x01(\r"F\n\x0f\x41ppLaunchFailed\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12\x10\n\x08ntstatus\x18\x03 \x01(\r"\xc1\x01\n\x11\x41ppLifecycleEvent\x12\x12\n\nprocess_id\x18\x01 \x01(\r\x12\x32\n\x04kind\x18\x02 \x01(\x0e\x32$.crossdesk.v1.AppLifecycleEvent.Kind\x12\x11\n\texit_code\x18\x03 \x01(\x05"Q\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x10\n\x0cKIND_STARTED\x10\x01\x12\x0f\n\x0bKIND_EXITED\x10\x02\x12\x10\n\x0cKIND_CRASHED\x10\x03"\xae\x03\n\x0fRailWindowEvent\x12\x11\n\twindow_id\x18\x01 \x01(\x04\x12\x12\n\nprocess_id\x18\x02 \x01(\r\x12\x30\n\x04kind\x18\x03 \x01(\x0e\x32".crossdesk.v1.RailWindowEvent.Kind\x12$\n\x08geometry\x18\x04 \x01(\x0b\x32\x12.crossdesk.v1.Rect\x12\r\n\x05title\x18\x05 \x01(\t\x12\x10\n\x08icon_png\x18\x06 \x01(\x0c"\xfa\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x10\n\x0cKIND_CREATED\x10\x01\x12\x12\n\x0eKIND_DESTROYED\x10\x02\x12\x0e\n\nKIND_MOVED\x10\x03\x12\x10\n\x0cKIND_RESIZED\x10\x04\x12\x12\n\x0eKIND_MINIMIZED\x10\x05\x12\x12\n\x0eKIND_MAXIMIZED\x10\x06\x12\x11\n\rKIND_RESTORED\x10\x07\x12\x15\n\x11KIND_FOCUS_GAINED\x10\x08\x12\x13\n\x0fKIND_FOCUS_LOST\x10\t\x12\x16\n\x12KIND_TITLE_CHANGED\x10\n\x12\x15\n\x11KIND_ICON_CHANGED\x10\x0b";\n\x04Rect\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r"V\n\rSessionClosed\x12\x35\n\x06reason\x18\x01 \x01(\x0e\x32%.crossdesk.v1.SessionTerminate.Reason\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t2Y\n\x0e\x43ontrolService\x12G\n\x0bOpenSession\x12\x19.crossdesk.v1.ClientFrame\x1a\x19.crossdesk.v1.ServerFrame(\x01\x30\x01\x62\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.control_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(
+    DESCRIPTOR, "crossdesk.v1.control_pb2", _globals
+)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_CLIENTFRAME']._serialized_start=72
-  _globals['_CLIENTFRAME']._serialized_end=488
-  _globals['_CLIENTHELLO']._serialized_start=490
-  _globals['_CLIENTHELLO']._serialized_end=579
-  _globals['_APPLAUNCHREQUEST']._serialized_start=582
-  _globals['_APPLAUNCHREQUEST']._serialized_end=719
-  _globals['_APPFOCUSREQUEST']._serialized_start=721
-  _globals['_APPFOCUSREQUEST']._serialized_end=777
-  _globals['_APPCLOSEREQUEST']._serialized_start=779
-  _globals['_APPCLOSEREQUEST']._serialized_end=850
-  _globals['_SESSIONTERMINATE']._serialized_start=853
-  _globals['_SESSIONTERMINATE']._serialized_end=1076
-  _globals['_SESSIONTERMINATE_REASON']._serialized_start=945
-  _globals['_SESSIONTERMINATE_REASON']._serialized_end=1076
-  _globals['_SERVERFRAME']._serialized_start=1079
-  _globals['_SERVERFRAME']._serialized_end=1506
-  _globals['_SERVERACCEPT']._serialized_start=1508
-  _globals['_SERVERACCEPT']._serialized_end=1601
-  _globals['_AUTHFAILURE']._serialized_start=1604
-  _globals['_AUTHFAILURE']._serialized_end=1854
-  _globals['_AUTHFAILURE_CODE']._serialized_start=1682
-  _globals['_AUTHFAILURE_CODE']._serialized_end=1854
-  _globals['_APPLAUNCHED']._serialized_start=1856
-  _globals['_APPLAUNCHED']._serialized_end=1909
-  _globals['_APPLAUNCHFAILED']._serialized_start=1911
-  _globals['_APPLAUNCHFAILED']._serialized_end=1981
-  _globals['_APPLIFECYCLEEVENT']._serialized_start=1984
-  _globals['_APPLIFECYCLEEVENT']._serialized_end=2177
-  _globals['_APPLIFECYCLEEVENT_KIND']._serialized_start=2096
-  _globals['_APPLIFECYCLEEVENT_KIND']._serialized_end=2177
-  _globals['_RAILWINDOWEVENT']._serialized_start=2180
-  _globals['_RAILWINDOWEVENT']._serialized_end=2610
-  _globals['_RAILWINDOWEVENT_KIND']._serialized_start=2360
-  _globals['_RAILWINDOWEVENT_KIND']._serialized_end=2610
-  _globals['_RECT']._serialized_start=2612
-  _globals['_RECT']._serialized_end=2671
-  _globals['_SESSIONCLOSED']._serialized_start=2673
-  _globals['_SESSIONCLOSED']._serialized_end=2759
-  _globals['_CONTROLSERVICE']._serialized_start=2761
-  _globals['_CONTROLSERVICE']._serialized_end=2850
+    DESCRIPTOR._loaded_options = None
+    _globals["_CLIENTFRAME"]._serialized_start = 72
+    _globals["_CLIENTFRAME"]._serialized_end = 488
+    _globals["_CLIENTHELLO"]._serialized_start = 490
+    _globals["_CLIENTHELLO"]._serialized_end = 579
+    _globals["_APPLAUNCHREQUEST"]._serialized_start = 582
+    _globals["_APPLAUNCHREQUEST"]._serialized_end = 719
+    _globals["_APPFOCUSREQUEST"]._serialized_start = 721
+    _globals["_APPFOCUSREQUEST"]._serialized_end = 777
+    _globals["_APPCLOSEREQUEST"]._serialized_start = 779
+    _globals["_APPCLOSEREQUEST"]._serialized_end = 850
+    _globals["_SESSIONTERMINATE"]._serialized_start = 853
+    _globals["_SESSIONTERMINATE"]._serialized_end = 1076
+    _globals["_SESSIONTERMINATE_REASON"]._serialized_start = 945
+    _globals["_SESSIONTERMINATE_REASON"]._serialized_end = 1076
+    _globals["_SERVERFRAME"]._serialized_start = 1079
+    _globals["_SERVERFRAME"]._serialized_end = 1506
+    _globals["_SERVERACCEPT"]._serialized_start = 1508
+    _globals["_SERVERACCEPT"]._serialized_end = 1601
+    _globals["_AUTHFAILURE"]._serialized_start = 1604
+    _globals["_AUTHFAILURE"]._serialized_end = 1854
+    _globals["_AUTHFAILURE_CODE"]._serialized_start = 1682
+    _globals["_AUTHFAILURE_CODE"]._serialized_end = 1854
+    _globals["_APPLAUNCHED"]._serialized_start = 1856
+    _globals["_APPLAUNCHED"]._serialized_end = 1909
+    _globals["_APPLAUNCHFAILED"]._serialized_start = 1911
+    _globals["_APPLAUNCHFAILED"]._serialized_end = 1981
+    _globals["_APPLIFECYCLEEVENT"]._serialized_start = 1984
+    _globals["_APPLIFECYCLEEVENT"]._serialized_end = 2177
+    _globals["_APPLIFECYCLEEVENT_KIND"]._serialized_start = 2096
+    _globals["_APPLIFECYCLEEVENT_KIND"]._serialized_end = 2177
+    _globals["_RAILWINDOWEVENT"]._serialized_start = 2180
+    _globals["_RAILWINDOWEVENT"]._serialized_end = 2610
+    _globals["_RAILWINDOWEVENT_KIND"]._serialized_start = 2360
+    _globals["_RAILWINDOWEVENT_KIND"]._serialized_end = 2610
+    _globals["_RECT"]._serialized_start = 2612
+    _globals["_RECT"]._serialized_end = 2671
+    _globals["_SESSIONCLOSED"]._serialized_start = 2673
+    _globals["_SESSIONCLOSED"]._serialized_end = 2759
+    _globals["_CONTROLSERVICE"]._serialized_start = 2761
+    _globals["_CONTROLSERVICE"]._serialized_end = 2850
 # @@protoc_insertion_point(module_scope)

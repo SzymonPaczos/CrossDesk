@@ -62,9 +62,13 @@ class StatusFrame(_message.Message):
     @_builtins.property
     def resources(self) -> Global___ResourceUsage: ...
     @_builtins.property
-    def running_apps(self) -> _containers.RepeatedCompositeFieldContainer[Global___RailAppRunning]: ...
+    def running_apps(
+        self,
+    ) -> _containers.RepeatedCompositeFieldContainer[Global___RailAppRunning]: ...
     @_builtins.property
-    def recent_activity(self) -> _containers.RepeatedCompositeFieldContainer[Global___RecentActivity]: ...
+    def recent_activity(
+        self,
+    ) -> _containers.RepeatedCompositeFieldContainer[Global___RecentActivity]: ...
     @_builtins.property
     def emitted_at(self) -> _timestamp_pb2.Timestamp: ...
     def __init__(
@@ -77,9 +81,31 @@ class StatusFrame(_message.Message):
         recent_activity: _abc.Iterable[Global___RecentActivity] | None = ...,
         emitted_at: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["emitted_at", b"emitted_at", "heartbeat", b"heartbeat", "resources", b"resources", "vm", b"vm"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "emitted_at",
+        b"emitted_at",
+        "heartbeat",
+        b"heartbeat",
+        "resources",
+        b"resources",
+        "vm",
+        b"vm",
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["emitted_at", b"emitted_at", "heartbeat", b"heartbeat", "recent_activity", b"recent_activity", "resources", b"resources", "running_apps", b"running_apps", "vm", b"vm"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "emitted_at",
+        b"emitted_at",
+        "heartbeat",
+        b"heartbeat",
+        "recent_activity",
+        b"recent_activity",
+        "resources",
+        b"resources",
+        "running_apps",
+        b"running_apps",
+        "vm",
+        b"vm",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -93,7 +119,9 @@ class VmStatus(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _StateEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[VmStatus._State.ValueType], _builtins.type):
+    class _StateEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[VmStatus._State.ValueType], _builtins.type
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         STATE_UNSPECIFIED: VmStatus._State.ValueType  # 0
         STATE_OFF: VmStatus._State.ValueType  # 1
@@ -127,9 +155,18 @@ class VmStatus(_message.Message):
         uptime: _duration_pb2.Duration | None = ...,
         last_hard_destroy: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["last_hard_destroy", b"last_hard_destroy", "uptime", b"uptime"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "last_hard_destroy", b"last_hard_destroy", "uptime", b"uptime"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["last_hard_destroy", b"last_hard_destroy", "state", b"state", "uptime", b"uptime"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "last_hard_destroy",
+        b"last_hard_destroy",
+        "state",
+        b"state",
+        "uptime",
+        b"uptime",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -163,9 +200,22 @@ class HeartbeatStatus(_message.Message):
         soft_attempts: _builtins.int = ...,
         auth_context_rejections: _builtins.int = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["ewma_rtt", b"ewma_rtt"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "ewma_rtt", b"ewma_rtt"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth_context_rejections", b"auth_context_rejections", "consecutive_miss_count", b"consecutive_miss_count", "ewma_rtt", b"ewma_rtt", "fsm_state", b"fsm_state", "soft_attempts", b"soft_attempts"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "auth_context_rejections",
+        b"auth_context_rejections",
+        "consecutive_miss_count",
+        b"consecutive_miss_count",
+        "ewma_rtt",
+        b"ewma_rtt",
+        "fsm_state",
+        b"fsm_state",
+        "soft_attempts",
+        b"soft_attempts",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -197,7 +247,18 @@ class ResourceUsage(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["cpu_percent", b"cpu_percent", "disk_percent", b"disk_percent", "ram_percent", b"ram_percent", "ram_total_bytes", b"ram_total_bytes", "ram_used_bytes", b"ram_used_bytes"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "cpu_percent",
+        b"cpu_percent",
+        "disk_percent",
+        b"disk_percent",
+        "ram_percent",
+        b"ram_percent",
+        "ram_total_bytes",
+        b"ram_total_bytes",
+        "ram_used_bytes",
+        b"ram_used_bytes",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -230,9 +291,24 @@ class RailAppRunning(_message.Message):
         ram_bytes: _builtins.int = ...,
         launched_at: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["launched_at", b"launched_at"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "launched_at", b"launched_at"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["app_id", b"app_id", "display_name", b"display_name", "hwnd", b"hwnd", "launched_at", b"launched_at", "process_id", b"process_id", "ram_bytes", b"ram_bytes"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "app_id",
+        b"app_id",
+        "display_name",
+        b"display_name",
+        "hwnd",
+        b"hwnd",
+        "launched_at",
+        b"launched_at",
+        "process_id",
+        b"process_id",
+        "ram_bytes",
+        b"ram_bytes",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -246,7 +322,10 @@ class RecentActivity(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[RecentActivity._Kind.ValueType], _builtins.type):
+    class _KindEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[RecentActivity._Kind.ValueType],
+        _builtins.type,
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: RecentActivity._Kind.ValueType  # 0
         KIND_APP_LAUNCHED: RecentActivity._Kind.ValueType  # 1
@@ -286,9 +365,13 @@ class RecentActivity(_message.Message):
         detail: _builtins.str = ...,
         timestamp: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["timestamp", b"timestamp"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "timestamp", b"timestamp"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "kind", b"kind", "timestamp", b"timestamp"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "detail", b"detail", "kind", b"kind", "timestamp", b"timestamp"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -307,7 +390,9 @@ class AppEntry(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _TierEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[AppEntry._Tier.ValueType], _builtins.type):
+    class _TierEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[AppEntry._Tier.ValueType], _builtins.type
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         TIER_UNSPECIFIED: AppEntry._Tier.ValueType  # 0
         TIER_CURATED: AppEntry._Tier.ValueType  # 1
@@ -357,7 +442,26 @@ class AppEntry(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["app_id", b"app_id", "category", b"category", "compatibility_notes", b"compatibility_notes", "compatibility_stars", b"compatibility_stars", "display_name", b"display_name", "executable_guest_path", b"executable_guest_path", "icon_data_uri", b"icon_data_uri", "mime_types", b"mime_types", "tier", b"tier"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "app_id",
+        b"app_id",
+        "category",
+        b"category",
+        "compatibility_notes",
+        b"compatibility_notes",
+        "compatibility_stars",
+        b"compatibility_stars",
+        "display_name",
+        b"display_name",
+        "executable_guest_path",
+        b"executable_guest_path",
+        "icon_data_uri",
+        b"icon_data_uri",
+        "mime_types",
+        b"mime_types",
+        "tier",
+        b"tier",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -402,9 +506,28 @@ class MountEntry(_message.Message):
         open_handles: _builtins.int = ...,
         pending_writes_bytes: _builtins.int = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["mounted_at", b"mounted_at"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "mounted_at", b"mounted_at"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["app_id", b"app_id", "guest_path", b"guest_path", "host_path", b"host_path", "mounted_at", b"mounted_at", "open_handles", b"open_handles", "pending_writes_bytes", b"pending_writes_bytes", "process_id", b"process_id", "share_id", b"share_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "app_id",
+        b"app_id",
+        "guest_path",
+        b"guest_path",
+        "host_path",
+        b"host_path",
+        "mounted_at",
+        b"mounted_at",
+        "open_handles",
+        b"open_handles",
+        "pending_writes_bytes",
+        b"pending_writes_bytes",
+        "process_id",
+        b"process_id",
+        "share_id",
+        b"share_id",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -432,7 +555,9 @@ class LaunchRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["app_id", b"app_id", "file_path", b"file_path"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "app_id", b"app_id", "file_path", b"file_path"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -459,7 +584,9 @@ class LaunchResponse(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["error", b"error", "ok", b"ok", "request_id", b"request_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "error", b"error", "ok", b"ok", "request_id", b"request_id"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -481,7 +608,9 @@ class ActionAck(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "ok", b"ok"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "detail", b"detail", "ok", b"ok"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -508,9 +637,18 @@ class CredentialsResponse(_message.Message):
         keyring_key: _builtins.str = ...,
         last_rotated: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["last_rotated", b"last_rotated"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "last_rotated", b"last_rotated"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["keyring_key", b"keyring_key", "last_rotated", b"last_rotated", "username", b"username"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "keyring_key",
+        b"keyring_key",
+        "last_rotated",
+        b"last_rotated",
+        "username",
+        b"username",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -529,7 +667,9 @@ class DiagnosticsReport(_message.Message):
     ANY_FAILED_FIELD_NUMBER: _builtins.int
     any_failed: _builtins.bool
     @_builtins.property
-    def checks(self) -> _containers.RepeatedCompositeFieldContainer[Global___DiagnosticsCheck]: ...
+    def checks(
+        self,
+    ) -> _containers.RepeatedCompositeFieldContainer[Global___DiagnosticsCheck]: ...
     def __init__(
         self,
         *,
@@ -538,7 +678,9 @@ class DiagnosticsReport(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["any_failed", b"any_failed", "checks", b"checks"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "any_failed", b"any_failed", "checks", b"checks"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -552,7 +694,10 @@ class DiagnosticsCheck(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _StatusEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[DiagnosticsCheck._Status.ValueType], _builtins.type):
+    class _StatusEnumTypeWrapper(
+        _enum_type_wrapper._EnumTypeWrapper[DiagnosticsCheck._Status.ValueType],
+        _builtins.type,
+    ):
         DESCRIPTOR: _descriptor.EnumDescriptor
         STATUS_UNSPECIFIED: DiagnosticsCheck._Status.ValueType  # 0
         STATUS_OK: DiagnosticsCheck._Status.ValueType  # 1
@@ -580,7 +725,9 @@ class DiagnosticsCheck(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["message", b"message", "name", b"name", "status", b"status"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "message", b"message", "name", b"name", "status", b"status"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -605,9 +752,18 @@ class DiagnosticBundle(_message.Message):
         filename: _builtins.str = ...,
         generated_at: _timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["generated_at", b"generated_at"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "generated_at", b"generated_at"
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["filename", b"filename", "generated_at", b"generated_at", "zip_payload", b"zip_payload"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "filename",
+        b"filename",
+        "generated_at",
+        b"generated_at",
+        "zip_payload",
+        b"zip_payload",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -632,7 +788,9 @@ class SettingsRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["desired", b"desired"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["desired", b"desired"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "desired", b"desired"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -652,7 +810,9 @@ class SettingsResponse(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["current", b"current"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["current", b"current"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "current", b"current"
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -722,9 +882,47 @@ class Settings(_message.Message):
         backoff_initial: _duration_pb2.Duration | None = ...,
         max_soft_attempts: _builtins.int = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["auto_suspend_after", b"auto_suspend_after", "backoff_initial", b"backoff_initial"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal[
+        "auto_suspend_after",
+        b"auto_suspend_after",
+        "backoff_initial",
+        b"backoff_initial",
+    ]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["auto_resume_on_launch", b"auto_resume_on_launch", "auto_suspend_after", b"auto_suspend_after", "auto_suspend_on_idle", b"auto_suspend_on_idle", "auto_suspend_on_lid", b"auto_suspend_on_lid", "backoff_initial", b"backoff_initial", "hidpi_scale", b"hidpi_scale", "keyring_enabled", b"keyring_enabled", "language", b"language", "lean_mode", b"lean_mode", "max_soft_attempts", b"max_soft_attempts", "miss_threshold", b"miss_threshold", "multi_monitor_placement", b"multi_monitor_placement", "network_mode", b"network_mode", "recovery_ticks", b"recovery_ticks", "telemetry_enabled", b"telemetry_enabled", "theme", b"theme"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal[
+        "auto_resume_on_launch",
+        b"auto_resume_on_launch",
+        "auto_suspend_after",
+        b"auto_suspend_after",
+        "auto_suspend_on_idle",
+        b"auto_suspend_on_idle",
+        "auto_suspend_on_lid",
+        b"auto_suspend_on_lid",
+        "backoff_initial",
+        b"backoff_initial",
+        "hidpi_scale",
+        b"hidpi_scale",
+        "keyring_enabled",
+        b"keyring_enabled",
+        "language",
+        b"language",
+        "lean_mode",
+        b"lean_mode",
+        "max_soft_attempts",
+        b"max_soft_attempts",
+        "miss_threshold",
+        b"miss_threshold",
+        "multi_monitor_placement",
+        b"multi_monitor_placement",
+        "network_mode",
+        b"network_mode",
+        "recovery_ticks",
+        b"recovery_ticks",
+        "telemetry_enabled",
+        b"telemetry_enabled",
+        "theme",
+        b"theme",
+    ]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

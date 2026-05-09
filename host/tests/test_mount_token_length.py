@@ -9,6 +9,7 @@ Without this length check a malicious peer could ship a multi-megabyte
 host code documents this in `MOUNT_TOKEN_LEN`; this test pins the
 contract end-to-end across the three frame types.
 """
+
 from __future__ import annotations
 
 import pytest

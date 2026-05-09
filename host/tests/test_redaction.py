@@ -5,6 +5,7 @@ not on the allow-list and on any value containing a forbidden
 substring (`password`, `secret`, `token`, `clipboard_content`).
 Lenient mode replaces violating values with ``<redacted>``.
 """
+
 from __future__ import annotations
 
 import io
@@ -12,7 +13,11 @@ import json
 
 import pytest
 
-from crossdesk_host.observability import RedactionViolation, configure_logging, get_logger
+from crossdesk_host.observability import (
+    RedactionViolation,
+    configure_logging,
+    get_logger,
+)
 from crossdesk_host.observability.redaction import redaction_processor
 
 

@@ -32,33 +32,68 @@ _SCHEMA_FIELDS: frozenset[str] = frozenset(
     {"timestamp", "level", "component", "trace_id", "span_id", "event"}
 )
 
-ALLOWED_FIELDS: frozenset[str] = _SCHEMA_FIELDS | frozenset({
-    # Lifecycle / FSM
-    "fsm_state", "previous_state", "transition", "vm_state", "duration_ms",
-    "rtt_ms", "miss_count", "share_id", "domain_name",
-    # Identity (fingerprints are short, non-sensitive)
-    "peer_fingerprint", "uuid", "host_endpoint", "kind",
-    # Metrics / counters
-    "metric_name", "value", "count", "n", "key", "target",
-    # gRPC / wire
-    "method", "status_code", "rpc_error", "stream_nonce_hex", "sequence",
-    "expected_sequence",
-    # Filesystem
-    "mount_path", "host_path", "guest_drive_letter", "open_handles",
-    "pending_writes_bytes", "frame_kind", "payload_type",
-    # Process / OS
-    "pid", "argv", "exit_code", "signal",
-    # stdlib logging integration leaves these alongside our schema.
-    # Allowing them prevents redaction noise on `logger.warning(...)`
-    # calls coming from grpc/asyncio plumbing.
-    "logger", "exception", "exc_info", "stack_info", "_record", "_from_structlog",
-    # Set by the redaction processor itself when running in lenient
-    # mode — re-allowing prevents recursive violation on the next pass.
-    "redaction_drop_count",
-})
+ALLOWED_FIELDS: frozenset[str] = _SCHEMA_FIELDS | frozenset(
+    {
+        # Lifecycle / FSM
+        "fsm_state",
+        "previous_state",
+        "transition",
+        "vm_state",
+        "duration_ms",
+        "rtt_ms",
+        "miss_count",
+        "share_id",
+        "domain_name",
+        # Identity (fingerprints are short, non-sensitive)
+        "peer_fingerprint",
+        "uuid",
+        "host_endpoint",
+        "kind",
+        # Metrics / counters
+        "metric_name",
+        "value",
+        "count",
+        "n",
+        "key",
+        "target",
+        # gRPC / wire
+        "method",
+        "status_code",
+        "rpc_error",
+        "stream_nonce_hex",
+        "sequence",
+        "expected_sequence",
+        # Filesystem
+        "mount_path",
+        "host_path",
+        "guest_drive_letter",
+        "open_handles",
+        "pending_writes_bytes",
+        "frame_kind",
+        "payload_type",
+        # Process / OS
+        "pid",
+        "argv",
+        "exit_code",
+        "signal",
+        # stdlib logging integration leaves these alongside our schema.
+        # Allowing them prevents redaction noise on `logger.warning(...)`
+        # calls coming from grpc/asyncio plumbing.
+        "logger",
+        "exception",
+        "exc_info",
+        "stack_info",
+        "_record",
+        "_from_structlog",
+        # Set by the redaction processor itself when running in lenient
+        # mode — re-allowing prevents recursive violation on the next pass.
+        "redaction_drop_count",
+    }
+)
 
 _FORBIDDEN_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
-    re.compile(p, re.IGNORECASE) for p in (
+    re.compile(p, re.IGNORECASE)
+    for p in (
         r"password",
         r"secret",
         r"\btoken\b",  # `mount_token` is sensitive too — see hex caveat below

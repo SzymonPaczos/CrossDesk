@@ -5,6 +5,7 @@ calls a unary handler that emits a log line via the observability
 facade, and asserts that the emitted log carries the trace IDs from
 the incoming ``traceparent`` metadata.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -40,9 +41,7 @@ def _generic_handler() -> grpc.GenericRpcHandler:
         request_deserializer=lambda b: b,
         response_serializer=lambda b: b,
     )
-    return grpc.method_handlers_generic_handler(
-        "Echo", {"Loop": rpc_method_handler}
-    )
+    return grpc.method_handlers_generic_handler("Echo", {"Loop": rpc_method_handler})
 
 
 @pytest.fixture

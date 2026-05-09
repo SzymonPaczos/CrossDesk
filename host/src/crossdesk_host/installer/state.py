@@ -24,6 +24,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
+import contextlib
 
 _SCHEMA_VERSION = 1
 
@@ -81,10 +82,8 @@ def _atomic_write(path: Path, payload: str) -> None:
             os.fsync(f.fileno())
         os.rename(tmp_path, path)
     except Exception:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
         raise
 
 

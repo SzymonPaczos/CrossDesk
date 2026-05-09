@@ -5,6 +5,7 @@ share leak (violates "NIE permanentny mount" invariant). These tests pin the
 state-machine bookkeeping for MountResult / LockReport / ReleaseAck / Incident
 plus the trigger_mount entrypoint that wires the host-initiated attach.
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,6 +41,7 @@ def _auth() -> common_pb2.AuthContext:
 # ---------------------------------------------------------------------------
 # MountResult bookkeeping
 # ---------------------------------------------------------------------------
+
 
 def test_mount_result_status_mounted_marks_share_active(
     servicer: FilesystemServiceServicer,
@@ -82,6 +84,7 @@ def test_mount_result_failure_does_not_register_share(
 # ReleaseAck — the critical security-relevant path
 # ---------------------------------------------------------------------------
 
+
 def test_release_ack_triggers_detach_and_removes_share(
     servicer: FilesystemServiceServicer, libvirt: MagicMock
 ) -> None:
@@ -116,6 +119,7 @@ def test_release_ack_for_unknown_share_still_detaches(
 # ---------------------------------------------------------------------------
 # LockReport / Incident — observe-only paths
 # ---------------------------------------------------------------------------
+
 
 def test_lock_report_does_not_mutate_state(
     servicer: FilesystemServiceServicer, libvirt: MagicMock
@@ -161,6 +165,7 @@ def test_incident_logs_at_error_level(
 # ---------------------------------------------------------------------------
 # Host-initiated mount
 # ---------------------------------------------------------------------------
+
 
 async def test_trigger_mount_attaches_libvirt_and_queues_request(
     servicer: FilesystemServiceServicer,
@@ -223,6 +228,7 @@ async def test_trigger_mount_rejects_traversal(
 # ---------------------------------------------------------------------------
 # Wire-format invariant: mount_token must be exactly 32 bytes
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("bad_token", [b"", b"\x00" * 31, b"\x00" * 33, b"\x00" * 4096])
 def test_release_ack_rejected_when_mount_token_length_invalid(

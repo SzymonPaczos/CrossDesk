@@ -24,6 +24,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Protocol
+import contextlib
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "crossdesk" / "iso"
 
@@ -103,10 +104,8 @@ def fetch(
         os.rename(tmp, target)
     finally:
         if tmp.exists():
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp)
-            except OSError:
-                pass
     return target
 
 

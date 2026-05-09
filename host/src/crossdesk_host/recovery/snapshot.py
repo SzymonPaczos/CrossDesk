@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+import contextlib
 
 
 @dataclass(frozen=True)
@@ -85,10 +86,8 @@ def _atomic_write(path: Path, content: str) -> None:
             os.fsync(f.fileno())
         os.rename(tmp, path)
     except Exception:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp)
-        except OSError:
-            pass
         raise
 
 

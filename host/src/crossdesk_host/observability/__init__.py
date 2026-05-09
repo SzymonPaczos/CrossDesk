@@ -35,12 +35,12 @@ from crossdesk_host.observability.trace_ctx import (
 
 __all__ = [
     "ALLOWED_FIELDS",
+    "LOG_SCHEMA_FIELDS",
+    "REGISTRY",
     "Counter",
     "Gauge",
     "Histogram",
-    "LOG_SCHEMA_FIELDS",
     "MetricNames",
-    "REGISTRY",
     "RedactionViolation",
     "Registry",
     "TraceContext",

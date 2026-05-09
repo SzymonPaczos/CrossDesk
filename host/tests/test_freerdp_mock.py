@@ -5,6 +5,7 @@ The real spawn path is exercised on hardware via the
 contract: argv recording, deterministic pid sequence, lifecycle
 state.
 """
+
 from __future__ import annotations
 
 import pytest

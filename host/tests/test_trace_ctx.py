@@ -1,6 +1,7 @@
 """W3C Trace Context unit tests — round-trip, parse rejection,
 metadata extraction, log-context binding.
 """
+
 from __future__ import annotations
 
 import io
@@ -31,9 +32,7 @@ def test_round_trip_traceparent() -> None:
 
 def test_parse_rejects_wrong_version() -> None:
     assert (
-        parse_traceparent(
-            "01-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01"
-        )
+        parse_traceparent("01-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01")
         is None
     )
 
@@ -44,9 +43,7 @@ def test_parse_rejects_short_hex() -> None:
 
 def test_parse_rejects_non_hex() -> None:
     assert (
-        parse_traceparent(
-            "00-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-bbbbbbbbbbbbbbbb-01"
-        )
+        parse_traceparent("00-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-bbbbbbbbbbbbbbbb-01")
         is None
     )
 

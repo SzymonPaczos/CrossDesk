@@ -25,12 +25,21 @@ class MockHooks:
     """If ``True``, the next ``spawn_rail`` raises ``RuntimeError``
     instead of recording. Cleared after firing."""
 
+    fail_next_terminate: bool = False
+    """If ``True``, the next ``terminate`` raises ``RuntimeError``
+    so callers can verify they swallow the failure rather than
+    leaking the host-side window registration."""
+
     spawn_count: int = 0
     terminate_count: int = 0
 
     spawned_argvs: list[list[str]] = field(default_factory=list)
     """Each entry is the argv passed to ``spawn_rail``. Tests assert
     this list against expected RAIL command construction."""
+
+    terminated_pids: list[int] = field(default_factory=list)
+    """pid order in which ``terminate`` was called. Tests use this
+    to assert idempotence and termination ordering."""
 
     live_pids: set[int] = field(default_factory=set)
     """Synthesised pids that haven't been terminated yet. Drives
@@ -56,15 +65,18 @@ class MockFreeRDPInvocation(FreeRDPInvocation):
         self.hooks.spawn_count += 1
         self.hooks.spawned_argvs.append(list(argv))
         self.hooks.live_pids.add(pid)
-        logger.debug(
-            "[FREERDP MOCK] spawn_rail pid=%d argv=%s", pid, argv
-        )
+        logger.debug("[FREERDP MOCK] spawn_rail pid=%d argv=%s", pid, argv)
         return RailSession(pid=pid, argv=list(argv))
 
     def terminate(self, session: RailSession) -> None:
+        if self.hooks.fail_next_terminate:
+            self.hooks.fail_next_terminate = False
+            raise RuntimeError(f"mock-injected terminate(pid={session.pid}) failure")
         if session.pid not in self.hooks.live_pids:
+            # Idempotent: double-terminate is OK, just don't record again.
             return
         self.hooks.live_pids.discard(session.pid)
+        self.hooks.terminated_pids.append(session.pid)
         self.hooks.terminate_count += 1
         logger.debug("[FREERDP MOCK] terminate pid=%d", session.pid)
 

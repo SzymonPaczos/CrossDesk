@@ -1,11 +1,11 @@
 # Dead Code / Generated / Reference Manifest
 
-**Last Updated:** 2026-05-08 22:33:28
+**Last Updated:** 2026-05-09 16:36:16
 
 > Files agents should **not** read or analyze unless the task is
 > explicitly to clean them up or modify the generator. The
-> post-commit hook bumps `Last Updated:` so freshness is visible at
-> a glance.
+> pre-commit hook bumps `Last Updated:` so the timestamp lands inside
+> the commit (visible to teammates after pull, not just locally).
 
 ## Reference only — do not modify
 

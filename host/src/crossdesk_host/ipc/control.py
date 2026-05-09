@@ -1,19 +1,41 @@
 import logging
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator, List, Optional
 
 import grpc
 
 from crossdesk_host.display.rail_manager import RailManager
 from crossdesk_host.ipc.auth import AuthValidator
+from crossdesk_host.ipc.version_negotiation import (
+    is_compatible,
+    negotiate_features,
+)
 from crossdesk_host.proto.crossdesk.v1 import control_pb2, control_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
+HOST_VERSION = "v0.1.0"
+# Feature flags the host advertises. The negotiation step intersects
+# this with what the client claims and the result lands in
+# ``ServerAccept.negotiated_features``.
+HOST_SUPPORTED_FEATURES: List[str] = ["rail.v1", "virtiofs.jit"]
+
 
 class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
-    def __init__(self, auth_validator: AuthValidator, rail_manager: Optional[RailManager] = None) -> None:
+    def __init__(
+        self,
+        auth_validator: AuthValidator,
+        rail_manager: Optional[RailManager] = None,
+        host_version: str = HOST_VERSION,
+        supported_features: Optional[List[str]] = None,
+    ) -> None:
         self.auth_validator = auth_validator
         self.rail_manager = rail_manager if rail_manager is not None else RailManager()
+        self.host_version = host_version
+        self.supported_features = (
+            list(supported_features)
+            if supported_features is not None
+            else list(HOST_SUPPORTED_FEATURES)
+        )
 
     async def OpenSession(
         self,
@@ -28,23 +50,50 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
 
         try:
             async for client_frame in request_iterator:
-                await self.auth_validator.verify_auth_context(context, client_frame.auth)
+                await self.auth_validator.verify_auth_context(
+                    context, client_frame.auth
+                )
                 if stream_nonce is None:
                     stream_nonce = client_frame.auth.stream_nonce
 
-                payload_type = client_frame.WhichOneof('payload')
+                payload_type = client_frame.WhichOneof("payload")
 
                 if state == "HANDSHAKE":
                     if payload_type == "hello":
-                        state = "AUTHENTICATED"
-                        logger.info(f"Received ClientHello: {client_frame.hello}")
-
-                        # Zbuduj ServerAccept
+                        hello = client_frame.hello
+                        compat = is_compatible(hello.host_version, self.host_version)
+                        if not compat.accepted:
+                            logger.warning(
+                                "ControlService Hello rejected: %s "
+                                "(client_says=%s, host_actual=%s)",
+                                compat.reason,
+                                hello.host_version,
+                                self.host_version,
+                            )
+                            yield control_pb2.ServerFrame(
+                                auth_failure=control_pb2.AuthFailure(
+                                    code=control_pb2.AuthFailure.Code.CODE_FEATURE_NEGOTIATION_FAILED,
+                                    detail=compat.reason,
+                                )
+                            )
+                            await context.abort(
+                                grpc.StatusCode.FAILED_PRECONDITION,
+                                f"version incompatible: {compat.reason}",
+                            )
+                        negotiated = negotiate_features(
+                            self.supported_features, hello.supported_features
+                        )
+                        logger.info(
+                            "ControlService Hello accepted: client_says=%s host=%s features=%s",
+                            hello.host_version,
+                            self.host_version,
+                            negotiated,
+                        )
                         yield control_pb2.ServerFrame(
                             accept=control_pb2.ServerAccept(
-                                guest_version="v0.1.0",
-                                negotiated_features=["rail.v1"],
-                                guest_smbios_uuid="fake-uuid-dry-run",
+                                guest_version=self.host_version,
+                                negotiated_features=negotiated,
+                                guest_smbios_uuid=hello.host_domain_uuid,
                             )
                         )
                         state = "READY"
@@ -54,12 +103,14 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                             grpc.StatusCode.FAILED_PRECONDITION,
                             f"Expected ClientHello, got {payload_type}",
                         )
-                
+
                 elif state == "READY" or state == "APP_RUNNING":
                     if payload_type == "launch":
-                        logger.info(f"AppLaunchRequest: {client_frame.launch.executable_guest_path}")
+                        logger.info(
+                            f"AppLaunchRequest: {client_frame.launch.executable_guest_path}"
+                        )
                         # Tutaj wywołalibyśmy faktyczną logikę uruchamiania procesu
-                        
+
                         yield control_pb2.ServerFrame(
                             launched=control_pb2.AppLaunched(
                                 request_id=client_frame.launch.request_id,
@@ -67,10 +118,10 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                             )
                         )
                         state = "APP_RUNNING"
-                        
+
                     elif payload_type == "rail_event":
                         self.rail_manager.handle_rail_event(client_frame.rail_event)
-                        
+
                     elif payload_type == "terminate":
                         logger.info("SessionTerminate requested by Guest.")
                         state = "DRAINING"
@@ -81,7 +132,7 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                             )
                         )
                         break
-                    
+
                     else:
                         logger.warning(f"Unhandled payload in {state}: {payload_type}")
 

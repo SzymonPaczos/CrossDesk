@@ -28,7 +28,10 @@ def _auth() -> common_pb2.AuthContext:
 def _hello() -> control_pb2.ClientFrame:
     return control_pb2.ClientFrame(
         auth=_auth(),
-        hello=control_pb2.ClientHello(host_version="v0.1.0"),
+        hello=control_pb2.ClientHello(
+            host_version="v0.1.0",
+            supported_features=["rail.v1", "virtiofs.jit"],
+        ),
     )
 
 

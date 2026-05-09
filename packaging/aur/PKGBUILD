@@ -1,0 +1,46 @@
+# Maintainer: Szymon Paczos <szymon-paczos@protonmail.com>
+pkgname=crossdesk
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Run Windows applications as native Linux windows (libvirt + RAIL)"
+arch=('x86_64')
+url="https://github.com/SzymonPaczos/CrossDesk"
+license=('GPL-3.0-or-later')
+depends=(
+  'python>=3.9'
+  'python-grpcio>=1.63'
+  'python-cryptography>=41.0'
+  'python-structlog>=24.1'
+  'libvirt'
+  'qemu-base'
+  'freerdp>=2'
+  'libnotify'
+)
+optdepends=(
+  'flatpak: alternate FreeRDP install path'
+  'systemd-libs: D-Bus suspend/resume listener'
+)
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-hatchling'
+  'rust>=1.74'
+)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/SzymonPaczos/CrossDesk/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "CrossDesk-$pkgver/host"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "CrossDesk-$pkgver"
+  python -m installer --destdir="$pkgdir" host/dist/*.whl
+
+  install -Dm644 infra/crossdesk-host.service \
+    "$pkgdir/usr/lib/systemd/user/crossdesk-host.service"
+  install -Dm644 infra/desktop/crossdesk-ms-office-protocol-handler.desktop \
+    "$pkgdir/usr/share/applications/crossdesk-ms-office-protocol-handler.desktop"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

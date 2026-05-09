@@ -23,9 +23,7 @@ from dataclasses import dataclass
 import structlog
 
 _TRACEPARENT_KEY = "traceparent"
-_TRACEPARENT_RE = re.compile(
-    r"^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
-)
+_TRACEPARENT_RE = re.compile(r"^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$")
 _INVALID_TRACE_ID = "0" * 32
 _INVALID_SPAN_ID = "0" * 16
 
@@ -45,10 +43,7 @@ class TraceContext:
         return f"00-{self.trace_id}-{self.span_id}-{self.flags}"
 
     def is_valid(self) -> bool:
-        return (
-            self.trace_id != _INVALID_TRACE_ID
-            and self.span_id != _INVALID_SPAN_ID
-        )
+        return self.trace_id != _INVALID_TRACE_ID and self.span_id != _INVALID_SPAN_ID
 
 
 def generate_root() -> TraceContext:

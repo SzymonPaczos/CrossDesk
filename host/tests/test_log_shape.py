@@ -5,6 +5,7 @@ must be a single JSON object with the mandatory schema fields. Drift
 from this shape breaks downstream tooling (CLI ``crossdesk logs``,
 future OTLP exporter, perf-budget telemetry).
 """
+
 from __future__ import annotations
 
 import io

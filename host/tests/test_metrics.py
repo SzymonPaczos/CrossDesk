@@ -4,6 +4,7 @@ Verifies counter/gauge/histogram primitives behave correctly under
 single-threaded use and that the snapshot shape matches what the
 future ``ControlService.GetMetrics`` RPC will return.
 """
+
 from __future__ import annotations
 
 import threading

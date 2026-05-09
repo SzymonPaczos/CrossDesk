@@ -15,7 +15,7 @@ import grpc
 
 from crossdesk_host.transport.real import RealTransport, _expected_endpoint
 
-__all__ = ["create_vsock_server", "_expected_endpoint"]
+__all__ = ["_expected_endpoint", "create_vsock_server"]
 
 
 def create_vsock_server(

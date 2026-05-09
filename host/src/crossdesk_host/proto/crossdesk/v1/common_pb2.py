@@ -4,18 +4,15 @@
 # source: crossdesk/v1/common.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    6,
-    31,
-    1,
-    '',
-    'crossdesk/v1/common.proto'
+    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "crossdesk/v1/common.proto"
 )
 # @@protoc_insertion_point(imports)
 
@@ -24,16 +21,17 @@ _sym_db = _symbol_database.Default()
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19\x63rossdesk/v1/common.proto\x12\x0c\x63rossdesk.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"T\n\x0b\x41uthContext\x12\x1d\n\x15peer_cert_fingerprint\x18\x01 \x01(\t\x12\x14\n\x0cstream_nonce\x18\x02 \x01(\x0c\x12\x10\n\x08sequence\x18\x03 \x01(\x04\"R\n\nTimingMark\x12.\n\nwall_clock\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cmonotonic_ns\x18\x02 \x01(\x06\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x19\x63rossdesk/v1/common.proto\x12\x0c\x63rossdesk.v1\x1a\x1fgoogle/protobuf/timestamp.proto"T\n\x0b\x41uthContext\x12\x1d\n\x15peer_cert_fingerprint\x18\x01 \x01(\t\x12\x14\n\x0cstream_nonce\x18\x02 \x01(\x0c\x12\x10\n\x08sequence\x18\x03 \x01(\x04"R\n\nTimingMark\x12.\n\nwall_clock\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cmonotonic_ns\x18\x02 \x01(\x06\x62\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.common_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "crossdesk.v1.common_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_AUTHCONTEXT']._serialized_start=76
-  _globals['_AUTHCONTEXT']._serialized_end=160
-  _globals['_TIMINGMARK']._serialized_start=162
-  _globals['_TIMINGMARK']._serialized_end=244
+    DESCRIPTOR._loaded_options = None
+    _globals["_AUTHCONTEXT"]._serialized_start = 76
+    _globals["_AUTHCONTEXT"]._serialized_end = 160
+    _globals["_TIMINGMARK"]._serialized_start = 162
+    _globals["_TIMINGMARK"]._serialized_end = 244
 # @@protoc_insertion_point(module_scope)

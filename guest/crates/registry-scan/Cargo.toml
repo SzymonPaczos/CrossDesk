@@ -3,9 +3,11 @@ name = "registry-scan"
 version = "0.1.0"
 edition = "2021"
 
+license.workspace = true
+repository.workspace = true
 [dependencies]
-anyhow = { workspace = true }
-tracing = { workspace = true }
+# Phase 8 stub uses no third-party deps. anyhow + tracing land
+# alongside the windows registry walker in Phase 8 Week 34.
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { workspace = true, features = [

@@ -11,6 +11,7 @@ question these tests answer is what happens when:
 
 from __future__ import annotations
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -63,21 +64,21 @@ def test_save_does_not_leak_tmp_files_after_many_cycles(tmp_path: Path) -> None:
 def test_load_garbage_json_raises(tmp_path: Path) -> None:
     target = tmp_path / "install.state.json"
     target.write_text("{not valid json", encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(json.JSONDecodeError):
         state.load(target)
 
 
 def test_load_empty_file_raises(tmp_path: Path) -> None:
     target = tmp_path / "install.state.json"
     target.write_text("", encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(json.JSONDecodeError):
         state.load(target)
 
 
 def test_load_truncated_json_raises(tmp_path: Path) -> None:
     target = tmp_path / "install.state.json"
     target.write_text('{"schema_version": 1, "ste', encoding="utf-8")
-    with pytest.raises(Exception):
+    with pytest.raises(json.JSONDecodeError):
         state.load(target)
 
 

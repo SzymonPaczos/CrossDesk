@@ -18,7 +18,9 @@ else:
 
 _T = _typing.TypeVar("_T")
 
-class _MaybeAsyncIterator(_abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta): ...
+class _MaybeAsyncIterator(
+    _abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta
+): ...
 
 class _ServicerContext(_grpc.ServicerContext, _aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
@@ -68,7 +70,9 @@ class ControlServiceStub:
     def __new__(cls, channel: _grpc.Channel) -> _Self: ...
     @_typing.overload
     def __new__(cls, channel: _aio.Channel) -> ControlServiceAsyncStub: ...
-    OpenSession: _grpc.StreamStreamMultiCallable[_control_pb2.ClientFrame, _control_pb2.ServerFrame]
+    OpenSession: _grpc.StreamStreamMultiCallable[
+        _control_pb2.ClientFrame, _control_pb2.ServerFrame
+    ]
     """Bidirectional. Host inicjuje; Guest multipleksuje RailWindowEvent i
     AppLifecycleEvent z powrotem tym samym strumieniem, żeby zachować
     kolejność względem komend kontrolnych.
@@ -163,10 +167,15 @@ class ControlServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request_iterator: _MaybeAsyncIterator[_control_pb2.ClientFrame],
         context: _ServicerContext,
-    ) -> _typing.Union[_abc.Iterator[_control_pb2.ServerFrame], _abc.AsyncIterator[_control_pb2.ServerFrame]]:
+    ) -> _typing.Union[
+        _abc.Iterator[_control_pb2.ServerFrame],
+        _abc.AsyncIterator[_control_pb2.ServerFrame],
+    ]:
         """Bidirectional. Host inicjuje; Guest multipleksuje RailWindowEvent i
         AppLifecycleEvent z powrotem tym samym strumieniem, żeby zachować
         kolejność względem komend kontrolnych.
         """
 
-def add_ControlServiceServicer_to_server(servicer: ControlServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...
+def add_ControlServiceServicer_to_server(
+    servicer: ControlServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]
+) -> None: ...

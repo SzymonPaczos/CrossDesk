@@ -9,6 +9,7 @@ would have shown up as UNAUTHENTICATED on every connection.
 Skip conditions: missing PKI files (real run requires `host/run_mock_macos.sh`
 to have generated certs at infra/certs/pki/).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -37,7 +38,6 @@ from crossdesk_host.proto.crossdesk.v1 import (
     heartbeat_pb2_grpc,
 )
 
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKI = _REPO_ROOT / "infra" / "certs" / "pki"
 
@@ -51,6 +51,7 @@ pytestmark = pytest.mark.skipif(
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _guest_fingerprint() -> str:
     pem = (_PKI / "guest.crt").read_bytes()
@@ -117,6 +118,7 @@ def channel_factory():
 # Control plane: full handshake → app launch → terminate
 # ---------------------------------------------------------------------------
 
+
 async def test_control_session_full_lifecycle(host_server, channel_factory) -> None:
     fp = _guest_fingerprint()
     nonce = b"smoke-control-1!"  # fixed for replay-clarity in the test
@@ -156,9 +158,11 @@ async def test_control_session_full_lifecycle(host_server, channel_factory) -> N
             responses.append(frame)
 
     payloads = [f.WhichOneof("payload") for f in responses]
-    assert payloads == ["accept", "launched", "closed"], (
-        f"unexpected response sequence: {payloads}"
-    )
+    assert payloads == [
+        "accept",
+        "launched",
+        "closed",
+    ], f"unexpected response sequence: {payloads}"
     assert responses[1].launched.request_id == "req-smoke-1"
     assert responses[1].launched.process_id == 9999
 
@@ -166,6 +170,7 @@ async def test_control_session_full_lifecycle(host_server, channel_factory) -> N
 # ---------------------------------------------------------------------------
 # Auth enforcement at the wire: bad fingerprint must be rejected
 # ---------------------------------------------------------------------------
+
 
 async def test_control_rejects_fingerprint_spoof(host_server, channel_factory) -> None:
     """Send a Hello carrying a bogus fingerprint. The server must abort the
@@ -194,6 +199,7 @@ async def test_control_rejects_fingerprint_spoof(host_server, channel_factory) -
 # ---------------------------------------------------------------------------
 # Heartbeat: receive at least one Ping, send a Pong, close cleanly
 # ---------------------------------------------------------------------------
+
 
 async def test_heartbeat_ping_pong_roundtrip(host_server, channel_factory) -> None:
     fp = _guest_fingerprint()
@@ -234,6 +240,7 @@ async def test_heartbeat_ping_pong_roundtrip(host_server, channel_factory) -> No
 # Filesystem: open share channel, post a MountResult, verify state mutation
 # ---------------------------------------------------------------------------
 
+
 async def test_filesystem_mount_result_recorded(host_server, channel_factory) -> None:
     """Connect to ShareChannel, push a MountResult(STATUS_MOUNTED), then close.
 
@@ -257,6 +264,7 @@ async def test_filesystem_mount_result_recorded(host_server, channel_factory) ->
 
     async with channel_factory(host_server) as channel:
         stub = filesystem_pb2_grpc.FilesystemServiceStub(channel)
+
         # The server's ShareChannel never yields anything until trigger_mount is
         # called (nothing in command_queue), so we just push our frame and bail.
         async def consume():
@@ -269,7 +277,9 @@ async def test_filesystem_mount_result_recorded(host_server, channel_factory) ->
             pass  # Expected: server never produces output on its own
 
 
-async def test_filesystem_rejects_fingerprint_spoof(host_server, channel_factory) -> None:
+async def test_filesystem_rejects_fingerprint_spoof(
+    host_server, channel_factory
+) -> None:
     """Regression for S2: per-frame auth check on ShareChannel.
 
     Before the fix, the filesystem plane skipped verify_auth_context entirely.
@@ -291,6 +301,7 @@ async def test_filesystem_rejects_fingerprint_spoof(host_server, channel_factory
 
     async with channel_factory(host_server) as channel:
         stub = filesystem_pb2_grpc.FilesystemServiceStub(channel)
+
         # Spoofed auth must abort the stream on the consume side. The producer
         # may emit nothing, so we time-bound the iteration and check whether
         # we tripped UNAUTHENTICATED.

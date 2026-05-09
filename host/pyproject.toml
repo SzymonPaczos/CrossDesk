@@ -100,6 +100,23 @@ select = ["E", "F", "I", "T201"]
 # tests do plenty of `print` for debugging captured-stderr fixtures;
 # the production code is the part we're guarding.
 "tests/*" = ["T201"]
+# CLI subcommands are the legitimate place for stdout — that's their job.
+"src/crossdesk_host/cli/*_cmd.py" = ["T201"]
+# gRPC servicers must use the proto-defined method names (CamelCase per
+# Google's gRPC convention). The N802 lint would force PascalCase or
+# snake_case, but the wire contract is fixed.
+"src/crossdesk_host/ipc/*.py" = ["N802"]
+# Subprocess callers that pass argv as a list with known binaries —
+# we never construct argv from user input. S603 (untrusted input)
+# and S607 (partial path) are intentional: we want the binary from
+# $PATH so distros can substitute their preferred build / wrapper.
+"src/crossdesk_host/display/hidpi.py" = ["S603"]
+"src/crossdesk_host/freerdp/real.py" = ["S603"]
+"src/crossdesk_host/integrations/keyring/kwallet.py" = ["S603"]
+"src/crossdesk_host/integrations/portal.py" = ["S603", "S607"]
+"src/crossdesk_host/lifecycle/notifications.py" = ["S603"]
+"src/crossdesk_host/doctor/checks.py" = ["S607"]
+"tests/test_smoke_inprocess.py" = ["S607"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

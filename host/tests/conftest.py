@@ -1,4 +1,5 @@
 """Shared fixtures and grpc test doubles for the host test suite."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -107,9 +108,7 @@ def _self_signed_cert_pem(common_name: str = "test-peer") -> bytes:
     from cryptography.x509.oid import NameOID
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    subject = issuer = x509.Name(
-        [x509.NameAttribute(NameOID.COMMON_NAME, common_name)]
-    )
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)

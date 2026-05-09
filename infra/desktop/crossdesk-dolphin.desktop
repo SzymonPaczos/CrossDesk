@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=application/msword;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.ms-excel;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.ms-powerpoint;application/vnd.openxmlformats-officedocument.presentationml.presentation;text/plain;image/png;image/jpeg;
+Actions=OpenInWindowsApp;
+X-KDE-Submenu=CrossDesk;
+X-KDE-Priority=TopLevel;
+Icon=crossdesk
+
+[Desktop Action OpenInWindowsApp]
+Name=Open in Windows app...
+Name[pl]=Otwórz w aplikacji Windows...
+Icon=crossdesk
+Exec=crossdesk launch auto %f

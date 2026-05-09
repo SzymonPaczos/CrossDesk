@@ -1,0 +1,11 @@
+# cargo-audit configuration. Mirrors guest/deny.toml's [advisories.ignore].
+#
+# Re-evaluate every time we bump tonic — the rustls-pemfile dep is
+# transitive and will drop once tonic migrates to rustls-pki-types
+# PemObject (no API change for us).
+
+[advisories]
+ignore = [
+    # rustls-pemfile unmaintained as of 2025-08; pulled in via tonic 0.12.
+    "RUSTSEC-2025-0134",
+]

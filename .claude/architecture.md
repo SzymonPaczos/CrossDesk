@@ -1,15 +1,15 @@
 # Architecture
 
-**Last Updated:** 2026-05-08 22:33:28
+**Last Updated:** 2026-05-09 16:36:16
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in
 > [AGENTS.md](../AGENTS.md#repository-layout) — it's the canonical
 > map and stays in sync with the directory tree because human
 > contributors read it from `README.md`. This file is short on
-> purpose: the post-commit hook bumps `Last Updated:` after every
-> commit so an agent can see at a glance whether the snapshot is
-> fresh or stale; the body is manual.
+> purpose: the pre-commit hook bumps `Last Updated:` so the timestamp
+> lands inside the commit (not as drift) and an agent can see at a
+> glance whether the snapshot is fresh or stale; the body is manual.
 
 ## Stack & core
 

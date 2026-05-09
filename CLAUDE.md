@@ -15,7 +15,7 @@ load.
 - @.claude/rules/backend.md — Python (host) + Rust (guest)
   path-specific rules.
 - @.claude/architecture.md — stack snapshot (timestamp bumped by
-  post-commit hook).
+  pre-commit hook so it lands in the commit, not as drift).
 - @.claude/ignorefiles.md — dead code / generated artifacts manifest.
 - @WORK_LOG.md — live "who's working on what" ledger; START/END
   protocol is in AGENTS.md "Agent workflow".

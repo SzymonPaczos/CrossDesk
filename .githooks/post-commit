@@ -1,13 +1,12 @@
 #!/bin/bash
-# Post-commit: bump Last Updated: in .claude/architecture.md and
-# .claude/ignorefiles.md. Cross-platform sed -i (BSD vs GNU).
-# Reports new/deleted files and DEPRECATED markers as info — does
-# not auto-edit anything else.
+# Post-commit: info-only signals. No file mutations — that ended up
+# leaving dirty working trees after every commit (the hook fires AFTER
+# the commit, so any sed -i would land unstaged). Timestamp bumps moved
+# to .githooks/pre-commit; this hook only reports stats.
 
 set -e
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
-ARCH_FILE=".claude/architecture.md"
 IGNORE_FILE=".claude/ignorefiles.md"
 
 GREEN='\033[0;32m'
@@ -17,20 +16,7 @@ NC='\033[0m'
 
 cd "$PROJECT_ROOT"
 
-# Skip cleanly if .claude/ isn't there yet (e.g., first-day repo).
-if [ ! -f "$ARCH_FILE" ] && [ ! -f "$IGNORE_FILE" ]; then
-    exit 0
-fi
-
 echo -e "${BLUE}→ post-commit${NC}"
-
-sed_inplace() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "$@"
-    else
-        sed -i "$@"
-    fi
-}
 
 # --- Info: new files in this commit ---
 NEW_FILES="$(git diff-tree --no-commit-id --name-only -r HEAD --diff-filter=A 2>/dev/null || true)"
@@ -54,10 +40,4 @@ if [ -n "$DEPRECATED" ]; then
     echo -e "${BLUE}  ⓘ DEPRECATED/DEAD markers detected — consider an entry in $IGNORE_FILE${NC}"
 fi
 
-# --- Bump timestamp ---
-TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
-[ -f "$ARCH_FILE" ] && sed_inplace "s/\*\*Last Updated:\*\* .*/\*\*Last Updated:\*\* $TIMESTAMP/" "$ARCH_FILE" 2>/dev/null || true
-[ -f "$IGNORE_FILE" ] && sed_inplace "s/\*\*Last Updated:\*\* .*/\*\*Last Updated:\*\* $TIMESTAMP/" "$IGNORE_FILE" 2>/dev/null || true
-
-echo -e "${GREEN}✓ timestamps bumped to $TIMESTAMP${NC}"
 exit 0

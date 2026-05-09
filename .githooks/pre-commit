@@ -19,6 +19,24 @@ if [ -z "$CHANGED" ]; then
     exit 0
 fi
 
+# --- Bump Last Updated: in .claude/{architecture,ignorefiles}.md and stage them ---
+# Runs in pre-commit so the bumped timestamp lands IN the commit (not as a
+# dangling working-tree change post-commit). Per universals.md §8 limit #2,
+# option (b).
+sed_inplace() {
+    if [ "$(uname)" = "Darwin" ]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
+for f in .claude/architecture.md .claude/ignorefiles.md; do
+    [ -f "$f" ] || continue
+    sed_inplace "s/\*\*Last Updated:\*\* .*/\*\*Last Updated:\*\* $TIMESTAMP/" "$f" 2>/dev/null || true
+    git add "$f" 2>/dev/null || true
+done
+
 # --- Host: mypy --strict (only if a .py under host/ is staged) ---
 if echo "$CHANGED" | grep -qE '^host/.*\.py$'; then
     echo "🔍 mypy --strict host/src/ ..."

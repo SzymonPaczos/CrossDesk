@@ -93,6 +93,68 @@ git diff "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
     | grep -E '^\+.*(TODO|FIXME)' \
     | head -10 || true
 
+# === 5. Supply-chain audit (HARD FAIL when tools available) ==============
+# These run automatically when the corresponding scanner is installed.
+# Skipped silently if not — keeps the hook usable on minimal dev machines.
+# To install everything: see docs/AUDIT_REPORT.md "How to re-run".
+
+if command -v cargo-audit >/dev/null 2>&1; then
+    echo "🦀 cargo audit (guest) ..."
+    (cd "$REPO_ROOT/guest" && cargo audit --quiet --deny warnings 2>&1) || {
+        echo "❌ cargo audit found vulnerabilities in guest workspace."
+        exit 1
+    }
+    echo "🦀 cargo audit (gui) ..."
+    (cd "$REPO_ROOT/gui" && cargo audit --quiet --deny warnings 2>&1) || {
+        echo "❌ cargo audit found vulnerabilities in gui workspace."
+        exit 1
+    }
+fi
+
+if command -v cargo-deny >/dev/null 2>&1; then
+    echo "🚧 cargo deny check (guest) ..."
+    (cd "$REPO_ROOT/guest" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
+        echo "❌ cargo deny rejected guest workspace — re-run for details."
+        exit 1
+    }
+    echo "🚧 cargo deny check (gui) ..."
+    (cd "$REPO_ROOT/gui" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
+        echo "❌ cargo deny rejected gui workspace — re-run for details."
+        exit 1
+    }
+fi
+
+if command -v gitleaks >/dev/null 2>&1; then
+    echo "🔑 gitleaks (git history) ..."
+    # Scan git history rather than worktree — leaves out cached
+    # build artifacts under guest/target/ that contain literal PEM
+    # bytes from the `pem` Rust crate (false positives) but never
+    # land in committed files.
+    if ! gitleaks detect --source "$REPO_ROOT" --no-banner --redact \
+            --exit-code 1 >/dev/null 2>&1; then
+        echo "❌ gitleaks found potential secrets in git history. Re-run:"
+        echo "   gitleaks detect --source . --redact"
+        exit 1
+    fi
+fi
+
+# pip-audit / bandit are slower (~3-5s) and run in CI; skip locally
+# unless explicitly requested via CROSSDESK_FULL_AUDIT=1.
+if [ "${CROSSDESK_FULL_AUDIT:-0}" = "1" ]; then
+    if command -v pip-audit >/dev/null 2>&1; then
+        echo "🐍 pip-audit ..."
+        pip-audit -r <(cd "$REPO_ROOT/host" && .venv/bin/pip freeze 2>/dev/null \
+            | grep -v '^-e \|^crossdesk-host=') --quiet || {
+            echo "❌ pip-audit found vulnerabilities."
+            exit 1
+        }
+    fi
+    if command -v bandit >/dev/null 2>&1; then
+        echo "🐍 bandit (medium+) ..."
+        bandit -r "$REPO_ROOT/host/src" -ll --quiet || exit 1
+    fi
+fi
+
 echo "─────────────────────────────────────────────"
 echo "✅ pre-push checks done."
 exit 0

@@ -243,6 +243,34 @@ Beyond the docstring coverage already noted:
 
 Estimated total to land everything actionable: ~3 hours.
 
+## Continuous enforcement
+
+The audit doesn't have to be a one-shot exercise — every push runs
+the security tier:
+
+- **Local pre-push** (`.githooks/pre-push`): auto-detects and runs
+  `cargo audit`, `cargo deny`, `gitleaks` when those scanners are
+  installed. Hard-fails on any finding. Bandit + pip-audit are
+  opt-in via `CROSSDESK_FULL_AUDIT=1` (adds ~5s).
+
+- **CI** (`.github/workflows/security.yml`): runs on every push to
+  main, every PR, and weekly Monday 06:00 UTC. The matrix:
+  - `gitleaks` — secret scan over full git history.
+  - `pip-audit` (strict) + `bandit` (SARIF → GitHub Security tab).
+  - `cargo audit` + `cargo deny` (guest + gui workspaces).
+  - `semgrep` (security-audit + python + rust + secrets + OWASP top
+    ten ruleset, SARIF upload).
+  - `CodeQL` (Python, security-and-quality query suite, SARIF upload).
+
+  Findings show up inline on PRs via SARIF + the Security tab. The
+  weekly scheduled run catches advisories that drop after we've
+  pushed but the dep graph hasn't changed.
+
+- **Advisory ignores** live in `guest/.cargo/audit.toml`,
+  `gui/.cargo/audit.toml`, and the `[advisories.ignore]` section of
+  each workspace's `deny.toml`. Re-evaluate whenever we bump tonic
+  (currently the source of the rustls-pemfile transitive dep).
+
 ## How to re-run
 
 ```bash

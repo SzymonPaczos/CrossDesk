@@ -1,0 +1,142 @@
+name: Security audit
+
+# Hard gate on every push and PR. Findings flow to the GitHub
+# Security tab via SARIF upload so reviewers see them inline on PRs
+# without having to dig through job logs.
+#
+# Schedule runs once a week so an advisory landing on a dep we
+# already use re-fires the alarm even when nobody pushes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  secrets:
+    name: Secrets scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # gitleaks scans full history
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  python-security:
+    name: Python security (pip-audit + bandit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install scanners
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit bandit
+      - name: Install host package + dev extras
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvirt-dev libsystemd-dev pkg-config
+          pip install -e ".[mock,dev,linux]"
+      - name: pip-audit
+        run: pip-audit --strict
+      - name: bandit (SARIF)
+        run: |
+          pip install bandit-sarif-formatter
+          bandit -r src/crossdesk_host -ll \
+            -f sarif -o ../bandit.sarif || true
+      - name: Upload bandit SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+  rust-security:
+    name: Rust security (cargo audit + cargo deny)
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [guest, gui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Qt6 (gui workspace)
+        if: matrix.workspace == 'gui'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev qt6-declarative-dev cmake ninja-build
+      - name: Install scanners
+        run: |
+          cargo install --quiet cargo-audit cargo-deny
+      - name: cargo audit
+        working-directory: ${{ matrix.workspace }}
+        run: cargo audit --deny warnings
+      - name: cargo deny
+        working-directory: ${{ matrix.workspace }}
+        run: cargo deny check --hide-inclusion-graph
+
+  semgrep:
+    name: Multi-language static analysis (semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: semgrep ci → SARIF
+        env:
+          SEMGREP_RULES: >-
+            p/security-audit
+            p/python
+            p/rust
+            p/secrets
+            p/owasp-top-ten
+        run: |
+          semgrep ci --sarif --output semgrep.sarif || true
+      - name: Upload semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  codeql:
+    name: GitHub CodeQL (Python)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+      # CodeQL auto-builds Python; no manual build step needed.
+      - name: CodeQL analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql-${{ matrix.language }}

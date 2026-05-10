@@ -29,7 +29,7 @@ backends.
 | `ipc/control.ControlServiceServicer.OpenSession` | bidi stream | ⚠️ inherits parent | per-handler child span follow-up — single long-lived stream so the trade-off is "one span per session vs one per ClientFrame" |
 | `ipc/heartbeat.HeartbeatServiceServicer.Channel` | bidi stream | ⚠️ inherits parent | same trade-off as control |
 | `ipc/filesystem.FilesystemServiceServicer.ShareChannel` | bidi stream | ⚠️ inherits parent | same trade-off |
-| `ipc/management.ManagementServiceServicer.*` | unary RPCs | ⚠️ inherits parent | per-call child span makes sense here (each RPC is one short request); add via `with child_span_scope():` at handler entry |
+| `ipc/management.ManagementServiceServicer.*` | unary RPCs | ✅ covered | `child_span_scope()` wraps every handler entry; emits `rpc_start` / `rpc_end` (or `rpc_end_early` on validation/error paths) — see `feat/span-wiring-mgmt` |
 | `ipc/verify_coordinator.VerifyCoordinator.verify` | server-initiated | ✅ covered | mints a fresh root context per call (Stage 2 already wired this; see `verify_credentials_dispatch` log line) |
 | `cli/main.main` | CLI entry | ⚠️ no spans yet | low priority — CLI is short-lived; add only if multi-invocation correlation becomes useful |
 | `daemon.main` | startup | ⚠️ no spans yet | startup is one-shot; not a per-invocation surface |

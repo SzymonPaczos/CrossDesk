@@ -20,6 +20,7 @@ Page {
         Step1Iso {
             wizard: page.wizard
             onNext: stepStack.push(step2Component)
+            onCancel: page.rootStack.pop()
         }
     }
     Component {

@@ -58,6 +58,8 @@ pub mod qobject {
         // Diagnose
         #[qproperty(QStringList, diagnostics)]
         #[qproperty(bool, diagnostics_any_failed)]
+        // Routing — Phase 7 will query daemon; Phase 6 mock always true
+        #[qproperty(bool, has_vm)]
         type ManagerState = super::ManagerStateRust;
 
         #[qinvokable]
@@ -124,6 +126,7 @@ pub struct ManagerStateRust {
 
     diagnostics: QStringList,
     diagnostics_any_failed: bool,
+    has_vm: bool,
 }
 
 impl cxx_qt::Initialize for qobject::ManagerState {
@@ -158,6 +161,7 @@ impl cxx_qt::Initialize for qobject::ManagerState {
         this.as_mut().set_theme(QString::from("system"));
         this.as_mut().set_hidpi_scale(0);
         this.as_mut().set_diagnostics(qsl(&mock_diagnostics()));
+        this.as_mut().set_has_vm(true);
     }
 }
 

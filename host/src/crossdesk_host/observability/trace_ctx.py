@@ -16,9 +16,11 @@ normalise to lowercase so explicit lookups work.
 
 from __future__ import annotations
 
+import contextlib
 import re
 import secrets
 from dataclasses import dataclass
+from typing import Iterator
 
 import structlog
 
@@ -126,3 +128,54 @@ def bind_to_log_context(ctx: TraceContext) -> None:
 
 def clear_log_context() -> None:
     structlog.contextvars.unbind_contextvars("trace_id", "span_id")
+
+
+def _current_bound_context() -> TraceContext:
+    """Read trace_id/span_id back out of structlog's contextvars.
+
+    Returns an invalid (all-zeros) ``TraceContext`` when nothing is
+    bound — the W3C "no upstream trace" sentinel. Callers can detect
+    this via ``ctx.is_valid()``.
+    """
+    bound = structlog.contextvars.get_contextvars()
+    return TraceContext(
+        trace_id=str(bound.get("trace_id", _INVALID_TRACE_ID)) or _INVALID_TRACE_ID,
+        span_id=str(bound.get("span_id", _INVALID_SPAN_ID)) or _INVALID_SPAN_ID,
+    )
+
+
+@contextlib.contextmanager
+def child_span_scope() -> "Iterator[TraceContext]":
+    """Mint a child span from the currently-bound context (or a fresh
+    root if nothing is bound), bind it for the duration of the
+    ``with`` block, and restore the previous context on exit.
+
+    The intended use is at the top of every RPC handler so each handler
+    invocation gets its own ``span_id`` while inheriting the upstream
+    ``trace_id``. This makes per-RPC log lines distinguishable in trace
+    backends without forcing every callsite to thread a context object.
+
+    Example::
+
+        async def OpenSession(self, request_iterator, context):
+            with child_span_scope():
+                logger.info("session_start")
+                ... do work ...
+                logger.info("session_end")
+    """
+    parent = _current_bound_context()
+    child = child_span(parent) if parent.is_valid() else generate_root()
+    # Snapshot existing bound vars so we can restore them on exit.
+    snapshot_trace = structlog.contextvars.get_contextvars().get("trace_id")
+    snapshot_span = structlog.contextvars.get_contextvars().get("span_id")
+    bind_to_log_context(child)
+    try:
+        yield child
+    finally:
+        if snapshot_trace is not None and snapshot_span is not None:
+            structlog.contextvars.bind_contextvars(
+                trace_id=snapshot_trace,
+                span_id=snapshot_span,
+            )
+        else:
+            clear_log_context()

@@ -80,6 +80,9 @@ branch names and the user merges by hand later.
 
 ## Recent
 
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/gui-startup-flow · task: gui-startup-flow · note: User request. Remove landing screen; Manager is always the base; InstallWizard pushed on top when hasVm=false. Step1Iso gets Back button (→ Manager). docs/GUI_DESIGN.md for icon/visual design brief.
+- [2026-05-10 21:15] END · agent: claude-code · branch: feat/gui-startup-flow · task: gui-startup-flow · note: result: success → branch at a733f16 (NOT merged). Main.qml: initialItem=Manager.qml, Component.onCompleted pushes wizard when !hasVm. Step1Iso: signal cancel() + Back button. InstallWizard: onCancel→rootStack.pop(). manager.rs: has_vm bool qproperty. docs/GUI_DESIGN.md: full screen/icon/color brief. Gates: cargo check gui clean.
+
 - [2026-05-10 21:15] START · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: USER-APPROVED proto edit. protocol_version=4 in ClientHello+ServerAccept (control.proto); agent_version=7 in StatusFrame (mgmt.proto); compatibility logic + crossdesk version CLI.
 - [2026-05-10 22:45] END · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: result: success → branch pushed at 36c556f (NOT merged — left for user review). 6 commits: proto+stubs+host-ipc+guest-rs+cli+tests+docs. Gates: mypy --strict 98 files clean; pytest 492/493 (1 pre-existing test_transport_mock failure unrelated); cargo check clean. FOLLOWUPS versioning P0+P2 items ✅ DONE.
 

@@ -465,10 +465,14 @@ version anything — we are above that bar.
   enters `UPGRADING` state during agent swap (suppresses
   HARD_DESTROY for ≤60 s); after new agent's first Hello,
   exits `UPGRADING`.
-- **[P1] Capabilities flag inventory.** Document each capability
-  string (`rail`, `vsock`, `jit-virtiofs`, `credential-rotate`,
-  experimental `exp:*`) with semantics and which side enables it.
-  Lives in `docs/VERSIONING.md` appendix.
+- **[✅ DONE 2026-05-10] Capabilities flag inventory.** Documented in
+  `docs/VERSIONING.md` "Appendix: capability flag inventory":
+  authoritative list of stable flags (`rail.v1`, `virtiofs.jit`),
+  planned flags (`auth.verify-credentials.v1`, `trace.w3c.v1`,
+  `gpu.passthrough.v1`, `looking-glass.v1`), naming convention
+  (`<area>.<version>`, `exp:` prefix for experimental), retirement
+  procedure, and code references for each side's advertise/negotiate
+  point.
 - **[P1] Config schema versioning + migration.** `vm.toml` and
   others get a `schema_version` field. Host reads older versions,
   migrates in-memory; `crossdesk config migrate` writes the

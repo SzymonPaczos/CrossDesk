@@ -49,6 +49,16 @@ infra/certs/pki/
 *.csr
 *.srl
 
+# Code-signing PKI for Authenticode on agent.exe.
+# publisher-root-ca.crt is intentionally NOT ignored (it ships in the
+# guest tools ISO and is needed for autounattend to import into the
+# guest's Trusted Root store). Everything else under pki/ is private:
+# leaking the root key or the leaf PFX lets an attacker sign binaries
+# that look legitimate inside any CrossDesk guest.
+infra/code-signing/pki/*
+!infra/code-signing/pki/publisher-root-ca.crt
+*.pfx
+
 # Claude Code per-project state — per-user / per-machine bits stay
 # ignored (settings.json contains absolute paths like
 # Read(//Users/<you>/.cargo/...)). Shared agent rules

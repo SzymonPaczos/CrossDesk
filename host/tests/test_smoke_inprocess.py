@@ -14,9 +14,20 @@ tonic-vs-grpcio interop all live in this seam.
 
 Skip conditions:
 - Missing PKI material at ``infra/certs/pki``.
-- ``cargo`` not on PATH.
+- ``cargo`` not on PATH (unless ``CROSSDESK_PREBUILT_AGENT`` is set —
+  see below).
 - The smoke build has been disabled via the ``CROSSDESK_SKIP_INPROCESS``
   env var (set by CI lanes that lack the Rust toolchain).
+
+Environment overrides:
+- ``CROSSDESK_PREBUILT_AGENT`` — absolute path to an already-built
+  ``agent`` binary. When set, the ``cargo_built_agent`` fixture
+  validates the file exists and is executable, then returns it
+  directly without invoking ``cargo build``. Used by the
+  ``compat-matrix`` GitHub workflow to point this harness at a
+  prior-tag agent built in a sibling worktree, avoiding a redundant
+  build (saves ~30+s and sidesteps the cargo cache surprise of
+  back-to-back builds in different workspaces).
 """
 
 from __future__ import annotations
@@ -62,8 +73,10 @@ pytestmark = [
         reason="PKI not generated. Run host/run_mock_macos.sh first.",
     ),
     pytest.mark.skipif(
-        shutil.which("cargo") is None,
-        reason="cargo not on PATH; cannot spawn Rust guest.",
+        shutil.which("cargo") is None
+        and not os.environ.get("CROSSDESK_PREBUILT_AGENT"),
+        reason="cargo not on PATH and CROSSDESK_PREBUILT_AGENT unset; "
+        "cannot obtain a Rust guest binary.",
     ),
     pytest.mark.skipif(
         os.environ.get("CROSSDESK_SKIP_INPROCESS") == "1",
@@ -87,11 +100,36 @@ def _stage_agent_pki(tmp_path: Path) -> Path:
 
 @pytest.fixture(scope="module")
 def cargo_built_agent() -> Path:
-    """Pre-build the agent so the first test doesn't pay the compile cost.
+    """Provide a path to a usable Rust agent binary.
 
-    Module-scoped because cargo only needs to run once per pytest
-    session even with multiple test functions in this file.
+    Two paths:
+
+    1. ``CROSSDESK_PREBUILT_AGENT`` env var set — validate the
+       referenced file exists + is executable and return it. Used by
+       the compat-matrix workflow (``.github/workflows/compat-matrix.yml``)
+       so a prior-tag agent built in a sibling worktree is exercised
+       directly instead of triggering a redundant ``cargo build`` here.
+    2. Otherwise — invoke ``cargo build -p agent-svc --features mock
+       --bin agent`` and return the resulting binary path.
+
+    Module-scoped because cargo (when invoked) only needs to run once
+    per pytest session even with multiple test functions in this file.
     """
+    prebuilt = os.environ.get("CROSSDESK_PREBUILT_AGENT")
+    if prebuilt:
+        binary = Path(prebuilt)
+        if not binary.is_file():
+            pytest.fail(
+                f"CROSSDESK_PREBUILT_AGENT={prebuilt!r} does not point at "
+                "an existing file."
+            )
+        if not os.access(binary, os.X_OK):
+            pytest.fail(
+                f"CROSSDESK_PREBUILT_AGENT={prebuilt!r} exists but is not "
+                "executable (chmod +x?)."
+            )
+        return binary
+
     result = subprocess.run(
         ["cargo", "build", "-p", "agent-svc", "--features", "mock", "--bin", "agent"],
         cwd=_GUEST_DIR,

@@ -1,0 +1,135 @@
+# SOME DESCRIPTIVE TITLE.
+# This file is put in the public domain.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: crossdesk-host 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: FROZEN\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:20
+msgid "removed:"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:24
+msgid "skipped:"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:28
+msgid "failed:"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:50
+msgid "unknown credentials action: {action!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:57
+#, python-brace-format
+msgid "no credentials at {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:59
+#, python-brace-format
+msgid "username = {username}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:60
+#, python-brace-format
+msgid "password = {password}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:67
+msgid "no existing credentials; run `crossdesk install` first"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:71
+msgid "host updated for {username!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:74
+msgid ""
+"(guest password change is hardware-gated; run `crossdesk vm credentials "
+"repair` once VM is reachable)"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:83
+msgid "password: "
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:85
+msgid "saved credentials for {username!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:95
+#, python-brace-format
+msgid "path:         {value}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:96
+#, python-brace-format
+msgid "present:      {value}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:96
+#: host/src/crossdesk_host/cli/credentials_cmd.py:97
+msgid "yes"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:96
+#: host/src/crossdesk_host/cli/credentials_cmd.py:97
+msgid "no"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:97
+#, python-brace-format
+msgid "parsable:     {value}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:99
+#, python-brace-format
+msgid "permissions:  {value}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:100
+msgid "NEEDS REPAIR"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:104
+msgid "status:       OK"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:107
+#, python-brace-format
+msgid "status:       FAIL — {hint}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:115
+#, python-brace-format
+msgid "no credentials at {path}; nothing to repair"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:123
+#, python-brace-format
+msgid "vm.toml permissions tightened to 0600 at {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:129
+#, python-brace-format
+msgid "vm.toml permissions already 0600 at {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/credentials_cmd.py:135
+msgid ""
+"note: full guest password re-apply for {username!r} requires a running "
+"daemon and is wired through `display.session_starter` before the next RAIL "
+"spawn."
+msgstr ""

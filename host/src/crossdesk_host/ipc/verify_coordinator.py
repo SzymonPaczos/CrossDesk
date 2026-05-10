@@ -29,8 +29,18 @@ import logging
 import uuid
 from typing import Optional
 
+from crossdesk_host.observability.trace_ctx import (
+    bind_to_log_context,
+    clear_log_context,
+    generate_root,
+)
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
 
+# Stdlib logger (not structlog facade) on purpose: ``configure_logging``
+# replaces the stdlib root handler per call, which means our log lines
+# are routed to the live stream + carry the current contextvars (trace_id).
+# A cached structlog facade bound at import time would keep its old
+# factory pointer — see the test fixture pattern in test_smoke_inprocess.
 logger = logging.getLogger(__name__)
 
 
@@ -99,6 +109,14 @@ class VerifyCoordinator:
     ) -> control_pb2.VerifyCredentialsResult:
         """Send a VerifyCredentials request to the active session and await result.
 
+        A fresh W3C trace context is minted per call and bound to
+        structlog's contextvars so every log line emitted while we wait
+        for the guest's response carries the same ``trace_id`` —
+        operators can grep one ID and see both the host-side request
+        emit and the eventual ``deliver()`` resolution. The ServerFrame
+        itself does not carry traceparent (no proto field for it on
+        this payload variant); this binding correlates host logs only.
+
         Raises:
             NoActiveSession: no guest session is currently registered.
             asyncio.TimeoutError: guest did not respond within ``timeout`` seconds.
@@ -107,6 +125,8 @@ class VerifyCoordinator:
             raise NoActiveSession("no active guest session for verify")
 
         request_id = str(uuid.uuid4())
+        trace_ctx = generate_root()
+        bind_to_log_context(trace_ctx)
         loop = asyncio.get_event_loop()
         future: asyncio.Future[control_pb2.VerifyCredentialsResult] = loop.create_future()
 
@@ -125,13 +145,25 @@ class VerifyCoordinator:
         # by libvirt domain UUID) is a follow-up if/when we host more
         # than one VM concurrently.
         outbound = self._sessions[0]
+        logger.info(
+            "verify_credentials_dispatch request_id=%s timeout_seconds=%s",
+            request_id,
+            timeout,
+        )
         await outbound.put(frame)
 
         try:
-            return await asyncio.wait_for(future, timeout=timeout)
+            result = await asyncio.wait_for(future, timeout=timeout)
+            logger.info(
+                "verify_credentials_resolved request_id=%s status=%s",
+                request_id,
+                int(result.status),
+            )
+            return result
         finally:
             async with self._lock:
                 self._pending.pop(request_id, None)
+            clear_log_context()
 
     def deliver(self, result: control_pb2.VerifyCredentialsResult) -> None:
         """Servicer hook: called when guest sends ClientFrame.verify_credentials_result.

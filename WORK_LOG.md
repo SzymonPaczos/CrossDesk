@@ -81,6 +81,7 @@ branch names and the user merges by hand later.
 <!-- Currently in flight. Move to Recent on completion. -->
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
+- [2026-05-10 18:05] START · agent: claude-code · branch: chore/smoke-fixture-prebuilt-agent · task: smoke-fixture-prebuilt-agent · note: P1 compat-matrix follow-up. Teach `cargo_built_agent` fixture in host/tests/test_smoke_inprocess.py to honour `CROSSDESK_PREBUILT_AGENT` env var: when set, validate file exists+executable and return its Path (skip cargo build); else keep current build behaviour. Add unit test exercising the env-var path with stub binary; document env var in module docstring; update .github/workflows/compat-matrix.yml comment to reference this commit. Worktree at .claude/worktrees/agent-adcc2892e7e881b27 — push branch only, no merge.
 
 ## Recent
 

@@ -78,11 +78,13 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
 - [2026-05-10 21:00] START · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: P1 FOLLOWUPS:1133-1142. `crossdesk logs` CLI: host (journal/file), libvirt, freerdp sources; --since, --follow, --component, --json, --lines; interleaved by timestamp; fully mocked tests; guest deferred to P2.
 - [2026-05-10 21:05] START · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: New host/src/crossdesk_host/config/peripherals.py — Pydantic PeripheralsConfig with audio/clipboard/mic/printer/smartcard/usb fields, to_freerdp_flags(), to_libvirt_xml_fragments(), load_peripherals_config(); 12 tests.
 
 ## Recent
+
+- [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
+- [2026-05-10 20:35] END · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: result: success → branch pushed at 65132f9 (NOT merged — left for user review). All 7 pages already qsTr()-clean; no QML edits required. FOLLOWUPS line 618 updated PARTIAL→DONE.
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
 - [2026-05-10 00:08] END · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: result: success → merged as c3b7707. docs/DISTRIBUTION.md with 5-format packaging map + dual-layer update flow; AGENTS.md nav row; PACKAGING.md cross-ref.

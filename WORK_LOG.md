@@ -78,12 +78,14 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-10 21:00] START · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: P1 FOLLOWUPS:1133-1142. `crossdesk logs` CLI: host (journal/file), libvirt, freerdp sources; --since, --follow, --component, --json, --lines; interleaved by timestamp; fully mocked tests; guest deferred to P2.
 - [2026-05-10 21:05] START · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: New host/src/crossdesk_host/config/peripherals.py — Pydantic PeripheralsConfig with audio/clipboard/mic/printer/smartcard/usb fields, to_freerdp_flags(), to_libvirt_xml_fragments(), load_peripherals_config(); 12 tests.
 - [2026-05-10 21:00] START · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: P0 performance benchmark harness. Add bench_N1_1_cold_launch, bench_N1_2_suspend, bench_N1_6_recovery; extend bench_check.py with --baseline/--results CLI; update perf-baselines.json; add microbench CI job.
 - [2026-05-10 21:15] START · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: USER-APPROVED proto edit. protocol_version=4 in ClientHello+ServerAccept (control.proto); agent_version=7 in StatusFrame (mgmt.proto); compatibility logic + crossdesk version CLI.
 
 ## Recent
+
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: P1 FOLLOWUPS:1133-1142. `crossdesk logs` CLI: host (journal/file), libvirt, freerdp sources; --since, --follow, --component, --json, --lines; interleaved by timestamp; fully mocked tests; guest deferred to P2.
+- [2026-05-10 21:45] END · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: result: success → branch pushed at ce7c5de (NOT merged — left for user review per worktree-agent protocol). logs_cmd.py: host (journalctl primary / JSONL fallback), libvirt, FreeRDP sources; --since, --follow (asyncio queue), --component, --json, --lines; all-sources-unavailable exits 0; --component guest warns P2. 14 tests all mocked; FOLLOWUPS:1133-1142 marked DONE/PARTIAL. Gates: mypy --strict 98 files clean; pytest 495/495 + 12 skipped.
 
 - [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
 - [2026-05-10 20:35] END · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: result: success → branch pushed at 65132f9 (NOT merged — left for user review). All 7 pages already qsTr()-clean; no QML edits required. FOLLOWUPS line 618 updated PARTIAL→DONE.

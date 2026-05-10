@@ -48,6 +48,7 @@ class AuthContext(_message.Message):
     PEER_CERT_FINGERPRINT_FIELD_NUMBER: _builtins.int
     STREAM_NONCE_FIELD_NUMBER: _builtins.int
     SEQUENCE_FIELD_NUMBER: _builtins.int
+    TRACEPARENT_FIELD_NUMBER: _builtins.int
     peer_cert_fingerprint: _builtins.str
     """SHA-256 leaf certyfikatu mTLS peera, lowercase hex, bez separatorów.
     Odbiorca MUSI porównać z fingerprintem zaobserwowanym na warstwie TLS
@@ -62,16 +63,24 @@ class AuthContext(_message.Message):
     """Ściśle monotoniczny licznik per-kierunek (klient i serwer mają osobne).
     Nadawca inkrementuje przed wysłaniem; odbiorca wymusza ścisłe +1.
     """
+    traceparent: _builtins.str
+    """W3C traceparent header propagated across the host↔guest boundary so
+    that a single trace_id ties together host-side dispatch logs and
+    guest-side handler logs. Format: "00-<32hex>-<16hex>-<2hex>" (version 0).
+    Optional: receivers must tolerate an absent or malformed value — they
+    generate a fresh root context rather than rejecting the frame.
+    """
     def __init__(
         self,
         *,
         peer_cert_fingerprint: _builtins.str = ...,
         stream_nonce: _builtins.bytes = ...,
         sequence: _builtins.int = ...,
+        traceparent: _builtins.str = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["peer_cert_fingerprint", b"peer_cert_fingerprint", "sequence", b"sequence", "stream_nonce", b"stream_nonce"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["peer_cert_fingerprint", b"peer_cert_fingerprint", "sequence", b"sequence", "stream_nonce", b"stream_nonce", "traceparent", b"traceparent"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

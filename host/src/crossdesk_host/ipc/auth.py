@@ -7,6 +7,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
 from crossdesk_host.observability.metrics import REGISTRY, MetricNames
+from crossdesk_host.observability.trace_ctx import (
+    bind_to_log_context,
+    generate_root,
+    parse_traceparent,
+)
 from crossdesk_host.proto.crossdesk.v1 import common_pb2
 
 logger = logging.getLogger(__name__)
@@ -98,6 +103,15 @@ class AuthValidator:
                 )
 
             self._active_streams[nonce] = seq + 1
+
+        # Propagate W3C trace context from the guest's frame into
+        # structlog contextvars so subsequent log lines on this asyncio
+        # task carry the guest's trace_id without callers threading it.
+        # A missing or malformed header falls back to a fresh root rather
+        # than rejecting the frame — propagation must never break auth.
+        raw_tp = request_auth_context.traceparent
+        ctx = parse_traceparent(raw_tp) if raw_tp else None
+        bind_to_log_context(ctx if ctx is not None else generate_root())
 
     def remove_stream(self, nonce: bytes) -> None:
         self._active_streams.pop(nonce, None)

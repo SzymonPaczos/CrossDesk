@@ -1,0 +1,8 @@
+# Placeholder. Polish translations land here as crossdesk-host.po,
+# generated initially via:
+#   msginit --locale=pl --input=../../crossdesk-host.pot \
+#           --output=crossdesk-host.po
+# and refreshed via:
+#   msgmerge --update crossdesk-host.po ../../crossdesk-host.pot
+#
+# See ../../README.md for the full workflow.

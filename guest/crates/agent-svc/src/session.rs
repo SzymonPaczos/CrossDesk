@@ -9,6 +9,7 @@ use proto::crossdesk::v1::{
 };
 use proto::crossdesk::v1::client_frame::Payload;
 
+use crate::credentials::handle_verify_credentials;
 use crate::host_uuid::read_host_domain_uuid;
 
 pub async fn run_control_session<T>(
@@ -67,7 +68,7 @@ where
     while let Some(msg_result) = response_stream.message().await.transpose() {
         match msg_result {
             Ok(server_frame) => {
-                handle_server_frame(server_frame);
+                handle_server_frame(server_frame, &tx, &auth).await;
             }
             Err(e) => {
                 error!("Control Session stream error: {:?}", e);
@@ -80,21 +81,43 @@ where
     Ok(())
 }
 
-fn handle_server_frame(frame: ServerFrame) {
-    if let Some(payload) = frame.payload {
-        match payload {
-            proto::crossdesk::v1::server_frame::Payload::Accept(accept) => {
-                info!("Server Accepted session: {:?}", accept.negotiated_features);
+async fn handle_server_frame(
+    frame: ServerFrame,
+    tx: &mpsc::Sender<ClientFrame>,
+    auth: &AuthCarrier,
+) {
+    let Some(payload) = frame.payload else { return };
+    match payload {
+        proto::crossdesk::v1::server_frame::Payload::Accept(accept) => {
+            info!("Server Accepted session: {:?}", accept.negotiated_features);
+        }
+        proto::crossdesk::v1::server_frame::Payload::AuthFailure(err) => {
+            error!("Auth Failure: {:?}", err);
+        }
+        proto::crossdesk::v1::server_frame::Payload::Launched(launched) => {
+            info!("App Launched, PID: {}", launched.process_id);
+        }
+        proto::crossdesk::v1::server_frame::Payload::VerifyCredentials(req) => {
+            // Synchronous LogonUserW call (mock or real wg cfg) — szybkie
+            // (~ms na real Windows; deterministic na mocku). Logujemy
+            // tylko status + request_id; password nigdy nie trafia do logów.
+            let result = handle_verify_credentials(&req);
+            info!(
+                request_id = %req.request_id,
+                status = result.status,
+                "VerifyCredentials handled",
+            );
+            let response = ClientFrame {
+                auth: Some(auth.next()),
+                sent_at: None,
+                payload: Some(Payload::VerifyCredentialsResult(result)),
+            };
+            if let Err(e) = tx.send(response).await {
+                error!("Failed to send VerifyCredentialsResult: {:?}", e);
             }
-            proto::crossdesk::v1::server_frame::Payload::AuthFailure(err) => {
-                error!("Auth Failure: {:?}", err);
-            }
-            proto::crossdesk::v1::server_frame::Payload::Launched(launched) => {
-                info!("App Launched, PID: {}", launched.process_id);
-            }
-            _ => {
-                warn!("Unhandled ServerFrame payload");
-            }
+        }
+        _ => {
+            warn!("Unhandled ServerFrame payload");
         }
     }
 }

@@ -68,6 +68,7 @@ message ClientFrame {
     AppCloseRequest close = 13;
     SessionTerminate terminate = 14;
     RailWindowEvent rail_event = 15;
+    VerifyCredentialsResult verify_credentials_result = 16;
   }
 }
 
@@ -135,6 +136,7 @@ message ServerFrame {
     AppLaunchFailed launch_failed = 13;
     AppLifecycleEvent app_event = 14;
     SessionClosed closed = 16;
+    VerifyCredentialsRequest verify_credentials = 17;
   }
 }
 
@@ -220,4 +222,35 @@ message Rect {
 message SessionClosed {
   SessionTerminate.Reason reason = 1;
   string detail = 2;
+}
+
+// -----------------------------------------------------------------------------
+// Auth health-check (DEC-0001 Windows password lifecycle).
+// Host inicjuje request przed każdym RAIL launch; Guest woła LogonUserW
+// (LOGON32_LOGON_NETWORK — najtańsze, nie tworzy desktopu) i odpowiada.
+// Plaintext password w ramce jest akceptowalne, bo: (a) mTLS na kanale,
+// (b) per-frame AuthContext (fingerprint+nonce+seq), (c) AF_VSOCK nie
+// wychodzi poza host. request_id koreluje request z odpowiedzią; gdyby
+// kiedyś było wiele in-flight verifies, host musi je rozróżnić.
+// -----------------------------------------------------------------------------
+message VerifyCredentialsRequest {
+  string request_id = 1;        // UUID; koreluje z VerifyCredentialsResult
+  string username = 2;          // np. "crossdesk" — z ~/.config/crossdesk/vm.toml
+  string password = 3;          // plaintext na czas RPC
+  string domain = 4;            // optional; "" lub "." = local account
+}
+
+message VerifyCredentialsResult {
+  string request_id = 1;        // odbicie z requesta
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_OK = 1;
+    STATUS_FAIL_BAD_CREDENTIALS = 2;   // ERROR_LOGON_FAILURE
+    STATUS_FAIL_ACCOUNT_LOCKED = 3;    // ERROR_ACCOUNT_LOCKED_OUT
+    STATUS_FAIL_PASSWORD_EXPIRED = 4;  // ERROR_PASSWORD_EXPIRED / MUST_CHANGE
+    STATUS_UNAVAILABLE = 5;            // guest LSA niedostępne / agent error
+  }
+  Status status = 2;
+  string detail = 3;            // human-readable; bezpieczne do logowania
+  uint32 win32_error = 4;       // surowy GetLastError dla diagnostyki
 }

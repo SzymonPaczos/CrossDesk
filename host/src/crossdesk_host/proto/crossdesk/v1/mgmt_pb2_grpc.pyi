@@ -18,9 +18,7 @@ else:
 
 _T = _typing.TypeVar("_T")
 
-class _MaybeAsyncIterator(
-    _abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta
-): ...
+class _MaybeAsyncIterator(_abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta): ...
 
 class _ServicerContext(_grpc.ServicerContext, _aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
@@ -60,39 +58,25 @@ class ManagementServiceStub:
     curated + user-added tiers; ``ListDiscoveredApps`` returns the
     guest-side registry-scan result.
     """
-    ListDiscoveredApps: _grpc.UnaryStreamMultiCallable[
-        _mgmt_pb2.Empty, _mgmt_pb2.AppEntry
-    ]
+    ListDiscoveredApps: _grpc.UnaryStreamMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.AppEntry]
     ListMounts: _grpc.UnaryStreamMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.MountEntry]
     """Active JIT VirtioFS shares. Stream so the GUI's Storage pane sees
     mounts appear and disappear in real time.
     """
-    Launch: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.LaunchRequest, _mgmt_pb2.LaunchResponse
-    ]
+    Launch: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.LaunchRequest, _mgmt_pb2.LaunchResponse]
     """Imperative actions."""
     Suspend: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.ActionAck]
     Resume: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.ActionAck]
     HardDestroy: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.ActionAck]
-    RotateCredentials: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.Empty, _mgmt_pb2.CredentialsResponse
-    ]
-    RunDiagnostics: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.Empty, _mgmt_pb2.DiagnosticsReport
-    ]
-    ExportDiagnosticBundle: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.Empty, _mgmt_pb2.DiagnosticBundle
-    ]
-    UpdateSettings: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.SettingsRequest, _mgmt_pb2.SettingsResponse
-    ]
+    RotateCredentials: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.CredentialsResponse]
+    RunDiagnostics: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.DiagnosticsReport]
+    ExportDiagnosticBundle: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.DiagnosticBundle]
+    UpdateSettings: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.SettingsRequest, _mgmt_pb2.SettingsResponse]
     """Settings round-trip: GUI sends the desired settings, daemon writes
     them to disk, replies with the resulting state (so the GUI can
     see what was clamped/normalised).
     """
-    ReadSettings: _grpc.UnaryUnaryMultiCallable[
-        _mgmt_pb2.Empty, _mgmt_pb2.SettingsResponse
-    ]
+    ReadSettings: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.SettingsResponse]
 
 @_typing.type_check_only
 class ManagementServiceAsyncStub(ManagementServiceStub):
@@ -165,9 +149,7 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _abc.Iterator[_mgmt_pb2.StatusFrame], _abc.AsyncIterator[_mgmt_pb2.StatusFrame]
-    ]:
+    ) -> _typing.Union[_abc.Iterator[_mgmt_pb2.StatusFrame], _abc.AsyncIterator[_mgmt_pb2.StatusFrame]]:
         """Streaming overview of the host's current state. The GUI subscribes
         once when it opens; the daemon pushes a new frame on every state
         change (FSM transition, mount appearing/disappearing, RAIL window
@@ -180,9 +162,7 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _abc.Iterator[_mgmt_pb2.AppEntry], _abc.AsyncIterator[_mgmt_pb2.AppEntry]
-    ]:
+    ) -> _typing.Union[_abc.Iterator[_mgmt_pb2.AppEntry], _abc.AsyncIterator[_mgmt_pb2.AppEntry]]:
         """List apps the host is willing to launch. ``ListApps`` returns the
         curated + user-added tiers; ``ListDiscoveredApps`` returns the
         guest-side registry-scan result.
@@ -193,17 +173,14 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _abc.Iterator[_mgmt_pb2.AppEntry], _abc.AsyncIterator[_mgmt_pb2.AppEntry]
-    ]: ...
+    ) -> _typing.Union[_abc.Iterator[_mgmt_pb2.AppEntry], _abc.AsyncIterator[_mgmt_pb2.AppEntry]]: ...
+
     @_abc_1.abstractmethod
     def ListMounts(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _abc.Iterator[_mgmt_pb2.MountEntry], _abc.AsyncIterator[_mgmt_pb2.MountEntry]
-    ]:
+    ) -> _typing.Union[_abc.Iterator[_mgmt_pb2.MountEntry], _abc.AsyncIterator[_mgmt_pb2.MountEntry]]:
         """Active JIT VirtioFS shares. Stream so the GUI's Storage pane sees
         mounts appear and disappear in real time.
         """
@@ -213,9 +190,7 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request: _mgmt_pb2.LaunchRequest,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.LaunchResponse, _abc.Awaitable[_mgmt_pb2.LaunchResponse]
-    ]:
+    ) -> _typing.Union[_mgmt_pb2.LaunchResponse, _abc.Awaitable[_mgmt_pb2.LaunchResponse]]:
         """Imperative actions."""
 
     @_abc_1.abstractmethod
@@ -224,50 +199,48 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
     ) -> _typing.Union[_mgmt_pb2.ActionAck, _abc.Awaitable[_mgmt_pb2.ActionAck]]: ...
+
     @_abc_1.abstractmethod
     def Resume(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
     ) -> _typing.Union[_mgmt_pb2.ActionAck, _abc.Awaitable[_mgmt_pb2.ActionAck]]: ...
+
     @_abc_1.abstractmethod
     def HardDestroy(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
     ) -> _typing.Union[_mgmt_pb2.ActionAck, _abc.Awaitable[_mgmt_pb2.ActionAck]]: ...
+
     @_abc_1.abstractmethod
     def RotateCredentials(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.CredentialsResponse, _abc.Awaitable[_mgmt_pb2.CredentialsResponse]
-    ]: ...
+    ) -> _typing.Union[_mgmt_pb2.CredentialsResponse, _abc.Awaitable[_mgmt_pb2.CredentialsResponse]]: ...
+
     @_abc_1.abstractmethod
     def RunDiagnostics(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.DiagnosticsReport, _abc.Awaitable[_mgmt_pb2.DiagnosticsReport]
-    ]: ...
+    ) -> _typing.Union[_mgmt_pb2.DiagnosticsReport, _abc.Awaitable[_mgmt_pb2.DiagnosticsReport]]: ...
+
     @_abc_1.abstractmethod
     def ExportDiagnosticBundle(
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.DiagnosticBundle, _abc.Awaitable[_mgmt_pb2.DiagnosticBundle]
-    ]: ...
+    ) -> _typing.Union[_mgmt_pb2.DiagnosticBundle, _abc.Awaitable[_mgmt_pb2.DiagnosticBundle]]: ...
+
     @_abc_1.abstractmethod
     def UpdateSettings(
         self,
         request: _mgmt_pb2.SettingsRequest,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.SettingsResponse, _abc.Awaitable[_mgmt_pb2.SettingsResponse]
-    ]:
+    ) -> _typing.Union[_mgmt_pb2.SettingsResponse, _abc.Awaitable[_mgmt_pb2.SettingsResponse]]:
         """Settings round-trip: GUI sends the desired settings, daemon writes
         them to disk, replies with the resulting state (so the GUI can
         see what was clamped/normalised).
@@ -278,11 +251,6 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _mgmt_pb2.SettingsResponse, _abc.Awaitable[_mgmt_pb2.SettingsResponse]
-    ]: ...
+    ) -> _typing.Union[_mgmt_pb2.SettingsResponse, _abc.Awaitable[_mgmt_pb2.SettingsResponse]]: ...
 
-def add_ManagementServiceServicer_to_server(
-    servicer: ManagementServiceServicer,
-    server: _typing.Union[_grpc.Server, _aio.Server],
-) -> None: ...
+def add_ManagementServiceServicer_to_server(servicer: ManagementServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

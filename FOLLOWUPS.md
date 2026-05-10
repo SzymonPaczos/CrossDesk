@@ -1130,16 +1130,12 @@ feeling.
   Confirms with the user before any destructive action; `--force`
   skips confirmation. Critical for trust — users won't try CrossDesk
   if they fear they can't get rid of it cleanly.
-- **[P1] `crossdesk logs` — log aggregation.** Aggregates host daemon
-  logs (systemd journal entries for the user service, fallback to
-  rotating file under `~/.local/state/crossdesk/logs/`), libvirt domain
-  logs (`/var/log/libvirt/qemu/<domain>.log`), guest agent logs
-  (pulled via gRPC from the agent's structured-log buffer), and
-  FreeRDP logs (under `~/.config/freerdp/`). Output interleaved by
-  timestamp. `--follow` for live tail; `--since 10m` for a time
-  window; `--component host|guest|libvirt|freerdp` to narrow. When
-  users hit a problem, "paste output of `crossdesk logs --since 10m`"
-  is what we ask in issue templates.
+- **[✅ DONE 2026-05-10 / 🚧 PARTIAL — guest deferred] `crossdesk logs` — log aggregation.**
+  Host (journalctl primary, JSONL file fallback), libvirt plain-text, FreeRDP log sources
+  implemented. `--since`, `--follow`, `--component`, `--json`, `--lines` flags wired.
+  Interleaved by timestamp. `--component guest` warns "not yet implemented (P2 scope)".
+  Guest gRPC log pull is P2 (no in-process buffer RPC yet). 14 tests; mypy --strict clean.
+  Implemented in `host/src/crossdesk_host/cli/logs_cmd.py`.
 - **[P1] First-launch experience after `crossdesk install` succeeds.**
   Send a desktop notification ("CrossDesk is ready — run
   `crossdesk launch notepad` to test") via

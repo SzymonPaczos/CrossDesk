@@ -60,10 +60,18 @@ def _mgmt_socket_path() -> Path:
 
 
 async def main() -> None:
-    base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    ca_cert = (base_dir / "infra" / "certs" / "pki" / "ca.crt").read_bytes()
-    host_cert = (base_dir / "infra" / "certs" / "pki" / "host.crt").read_bytes()
-    host_key = (base_dir / "infra" / "certs" / "pki" / "host.key").read_bytes()
+    # Single typed entry point for every operator-facing knob (paths,
+    # ports, mTLS material, peripherals). Defaults match the historical
+    # hardcoded values in this file so a missing config.toml keeps
+    # behaviour identical; an operator that wants to override anything
+    # drops a ``~/.config/crossdesk/config.toml`` and restarts.
+    from crossdesk_host.config import load_from_toml
+
+    cfg = load_from_toml()
+
+    ca_cert = cfg.paths.ca_cert.read_bytes()
+    host_cert = cfg.paths.host_cert.read_bytes()
+    host_key = cfg.paths.host_key.read_bytes()
 
     auth_validator = AuthValidator()
     libvirt_ctl = LibvirtControllerMock()
@@ -74,7 +82,7 @@ async def main() -> None:
         ca_cert,
         host_cert,
         host_key,
-        port=50051,
+        port=cfg.transport.vsock_port,
         interceptors=[TraceContextInterceptor()],
     )
 

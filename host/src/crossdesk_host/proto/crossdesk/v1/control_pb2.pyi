@@ -37,6 +37,7 @@ class ClientFrame(_message.Message):
     CLOSE_FIELD_NUMBER: _builtins.int
     TERMINATE_FIELD_NUMBER: _builtins.int
     RAIL_EVENT_FIELD_NUMBER: _builtins.int
+    VERIFY_CREDENTIALS_RESULT_FIELD_NUMBER: _builtins.int
     @_builtins.property
     def auth(self) -> _common_pb2.AuthContext: ...
     @_builtins.property
@@ -53,6 +54,8 @@ class ClientFrame(_message.Message):
     def terminate(self) -> Global___SessionTerminate: ...
     @_builtins.property
     def rail_event(self) -> Global___RailWindowEvent: ...
+    @_builtins.property
+    def verify_credentials_result(self) -> Global___VerifyCredentialsResult: ...
     def __init__(
         self,
         *,
@@ -64,58 +67,15 @@ class ClientFrame(_message.Message):
         close: Global___AppCloseRequest | None = ...,
         terminate: Global___SessionTerminate | None = ...,
         rail_event: Global___RailWindowEvent | None = ...,
+        verify_credentials_result: Global___VerifyCredentialsResult | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "close",
-        b"close",
-        "focus",
-        b"focus",
-        "hello",
-        b"hello",
-        "launch",
-        b"launch",
-        "payload",
-        b"payload",
-        "rail_event",
-        b"rail_event",
-        "sent_at",
-        b"sent_at",
-        "terminate",
-        b"terminate",
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "close", b"close", "focus", b"focus", "hello", b"hello", "launch", b"launch", "payload", b"payload", "rail_event", b"rail_event", "sent_at", b"sent_at", "terminate", b"terminate", "verify_credentials_result", b"verify_credentials_result"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "close",
-        b"close",
-        "focus",
-        b"focus",
-        "hello",
-        b"hello",
-        "launch",
-        b"launch",
-        "payload",
-        b"payload",
-        "rail_event",
-        b"rail_event",
-        "sent_at",
-        b"sent_at",
-        "terminate",
-        b"terminate",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "close", b"close", "focus", b"focus", "hello", b"hello", "launch", b"launch", "payload", b"payload", "rail_event", b"rail_event", "sent_at", b"sent_at", "terminate", b"terminate", "verify_credentials_result", b"verify_credentials_result"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
-        "hello", "launch", "focus", "close", "terminate", "rail_event"
-    ]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
-        "payload", b"payload"
-    ]  # noqa: Y015
-    def WhichOneof(
-        self, oneof_group: _WhichOneofArgType_payload
-    ) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["hello", "launch", "focus", "close", "terminate", "rail_event", "verify_credentials_result"]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
 
 Global___ClientFrame: _TypeAlias = ClientFrame  # noqa: Y015
 
@@ -132,9 +92,7 @@ class ClientHello(_message.Message):
     SMBIOS-injected UUID, żeby wykryć live-migration / host swap.
     """
     @_builtins.property
-    def supported_features(
-        self,
-    ) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
+    def supported_features(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
         """Capability advertisement; Guest odpowiada wynegocjowanym podzbiorem.
         np. "rail.v1", "virtiofs.jit"
         """
@@ -148,14 +106,7 @@ class ClientHello(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "host_domain_uuid",
-        b"host_domain_uuid",
-        "host_version",
-        b"host_version",
-        "supported_features",
-        b"supported_features",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["host_domain_uuid", b"host_domain_uuid", "host_version", b"host_version", "supported_features", b"supported_features"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -192,18 +143,7 @@ class AppLaunchRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "argv",
-        b"argv",
-        "executable_guest_path",
-        b"executable_guest_path",
-        "request_id",
-        b"request_id",
-        "required_share_id",
-        b"required_share_id",
-        "working_directory",
-        b"working_directory",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["argv", b"argv", "executable_guest_path", b"executable_guest_path", "request_id", b"request_id", "required_share_id", b"required_share_id", "working_directory", b"working_directory"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -226,9 +166,7 @@ class AppFocusRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "request_id", b"request_id", "window_id", b"window_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["request_id", b"request_id", "window_id", b"window_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -254,9 +192,7 @@ class AppCloseRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "force", b"force", "request_id", b"request_id", "window_id", b"window_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["force", b"force", "request_id", b"request_id", "window_id", b"window_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -270,10 +206,7 @@ class SessionTerminate(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _ReasonEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[SessionTerminate._Reason.ValueType],
-        _builtins.type,
-    ):
+    class _ReasonEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[SessionTerminate._Reason.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         REASON_UNSPECIFIED: SessionTerminate._Reason.ValueType  # 0
         REASON_USER_QUIT: SessionTerminate._Reason.ValueType  # 1
@@ -300,9 +233,7 @@ class SessionTerminate(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "detail", b"detail", "reason", b"reason"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "reason", b"reason"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -325,6 +256,7 @@ class ServerFrame(_message.Message):
     LAUNCH_FAILED_FIELD_NUMBER: _builtins.int
     APP_EVENT_FIELD_NUMBER: _builtins.int
     CLOSED_FIELD_NUMBER: _builtins.int
+    VERIFY_CREDENTIALS_FIELD_NUMBER: _builtins.int
     @_builtins.property
     def auth(self) -> _common_pb2.AuthContext: ...
     @_builtins.property
@@ -341,6 +273,8 @@ class ServerFrame(_message.Message):
     def app_event(self) -> Global___AppLifecycleEvent: ...
     @_builtins.property
     def closed(self) -> Global___SessionClosed: ...
+    @_builtins.property
+    def verify_credentials(self) -> Global___VerifyCredentialsRequest: ...
     def __init__(
         self,
         *,
@@ -352,58 +286,15 @@ class ServerFrame(_message.Message):
         launch_failed: Global___AppLaunchFailed | None = ...,
         app_event: Global___AppLifecycleEvent | None = ...,
         closed: Global___SessionClosed | None = ...,
+        verify_credentials: Global___VerifyCredentialsRequest | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "accept",
-        b"accept",
-        "app_event",
-        b"app_event",
-        "auth",
-        b"auth",
-        "auth_failure",
-        b"auth_failure",
-        "closed",
-        b"closed",
-        "launch_failed",
-        b"launch_failed",
-        "launched",
-        b"launched",
-        "payload",
-        b"payload",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["accept", b"accept", "app_event", b"app_event", "auth", b"auth", "auth_failure", b"auth_failure", "closed", b"closed", "launch_failed", b"launch_failed", "launched", b"launched", "payload", b"payload", "sent_at", b"sent_at", "verify_credentials", b"verify_credentials"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "accept",
-        b"accept",
-        "app_event",
-        b"app_event",
-        "auth",
-        b"auth",
-        "auth_failure",
-        b"auth_failure",
-        "closed",
-        b"closed",
-        "launch_failed",
-        b"launch_failed",
-        "launched",
-        b"launched",
-        "payload",
-        b"payload",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["accept", b"accept", "app_event", b"app_event", "auth", b"auth", "auth_failure", b"auth_failure", "closed", b"closed", "launch_failed", b"launch_failed", "launched", b"launched", "payload", b"payload", "sent_at", b"sent_at", "verify_credentials", b"verify_credentials"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
-        "accept", "auth_failure", "launched", "launch_failed", "app_event", "closed"
-    ]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
-        "payload", b"payload"
-    ]  # noqa: Y015
-    def WhichOneof(
-        self, oneof_group: _WhichOneofArgType_payload
-    ) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["accept", "auth_failure", "launched", "launch_failed", "app_event", "closed", "verify_credentials"]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
 
 Global___ServerFrame: _TypeAlias = ServerFrame  # noqa: Y015
 
@@ -418,9 +309,7 @@ class ServerAccept(_message.Message):
     guest_smbios_uuid: _builtins.str
     """p. ClientHello.host_domain_uuid"""
     @_builtins.property
-    def negotiated_features(
-        self,
-    ) -> _containers.RepeatedScalarFieldContainer[_builtins.str]: ...
+    def negotiated_features(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]: ...
     def __init__(
         self,
         *,
@@ -430,14 +319,7 @@ class ServerAccept(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "guest_smbios_uuid",
-        b"guest_smbios_uuid",
-        "guest_version",
-        b"guest_version",
-        "negotiated_features",
-        b"negotiated_features",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["guest_smbios_uuid", b"guest_smbios_uuid", "guest_version", b"guest_version", "negotiated_features", b"negotiated_features"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -451,9 +333,7 @@ class AuthFailure(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _CodeEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[AuthFailure._Code.ValueType], _builtins.type
-    ):
+    class _CodeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[AuthFailure._Code.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         CODE_UNSPECIFIED: AuthFailure._Code.ValueType  # 0
         CODE_FINGERPRINT_MISMATCH: AuthFailure._Code.ValueType  # 1
@@ -482,9 +362,7 @@ class AuthFailure(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "code", b"code", "detail", b"detail"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["code", b"code", "detail", b"detail"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -506,9 +384,7 @@ class AppLaunched(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "process_id", b"process_id", "request_id", b"request_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["process_id", b"process_id", "request_id", b"request_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -535,9 +411,7 @@ class AppLaunchFailed(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "error", b"error", "ntstatus", b"ntstatus", "request_id", b"request_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["error", b"error", "ntstatus", b"ntstatus", "request_id", b"request_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -551,10 +425,7 @@ class AppLifecycleEvent(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[AppLifecycleEvent._Kind.ValueType],
-        _builtins.type,
-    ):
+    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[AppLifecycleEvent._Kind.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: AppLifecycleEvent._Kind.ValueType  # 0
         KIND_STARTED: AppLifecycleEvent._Kind.ValueType  # 1
@@ -582,9 +453,7 @@ class AppLifecycleEvent(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "exit_code", b"exit_code", "kind", b"kind", "process_id", b"process_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["exit_code", b"exit_code", "kind", b"kind", "process_id", b"process_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -605,10 +474,7 @@ class RailWindowEvent(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[RailWindowEvent._Kind.ValueType],
-        _builtins.type,
-    ):
+    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[RailWindowEvent._Kind.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: RailWindowEvent._Kind.ValueType  # 0
         KIND_CREATED: RailWindowEvent._Kind.ValueType  # 1
@@ -664,24 +530,9 @@ class RailWindowEvent(_message.Message):
         title: _builtins.str = ...,
         icon_png: _builtins.bytes = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "geometry", b"geometry"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["geometry", b"geometry"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "geometry",
-        b"geometry",
-        "icon_png",
-        b"icon_png",
-        "kind",
-        b"kind",
-        "process_id",
-        b"process_id",
-        "title",
-        b"title",
-        "window_id",
-        b"window_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["geometry", b"geometry", "icon_png", b"icon_png", "kind", b"kind", "process_id", b"process_id", "title", b"title", "window_id", b"window_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -709,9 +560,7 @@ class Rect(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "height", b"height", "width", b"width", "x", b"x", "y", b"y"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["height", b"height", "width", b"width", "x", b"x", "y", b"y"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -733,10 +582,111 @@ class SessionClosed(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "detail", b"detail", "reason", b"reason"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "reason", b"reason"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
 Global___SessionClosed: _TypeAlias = SessionClosed  # noqa: Y015
+
+@_typing.final
+class VerifyCredentialsRequest(_message.Message):
+    """-----------------------------------------------------------------------------
+    Auth health-check (DEC-0001 Windows password lifecycle).
+    Host inicjuje request przed każdym RAIL launch; Guest woła LogonUserW
+    (LOGON32_LOGON_NETWORK — najtańsze, nie tworzy desktopu) i odpowiada.
+    Plaintext password w ramce jest akceptowalne, bo: (a) mTLS na kanale,
+    (b) per-frame AuthContext (fingerprint+nonce+seq), (c) AF_VSOCK nie
+    wychodzi poza host. request_id koreluje request z odpowiedzią; gdyby
+    kiedyś było wiele in-flight verifies, host musi je rozróżnić.
+    -----------------------------------------------------------------------------
+    """
+
+    DESCRIPTOR: _descriptor.Descriptor
+
+    REQUEST_ID_FIELD_NUMBER: _builtins.int
+    USERNAME_FIELD_NUMBER: _builtins.int
+    PASSWORD_FIELD_NUMBER: _builtins.int
+    DOMAIN_FIELD_NUMBER: _builtins.int
+    request_id: _builtins.str
+    """UUID; koreluje z VerifyCredentialsResult"""
+    username: _builtins.str
+    """np. "crossdesk" — z ~/.config/crossdesk/vm.toml"""
+    password: _builtins.str
+    """plaintext na czas RPC"""
+    domain: _builtins.str
+    """optional; "" lub "." = local account"""
+    def __init__(
+        self,
+        *,
+        request_id: _builtins.str = ...,
+        username: _builtins.str = ...,
+        password: _builtins.str = ...,
+        domain: _builtins.str = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["domain", b"domain", "password", b"password", "request_id", b"request_id", "username", b"username"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___VerifyCredentialsRequest: _TypeAlias = VerifyCredentialsRequest  # noqa: Y015
+
+@_typing.final
+class VerifyCredentialsResult(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    class _Status:
+        ValueType = _typing.NewType("ValueType", _builtins.int)
+        V: _TypeAlias = ValueType  # noqa: Y015
+
+    class _StatusEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[VerifyCredentialsResult._Status.ValueType], _builtins.type):
+        DESCRIPTOR: _descriptor.EnumDescriptor
+        STATUS_UNSPECIFIED: VerifyCredentialsResult._Status.ValueType  # 0
+        STATUS_OK: VerifyCredentialsResult._Status.ValueType  # 1
+        STATUS_FAIL_BAD_CREDENTIALS: VerifyCredentialsResult._Status.ValueType  # 2
+        """ERROR_LOGON_FAILURE"""
+        STATUS_FAIL_ACCOUNT_LOCKED: VerifyCredentialsResult._Status.ValueType  # 3
+        """ERROR_ACCOUNT_LOCKED_OUT"""
+        STATUS_FAIL_PASSWORD_EXPIRED: VerifyCredentialsResult._Status.ValueType  # 4
+        """ERROR_PASSWORD_EXPIRED / MUST_CHANGE"""
+        STATUS_UNAVAILABLE: VerifyCredentialsResult._Status.ValueType  # 5
+        """guest LSA niedostępne / agent error"""
+
+    class Status(_Status, metaclass=_StatusEnumTypeWrapper): ...
+    STATUS_UNSPECIFIED: VerifyCredentialsResult.Status.ValueType  # 0
+    STATUS_OK: VerifyCredentialsResult.Status.ValueType  # 1
+    STATUS_FAIL_BAD_CREDENTIALS: VerifyCredentialsResult.Status.ValueType  # 2
+    """ERROR_LOGON_FAILURE"""
+    STATUS_FAIL_ACCOUNT_LOCKED: VerifyCredentialsResult.Status.ValueType  # 3
+    """ERROR_ACCOUNT_LOCKED_OUT"""
+    STATUS_FAIL_PASSWORD_EXPIRED: VerifyCredentialsResult.Status.ValueType  # 4
+    """ERROR_PASSWORD_EXPIRED / MUST_CHANGE"""
+    STATUS_UNAVAILABLE: VerifyCredentialsResult.Status.ValueType  # 5
+    """guest LSA niedostępne / agent error"""
+
+    REQUEST_ID_FIELD_NUMBER: _builtins.int
+    STATUS_FIELD_NUMBER: _builtins.int
+    DETAIL_FIELD_NUMBER: _builtins.int
+    WIN32_ERROR_FIELD_NUMBER: _builtins.int
+    request_id: _builtins.str
+    """odbicie z requesta"""
+    status: Global___VerifyCredentialsResult.Status.ValueType
+    detail: _builtins.str
+    """human-readable; bezpieczne do logowania"""
+    win32_error: _builtins.int
+    """surowy GetLastError dla diagnostyki"""
+    def __init__(
+        self,
+        *,
+        request_id: _builtins.str = ...,
+        status: Global___VerifyCredentialsResult.Status.ValueType = ...,
+        detail: _builtins.str = ...,
+        win32_error: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "request_id", b"request_id", "status", b"status", "win32_error", b"win32_error"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___VerifyCredentialsResult: _TypeAlias = VerifyCredentialsResult  # noqa: Y015

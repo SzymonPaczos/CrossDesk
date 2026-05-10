@@ -18,9 +18,7 @@ else:
 
 _T = _typing.TypeVar("_T")
 
-class _MaybeAsyncIterator(
-    _abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta
-): ...
+class _MaybeAsyncIterator(_abc.AsyncIterator[_T], _abc.Iterator[_T], metaclass=_abc_1.ABCMeta): ...
 
 class _ServicerContext(_grpc.ServicerContext, _aio.ServicerContext):  # type: ignore[misc, type-arg]
     ...
@@ -63,9 +61,7 @@ class HeartbeatServiceStub:
     def __new__(cls, channel: _grpc.Channel) -> _Self: ...
     @_typing.overload
     def __new__(cls, channel: _aio.Channel) -> HeartbeatServiceAsyncStub: ...
-    Channel: _grpc.StreamStreamMultiCallable[
-        _heartbeat_pb2.GuestFrame, _heartbeat_pb2.HostFrame
-    ]
+    Channel: _grpc.StreamStreamMultiCallable[_heartbeat_pb2.GuestFrame, _heartbeat_pb2.HostFrame]
     """Bidirectional. HOST jest cadence-setterem; Guest MUSI odpowiadać Pongiem
     na każdy Ping nawet w stanie DEGRADED. Guest może asynchronicznie wpychać
     GuestSignal-e między Pongami, żeby zgłosić self-detected issues.
@@ -146,15 +142,10 @@ class HeartbeatServiceServicer(metaclass=_abc_1.ABCMeta):
         self,
         request_iterator: _MaybeAsyncIterator[_heartbeat_pb2.GuestFrame],
         context: _ServicerContext,
-    ) -> _typing.Union[
-        _abc.Iterator[_heartbeat_pb2.HostFrame],
-        _abc.AsyncIterator[_heartbeat_pb2.HostFrame],
-    ]:
+    ) -> _typing.Union[_abc.Iterator[_heartbeat_pb2.HostFrame], _abc.AsyncIterator[_heartbeat_pb2.HostFrame]]:
         """Bidirectional. HOST jest cadence-setterem; Guest MUSI odpowiadać Pongiem
         na każdy Ping nawet w stanie DEGRADED. Guest może asynchronicznie wpychać
         GuestSignal-e między Pongami, żeby zgłosić self-detected issues.
         """
 
-def add_HeartbeatServiceServicer_to_server(
-    servicer: HeartbeatServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]
-) -> None: ...
+def add_HeartbeatServiceServicer_to_server(servicer: HeartbeatServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

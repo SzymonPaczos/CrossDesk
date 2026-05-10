@@ -18,7 +18,7 @@ from typing import Any, Dict
 
 from hdrh.histogram import HdrHistogram
 
-_PERCENTILES = (50.0, 90.0, 99.0, 99.9)
+_PERCENTILES = (50.0, 90.0, 95.0, 99.0, 99.9)
 
 
 def _percentile_key(p: float) -> str:
@@ -93,7 +93,18 @@ class Histogram:
                 _percentile_key(p): self._hist.get_value_at_percentile(p) / self._SCALE
                 for p in _PERCENTILES
             }
-        return {"count": count, **percentiles}
+            # Min/max come from the actual recorded extremes rather
+            # than a percentile lookup so the GetMetrics RPC can show
+            # the exact bounds of the sample window. ``hdrhistogram``
+            # returns 2**63 - 1 for "no samples" — flatten to 0 so the
+            # JSON shape stays sane on an untouched histogram.
+            if count == 0:
+                lo = 0.0
+                hi = 0.0
+            else:
+                lo = self._hist.get_min_value() / self._SCALE
+                hi = self._hist.get_max_value() / self._SCALE
+        return {"count": count, "min": lo, "max": hi, **percentiles}
 
 
 @dataclass

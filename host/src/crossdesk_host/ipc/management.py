@@ -21,9 +21,11 @@ the wire format guests already speak.
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import AsyncIterator, List, Optional
 
 import grpc
@@ -36,10 +38,33 @@ from crossdesk_host.installer import credentials, settings
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.observability import child_span_scope
 from crossdesk_host.observability.log import get_logger
+from crossdesk_host.observability.metrics import REGISTRY, Registry
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2, mgmt_pb2_grpc
 from crossdesk_host.watchdog import HeartbeatFsm, State
 
 logger = get_logger("host.ipc.management")
+
+# Shared between daemon (which binds the socket) and the CLI (which
+# connects to it). Keeping the function on the servicer module — and
+# not the daemon — is what lets ``crossdesk metrics`` import it
+# without dragging the whole daemon entry point along.
+_SOCK_NAME = "crossdesk-host.sock"
+
+
+def mgmt_socket_path() -> Path:
+    """Resolve the Unix socket path the management plane binds to.
+
+    Honours ``XDG_RUNTIME_DIR`` per the freedesktop spec; falls back
+    to ``~/.local/run`` for environments that don't set it (Mac dev,
+    minimal containers). The fallback directory is created on demand
+    so callers don't have to."""
+
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+    if runtime_dir:
+        return Path(runtime_dir) / _SOCK_NAME
+    fallback = Path.home() / ".local" / "run"
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback / _SOCK_NAME
 
 
 def _ts(when: Optional[datetime] = None) -> timestamp_pb2.Timestamp:
@@ -99,11 +124,16 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         libvirt_ctl: LibvirtController,
         coordinator: Optional[LifecycleCoordinator] = None,
         push_interval_seconds: float = 1.0,
+        metrics_registry: Optional[Registry] = None,
     ) -> None:
         self.state = state
         self.libvirt_ctl = libvirt_ctl
         self.coordinator = coordinator
         self.push_interval_seconds = push_interval_seconds
+        # Tests inject a fresh Registry to avoid cross-test pollution;
+        # production wires the module-level singleton so every metric
+        # instrumented anywhere in the host shows up here.
+        self.metrics_registry = metrics_registry or REGISTRY
 
     # ------------------------------------------------------------------
     # Status stream
@@ -421,6 +451,71 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             )
             logger.info("rpc_end", method="ReadSettings")
             return response
+
+    # ------------------------------------------------------------------
+    # Metrics snapshot
+    # ------------------------------------------------------------------
+
+    async def GetMetrics(  # noqa: N802
+        self,
+        request: mgmt_pb2.GetMetricsRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> mgmt_pb2.GetMetricsResponse:
+        prefixes = tuple(request.name_prefix)
+        return mgmt_pb2.GetMetricsResponse(
+            metrics=_serialise_registry(self.metrics_registry, prefixes),
+        )
+
+
+def _serialise_registry(
+    registry: Registry, prefixes: tuple[str, ...]
+) -> List[mgmt_pb2.Metric]:
+    out: List[mgmt_pb2.Metric] = []
+    for name, counter in registry.counters.items():
+        if not _name_matches(name, prefixes):
+            continue
+        out.append(
+            mgmt_pb2.Metric(
+                name=name,
+                type=mgmt_pb2.Metric.Type.COUNTER,
+                scalar=float(counter.value()),
+            )
+        )
+    for name, gauge in registry.gauges.items():
+        if not _name_matches(name, prefixes):
+            continue
+        out.append(
+            mgmt_pb2.Metric(
+                name=name,
+                type=mgmt_pb2.Metric.Type.GAUGE,
+                scalar=float(gauge.value()),
+            )
+        )
+    for name, histogram in registry.histograms.items():
+        if not _name_matches(name, prefixes):
+            continue
+        snap = histogram.snapshot()
+        out.append(
+            mgmt_pb2.Metric(
+                name=name,
+                type=mgmt_pb2.Metric.Type.HISTOGRAM,
+                histogram=mgmt_pb2.HistogramSnapshot(
+                    p50=snap["p50"],
+                    p95=snap["p95"],
+                    p99=snap["p99"],
+                    min=snap["min"],
+                    max=snap["max"],
+                    count=snap["count"],
+                ),
+            )
+        )
+    return out
+
+
+def _name_matches(name: str, prefixes: tuple[str, ...]) -> bool:
+    if not prefixes:
+        return True
+    return any(name.startswith(p) for p in prefixes)
 
 
 def _settings_from_proto(p: mgmt_pb2.Settings) -> settings.Settings:

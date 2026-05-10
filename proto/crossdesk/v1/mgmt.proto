@@ -51,6 +51,13 @@ service ManagementService {
   // see what was clamped/normalised).
   rpc UpdateSettings(SettingsRequest) returns (SettingsResponse);
   rpc ReadSettings(Empty) returns (SettingsResponse);
+
+  // Snapshot of in-memory observability metrics. Counters / gauges
+  // serialise as ``Metric.scalar``; histograms collapse to a small
+  // percentile + min/max/count summary. Used by the ``crossdesk
+  // metrics`` CLI and the microbench harness — Prometheus scraping
+  // is out of scope per DEC-0006 (in-memory only).
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
 }
 
 message Empty {}
@@ -255,4 +262,51 @@ message Settings {
   uint32 recovery_ticks = 14;
   google.protobuf.Duration backoff_initial = 15;
   uint32 max_soft_attempts = 16;
+}
+
+// -----------------------------------------------------------------------------
+// Metrics snapshot
+// -----------------------------------------------------------------------------
+
+message GetMetricsRequest {
+  // Optional: only metrics whose name starts with one of these
+  // prefixes are returned. Empty list ⇒ every metric in the
+  // registry (the default for the CLI).
+  repeated string name_prefix = 1;
+}
+
+message Metric {
+  string name = 1;
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    COUNTER = 1;
+    GAUGE = 2;
+    HISTOGRAM = 3;
+  }
+  Type type = 2;
+  // Reserved for label support — Phase 7. The current Registry has
+  // no per-metric labels, so this field is always empty on the wire
+  // until labelled metrics land.
+  map<string, string> labels = 3;
+  oneof value {
+    double scalar = 4;            // counter (rounded to integer caller-side) or gauge
+    HistogramSnapshot histogram = 5;
+  }
+}
+
+message HistogramSnapshot {
+  // Percentiles in seconds (or whatever unit the histogram was fed).
+  // Mirrors hdrhistogram's get_value_at_percentile, scaled back from
+  // the µs internal representation; min/max are the actual recorded
+  // extremes, count is the number of samples.
+  double p50 = 1;
+  double p95 = 2;
+  double p99 = 3;
+  double min = 4;
+  double max = 5;
+  uint64 count = 6;
+}
+
+message GetMetricsResponse {
+  repeated Metric metrics = 1;
 }

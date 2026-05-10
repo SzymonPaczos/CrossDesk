@@ -79,6 +79,7 @@ branch names and the user merges by hand later.
 ## Active
 
 - [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: New host/src/crossdesk_host/config/peripherals.py — Pydantic PeripheralsConfig with audio/clipboard/mic/printer/smartcard/usb fields, to_freerdp_flags(), to_libvirt_xml_fragments(), load_peripherals_config(); 12 tests.
 
 ## Recent
 

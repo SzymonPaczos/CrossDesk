@@ -78,10 +78,12 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-10 21:00] START · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: P0 performance benchmark harness. Add bench_N1_1_cold_launch, bench_N1_2_suspend, bench_N1_6_recovery; extend bench_check.py with --baseline/--results CLI; update perf-baselines.json; add microbench CI job.
 - [2026-05-10 21:15] START · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: USER-APPROVED proto edit. protocol_version=4 in ClientHello+ServerAccept (control.proto); agent_version=7 in StatusFrame (mgmt.proto); compatibility logic + crossdesk version CLI.
 
 ## Recent
+
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: P0 performance benchmark harness. Add bench_N1_1_cold_launch, bench_N1_2_suspend, bench_N1_6_recovery; extend bench_check.py with --baseline/--results CLI; update perf-baselines.json; add microbench CI job.
+- [2026-05-10 22:30] END · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: result: success → branch pushed at 4c814f2 (NOT merged — left for user review). 3 new bench files + python_files discovery + bench_check --baseline/--results flags + 8 new perf-baselines entries + microbench CI job. Gates: mypy --strict 97 files clean; 11/11 benches run; 6/6 bench_check tests pass.
 
 - [2026-05-10 21:05] START · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: New host/src/crossdesk_host/config/peripherals.py — Pydantic PeripheralsConfig with audio/clipboard/mic/printer/smartcard/usb fields, to_freerdp_flags(), to_libvirt_xml_fragments(), load_peripherals_config(); 12 tests.
 - [2026-05-10 22:00] END · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: result: success → branch pushed at 10548c5 (NOT merged — left for user review). config.py → config/__init__.py (rename, history preserved) + config/peripherals.py; 27 tests; FOLLOWUPS P0 ✅ DONE. Gates: mypy --strict 99 files clean; pytest 518/518 + pre-existing gRPC teardown warning.

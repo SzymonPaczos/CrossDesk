@@ -147,11 +147,38 @@ def check_disk_space(min_gb: float = 60.0) -> CheckResult:
     )
 
 
+def check_vm_credentials() -> CheckResult:
+    """vm.toml health: present, parsable, file mode 0600.
+
+    Does NOT contact the guest — that requires a running daemon and is
+    wired through ``display.session_starter`` before each RAIL spawn.
+    Doctor stays a fast pre-flight: it tells the user whether the
+    credential file is sane on disk.
+    """
+    from crossdesk_host.installer.credentials import health_check
+
+    health = health_check()
+    if health.ok:
+        return CheckResult("vm_credentials", Status.OK, f"{health.path}")
+    if not health.present:
+        return CheckResult(
+            "vm_credentials",
+            Status.WARN,
+            health.remediation() or f"{health.path} missing",
+        )
+    return CheckResult(
+        "vm_credentials",
+        Status.FAIL,
+        health.remediation() or f"{health.path} unhealthy",
+    )
+
+
 DEFAULT_CHECKS: List[CheckFn] = [
     check_kvm_device,
     check_freerdp_available,
     check_libvirt_session,
     check_disk_space,
+    check_vm_credentials,
 ]
 
 

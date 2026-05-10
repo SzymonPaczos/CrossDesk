@@ -2,151 +2,837 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pl_PL">
 <context>
-    <name>Main</name>
-    <message><source>CrossDesk Manager</source><translation>Menedżer CrossDesk</translation></message>
-    <message><source>Language:</source><translation>Język:</translation></message>
-    <message><source>No virtual machines yet.</source><translation>Brak maszyn wirtualnych.</translation></message>
-    <message><source>Provision a Windows guest to get started.</source><translation>Zainstaluj maszynę Windows, aby rozpocząć.</translation></message>
-    <message><source>New Windows VM</source><translation>Nowa maszyna Windows</translation></message>
-</context>
-<context>
-    <name>InstallWizard</name>
-    <message><source>Install Windows VM</source><translation>Instalacja maszyny Windows</translation></message>
-</context>
-<context>
-    <name>Step1Iso</name>
-    <message><source>Select Windows ISO image</source><translation>Wybierz obraz ISO systemu Windows</translation></message>
-    <message><source>ISO images (*.iso)</source><translation>Obrazy ISO (*.iso)</translation></message>
-    <message><source>All files (*)</source><translation>Wszystkie pliki (*)</translation></message>
-    <message><source>Step 1 of 3 — Installation media</source><translation>Krok 1 z 3 — Nośnik instalacyjny</translation></message>
-    <message><source>Choose the Windows installation ISO. The image will be attached as a virtual CD-ROM during the autounattend bootstrap.</source><translation>Wskaż obraz ISO instalatora Windows. Zostanie podpięty jako wirtualny CD-ROM podczas bootstrapu autounattend.</translation></message>
-    <message><source>No ISO selected</source><translation>Nie wybrano pliku ISO</translation></message>
-    <message><source>Browse…</source><translation>Przeglądaj…</translation></message>
-    <message><source>Next</source><translation>Dalej</translation></message>
-</context>
-<context>
-    <name>Step2Identity</name>
-    <message><source>Step 2 of 3 — VM identity</source><translation>Krok 2 z 3 — Tożsamość maszyny</translation></message>
-    <message><source>These values are baked into autounattend.xml. The guest will boot pre-named and pre-localized.</source><translation>Te wartości trafiają do autounattend.xml. Maszyna wstanie z gotową nazwą i lokalizacją.</translation></message>
-    <message><source>VM name</source><translation>Nazwa maszyny</translation></message>
-    <message><source>Timezone</source><translation>Strefa czasowa</translation></message>
-    <message><source>Locale</source><translation>Język systemu</translation></message>
-    <message><source>Back</source><translation>Wstecz</translation></message>
-    <message><source>Next</source><translation>Dalej</translation></message>
-</context>
-<context>
-    <name>Step3Resources</name>
-    <message><source>Step 3 of 3 — Hardware resources</source><translation>Krok 3 z 3 — Zasoby sprzętowe</translation></message>
-    <message><source>Defaults are tuned for development workloads. Production tuning is out of scope for the wizard.</source><translation>Domyślne wartości pod pracę deweloperską. Dostrajanie pod produkcję jest poza zakresem kreatora.</translation></message>
-    <message><source>RAM</source><translation>RAM</translation></message>
-    <message><source>vCPU</source><translation>vCPU</translation></message>
-    <message><source>Disk</source><translation>Dysk</translation></message>
-    <message><source>%1 GB</source><translation>%1 GB</translation></message>
-    <message><source>%1 cores</source><translation>%1 rdzeni</translation></message>
-    <message><source>Back</source><translation>Wstecz</translation></message>
-    <message><source>Install</source><translation>Instaluj</translation></message>
-</context>
-<context>
-    <name>ProgressView</name>
-    <message><source>Installation complete</source><translation>Instalacja zakończona</translation></message>
-    <message><source>Installing %1…</source><translation>Instalowanie %1…</translation></message>
-    <message><source>Step %1 of %2</source><translation>Krok %1 z %2</translation></message>
-    <message><source>Close</source><translation>Zamknij</translation></message>
-    <message><source>Booting Windows installer…</source><translation>Uruchamianie instalatora Windows…</translation></message>
-    <message><source>Partitioning virtual disk…</source><translation>Tworzenie partycji na dysku wirtualnym…</translation></message>
-    <message><source>Installing Windows…</source><translation>Instalowanie systemu Windows…</translation></message>
-    <message><source>Applying autounattend.xml…</source><translation>Stosowanie autounattend.xml…</translation></message>
-    <message><source>Registering CrossDesk agent NT service…</source><translation>Rejestrowanie usługi NT agenta CrossDesk…</translation></message>
-</context>
-<context>
-    <name>Manager</name>
-    <message><source>Dashboard</source><translation>Panel główny</translation></message>
-    <message><source>Apps</source><translation>Aplikacje</translation></message>
-    <message><source>Storage</source><translation>Pamięć</translation></message>
-    <message><source>Lifecycle</source><translation>Cykl życia</translation></message>
-    <message><source>Diagnose</source><translation>Diagnoza</translation></message>
-    <message><source>Logs</source><translation>Dzienniki</translation></message>
-    <message><source>Settings</source><translation>Ustawienia</translation></message>
-    <message><source>About</source><translation>O programie</translation></message>
-    <message><source>Welcome to CrossDesk</source><translation>Witaj w CrossDesk</translation></message>
-    <message><source>Provision a Windows guest to get started, or open the Manager if you've already installed.</source><translation>Zainstaluj system Windows aby rozpocząć, lub otwórz Menedżera jeśli już go masz.</translation></message>
-    <message><source>Open Manager</source><translation>Otwórz Menedżera</translation></message>
-</context>
-<context>
-    <name>Dashboard</name>
-    <message><source>Uptime: %1</source><translation>Czas działania: %1</translation></message>
-    <message><source>Heartbeat RTT: %1 ms</source><translation>RTT heartbeat: %1 ms</translation></message>
-    <message><source>AuthContext rejections: %1</source><translation>Odrzucenia AuthContext: %1</translation></message>
-    <message><source>Active mounts: %1</source><translation>Aktywne mounty: %1</translation></message>
-    <message><source>Resources</source><translation>Zasoby</translation></message>
-    <message><source>CPU</source><translation>CPU</translation></message>
-    <message><source>Recent activity</source><translation>Ostatnia aktywność</translation></message>
-    <message><source>Launch app...</source><translation>Uruchom aplikację...</translation></message>
-    <message><source>Suspend VM</source><translation>Uśpij maszynę</translation></message>
-    <message><source>View logs</source><translation>Pokaż dzienniki</translation></message>
+    <name>About</name>
+    <message>
+        <source>Version 0.1.0 (pre-release)</source>
+        <translation type="vanished">Wersja 0.1.0 (przed-wydanie)</translation>
+    </message>
+    <message>
+        <source>Run Windows applications as native Wayland or X11 windows.</source>
+        <translation type="vanished">Uruchamiaj aplikacje Windows jako natywne okna Wayland lub X11.</translation>
+    </message>
+    <message>
+        <source>License: GPL-3.0-or-later</source>
+        <translation type="vanished">Licencja: GPL-3.0-or-later</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="31"/>
+        <source>About</source>
+        <translation>O programie</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="110"/>
+        <source>Windows apps as native Wayland/X11 windows.</source>
+        <translation>Aplikacje Windows jako natywne okna Wayland/X11.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="135"/>
+        <source>VERSION</source>
+        <translation>WERSJA</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="151"/>
+        <source>LICENSE</source>
+        <translation>LICENCJA</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="167"/>
+        <source>LINKS</source>
+        <translation>LINKI</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/About.qml" line="217"/>
+        <source>Phase 4 SPOF</source>
+        <translation>Phase 4 SPOF</translation>
+    </message>
 </context>
 <context>
     <name>Apps</name>
-    <message><source>Curated apps</source><translation>Wyselekcjonowane aplikacje</translation></message>
-    <message><source>Discovered (%1)</source><translation>Wykryte (%1)</translation></message>
-    <message><source>No apps discovered yet. Auto-discovery runs after VM is running.</source><translation>Brak wykrytych aplikacji. Wykrywanie uruchamia się po starcie maszyny.</translation></message>
-    <message><source>+ Add custom .exe</source><translation>+ Dodaj własny .exe</translation></message>
-    <message><source>Refresh discovery</source><translation>Odśwież wykrywanie</translation></message>
-    <message><source>Launch</source><translation>Uruchom</translation></message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="128"/>
+        <source>Curated apps</source>
+        <translation>Wyselekcjonowane aplikacje</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="239"/>
+        <source>Discovered (%1)</source>
+        <translation>Wykryte (%1)</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="247"/>
+        <source>No apps discovered yet. Auto-discovery runs after VM is running.</source>
+        <translation>Brak wykrytych aplikacji. Wykrywanie uruchamia się po starcie maszyny.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="76"/>
+        <source>+ Add custom .exe</source>
+        <translation>+ Dodaj własny .exe</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="34"/>
+        <source>Apps</source>
+        <translation>Aplikacje</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="63"/>
+        <source>Search apps…</source>
+        <translation>Szukaj aplikacji…</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="71"/>
+        <source>Refresh discovery</source>
+        <translation>Odśwież wykrywanie</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Apps.qml" line="220"/>
+        <source>Launch</source>
+        <translation>Uruchom</translation>
+    </message>
 </context>
 <context>
-    <name>Storage</name>
-    <message><source>Active JIT mounts (%1)</source><translation>Aktywne JIT mounty (%1)</translation></message>
-    <message><source>No active mounts.
-Mounts appear here when you open a file in a Windows app and disappear when the app closes.</source><translation>Brak aktywnych mountów.
-Mounty pojawiają się tu po otwarciu pliku w aplikacji Windows i znikają po jej zamknięciu.</translation></message>
-    <message><source>Recent mount history</source><translation>Historia mountów</translation></message>
-    <message><source>History empties when you uninstall.</source><translation>Historia czyści się przy odinstalowaniu.</translation></message>
-</context>
-<context>
-    <name>Lifecycle</name>
-    <message><source>VM controls</source><translation>Sterowanie maszyną</translation></message>
-    <message><source>Suspend</source><translation>Uśpij</translation></message>
-    <message><source>Resume</source><translation>Wznów</translation></message>
-    <message><source>Force HARD_DESTROY</source><translation>Wymuś HARD_DESTROY</translation></message>
-    <message><source>Force HARD_DESTROY?</source><translation>Wymusić HARD_DESTROY?</translation></message>
-    <message><source>This will force-restart the VM. Any unsaved Windows app state will be lost.</source><translation>Spowoduje to wymuszony restart maszyny. Niezapisany stan aplikacji Windows zostanie utracony.</translation></message>
-    <message><source>FSM state</source><translation>Stan FSM</translation></message>
-    <message><source>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</source><translation>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</translation></message>
+    <name>Dashboard</name>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="92"/>
+        <source>Uptime: %1</source>
+        <translation>Czas działania: %1</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="126"/>
+        <source>Heartbeat RTT: %1 ms</source>
+        <translation>RTT heartbeat: %1 ms</translation>
+    </message>
+    <message>
+        <source>AuthContext rejections: %1</source>
+        <translation type="vanished">Odrzucenia AuthContext: %1</translation>
+    </message>
+    <message>
+        <source>Active mounts: %1</source>
+        <translation type="vanished">Aktywne mounty: %1</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="40"/>
+        <source>Dashboard</source>
+        <translation>Panel główny</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="86"/>
+        <source>VM Status</source>
+        <translation>Stan maszyny</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="140"/>
+        <source>AuthCtx rejections</source>
+        <translation>Odrzucenia AuthCtx</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="153"/>
+        <source>Active mounts</source>
+        <translation>Aktywne mounty</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="198"/>
+        <source>Resources</source>
+        <translation>Zasoby</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="219"/>
+        <source>CPU</source>
+        <translation>CPU</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="253"/>
+        <source>RAM</source>
+        <translation>RAM</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="312"/>
+        <source>Recent activity</source>
+        <translation>Ostatnia aktywność</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="339"/>
+        <source>No recent activity.</source>
+        <translation>Brak ostatniej aktywności.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="352"/>
+        <source>Launch app…</source>
+        <translation>Uruchom aplikację…</translation>
+    </message>
+    <message>
+        <source>Launch app...</source>
+        <translation type="vanished">Uruchom aplikację...</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="357"/>
+        <source>Suspend VM</source>
+        <translation>Uśpij maszynę</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Dashboard.qml" line="361"/>
+        <source>View logs</source>
+        <translation>Pokaż dzienniki</translation>
+    </message>
 </context>
 <context>
     <name>Diagnose</name>
-    <message><source>Pre-flight check</source><translation>Sprawdzenie wstępne</translation></message>
-    <message><source>Re-run</source><translation>Uruchom ponownie</translation></message>
-    <message><source>Export diagnostic bundle</source><translation>Eksportuj paczkę diagnostyczną</translation></message>
+    <message>
+        <location filename="../qml/manager/Diagnose.qml" line="34"/>
+        <source>Diagnose</source>
+        <translation>Diagnoza</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Diagnose.qml" line="87"/>
+        <source>Pre-flight check</source>
+        <translation>Sprawdzenie wstępne</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Diagnose.qml" line="93"/>
+        <source>Re-run</source>
+        <translation>Uruchom ponownie</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Diagnose.qml" line="98"/>
+        <source>Export bundle</source>
+        <translation>Eksportuj paczkę</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Diagnose.qml" line="197"/>
+        <source>No diagnostics data. Run a check to see results.</source>
+        <translation>Brak danych diagnostycznych. Uruchom sprawdzenie, aby zobaczyć wyniki.</translation>
+    </message>
+    <message>
+        <source>Export diagnostic bundle</source>
+        <translation type="vanished">Eksportuj paczkę diagnostyczną</translation>
+    </message>
+</context>
+<context>
+    <name>InstallWizard</name>
+    <message>
+        <location filename="../qml/wizard/InstallWizard.qml" line="10"/>
+        <source>Install Windows VM</source>
+        <translation>Instalacja maszyny Windows</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/InstallWizard.qml" line="42"/>
+        <source>Media</source>
+        <translation>Nośnik</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/InstallWizard.qml" line="43"/>
+        <source>Identity</source>
+        <translation>Tożsamość</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/InstallWizard.qml" line="44"/>
+        <source>Resources</source>
+        <translation>Zasoby</translation>
+    </message>
+</context>
+<context>
+    <name>Lifecycle</name>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="34"/>
+        <source>Lifecycle</source>
+        <translation>Cykl życia</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="84"/>
+        <source>VM controls</source>
+        <translation>Sterowanie maszyną</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="106"/>
+        <source>&lt;b&gt;Running&lt;/b&gt; · %1</source>
+        <translation>&lt;b&gt;Uruchomiona&lt;/b&gt; · %1</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="124"/>
+        <source>Suspend</source>
+        <translation>Uśpij</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="128"/>
+        <source>Resume</source>
+        <translation>Wznów</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="132"/>
+        <source>Force HARD_DESTROY</source>
+        <translation>Wymuś HARD_DESTROY</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="212"/>
+        <source>EWMA RTT</source>
+        <translation>EWMA RTT</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="228"/>
+        <source>miss_count</source>
+        <translation>miss_count</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="244"/>
+        <source>soft_attempts</source>
+        <translation>soft_attempts</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="270"/>
+        <source>Force HARD_DESTROY?</source>
+        <translation>Wymusić HARD_DESTROY?</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="276"/>
+        <source>This will force-restart the VM. Any unsaved Windows app state will be lost.</source>
+        <translation>Spowoduje to wymuszony restart maszyny. Niezapisany stan aplikacji Windows zostanie utracony.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Lifecycle.qml" line="173"/>
+        <source>FSM state</source>
+        <translation>Stan FSM</translation>
+    </message>
+    <message>
+        <source>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</source>
+        <translation type="vanished">EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</translation>
+    </message>
 </context>
 <context>
     <name>Logs</name>
-    <message><source>Filter:</source><translation>Filtr:</translation></message>
-    <message><source>Search…</source><translation>Szukaj…</translation></message>
-    <message><source>Follow</source><translation>Śledź</translation></message>
+    <message>
+        <source>Filter:</source>
+        <translation type="vanished">Filtr:</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Logs.qml" line="34"/>
+        <source>Logs</source>
+        <translation>Dzienniki</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Logs.qml" line="73"/>
+        <source>Search…</source>
+        <translation>Szukaj…</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Logs.qml" line="78"/>
+        <source>Follow</source>
+        <translation>Śledź</translation>
+    </message>
+</context>
+<context>
+    <name>Main</name>
+    <message>
+        <location filename="../qml/Main.qml" line="13"/>
+        <location filename="../qml/Main.qml" line="49"/>
+        <source>CrossDesk Manager</source>
+        <translation>Menedżer CrossDesk</translation>
+    </message>
+    <message>
+        <source>Language:</source>
+        <translation type="vanished">Język:</translation>
+    </message>
+    <message>
+        <source>No virtual machines yet.</source>
+        <translation type="vanished">Brak maszyn wirtualnych.</translation>
+    </message>
+    <message>
+        <source>Provision a Windows guest to get started.</source>
+        <translation type="vanished">Zainstaluj maszynę Windows, aby rozpocząć.</translation>
+    </message>
+    <message>
+        <source>New Windows VM</source>
+        <translation type="vanished">Nowa maszyna Windows</translation>
+    </message>
+</context>
+<context>
+    <name>Manager</name>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="88"/>
+        <source>Manager</source>
+        <translation>Menedżer</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="107"/>
+        <source>MANAGE</source>
+        <translation>ZARZĄDZAJ</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="118"/>
+        <source>Dashboard</source>
+        <translation>Panel główny</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="119"/>
+        <source>Apps</source>
+        <translation>Aplikacje</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="120"/>
+        <source>Storage</source>
+        <translation>Pamięć</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="121"/>
+        <source>Lifecycle</source>
+        <translation>Cykl życia</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="204"/>
+        <source>SYSTEM</source>
+        <translation>SYSTEM</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="215"/>
+        <source>Diagnose</source>
+        <translation>Diagnoza</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="216"/>
+        <source>Logs</source>
+        <translation>Dzienniki</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="217"/>
+        <source>Settings</source>
+        <translation>Ustawienia</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="218"/>
+        <source>About</source>
+        <translation>O programie</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="335"/>
+        <source>No Windows VM installed</source>
+        <translation>Brak maszyny wirtualnej Windows</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="342"/>
+        <source>Run the setup wizard to provision a Windows guest.</source>
+        <translation>Uruchom kreatora instalacji, aby skonfigurować maszynę Windows.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Manager.qml" line="348"/>
+        <source>Open setup wizard</source>
+        <translation>Otwórz kreatora instalacji</translation>
+    </message>
+    <message>
+        <source>Language:</source>
+        <translation type="vanished">Język:</translation>
+    </message>
+    <message>
+        <source>Welcome to CrossDesk</source>
+        <translation type="vanished">Witaj w CrossDesk</translation>
+    </message>
+    <message>
+        <source>Provision a Windows guest to get started, or open the Manager if you&apos;ve already installed.</source>
+        <translation type="vanished">Zainstaluj system Windows aby rozpocząć, lub otwórz Menedżera jeśli już go masz.</translation>
+    </message>
+    <message>
+        <source>Open Manager</source>
+        <translation type="vanished">Otwórz Menedżera</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressView</name>
+    <message>
+        <location filename="../qml/wizard/ProgressView.qml" line="61"/>
+        <source>Installation complete</source>
+        <translation>Instalacja zakończona</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/ProgressView.qml" line="62"/>
+        <source>Installing %1…</source>
+        <translation>Instalowanie %1…</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/ProgressView.qml" line="129"/>
+        <source>Step %1 of %2</source>
+        <translation>Krok %1 z %2</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/ProgressView.qml" line="139"/>
+        <source>Close</source>
+        <translation>Zamknij</translation>
+    </message>
+    <message>
+        <source>Booting Windows installer…</source>
+        <translation type="vanished">Uruchamianie instalatora Windows…</translation>
+    </message>
+    <message>
+        <source>Partitioning virtual disk…</source>
+        <translation type="vanished">Tworzenie partycji na dysku wirtualnym…</translation>
+    </message>
+    <message>
+        <source>Installing Windows…</source>
+        <translation type="vanished">Instalowanie systemu Windows…</translation>
+    </message>
+    <message>
+        <source>Applying autounattend.xml…</source>
+        <translation type="vanished">Stosowanie autounattend.xml…</translation>
+    </message>
+    <message>
+        <source>Registering CrossDesk agent NT service…</source>
+        <translation type="vanished">Rejestrowanie usługi NT agenta CrossDesk…</translation>
+    </message>
 </context>
 <context>
     <name>Settings</name>
-    <message><source>General</source><translation>Ogólne</translation></message>
-    <message><source>Theme:</source><translation>Motyw:</translation></message>
-    <message><source>Anonymous telemetry</source><translation>Anonimowa telemetria</translation></message>
-    <message><source>VM</source><translation>Maszyna</translation></message>
-    <message><source>Credentials:</source><translation>Poświadczenia:</translation></message>
-    <message><source>Show</source><translation>Pokaż</translation></message>
-    <message><source>Rotate</source><translation>Zmień</translation></message>
-    <message><source>Repair</source><translation>Napraw</translation></message>
-    <message><source>Lean mode</source><translation>Tryb Lean</translation></message>
-    <message><source>Display</source><translation>Wyświetlanie</translation></message>
-    <message><source>HiDPI scale:</source><translation>Skala HiDPI:</translation></message>
-    <message><source>Advanced (FSM tuning)</source><translation>Zaawansowane (strojenie FSM)</translation></message>
-    <message><source>These knobs balance false-positive HARD_DESTROY against false-negative hung sessions. Defaults are safe for most users.</source><translation>Te ustawienia balansują między fałszywym HARD_DESTROY a niewykrytą zawieszoną sesją. Domyślne wartości są bezpieczne dla większości użytkowników.</translation></message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="84"/>
+        <source>General</source>
+        <translation>Ogólne</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation type="vanished">Motyw:</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="172"/>
+        <source>Anonymous telemetry</source>
+        <translation>Anonimowa telemetria</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="221"/>
+        <source>VM</source>
+        <translation>Maszyna</translation>
+    </message>
+    <message>
+        <source>Credentials:</source>
+        <translation type="vanished">Poświadczenia:</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="34"/>
+        <source>Settings</source>
+        <translation>Ustawienia</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="105"/>
+        <source>Language</source>
+        <translation>Język</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="121"/>
+        <source>Language change takes effect on next launch.</source>
+        <translation>Zmiana języka będzie aktywna od następnego uruchomienia.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="138"/>
+        <source>Theme</source>
+        <translation>Motyw</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="143"/>
+        <source>Follows desktop colour scheme by default.</source>
+        <translation>Domyślnie zgodny z motywem pulpitu.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="159"/>
+        <source>Light/dark override takes effect on next launch.</source>
+        <translation>Zmiana motywu będzie aktywna od następnego uruchomienia.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="177"/>
+        <source>Helps prioritise fixes. Off by default.</source>
+        <translation>Pomaga ustalać priorytety poprawek. Domyślnie wyłączona.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="238"/>
+        <source>Credentials</source>
+        <translation>Poświadczenia</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="245"/>
+        <source>Show</source>
+        <translation>Pokaż</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="246"/>
+        <source>Rotate</source>
+        <translation>Zmień</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="247"/>
+        <source>Repair</source>
+        <translation>Napraw</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="257"/>
+        <source>Lean mode</source>
+        <translation>Tryb Lean</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="262"/>
+        <source>Rebake VM image with services trimmed (opt-in).</source>
+        <translation>Przebuduj obraz maszyny z odchudzonymi usługami (opcjonalne).</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="307"/>
+        <source>Display</source>
+        <translation>Wyświetlanie</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="324"/>
+        <source>HiDPI scale</source>
+        <translation>Skalowanie HiDPI</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="373"/>
+        <source>Advanced — FSM tuning</source>
+        <translation>Zaawansowane — strojenie FSM</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="379"/>
+        <source>Heartbeat / recovery thresholds</source>
+        <translation>Progi heartbeat / odtwarzania</translation>
+    </message>
+    <message>
+        <source>HiDPI scale:</source>
+        <translation type="vanished">Skala HiDPI:</translation>
+    </message>
+    <message>
+        <source>Advanced (FSM tuning)</source>
+        <translation type="vanished">Zaawansowane (strojenie FSM)</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Settings.qml" line="395"/>
+        <source>These knobs balance false-positive HARD_DESTROY against false-negative hung sessions. Defaults are safe for most users.</source>
+        <translation>Te ustawienia balansują między fałszywym HARD_DESTROY a niewykrytą zawieszoną sesją. Domyślne wartości są bezpieczne dla większości użytkowników.</translation>
+    </message>
 </context>
 <context>
-    <name>About</name>
-    <message><source>Version 0.1.0 (pre-release)</source><translation>Wersja 0.1.0 (przed-wydanie)</translation></message>
-    <message><source>Run Windows applications as native Wayland or X11 windows.</source><translation>Uruchamiaj aplikacje Windows jako natywne okna Wayland lub X11.</translation></message>
-    <message><source>License: GPL-3.0-or-later</source><translation>Licencja: GPL-3.0-or-later</translation></message>
-    <message><source>Phase 4 SPOF</source><translation>Phase 4 SPOF</translation></message>
+    <name>Step1Iso</name>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="21"/>
+        <source>Select Windows ISO image</source>
+        <translation>Wybierz obraz ISO systemu Windows</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="22"/>
+        <source>ISO images (*.iso)</source>
+        <translation>Obrazy ISO (*.iso)</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="22"/>
+        <source>All files (*)</source>
+        <translation>Wszystkie pliki (*)</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="82"/>
+        <source>Step 1 of 3 — Installation media</source>
+        <translation>Krok 1 z 3 — Nośnik instalacyjny</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="89"/>
+        <source>Drop a .iso file or pick from downloads detected on your system.</source>
+        <translation>Upuść plik .iso lub wybierz z pobranych plików wykrytych w systemie.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="116"/>
+        <source>Drag a Windows ISO here</source>
+        <translation>Przeciągnij obraz ISO Windows tutaj</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="123"/>
+        <source>or click to browse · Windows 10 / 11 supported</source>
+        <translation>lub kliknij, aby przeglądać · obsługiwane Windows 10 / 11</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="129"/>
+        <source>Browse files…</source>
+        <translation>Przeglądaj pliki…</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="141"/>
+        <source>ISO selected</source>
+        <translation>ISO wybrane</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="158"/>
+        <source>Change…</source>
+        <translation>Zmień…</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="183"/>
+        <source>Scanning Downloads…</source>
+        <translation>Skanowanie pobranych…</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="192"/>
+        <source>DETECTED ON THIS SYSTEM</source>
+        <translation>WYKRYTE W SYSTEMIE</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="313"/>
+        <source>No Windows ISO files found in Downloads — use Browse above.</source>
+        <translation>Nie znaleziono plików ISO Windows w Pobranych — użyj przycisku Przeglądaj powyżej.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="347"/>
+        <source>Cancel</source>
+        <translation>Anuluj</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="354"/>
+        <source>Continue</source>
+        <translation>Kontynuuj</translation>
+    </message>
+    <message>
+        <source>Choose the Windows installation ISO. The image will be attached as a virtual CD-ROM during the autounattend bootstrap.</source>
+        <translation type="vanished">Wskaż obraz ISO instalatora Windows. Zostanie podpięty jako wirtualny CD-ROM podczas bootstrapu autounattend.</translation>
+    </message>
+    <message>
+        <source>No ISO selected</source>
+        <translation type="vanished">Nie wybrano pliku ISO</translation>
+    </message>
+    <message>
+        <source>Browse…</source>
+        <translation type="vanished">Przeglądaj…</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="vanished">Dalej</translation>
+    </message>
+</context>
+<context>
+    <name>Step2Identity</name>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="33"/>
+        <source>Step 2 of 3 — VM identity</source>
+        <translation>Krok 2 z 3 — Tożsamość maszyny</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="40"/>
+        <source>These values are baked into autounattend.xml. The guest will boot pre-named and pre-localized.</source>
+        <translation>Te wartości trafiają do autounattend.xml. Maszyna wstanie z gotową nazwą i lokalizacją.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="70"/>
+        <source>VM name</source>
+        <translation>Nazwa maszyny</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="80"/>
+        <source>e.g. Windows-11</source>
+        <translation>np. Windows-11</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="84"/>
+        <source>Timezone</source>
+        <translation>Strefa czasowa</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="97"/>
+        <source>Locale</source>
+        <translation>Język systemu</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="136"/>
+        <source>Back</source>
+        <translation>Wstecz</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step2Identity.qml" line="143"/>
+        <source>Next</source>
+        <translation>Dalej</translation>
+    </message>
+</context>
+<context>
+    <name>Step3Resources</name>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="33"/>
+        <source>Step 3 of 3 — Hardware resources</source>
+        <translation>Krok 3 z 3 — Zasoby sprzętowe</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="40"/>
+        <source>Defaults are tuned for development workloads. Production tuning is out of scope for the wizard.</source>
+        <translation>Domyślne wartości pod pracę deweloperską. Dostrajanie pod produkcję jest poza zakresem kreatora.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="73"/>
+        <source>RAM</source>
+        <translation>RAM</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="95"/>
+        <source>Minimum 4 GB recommended for Windows 11.</source>
+        <translation>Minimum 4 GB zalecane dla Windows 11.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="121"/>
+        <source>vCPU</source>
+        <translation>vCPU</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="143"/>
+        <source>Shares physical cores — does not subtract from host.</source>
+        <translation>Współdzieli fizyczne rdzenie — nie odejmuje ich od systemu hosta.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="169"/>
+        <source>Disk</source>
+        <translation>Dysk</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="79"/>
+        <location filename="../qml/wizard/Step3Resources.qml" line="175"/>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="127"/>
+        <source>%1 cores</source>
+        <translation>%1 rdzeni</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="191"/>
+        <source>Thin-provisioned qcow2 — only used space is allocated.</source>
+        <translation>Rzadki qcow2 — alokuje tylko używane miejsce.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="224"/>
+        <source>Back</source>
+        <translation>Wstecz</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step3Resources.qml" line="231"/>
+        <source>Install</source>
+        <translation>Instaluj</translation>
+    </message>
+</context>
+<context>
+    <name>Storage</name>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="35"/>
+        <source>Storage</source>
+        <translation>Pamięć</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="87"/>
+        <source>Active JIT mounts (%1)</source>
+        <translation>Aktywne JIT mounty (%1)</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="110"/>
+        <source> active</source>
+        <translation> aktywny</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="130"/>
+        <source>No active mounts.
+Mounts appear here when you open a file in a Windows app and disappear when the app closes.</source>
+        <translation>Brak aktywnych mountów.
+Mounty pojawiają się tu po otwarciu pliku w aplikacji Windows i znikają po jej zamknięciu.</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="183"/>
+        <source>Recent mount history</source>
+        <translation>Historia mountów</translation>
+    </message>
+    <message>
+        <location filename="../qml/manager/Storage.qml" line="200"/>
+        <source>History empties when you uninstall.</source>
+        <translation>Historia czyści się przy odinstalowaniu.</translation>
+    </message>
 </context>
 </TS>

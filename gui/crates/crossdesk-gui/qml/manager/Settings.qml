@@ -95,46 +95,71 @@ Item {
                         anchors.margins: 14
                         spacing: 12
 
-                        RowLayout {
-                            spacing: 16
-                            Label {
-                                text: qsTr("Language")
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                                Layout.preferredWidth: 180
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            RowLayout {
+                                spacing: 16
+                                Label {
+                                    text: qsTr("Language")
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                    Layout.preferredWidth: 180
+                                }
+                                ComboBox {
+                                    id: langCombo
+                                    model: ["auto", "en", "pl"]
+                                    currentIndex: model.indexOf(mgr.language)
+                                    onActivated: (index) => mgr.apply_language(model[index])
+                                    font.pixelSize: 12
+                                    Layout.preferredWidth: 120
+                                }
                             }
-                            ComboBox {
-                                model: ["auto", "en", "pl"]
-                                currentIndex: model.indexOf(mgr.language)
-                                onActivated: (index) => mgr.apply_language(model[index])
-                                font.pixelSize: 12
-                                Layout.preferredWidth: 120
+                            Label {
+                                visible: mgr.language !== "auto"
+                                text: qsTr("Language change takes effect on next launch.")
+                                color: palette.placeholderText
+                                font.pixelSize: 11
+                                leftPadding: 196
                             }
                         }
 
-                        RowLayout {
-                            spacing: 16
-                            ColumnLayout {
-                                spacing: 2
-                                Layout.preferredWidth: 180
-                                Label {
-                                    text: qsTr("Theme")
-                                    font.pixelSize: 12
-                                    font.weight: Font.Medium
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            RowLayout {
+                                spacing: 16
+                                ColumnLayout {
+                                    spacing: 2
+                                    Layout.preferredWidth: 180
+                                    Label {
+                                        text: qsTr("Theme")
+                                        font.pixelSize: 12
+                                        font.weight: Font.Medium
+                                    }
+                                    Label {
+                                        text: qsTr("Follows desktop colour scheme by default.")
+                                        font.pixelSize: 11
+                                        color: palette.placeholderText
+                                        wrapMode: Text.WordWrap
+                                    }
                                 }
-                                Label {
-                                    text: qsTr("Follows desktop colour scheme by default.")
-                                    font.pixelSize: 11
-                                    color: palette.placeholderText
-                                    wrapMode: Text.WordWrap
+                                ComboBox {
+                                    model: ["system", "light", "dark"]
+                                    currentIndex: model.indexOf(mgr.theme)
+                                    onActivated: (index) => mgr.apply_theme(model[index])
+                                    font.pixelSize: 12
+                                    Layout.preferredWidth: 120
                                 }
                             }
-                            ComboBox {
-                                model: ["system", "light", "dark"]
-                                currentIndex: model.indexOf(mgr.theme)
-                                onActivated: (index) => mgr.apply_theme(model[index])
-                                font.pixelSize: 12
-                                Layout.preferredWidth: 120
+                            Label {
+                                visible: mgr.theme !== "system"
+                                text: qsTr("Light/dark override takes effect on next launch.")
+                                color: palette.placeholderText
+                                font.pixelSize: 11
+                                leftPadding: 196
                             }
                         }
 

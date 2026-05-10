@@ -282,50 +282,76 @@ Item {
                 }
 
                 Item { Layout.fillHeight: true }
-
-                // Sidebar footer
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 44
-                    color: "transparent"
-
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 1
-                        color: palette.mid
-                    }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 14
-                        anchors.rightMargin: 10
-                        spacing: 8
-
-                        Label {
-                            text: qsTr("Language:")
-                            font.pixelSize: 11
-                            color: palette.placeholderText
-                        }
-                        ComboBox {
-                            id: langSwitch
-                            model: ["en", "pl"]
-                            font.pixelSize: 11
-                            Layout.preferredWidth: 68
-                        }
-                        Item { Layout.fillWidth: true }
-                    }
-                }
             }
         }
 
         // ── Main pane ─────────────────────────────────────────
-        StackView {
-            id: stack
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            initialItem: "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Dashboard.qml"
+
+            // Normal panes — shown when a VM is installed
+            StackView {
+                id: stack
+                anchors.fill: parent
+                visible: mgr.has_vm
+                initialItem: mgr.has_vm
+                    ? "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Dashboard.qml"
+                    : ""
+            }
+
+            // Empty state — shown when no VM is installed
+            Rectangle {
+                anchors.fill: parent
+                visible: !mgr.has_vm
+                color: palette.window
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 16
+
+                    Rectangle {
+                        Layout.alignment: Qt.AlignHCenter
+                        width: 56
+                        height: 56
+                        radius: 14
+                        color: palette.highlight
+
+                        Rectangle {
+                            x: 10; y: 12
+                            width: 24; height: 20
+                            color: "white"
+                            opacity: 1.0
+                        }
+                        Rectangle {
+                            x: 22; y: 24
+                            width: 24; height: 20
+                            color: "black"
+                            opacity: 0.45
+                        }
+                    }
+
+                    Label {
+                        text: qsTr("No Windows VM installed")
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                        color: palette.text
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    Label {
+                        text: qsTr("Run the setup wizard to provision a Windows guest.")
+                        font.pixelSize: 13
+                        color: palette.placeholderText
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    Button {
+                        text: qsTr("Open setup wizard")
+                        highlighted: true
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: ApplicationWindow.window.launchWizard()
+                    }
+                }
+            }
         }
     }
 

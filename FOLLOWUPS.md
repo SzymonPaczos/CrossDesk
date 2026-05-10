@@ -385,11 +385,15 @@ when `DEBUG=on` — we are doing materially more.
 - **[P1] `crossdesk metrics` CLI command.** Calls the RPC, prints
   human-readable summary or `--json`. Covers heartbeat RTT
   histogram, launch latency by app class, current FSM state.
-- **[P1] Per-component span coverage.** Audit every module for
-  span instrumentation. `host.installer.*`, `host.watchdog.*`,
-  `host.ipc.*`, `host.libvirt.*`, `host.display.*`,
-  `host.filesystem.*`, `host.credentials.*`, plus mirror set on
-  guest.
+- **[✅ partial DONE 2026-05-10] Per-component span coverage.** Audit
+  + helper landed: `docs/SPAN_COVERAGE.md` documents per-component
+  status (control / heartbeat / filesystem bidi streamers, mgmt
+  unary, verify_coordinator, daemon, CLI) and the per-frame vs
+  per-handler trade-off. New `child_span_scope()` context manager in
+  `crossdesk_host.observability.trace_ctx` makes adoption a one-line
+  `with` block. Remaining work (wiring `child_span_scope()` into
+  every mgmt RPC + per-frame variant decision for bidi streams) is a
+  follow-up commit; the coverage matrix is now source-of-truth.
 - **[P1] OTLP exporter (opt-in).** Reads
   `observability.otlp_endpoint` from config. Off by default per
   DEC-0002. Enables users with their own observability stack

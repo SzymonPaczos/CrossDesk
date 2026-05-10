@@ -350,7 +350,7 @@ Item {
 
                     Button {
                         text: qsTr("Launch app…")
-                        onClicked: dashboard.parent.parent.replace(
+                        onClicked: StackView.view.replace(
                             "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Apps.qml")
                     }
                     Button {
@@ -359,7 +359,7 @@ Item {
                     }
                     Button {
                         text: qsTr("View logs")
-                        onClicked: dashboard.parent.parent.replace(
+                        onClicked: StackView.view.replace(
                             "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Logs.qml")
                     }
                     Item { Layout.fillWidth: true }

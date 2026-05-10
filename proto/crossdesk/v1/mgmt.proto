@@ -75,6 +75,9 @@ message StatusFrame {
   repeated RailAppRunning running_apps = 4;
   repeated RecentActivity recent_activity = 5;
   google.protobuf.Timestamp emitted_at = 6;
+  // Version string from the guest agent's most recent ServerAccept handshake.
+  // Empty if no successful handshake has occurred in the current session.
+  string agent_version = 7;
 }
 
 message VmStatus {

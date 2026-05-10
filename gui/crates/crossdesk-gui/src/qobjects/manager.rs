@@ -161,7 +161,11 @@ impl cxx_qt::Initialize for qobject::ManagerState {
         this.as_mut().set_theme(QString::from("system"));
         this.as_mut().set_hidpi_scale(0);
         this.as_mut().set_diagnostics(qsl(&mock_diagnostics()));
-        this.as_mut().set_has_vm(true);
+        // Honour CROSSDESK_HAS_VM=0 so the no-VM UI state is testable without a daemon.
+        let has_vm = std::env::var("CROSSDESK_HAS_VM")
+            .map(|v| v != "0")
+            .unwrap_or(true);
+        this.as_mut().set_has_vm(has_vm);
     }
 }
 

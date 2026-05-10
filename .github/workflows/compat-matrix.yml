@@ -96,10 +96,12 @@ jobs:
         if: steps.prev-tag.outputs.found == 'true'
         working-directory: host
         env:
-          # The harness fixture builds its own agent by default. Override
-          # to point it at the prior-tag build we just dropped at the
-          # repo root. Test code reads CROSSDESK_PREBUILT_AGENT and
-          # skips its own cargo build when set.
+          # The cargo_built_agent fixture in tests/test_smoke_inprocess.py
+          # honours CROSSDESK_PREBUILT_AGENT — see that file's module
+          # docstring + its sibling tests/test_smoke_inprocess_fixture.py.
+          # When set it validates the binary and uses it directly,
+          # bypassing the in-fixture cargo build (avoids a redundant
+          # ~30s+ compile against the current main's workspace cache).
           CROSSDESK_PREBUILT_AGENT: ${{ github.workspace }}/prev-agent
         run: |
           # Only the smoke harness needs the live agent — keep the run

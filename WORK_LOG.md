@@ -78,9 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-10 21:15] START · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: USER-APPROVED proto edit. protocol_version=4 in ClientHello+ServerAccept (control.proto); agent_version=7 in StatusFrame (mgmt.proto); compatibility logic + crossdesk version CLI.
-
 ## Recent
+
+- [2026-05-10 21:15] START · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: USER-APPROVED proto edit. protocol_version=4 in ClientHello+ServerAccept (control.proto); agent_version=7 in StatusFrame (mgmt.proto); compatibility logic + crossdesk version CLI.
+- [2026-05-10 22:45] END · agent: claude-code · branch: feat/hello-protocol-version · task: hello-protocol-version · note: result: success → branch pushed at 36c556f (NOT merged — left for user review). 6 commits: proto+stubs+host-ipc+guest-rs+cli+tests+docs. Gates: mypy --strict 98 files clean; pytest 492/493 (1 pre-existing test_transport_mock failure unrelated); cargo check clean. FOLLOWUPS versioning P0+P2 items ✅ DONE.
 
 - [2026-05-10 21:00] START · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: P0 performance benchmark harness. Add bench_N1_1_cold_launch, bench_N1_2_suspend, bench_N1_6_recovery; extend bench_check.py with --baseline/--results CLI; update perf-baselines.json; add microbench CI job.
 - [2026-05-10 22:30] END · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: result: success → branch pushed at 4c814f2 (NOT merged — left for user review). 3 new bench files + python_files discovery + bench_check --baseline/--results flags + 8 new perf-baselines entries + microbench CI job. Gates: mypy --strict 97 files clean; 11/11 benches run; 6/6 bench_check tests pass.

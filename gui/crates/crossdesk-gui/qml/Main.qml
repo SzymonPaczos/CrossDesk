@@ -5,8 +5,10 @@ import com.crossdesk.gui
 
 ApplicationWindow {
     id: root
-    width: 800
-    height: 600
+    width: 1100
+    height: 760
+    minimumWidth: 860
+    minimumHeight: 560
     visible: true
     title: qsTr("CrossDesk Manager")
 
@@ -14,32 +16,39 @@ ApplicationWindow {
     // Phase 7 Week 27: replace with mgmt::Status has_vm field from daemon.
     readonly property bool hasVm: true
 
+
     WizardState {
         id: wizard
     }
 
-    header: ToolBar {
+    // Window chrome bar
+    header: Rectangle {
+        height: 36
+        color: palette.alternateBase
+
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: palette.mid
+        }
+
         RowLayout {
             anchors.fill: parent
-            spacing: 12
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            spacing: 8
 
+            // Window title (centered)
+            Item { Layout.fillWidth: true }
             Label {
                 text: qsTr("CrossDesk Manager")
-                font.pixelSize: 16
-                font.bold: true
-                Layout.leftMargin: 12
+                font.pixelSize: 12
+                font.weight: Font.Medium
+                color: palette.placeholderText
             }
-
             Item { Layout.fillWidth: true }
-
-            Label {
-                text: qsTr("Language:")
-            }
-            ComboBox {
-                id: langSwitch
-                model: ["en", "pl"]
-                Layout.rightMargin: 12
-            }
         }
     }
 

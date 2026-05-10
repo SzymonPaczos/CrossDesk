@@ -3,4 +3,14 @@
         <file alias="crossdesk_en.qm">i18n/crossdesk_en.qm</file>
         <file alias="crossdesk_pl.qm">i18n/crossdesk_pl.qm</file>
     </qresource>
+    <qresource prefix="/icons">
+        <file alias="dashboard.svg">icons/dashboard.svg</file>
+        <file alias="apps.svg">icons/apps.svg</file>
+        <file alias="storage.svg">icons/storage.svg</file>
+        <file alias="lifecycle.svg">icons/lifecycle.svg</file>
+        <file alias="diagnose.svg">icons/diagnose.svg</file>
+        <file alias="logs.svg">icons/logs.svg</file>
+        <file alias="settings.svg">icons/settings.svg</file>
+        <file alias="about.svg">icons/about.svg</file>
+    </qresource>
 </RCC>

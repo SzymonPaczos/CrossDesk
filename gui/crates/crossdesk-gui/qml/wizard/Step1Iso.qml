@@ -11,6 +11,11 @@ Item {
     signal next()
     signal cancel()
 
+    // Scan is considered "done" once the model has reported at least one
+    // count change OR the guard timer fires — whichever comes first.
+    // This prevents showing the spinner forever when Downloads has no ISOs.
+    property bool scanReady: false
+
     FileDialog {
         id: fileDialog
         title: qsTr("Select Windows ISO image")
@@ -18,7 +23,6 @@ Item {
         onAccepted: wizard.iso_path = selectedFile.toString()
     }
 
-    // Scans ~/Downloads for *.iso files — no Rust changes needed.
     FolderListModel {
         id: downloadsModel
         folder: StandardPaths.writableLocation(StandardPaths.DownloadLocation)
@@ -26,6 +30,31 @@ Item {
         showDirs: false
         sortField: FolderListModel.Size
         sortReversed: true
+        onCountChanged: {
+            // First count notification → scan has returned at least one result.
+            if (!scanReady) {
+                scanTimer.stop()
+                scanReady = true
+            }
+        }
+    }
+
+    // Fallback: mark ready after 700 ms even if Downloads is empty.
+    Timer {
+        id: scanTimer
+        interval: 700
+        running: true
+        repeat: false
+        onTriggered: scanReady = true
+    }
+
+    // Only show ISOs that look like Windows media; excludes Linux distros.
+    function isWindowsIso(name) {
+        var n = name.toLowerCase()
+        return n.indexOf("win")       !== -1 ||
+               n.indexOf("msdn")      !== -1 ||
+               n.indexOf("ltsc")      !== -1 ||
+               n.indexOf("microsoft") !== -1
     }
 
     ColumnLayout {
@@ -134,113 +163,160 @@ Item {
                     }
                 }
 
-                // ── Detected ISOs in ~/Downloads ───────────────
+                // ── Detected Windows ISOs ──────────────────────
                 ColumnLayout {
                     Layout.leftMargin: 32
                     Layout.rightMargin: 32
                     spacing: 6
-                    visible: downloadsModel.count > 0
 
+                    // ── Spinner while scan runs ────────────────
+                    RowLayout {
+                        spacing: 10
+                        visible: !scanReady
+
+                        BusyIndicator {
+                            running: !scanReady
+                            implicitWidth: 22
+                            implicitHeight: 22
+                        }
+                        Label {
+                            text: qsTr("Scanning Downloads…")
+                            font.pixelSize: 12
+                            color: palette.placeholderText
+                        }
+                    }
+
+                    // ── Section header (shown once scan is done and there are results) ──
                     Label {
+                        visible: scanReady && downloadsModel.count > 0
                         text: qsTr("DETECTED ON THIS SYSTEM")
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
                         color: palette.placeholderText
                         font.letterSpacing: 0.5
                         topPadding: 4
+
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        opacity: visible ? 1 : 0
                     }
 
+                    // ── ISO cards ─────────────────────────────
                     Repeater {
-                        model: downloadsModel
+                        model: scanReady ? downloadsModel : null
 
-                        delegate: Rectangle {
+                        delegate: Item {
                             required property string fileName
                             required property string filePath
-                            required property int fileSize
+                            required property int     fileSize
+                            required property int     index
 
+                            property bool isWin: isWindowsIso(fileName)
                             property string fileUrl: "file://" + filePath
                             property bool isSelected: wizard.iso_path === fileUrl
                             property string sizeLabel: {
-                                var gib = fileSize / (1024 * 1024 * 1024);
-                                return gib >= 0.1 ? gib.toFixed(1) + " GiB" : "< 0.1 GiB";
+                                var gib = fileSize / (1024 * 1024 * 1024)
+                                return gib >= 0.1 ? gib.toFixed(1) + " GiB" : "< 0.1 GiB"
                             }
-                            // Strip _x64/_x86 suffixes and underscores for a cleaner label.
                             property string displayName: {
                                 var n = fileName.replace(/\.iso$/i, "")
-                                                .replace(/_x64|_x86|_ARM64/gi, "")
+                                                .replace(/_(x64|x86|ARM64|amd64)/gi, "")
                                                 .replace(/_/g, " ")
-                                                .replace(/\s+/g, " ").trim();
-                                return n;
+                                                .trim()
+                                return n
                             }
 
                             Layout.fillWidth: true
-                            height: 56
-                            radius: 6
-                            color: isSelected
-                                   ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.08)
-                                   : palette.base
-                            border.color: isSelected ? palette.highlight : palette.mid
-                            border.width: 1
+                            // Non-Windows ISOs collapse to zero height — no gap.
+                            height: isWin ? card.height : 0
+                            clip: true
+                            visible: isWin
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14
-                                anchors.rightMargin: 14
-                                spacing: 10
+                            Rectangle {
+                                id: card
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 60
+                                radius: 6
+                                color: isSelected
+                                       ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.08)
+                                       : palette.base
+                                border.color: isSelected ? palette.highlight : palette.mid
+                                border.width: 1
+                                opacity: 0
 
-                                RadioButton {
-                                    checked: isSelected
+                                // Staggered cascade appearance — each card fades in
+                                // with a delay proportional to its position.
+                                SequentialAnimation {
+                                    running: isWin
+                                    PauseAnimation { duration: Math.min(index * 70, 350) }
+                                    NumberAnimation {
+                                        target: card
+                                        property: "opacity"
+                                        to: 1
+                                        duration: 220
+                                        easing.type: Easing.OutQuad
+                                    }
+                                }
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 14
+                                    anchors.rightMargin: 14
+                                    spacing: 10
+
+                                    RadioButton {
+                                        checked: isSelected
+                                        onClicked: wizard.iso_path = fileUrl
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+
+                                        Label {
+                                            text: displayName
+                                            font.pixelSize: 13
+                                            font.weight: Font.Medium
+                                            color: palette.text
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                        Label {
+                                            text: filePath
+                                            font.pixelSize: 11
+                                            font.family: "monospace"
+                                            color: palette.placeholderText
+                                            elide: Text.ElideMiddle
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    Label {
+                                        text: sizeLabel
+                                        font.pixelSize: 12
+                                        color: palette.placeholderText
+                                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
                                     onClicked: wizard.iso_path = fileUrl
                                 }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    Label {
-                                        text: displayName
-                                        font.pixelSize: 13
-                                        font.weight: Font.Medium
-                                        color: palette.text
-                                        elide: Text.ElideRight
-                                        Layout.fillWidth: true
-                                    }
-                                    Label {
-                                        text: filePath
-                                        font.pixelSize: 11
-                                        font.family: "monospace"
-                                        color: palette.placeholderText
-                                        elide: Text.ElideMiddle
-                                        Layout.fillWidth: true
-                                    }
-                                }
-
-                                Label {
-                                    text: sizeLabel
-                                    font.pixelSize: 12
-                                    color: palette.placeholderText
-                                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                                }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: wizard.iso_path = fileUrl
                             }
                         }
                     }
-                }
 
-                // Empty-state when Downloads has no ISOs and none selected
-                Label {
-                    Layout.leftMargin: 32
-                    Layout.rightMargin: 32
-                    visible: downloadsModel.count === 0 && wizard.iso_path.length === 0
-                    text: qsTr("No ISO files found in Downloads — use Browse above.")
-                    font.pixelSize: 12
-                    color: palette.placeholderText
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
+                    // Empty state: scan done, no Windows ISOs found.
+                    Label {
+                        visible: scanReady && downloadsModel.count === 0 && wizard.iso_path.length === 0
+                        text: qsTr("No Windows ISO files found in Downloads — use Browse above.")
+                        font.pixelSize: 12
+                        color: palette.placeholderText
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        topPadding: 4
+                    }
                 }
 
                 Item { height: 8 }

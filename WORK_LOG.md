@@ -80,6 +80,7 @@ branch names and the user merges by hand later.
 
 - [2026-05-10 21:00] START · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: P1 FOLLOWUPS:1133-1142. `crossdesk logs` CLI: host (journal/file), libvirt, freerdp sources; --since, --follow, --component, --json, --lines; interleaved by timestamp; fully mocked tests; guest deferred to P2.
 - [2026-05-10 21:05] START · agent: claude-code · branch: feat/peripherals-config-schema · task: peripherals-config-schema · note: New host/src/crossdesk_host/config/peripherals.py — Pydantic PeripheralsConfig with audio/clipboard/mic/printer/smartcard/usb fields, to_freerdp_flags(), to_libvirt_xml_fragments(), load_peripherals_config(); 12 tests.
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/perf-harness · task: perf-harness · note: P0 performance benchmark harness. Add bench_N1_1_cold_launch, bench_N1_2_suspend, bench_N1_6_recovery; extend bench_check.py with --baseline/--results CLI; update perf-baselines.json; add microbench CI job.
 
 ## Recent
 

@@ -1,30 +1,53 @@
-# cargo-deny configuration for the guest workspace.
+# cargo-deny configuration for the gui workspace.
 #
-# Run: `cargo deny check`
+# Run: `cargo deny check`  (from the gui/ workspace root)
 #
-# CrossDesk is GPL-3.0-or-later. Deps may be permissive (MIT,
-# Apache-2.0, BSD, ISC, Unicode-DFS) or copyleft compatible with GPL-3
-# (LGPL-3, MPL-2.0). We deny anything stricter (AGPL would force
-# downstream packages, BUSL etc).
+# Mirrors guest/deny.toml — see that file for the rationale on each
+# section. Kept as a separate file because cargo-deny resolves config
+# from the workspace root and the two workspaces have disjoint dep
+# graphs (gui pulls Qt6 / cxx-qt, guest pulls tonic / windows-rs).
 #
-# RustSec advisories are enforced in `[advisories]`; unmaintained =
-# warn (we want to know but not block) since upstream maintenance is
-# outside our control.
+# CrossDesk ships under GPL-3.0-or-later. Direct + transitive deps are
+# permitted only if their license is permissive (MIT, Apache-2.0, BSD,
+# ISC, Unicode, Zlib, …) or copyleft-compatible with GPL-3 (LGPL-3,
+# MPL-2.0). Anything stricter is rejected by omission from the
+# allow-list.
+#
+# The pre-push hook runs `cargo deny check --hide-inclusion-graph`
+# automatically when cargo-deny is on PATH (see .githooks/pre-push and
+# docs/AUDIT_REPORT.md "How to re-run"). The same check runs on every
+# push and PR via .github/workflows/security.yml.
 
+# -----------------------------------------------------------------------
+# Advisories — RustSec database integration.
+# -----------------------------------------------------------------------
+#
+# Defaults from cargo-deny 0.19: vulnerability = deny, yanked = warn,
+# notice = warn, unmaintained + unsound = deny. We tighten yanked →
+# deny so a yanked dep blocks the push. Each entry in `ignore` MUST
+# carry a one-line justification + a re-evaluation trigger.
 [advisories]
 yanked = "deny"
 ignore = [
-    # rustls-pemfile is unmaintained as of 2025-08; tonic 0.12 still
-    # depends on it, so we flag-and-track until tonic updates.
+    # rustls-pemfile is unmaintained as of 2025-08; pulled in via the
+    # shared proto crate's tonic dep. Re-evaluate after tonic 0.13+.
+    # Listed even though the gui workspace doesn't currently transit
+    # through tonic, so the entry is harmless if unmatched (warn-only
+    # cargo-deny output, not a hard fail).
     "RUSTSEC-2025-0134",
 ]
 
+# -----------------------------------------------------------------------
+# Licenses — explicit allow-list, deny-by-omission.
+# -----------------------------------------------------------------------
 [licenses]
 allow = [
+    # First-party + first-party-compatible copyleft.
     "GPL-3.0",
     "GPL-3.0-or-later",
     "LGPL-3.0-or-later",
     "MPL-2.0",
+    # Standard permissive set used across the Rust ecosystem.
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "MIT",
@@ -38,25 +61,36 @@ allow = [
     "0BSD",
     "CC0-1.0",
     "BSL-1.0",
+    # OpenSSL is needed for transitive deps that link or vendor it.
     "OpenSSL",
 ]
 confidence-threshold = 0.8
 exceptions = []
 
+# -----------------------------------------------------------------------
+# Bans — multiple-version + wildcard policy.
+# -----------------------------------------------------------------------
+#
+# multiple-versions starts as "warn" so we can see the duplicate graph
+# without blocking pushes; tightening to "deny" is queued as a
+# follow-up once the cxx-qt / qt6-* duplicate graph stabilises.
+#
+# wildcards = "allow" because the gui workspace will eventually use
+# `path = "../crates/..."` for first-party crates without a version
+# field, mirroring the guest pattern.
 [bans]
 multiple-versions = "warn"
-# `wildcards = "deny"` rejects internal `path = "../foo"` dependencies
-# that don't carry a version field. We explicitly allow wildcards on
-# our own crates (proto, observability, ipc-vsock, etc.) since their
-# versions are workspace-pinned anyway.
 wildcards = "allow"
 highlight = "all"
 deny = []
 skip = []
 skip-tree = []
 
+# -----------------------------------------------------------------------
+# Sources — only crates.io + (no) git remotes.
+# -----------------------------------------------------------------------
 [sources]
-unknown-registry = "warn"
-unknown-git = "warn"
+unknown-registry = "deny"
+unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = []

@@ -103,7 +103,7 @@ jobs:
         run: cargo check --workspace
 
   proto:
-    name: Proto codegen sanity
+    name: Proto lint + format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,13 +111,14 @@ jobs:
         uses: bufbuild/buf-setup-action@v1
       - name: buf lint
         working-directory: proto
-        # Tolerated until `buf.yaml` is finalised; the lint rules ship as
-        # default-permissive. Tracked in FOLLOWUPS under "Cross-platform
-        # development & testing scaffold".
-        run: buf lint || true
+        # Rules codified in proto/buf.yaml (STANDARD minus COMMENT_*).
+        # Strict-enforced.
+        run: buf lint
       - name: buf format check
         working-directory: proto
-        run: buf format --diff --exit-code || true
+        # Diff-and-fail on any unformatted file. Run `buf format -w`
+        # locally to normalise.
+        run: buf format --diff --exit-code
 
   linux-kvm-smoke:
     name: Linux + KVM smoke (placeholder — needs self-hosted runner)

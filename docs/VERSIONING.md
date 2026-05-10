@@ -192,11 +192,16 @@ hit majors.
 ## Implementation phasing
 
 ### P0 (foundation, comes early)
-- `Hello` message added to proto with `protocol_version`,
-  `host_version`, `agent_version`, `capabilities` fields.
-- Handshake logic on connect, on both sides.
-- Compatibility matrix enforcement with structured error messages.
-- Versioning policy documented (this file).
+- ✅ `protocol_version` field 4 added to `ClientHello` and `ServerAccept`
+  in `proto/crossdesk/v1/control.proto`. `agent_version` field 7 added
+  to `StatusFrame` in `mgmt.proto`. Guest stamps `protocol_version="1"`;
+  host echoes it in `ServerAccept`. Both are exposed via
+  `crossdesk version` and `ManagementService.Status`.
+- ✅ Handshake logic on connect, on both sides. Host rejects on major
+  mismatch (`AuthFailure.CODE_FEATURE_NEGOTIATION_FAILED`); guest logs
+  warning but stays lenient.
+- ✅ Compatibility matrix enforcement with structured error messages.
+- ✅ Versioning policy documented (this file).
 
 ### P1
 - `crossdesk upgrade` agent hot-swap path (already in Operations
@@ -208,8 +213,10 @@ hit majors.
 - Deprecation tracking: when a MINOR adds a field that obsoletes
   an older one, surface a warning at startup until removed in a
   MAJOR.
-- `crossdesk version` command that shows host + agent versions
-  side-by-side and warns of mismatch.
+- ✅ `crossdesk version` command shows host version, agent version
+  (from `ManagementService.Status.agent_version`), protocol version
+  (constant "1"), and commit. Handles "daemon not running" and
+  "not connected" states.
 
 ## What WinApps does for comparison
 

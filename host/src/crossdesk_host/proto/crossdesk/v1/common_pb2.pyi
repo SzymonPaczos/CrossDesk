@@ -71,14 +71,7 @@ class AuthContext(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "peer_cert_fingerprint",
-        b"peer_cert_fingerprint",
-        "sequence",
-        b"sequence",
-        "stream_nonce",
-        b"stream_nonce",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["peer_cert_fingerprint", b"peer_cert_fingerprint", "sequence", b"sequence", "stream_nonce", b"stream_nonce"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -106,13 +99,9 @@ class TimingMark(_message.Message):
         wall_clock: _timestamp_pb2.Timestamp | None = ...,
         monotonic_ns: _builtins.int = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "wall_clock", b"wall_clock"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["wall_clock", b"wall_clock"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "monotonic_ns", b"monotonic_ns", "wall_clock", b"wall_clock"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["monotonic_ns", b"monotonic_ns", "wall_clock", b"wall_clock"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

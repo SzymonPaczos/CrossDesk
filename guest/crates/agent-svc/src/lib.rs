@@ -14,3 +14,4 @@ pub mod planes;
 pub mod session;
 pub mod heartbeat;
 pub mod filesystem;
+pub mod credentials;

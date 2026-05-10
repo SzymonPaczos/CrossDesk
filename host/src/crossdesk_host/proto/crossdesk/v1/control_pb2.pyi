@@ -86,10 +86,16 @@ class ClientHello(_message.Message):
     HOST_VERSION_FIELD_NUMBER: _builtins.int
     SUPPORTED_FEATURES_FIELD_NUMBER: _builtins.int
     HOST_DOMAIN_UUID_FIELD_NUMBER: _builtins.int
+    PROTOCOL_VERSION_FIELD_NUMBER: _builtins.int
     host_version: _builtins.str
     host_domain_uuid: _builtins.str
     """UUID domeny libvirt po stronie hosta. Guest porównuje z własnym
     SMBIOS-injected UUID, żeby wykryć live-migration / host swap.
+    """
+    protocol_version: _builtins.str
+    """CrossDesk wire-protocol major version. Currently "1". On a major
+    version bump the receiver rejects with AuthFailure FEATURE_NEGOTIATION_FAILED
+    rather than trying to parse an incompatible frame layout.
     """
     @_builtins.property
     def supported_features(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
@@ -103,10 +109,11 @@ class ClientHello(_message.Message):
         host_version: _builtins.str = ...,
         supported_features: _abc.Iterable[_builtins.str] | None = ...,
         host_domain_uuid: _builtins.str = ...,
+        protocol_version: _builtins.str = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["host_domain_uuid", b"host_domain_uuid", "host_version", b"host_version", "supported_features", b"supported_features"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["host_domain_uuid", b"host_domain_uuid", "host_version", b"host_version", "protocol_version", b"protocol_version", "supported_features", b"supported_features"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -305,9 +312,12 @@ class ServerAccept(_message.Message):
     GUEST_VERSION_FIELD_NUMBER: _builtins.int
     NEGOTIATED_FEATURES_FIELD_NUMBER: _builtins.int
     GUEST_SMBIOS_UUID_FIELD_NUMBER: _builtins.int
+    PROTOCOL_VERSION_FIELD_NUMBER: _builtins.int
     guest_version: _builtins.str
     guest_smbios_uuid: _builtins.str
     """p. ClientHello.host_domain_uuid"""
+    protocol_version: _builtins.str
+    """Echoes the protocol_version the guest is responding under."""
     @_builtins.property
     def negotiated_features(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]: ...
     def __init__(
@@ -316,10 +326,11 @@ class ServerAccept(_message.Message):
         guest_version: _builtins.str = ...,
         negotiated_features: _abc.Iterable[_builtins.str] | None = ...,
         guest_smbios_uuid: _builtins.str = ...,
+        protocol_version: _builtins.str = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["guest_smbios_uuid", b"guest_smbios_uuid", "guest_version", b"guest_version", "negotiated_features", b"negotiated_features"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["guest_smbios_uuid", b"guest_smbios_uuid", "guest_version", b"guest_version", "negotiated_features", b"negotiated_features", "protocol_version", b"protocol_version"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

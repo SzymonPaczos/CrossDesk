@@ -17,7 +17,7 @@ Item {
             width: dashboard.width
             spacing: 0
 
-            // ── Pane header ───────────────────────────────────
+            // ── Pane header ───────────────────────────────────────
             Rectangle {
                 Layout.fillWidth: true
                 height: 52
@@ -59,109 +59,107 @@ Item {
                     border.color: palette.mid
                     border.width: 1
                     radius: 6
+                    implicitHeight: statusHeader.height + statusBody.implicitHeight + 28
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 0
-                        spacing: 0
+                    Rectangle {
+                        id: statusHeader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 38
+                        color: "transparent"
+                        radius: 6
 
-                        // Card header
                         Rectangle {
-                            Layout.fillWidth: true
-                            height: 38
-                            color: "transparent"
-                            radius: 6
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 1
+                            color: palette.mid
+                        }
 
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 1
-                                color: palette.mid
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            Label {
+                                text: qsTr("VM Status")
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
                             }
+                            Item { Layout.fillWidth: true }
+                            Label {
+                                text: qsTr("Uptime: %1").arg(mgr.uptime_label)
+                                font.pixelSize: 11
+                                color: palette.placeholderText
+                            }
+                        }
+                    }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14
-                                anchors.rightMargin: 14
-                                Label {
-                                    text: qsTr("VM Status")
-                                    font.pixelSize: 12
-                                    font.weight: Font.DemiBold
-                                }
-                                Item { Layout.fillWidth: true }
-                                Label {
-                                    text: qsTr("Uptime: %1").arg(mgr.uptime_label)
-                                    font.pixelSize: 11
-                                    color: palette.placeholderText
-                                }
+                    RowLayout {
+                        id: statusBody
+                        anchors.top: statusHeader.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.margins: 14
+                        spacing: 16
+
+                        Rectangle {
+                            implicitWidth: 14
+                            implicitHeight: 14
+                            radius: 7
+                            color: severityColor(mgr.fsm_severity)
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        ColumnLayout {
+                            spacing: 2
+                            Label {
+                                text: mgr.fsm_state
+                                font.pixelSize: 15
+                                font.weight: Font.Bold
+                                font.family: "monospace"
+                                color: palette.text
+                                font.letterSpacing: 0.8
+                            }
+                            Label {
+                                text: qsTr("Heartbeat RTT: %1 ms").arg(mgr.ewma_rtt_ms)
+                                font.pixelSize: 11
+                                color: palette.placeholderText
                             }
                         }
 
-                        // Card body
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.margins: 14
-                            spacing: 16
+                        Item { Layout.fillWidth: true }
 
-                            // Severity dot
-                            Rectangle {
-                                width: 14
-                                height: 14
-                                radius: 7
-                                color: severityColor(mgr.fsm_severity)
-                                Layout.alignment: Qt.AlignVCenter
+                        GridLayout {
+                            columns: 2
+                            rowSpacing: 8
+                            columnSpacing: 28
+
+                            Label {
+                                text: qsTr("AuthCtx rejections")
+                                font.pixelSize: 10
+                                color: palette.placeholderText
+                                font.capitalization: Font.AllUppercase
+                                font.letterSpacing: 0.4
+                            }
+                            Label {
+                                text: mgr.auth_rejections
+                                font.pixelSize: 12
+                                font.family: "monospace"
                             }
 
-                            ColumnLayout {
-                                spacing: 2
-                                Label {
-                                    text: mgr.fsm_state
-                                    font.pixelSize: 15
-                                    font.weight: Font.Bold
-                                    font.family: "monospace"
-                                    color: palette.text
-                                    font.letterSpacing: 0.8
-                                }
-                                Label {
-                                    text: qsTr("Heartbeat RTT: %1 ms").arg(mgr.ewma_rtt_ms)
-                                    font.pixelSize: 11
-                                    color: palette.placeholderText
-                                }
+                            Label {
+                                text: qsTr("Active mounts")
+                                font.pixelSize: 10
+                                color: palette.placeholderText
+                                font.capitalization: Font.AllUppercase
+                                font.letterSpacing: 0.4
                             }
-
-                            Item { Layout.fillWidth: true }
-
-                            GridLayout {
-                                columns: 2
-                                rowSpacing: 8
-                                columnSpacing: 28
-
-                                Label {
-                                    text: qsTr("AuthCtx rejections")
-                                    font.pixelSize: 10
-                                    color: palette.placeholderText
-                                    font.capitalization: Font.AllUppercase
-                                    font.letterSpacing: 0.4
-                                }
-                                Label {
-                                    text: mgr.auth_rejections
-                                    font.pixelSize: 12
-                                    font.family: "monospace"
-                                }
-
-                                Label {
-                                    text: qsTr("Active mounts")
-                                    font.pixelSize: 10
-                                    color: palette.placeholderText
-                                    font.capitalization: Font.AllUppercase
-                                    font.letterSpacing: 0.4
-                                }
-                                Label {
-                                    text: mgr.active_mounts.length
-                                    font.pixelSize: 12
-                                    font.family: "monospace"
-                                }
+                            Label {
+                                text: mgr.active_mounts.length
+                                font.pixelSize: 12
+                                font.family: "monospace"
                             }
                         }
                     }
@@ -174,103 +172,107 @@ Item {
                     border.color: palette.mid
                     border.width: 1
                     radius: 6
+                    implicitHeight: resourcesHeader.height + resourcesBody.implicitHeight + 28
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 0
+                    Rectangle {
+                        id: resourcesHeader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 38
+                        color: "transparent"
+                        radius: 6
 
                         Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 1
+                            color: palette.mid
+                        }
+
+                        Label {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 14
+                            text: qsTr("Resources")
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+                    }
+
+                    ColumnLayout {
+                        id: resourcesBody
+                        anchors.top: resourcesHeader.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.margins: 14
+                        spacing: 14
+
+                        // CPU bar
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            height: 38
-                            color: "transparent"
-                            radius: 6
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 1
-                                color: palette.mid
+                            spacing: 6
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label {
+                                    text: qsTr("CPU")
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                    Layout.preferredWidth: 44
+                                }
+                                Item { Layout.fillWidth: true }
+                                Label {
+                                    text: mgr.cpu_percent + " %"
+                                    font.pixelSize: 11
+                                    font.family: "monospace"
+                                    color: palette.placeholderText
+                                }
                             }
-
-                            Label {
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.leftMargin: 14
-                                text: qsTr("Resources")
-                                font.pixelSize: 12
-                                font.weight: Font.DemiBold
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 6
+                                radius: 3
+                                color: palette.mid
+                                Rectangle {
+                                    width: parent.width * (mgr.cpu_percent / 100.0)
+                                    height: parent.height
+                                    radius: 3
+                                    color: palette.highlight
+                                }
                             }
                         }
 
+                        // RAM bar
                         ColumnLayout {
                             Layout.fillWidth: true
-                            Layout.margins: 14
-                            spacing: 14
-
-                            // CPU bar
-                            ColumnLayout {
-                                spacing: 6
-                                RowLayout {
-                                    Label {
-                                        text: qsTr("CPU")
-                                        font.pixelSize: 12
-                                        font.weight: Font.Medium
-                                        Layout.preferredWidth: 44
-                                    }
-                                    Item { Layout.fillWidth: true }
-                                    Label {
-                                        text: mgr.cpu_percent + " %"
-                                        font.pixelSize: 11
-                                        font.family: "monospace"
-                                        color: palette.placeholderText
-                                    }
+                            spacing: 6
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label {
+                                    text: qsTr("RAM")
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                    Layout.preferredWidth: 44
                                 }
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    height: 6
-                                    radius: 3
-                                    color: palette.mid
-
-                                    Rectangle {
-                                        width: parent.width * (mgr.cpu_percent / 100.0)
-                                        height: parent.height
-                                        radius: 3
-                                        color: palette.highlight
-                                    }
+                                Item { Layout.fillWidth: true }
+                                Label {
+                                    text: mgr.ram_label
+                                    font.pixelSize: 11
+                                    font.family: "monospace"
+                                    color: palette.placeholderText
                                 }
                             }
-
-                            // RAM bar
-                            ColumnLayout {
-                                spacing: 6
-                                RowLayout {
-                                    Label {
-                                        text: qsTr("RAM")
-                                        font.pixelSize: 12
-                                        font.weight: Font.Medium
-                                        Layout.preferredWidth: 44
-                                    }
-                                    Item { Layout.fillWidth: true }
-                                    Label {
-                                        text: mgr.ram_label
-                                        font.pixelSize: 11
-                                        font.family: "monospace"
-                                        color: palette.placeholderText
-                                    }
-                                }
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 6
+                                radius: 3
+                                color: palette.mid
                                 Rectangle {
-                                    Layout.fillWidth: true
-                                    height: 6
+                                    width: parent.width * (mgr.ram_percent / 100.0)
+                                    height: parent.height
                                     radius: 3
-                                    color: palette.mid
-
-                                    Rectangle {
-                                        width: parent.width * (mgr.ram_percent / 100.0)
-                                        height: parent.height
-                                        radius: 3
-                                        color: palette.highlight
-                                    }
+                                    color: palette.highlight
                                 }
                             }
                         }
@@ -284,57 +286,59 @@ Item {
                     border.color: palette.mid
                     border.width: 1
                     radius: 6
+                    implicitHeight: activityHeader.height + activityBody.implicitHeight + 28
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 0
+                    Rectangle {
+                        id: activityHeader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 38
+                        color: "transparent"
+                        radius: 6
 
                         Rectangle {
-                            Layout.fillWidth: true
-                            height: 38
-                            color: "transparent"
-                            radius: 6
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 1
+                            color: palette.mid
+                        }
 
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 1
-                                color: palette.mid
-                            }
+                        Label {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 14
+                            text: qsTr("Recent activity")
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+                    }
 
-                            Label {
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.leftMargin: 14
-                                text: qsTr("Recent activity")
-                                font.pixelSize: 12
-                                font.weight: Font.DemiBold
+                    ColumnLayout {
+                        id: activityBody
+                        anchors.top: activityHeader.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.margins: 14
+                        spacing: 4
+
+                        Repeater {
+                            model: mgr.recent_activity
+                            delegate: Label {
+                                text: modelData
+                                font.family: "monospace"
+                                font.pixelSize: 11
+                                color: palette.text
+                                Layout.fillWidth: true
                             }
                         }
 
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.margins: 14
-                            spacing: 4
-
-                            Repeater {
-                                model: mgr.recent_activity
-                                delegate: Label {
-                                    text: modelData
-                                    font.family: "monospace"
-                                    font.pixelSize: 11
-                                    color: palette.text
-                                    Layout.fillWidth: true
-                                }
-                            }
-
-                            Label {
-                                visible: mgr.recent_activity.length === 0
-                                text: qsTr("No recent activity.")
-                                color: palette.placeholderText
-                                font.pixelSize: 12
-                            }
+                        Label {
+                            visible: mgr.recent_activity.length === 0
+                            text: qsTr("No recent activity.")
+                            color: palette.placeholderText
+                            font.pixelSize: 12
                         }
                     }
                 }
@@ -361,7 +365,6 @@ Item {
                     Item { Layout.fillWidth: true }
                 }
 
-                // Bottom spacer
                 Item { height: 8 }
             }
         }

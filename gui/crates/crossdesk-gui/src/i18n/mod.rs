@@ -1,7 +1,9 @@
-use cxx_qt_lib::QGuiApplication;
-use std::pin::Pin;
+unsafe extern "C" {
+    fn crossdesk_install_translator(locale: *const u8, len: i32);
+}
 
-// TODO: cxx-qt-lib 0.7.3 does not expose QTranslator or
-// QCoreApplication::installTranslator. Wire translation loading once we
-// add a custom cxx::bridge for QTranslator (or upgrade cxx-qt-lib).
-pub fn install_translator(_app: Pin<&mut QGuiApplication>, _locale: &str) {}
+pub fn install_translator(locale: &str) {
+    // Safety: the C++ function reads exactly `len` bytes from `locale`,
+    // which is a valid UTF-8 str with at least that many bytes.
+    unsafe { crossdesk_install_translator(locale.as_ptr(), locale.len() as i32) }
+}

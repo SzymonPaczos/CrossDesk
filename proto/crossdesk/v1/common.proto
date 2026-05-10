@@ -40,6 +40,13 @@ message AuthContext {
   // Ściśle monotoniczny licznik per-kierunek (klient i serwer mają osobne).
   // Nadawca inkrementuje przed wysłaniem; odbiorca wymusza ścisłe +1.
   uint64 sequence = 3;
+
+  // W3C traceparent header propagated across the host↔guest boundary so
+  // that a single trace_id ties together host-side dispatch logs and
+  // guest-side handler logs. Format: "00-<32hex>-<16hex>-<2hex>" (version 0).
+  // Optional: receivers must tolerate an absent or malformed value — they
+  // generate a fresh root context rather than rejecting the frame.
+  string traceparent = 4;
 }
 
 // Wall-clock + monotonic shipowane razem.

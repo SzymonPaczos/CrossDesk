@@ -80,8 +80,10 @@ branch names and the user merges by hand later.
 
 <!-- Currently in flight. Move to Recent on completion. -->
 
-- [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
 ## Recent
+
+- [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
+- [2026-05-10 00:08] END · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: result: success → merged as c3b7707. docs/DISTRIBUTION.md with 5-format packaging map + dual-layer update flow; AGENTS.md nav row; PACKAGING.md cross-ref.
 
 - [2026-05-10 19:30] START · agent: claude-code · branch: feat/traceparent-on-wire · task: traceparent-in-authcontext · note: Resume after context-limit break. USER-APPROVED proto edit. Add `string traceparent = 4;` to common.proto AuthContext. Host VerifyCoordinator stamps traceparent on outgoing ServerFrame; AuthValidator parses + binds on incoming frames. Tests assert W3C-format propagation.
 - [2026-05-10 20:10] END · agent: claude-code · branch: feat/traceparent-on-wire · task: traceparent-in-authcontext · note: result: success → merged as part of main@5811fed batch. common.proto +traceparent field; verify_coordinator stamps auth.traceparent; auth.py parses incoming + binds structlog contextvars; guest client.rs updated; 2 new tests. Gates: mypy --strict 97 files clean; pytest 497/497; cargo check clean.

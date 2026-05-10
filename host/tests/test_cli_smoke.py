@@ -86,3 +86,30 @@ def test_doctor_includes_vm_credentials_check(
     assert rc in (0, 1)
     out = capsys.readouterr().out
     assert "vm_credentials" in out
+
+
+def test_metrics_subparser_listed_in_help(capsys: pytest.CaptureFixture[str]) -> None:
+    """``crossdesk --help`` lists the metrics subcommand. Guards against
+    the parser being forgotten when adding a new sibling."""
+    with pytest.raises(SystemExit) as exc:
+        main(["--help"])
+    assert exc.value.code == 0
+    out = capsys.readouterr().out
+    assert "metrics" in out
+
+
+def test_metrics_dispatches_and_handles_missing_daemon(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    """Happy-path dispatch: the `metrics` subparser parses + reaches
+    the run() function. With no daemon listening on the socket the
+    command exits 1 with a stderr error, not a stack trace — that's
+    the contract."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path))
+    rc = main(["metrics", "--socket", str(tmp_path / "missing.sock")])
+    assert rc == 1
+    err = capsys.readouterr().err
+    # Identifier strings ("error", "UNAVAILABLE", path) stay English
+    # so this assertion isn't locale-dependent.
+    assert "error" in err.lower() or "unavailable" in err.lower()

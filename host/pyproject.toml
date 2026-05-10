@@ -19,6 +19,7 @@ dependencies = [
     "structlog>=24.1",          # JSON-structured logging per DEC-0006
     "hdrhistogram>=0.10",       # in-memory metrics per docs/OBSERVABILITY.md
     "tomli>=2.0; python_version<'3.11'",  # TOML config; stdlib in 3.11+
+    "pydantic>=2.0",            # typed config schema in crossdesk_host.config
 ]
 
 [project.optional-dependencies]

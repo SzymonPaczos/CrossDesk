@@ -23,13 +23,7 @@ def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") ->
     set_p = sp.add_parser("set", help="Set username/password from stdin or args")
     set_p.add_argument("--username", required=True)
     set_p.add_argument("--password", default=None, help="Read from prompt if omitted")
-    sp.add_parser(
-        "check", help="Inspect vm.toml health (presence, parse, file mode); no guest contact"
-    )
-    sp.add_parser(
-        "repair",
-        help="Fix vm.toml file mode to 0600; re-applying password to guest needs a running daemon",
-    )
+    sp.add_parser("repair", help="Re-apply the host-stored password to the guest")
 
 
 def run(args: argparse.Namespace) -> int:
@@ -40,8 +34,6 @@ def run(args: argparse.Namespace) -> int:
         return _run_rotate()
     if action == "set":
         return _run_set(args.username, args.password)
-    if action == "check":
-        return _run_check()
     if action == "repair":
         return _run_repair()
     print(f"unknown credentials action: {action!r}")
@@ -81,33 +73,13 @@ def _run_set(username: str, password: Optional[str]) -> int:
     return 0
 
 
-def _run_check() -> int:
-    health = credentials.health_check()
-    print(f"path:         {health.path}")
-    print(f"present:      {'yes' if health.present else 'no'}")
-    print(f"parsable:     {'yes' if health.parsable else 'no'}")
-    print(f"permissions:  {'0600' if health.permissions_ok else 'NEEDS REPAIR'}")
-    if health.ok:
-        print("status:       OK")
-        return 0
-    hint = health.remediation()
-    print(f"status:       FAIL — {hint}")
-    return 1
-
-
 def _run_repair() -> int:
     creds = credentials.load()
     if creds is None:
-        print(f"no credentials at {credentials.default_path()}; nothing to repair")
+        print(f"no credentials at {credentials.default_path()}")
         return 1
-    changed = credentials.repair_permissions()
-    if changed:
-        print(f"vm.toml permissions tightened to 0600 at {credentials.default_path()}")
-    else:
-        print(f"vm.toml permissions already 0600 at {credentials.default_path()}")
     print(
-        f"note: full guest password re-apply for {creds.username!r} requires a "
-        "running daemon and is wired through `display.session_starter` "
-        "before the next RAIL spawn."
+        f"would re-push password for {creds.username!r} to guest "
+        "(hardware-gated; needs a running domain)"
     )
     return 0

@@ -5,6 +5,7 @@ from crossdesk_host.cli import (
     doctor_cmd,
     install_cmd,
     main,
+    metrics_cmd,
     uninstall_cmd,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "doctor_cmd",
     "install_cmd",
     "main",
+    "metrics_cmd",
     "uninstall_cmd",
 ]

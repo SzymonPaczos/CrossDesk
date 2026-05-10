@@ -7,6 +7,7 @@ Item {
     id: step
     property var wizard
     signal next()
+    signal cancel()
 
     FileDialog {
         id: fileDialog
@@ -53,8 +54,15 @@ Item {
         Item { Layout.fillHeight: true }
 
         RowLayout {
-            Layout.alignment: Qt.AlignRight
+            Layout.fillWidth: true
             spacing: 8
+
+            Button {
+                text: qsTr("Back")
+                onClicked: step.cancel()
+            }
+
+            Item { Layout.fillWidth: true }
 
             Button {
                 text: qsTr("Next")

@@ -1,0 +1,112 @@
+name: Compatibility matrix (N-1 agent)
+
+# Builds the previous minor release's guest agent and exercises it
+# against the current main host. Catches accidentally-breaking proto
+# changes that pass our own smoke tests (because we update both sides
+# in lockstep) but would break a user running last-month's agent
+# against this-month's host.
+#
+# Skips gracefully on repos that have never tagged a release yet
+# (pre-v0.1.0 today). The first run with a real tag will exercise
+# the full handshake; until then the job is a single fast skip step
+# so PR pipelines don't fail.
+#
+# Per FOLLOWUPS.md:489-492 (P1) + DEC-0007 (N-1 minor compat
+# window). Documented in docs/VERSIONING.md "Compatibility matrix".
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  n-minus-1-handshake:
+    name: Build prior-minor agent + handshake against current host
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need full history to find the previous tag.
+          fetch-depth: 0
+
+      - name: Discover previous minor tag
+        id: prev-tag
+        run: |
+          set -euo pipefail
+          # Grab the highest semver tag on the parent of HEAD that
+          # matches v<MAJOR>.<MINOR>.<PATCH>.
+          # `git tag --list 'v*.*.*' --sort=-version:refname | head -1`
+          # is portable across recent git versions.
+          if previous="$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)" && [[ -n "$previous" ]]; then
+            echo "tag=$previous" >> "$GITHUB_OUTPUT"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip when no prior tag exists
+        if: steps.prev-tag.outputs.found == 'false'
+        run: |
+          echo "::notice::no v*.*.* tag in repo yet; N-1 matrix skipped."
+          echo "Once v0.1.0 lands, this job will start exercising"
+          echo "the previous minor's agent against the current host."
+          exit 0
+
+      - name: Set up Python (current host build)
+        if: steps.prev-tag.outputs.found == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Linux build deps
+        if: steps.prev-tag.outputs.found == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvirt-dev libsystemd-dev pkg-config
+
+      - name: Install host package (current main, with mock + dev)
+        if: steps.prev-tag.outputs.found == 'true'
+        working-directory: host
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[mock,dev,linux]"
+
+      - name: Set up Rust toolchain
+        if: steps.prev-tag.outputs.found == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check out previous tag's guest workspace into a sibling dir
+        if: steps.prev-tag.outputs.found == 'true'
+        env:
+          PREV: ${{ steps.prev-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git worktree add "../crossdesk-prev" "${PREV}"
+          ls "../crossdesk-prev/guest"
+
+      - name: Build prior agent with --features mock
+        if: steps.prev-tag.outputs.found == 'true'
+        working-directory: ../crossdesk-prev/guest
+        run: |
+          cargo build -p agent-svc --features mock --bin agent
+          cp target/debug/agent "$GITHUB_WORKSPACE/prev-agent"
+
+      - name: Run smoke harness against prior agent
+        if: steps.prev-tag.outputs.found == 'true'
+        working-directory: host
+        env:
+          # The harness fixture builds its own agent by default. Override
+          # to point it at the prior-tag build we just dropped at the
+          # repo root. Test code reads CROSSDESK_PREBUILT_AGENT and
+          # skips its own cargo build when set.
+          CROSSDESK_PREBUILT_AGENT: ${{ github.workspace }}/prev-agent
+        run: |
+          # Only the smoke harness needs the live agent — keep the run
+          # narrow so an unrelated test failure doesn't get blamed on
+          # backwards-compat.
+          pytest -q tests/test_smoke_inprocess.py
+
+      - name: Cleanup worktree
+        if: always() && steps.prev-tag.outputs.found == 'true'
+        run: git worktree remove --force "../crossdesk-prev" || true

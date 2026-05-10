@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 # Configure structured logging FIRST — before importing any module that
 # captures `structlog.get_logger(...)` (or stdlib logging) at import
@@ -25,7 +24,11 @@ from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
-from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
+from crossdesk_host.ipc.management import (
+    ManagementServiceServicer,
+    MgmtState,
+    mgmt_socket_path,
+)
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env
@@ -46,17 +49,6 @@ from crossdesk_host.transport.real import RealTransport
 configure_otlp_from_env()
 
 logger = get_logger("host.daemon")
-
-
-def _mgmt_socket_path() -> Path:
-    runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
-    if runtime_dir:
-        return Path(runtime_dir) / "crossdesk-host.sock"
-    # Fallback for environments without XDG_RUNTIME_DIR (Mac dev,
-    # minimal containers): drop the socket under ~/.local/run.
-    fallback = Path.home() / ".local" / "run"
-    fallback.mkdir(parents=True, exist_ok=True)
-    return fallback / "crossdesk-host.sock"
 
 
 async def main() -> None:
@@ -102,7 +94,7 @@ async def main() -> None:
     mgmt_pb2_grpc.add_ManagementServiceServicer_to_server(
         ManagementServiceServicer(mgmt_state, libvirt_ctl), mgmt_server
     )
-    sock_path = _mgmt_socket_path()
+    sock_path = mgmt_socket_path()
     if sock_path.exists():
         sock_path.unlink()
     mgmt_server.add_insecure_port(f"unix://{sock_path}")

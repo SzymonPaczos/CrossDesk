@@ -81,6 +81,7 @@ branch names and the user merges by hand later.
 <!-- Currently in flight. Move to Recent on completion. -->
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
+- [2026-05-10 11:14] START · agent: claude-code · branch: feat/verify-credentials-rpc · task: verify-credentials-stage-1 · note: P0 unblocked by user (FOLLOWUPS:928-935 + 985-994). Stage 1 of 3: proto edit (VerifyCredentialsRequest as ServerFrame variant + VerifyCredentialsResult as ClientFrame variant — payload-variant approach because guest is gRPC client not server) + guest mock impl with cfg-gated real-Windows scaffold + guest session.rs wiring. Stages 2-3 follow: host-side VerifyCoordinator + servicer refactor; rail_manager gate + CLI vm credentials check/repair.
 
 ## Recent
 

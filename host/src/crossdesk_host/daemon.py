@@ -16,6 +16,7 @@ from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging, get_logger
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
+from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env
 from crossdesk_host.proto.crossdesk.v1 import (
     control_pb2_grpc,
     filesystem_pb2_grpc,
@@ -25,6 +26,12 @@ from crossdesk_host.proto.crossdesk.v1 import (
 from crossdesk_host.transport.real import RealTransport
 
 configure_logging()
+# OTLP span exporter wires here, after configure_logging() so any
+# warnings the SDK emits land in the JSON stream rather than the
+# default stderr formatter. The function is a no-op when
+# CROSSDESK_OTLP_ENDPOINT is unset, so production daemons that don't
+# run their own collector pay nothing.
+configure_otlp_from_env()
 logger = get_logger("host.daemon")
 
 

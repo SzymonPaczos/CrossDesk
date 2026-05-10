@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19\x63rossdesk/v1/common.proto\x12\x0c\x63rossdesk.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"T\n\x0b\x41uthContext\x12\x1d\n\x15peer_cert_fingerprint\x18\x01 \x01(\t\x12\x14\n\x0cstream_nonce\x18\x02 \x01(\x0c\x12\x10\n\x08sequence\x18\x03 \x01(\x04\"R\n\nTimingMark\x12.\n\nwall_clock\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cmonotonic_ns\x18\x02 \x01(\x06\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19\x63rossdesk/v1/common.proto\x12\x0c\x63rossdesk.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"i\n\x0b\x41uthContext\x12\x1d\n\x15peer_cert_fingerprint\x18\x01 \x01(\t\x12\x14\n\x0cstream_nonce\x18\x02 \x01(\x0c\x12\x10\n\x08sequence\x18\x03 \x01(\x04\x12\x13\n\x0btraceparent\x18\x04 \x01(\t\"R\n\nTimingMark\x12.\n\nwall_clock\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cmonotonic_ns\x18\x02 \x01(\x06\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,7 +33,7 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.common_pb2', _
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_AUTHCONTEXT']._serialized_start=76
-  _globals['_AUTHCONTEXT']._serialized_end=160
-  _globals['_TIMINGMARK']._serialized_start=162
-  _globals['_TIMINGMARK']._serialized_end=244
+  _globals['_AUTHCONTEXT']._serialized_end=181
+  _globals['_TIMINGMARK']._serialized_start=183
+  _globals['_TIMINGMARK']._serialized_end=265
 # @@protoc_insertion_point(module_scope)

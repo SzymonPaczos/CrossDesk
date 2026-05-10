@@ -81,6 +81,7 @@ branch names and the user merges by hand later.
 <!-- Currently in flight. Move to Recent on completion. -->
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
+- [2026-05-10 11:42] START · agent: claude-code · branch: feat/verify-credentials-host · task: verify-credentials-stage-2 · note: Stage 2 of 3 (Stage 1 merged as c3e314c). Host-side: new VerifyCoordinator (request_id correlation map + asyncio.Future plumbing), refactor ControlServiceServicer.OpenSession to support server-initiated ServerFrames via outbound asyncio.Queue, route incoming ClientFrame.verify_credentials_result to coordinator.deliver(). Smoke test extension exercising __inject_ok__ + __inject_bad__ end-to-end through in-process harness. Stage 3 (rail_manager gate + CLI vm credentials check/repair) follows.
 
 ## Recent
 

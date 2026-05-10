@@ -101,6 +101,9 @@ class MgmtState:
     running_apps: List[mgmt_pb2.RailAppRunning] = field(default_factory=list)
     recent_activity: List[mgmt_pb2.RecentActivity] = field(default_factory=list)
     active_mounts: List[mgmt_pb2.MountEntry] = field(default_factory=list)
+    # Set by ControlServiceServicer.on_agent_version after each successful
+    # handshake. Empty string means no session has completed yet.
+    agent_version: str = ""
 
     def append_activity(
         self,
@@ -191,6 +194,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             running_apps=list(self.state.running_apps),
             recent_activity=list(self.state.recent_activity[:10]),
             emitted_at=_ts(),
+            agent_version=self.state.agent_version,
         )
 
     # ------------------------------------------------------------------

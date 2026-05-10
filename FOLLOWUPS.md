@@ -600,29 +600,57 @@ CrossDesk's positioning, especially with non-English users
 underserved by the comparable VM-management tooling. See
 `docs/I18N.md` for the full strategy.
 
-- **[P0] `gettext` configured in Python host.** `bindtextdomain`,
-  `textdomain`, `_()` shortcut available everywhere. Every
-  user-facing string marked `_("...")`. Lives in
-  `host/src/crossdesk_host/i18n.py` (initialization) and used
-  from every module emitting user-visible text.
-- **[P0] `qsTr("...")` markers on every QML string in
-  `gui/`.** Buttons, labels, tooltips, error messages.
-- **[P0] `i18n/` directory at repo root with templates.**
-  `crossdesk.pot` (gettext template), `crossdesk_*.ts` (Qt
-  templates per language). Per-language `.po` and `.ts` files
-  in subdirectories.
-- **[P0] Build tooling.** `Makefile` or `scripts/i18n.sh`
-  invoking `pybabel extract` / `pybabel compile` for gettext,
-  `lupdate` / `lrelease` for Qt. Run on PR to verify no
-  uncommitted string changes.
-- **[P0] Distro package install rules.** `.mo` files to
-  `/usr/share/locale/<lang>/LC_MESSAGES/crossdesk.mo`. `.qm`
-  files to `/usr/share/crossdesk/translations/`. Hooked into
-  packaging work (`docs/PACKAGING.md`).
-- **[P0] English-string discipline.** Logs, config field names,
-  component identifiers, and error codes stay English. Only
-  user-facing UI text gets translated. Documented in
-  `docs/I18N.md`; reviewers enforce.
+- **[P0] [✅ DONE 2026-05-10] `gettext` configured in Python host.**
+  `crossdesk_host.i18n` module exposes `_()` backed by
+  `gettext.translation()`; falls back to `NullTranslations` (identity)
+  when no `.mo` is found so unconfigured installs stay English.
+  Probes `$CROSSDESK_LOCALEDIR`, `$XDG_DATA_DIRS/locale/`, and the
+  in-repo `i18n/` for dev. CLI surfaces migrated:
+  `cli/credentials_cmd.py`, `cli/doctor_cmd.py`,
+  `cli/uninstall_cmd.py`. Other `print()` call sites in
+  `cli/install_cmd.py`, `cli/main.py`, and the `installer/` package
+  remain English-literal — follow-up wave can wrap them as user
+  testing surfaces them.
+- **[P0] [PARTIAL 2026-05-10] `qsTr("...")` markers on every QML
+  string in `gui/`.** Audit on entry-point pages
+  (`Main.qml`, `Manager.qml`, `wizard/InstallWizard.qml`,
+  `wizard/Step1Iso.qml`, `wizard/Step2Identity.qml`,
+  `wizard/Step3Resources.qml`) confirms they are already
+  `qsTr()`-clean — strings are picked up by the existing
+  `gui/crates/crossdesk-gui/i18n/crossdesk_pl.ts`. `About.qml`
+  intentionally has 1 brand string ("CrossDesk Manager", not
+  translated) plus 1 deliberate Polish easter-egg per ROADMAP
+  (Phase 4 SPOF blurb). Remaining manager pages
+  (`Apps.qml`, `Storage.qml`, `Lifecycle.qml`, `Diagnose.qml`,
+  `Logs.qml`, `Settings.qml`) were not line-audited in this pass —
+  follow-up.
+- **[P0] [✅ DONE 2026-05-10] `i18n/` directory at repo root with
+  templates.** `i18n/crossdesk-host.pot` (gettext skeleton),
+  `i18n/pl/LC_MESSAGES/.gitkeep` placeholder for Polish .po,
+  `i18n/README.md` documenting the workflow. Qt `.ts` files
+  continue to live next to the GUI source under
+  `gui/crates/crossdesk-gui/i18n/` (where the Qt resource
+  system expects them) — `i18n/README.md` cross-references.
+- **[P0] [✅ DONE 2026-05-10] Build tooling.** `scripts/i18n.sh`
+  with `extract` and `compile` subcommands. Wraps `xgettext`
+  (Python sources → `.pot`) and `lupdate` (QML → `.ts`) for
+  extraction; `msgfmt` and `lrelease` for compile. Idempotent —
+  re-run with no source changes leaves the templates byte-identical
+  (the `POT-Creation-Date` is frozen to keep diffs clean for
+  the eventual CI extraction job).
+- **[P0] [✅ DONE 2026-05-10] Distro package install rules.**
+  Documented in `i18n/README.md`: `.mo` files land at
+  `/usr/share/locale/<lang>/LC_MESSAGES/crossdesk-host.mo`,
+  `.qm` files at `/usr/share/crossdesk/translations/`. Standard
+  freedesktop / Qt paths — distro packagers (deb / rpm / AUR)
+  invoke `msgfmt` and `lrelease` from their build steps.
+  Compiled artifacts are intentionally not in-repo.
+- **[P0] [✅ DONE 2026-05-10] English-string discipline.** Already
+  documented in `docs/I18N.md` "Strings we don't translate" — logs
+  via structlog, config field names, component identifiers, and
+  error codes stay English. Reinforced in `i18n/README.md`
+  "Conventions". The `crossdesk_host.i18n` module docstring
+  re-states the rule for code readers. Reviewers enforce.
 - **[P1] Polish translations complete.** Project author
   translates all P0-shipped strings to Polish before first
   release.

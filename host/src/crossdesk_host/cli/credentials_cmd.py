@@ -12,6 +12,7 @@ import argparse
 import getpass
 from typing import Optional
 
+from crossdesk_host.i18n import _
 from crossdesk_host.installer import credentials
 
 
@@ -24,7 +25,8 @@ def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") ->
     set_p.add_argument("--username", required=True)
     set_p.add_argument("--password", default=None, help="Read from prompt if omitted")
     sp.add_parser(
-        "check", help="Inspect vm.toml health (presence, parse, file mode); no guest contact"
+        "check",
+        help="Inspect vm.toml health (presence, parse, file mode); no guest contact",
     )
     sp.add_parser(
         "repair",
@@ -44,70 +46,102 @@ def run(args: argparse.Namespace) -> int:
         return _run_check()
     if action == "repair":
         return _run_repair()
-    print(f"unknown credentials action: {action!r}")
+    # The action!r value is a CLI-reachable identifier (English literal
+    # passed by the user via argparse) — not translated. The framing is.
+    print(_("unknown credentials action: {action!r}").format(action=action))
     return 2
 
 
 def _run_show() -> int:
     creds = credentials.load()
     if creds is None:
-        print(f"no credentials at {credentials.default_path()}")
+        print(_("no credentials at {path}").format(path=credentials.default_path()))
         return 1
-    print(f"username = {creds.username}")
-    print(f"password = {creds.password}")
+    print(_("username = {username}").format(username=creds.username))
+    print(_("password = {password}").format(password=creds.password))
     return 0
 
 
 def _run_rotate() -> int:
     existing = credentials.load()
     if existing is None:
-        print("no existing credentials; run `crossdesk install` first")
+        print(_("no existing credentials; run `crossdesk install` first"))
         return 1
     new_creds = credentials.generate(existing.username)
     credentials.save(new_creds)
-    print(f"host updated for {new_creds.username!r}")
+    print(_("host updated for {username!r}").format(username=new_creds.username))
     print(
-        "(guest password change is hardware-gated; "
-        "run `crossdesk vm credentials repair` once VM is reachable)"
+        _(
+            "(guest password change is hardware-gated; "
+            "run `crossdesk vm credentials repair` once VM is reachable)"
+        )
     )
     return 0
 
 
 def _run_set(username: str, password: Optional[str]) -> int:
     if password is None:
-        password = getpass.getpass("password: ")
+        password = getpass.getpass(_("password: "))
     credentials.save(credentials.VmCredentials(username=username, password=password))
-    print(f"saved credentials for {username!r}")
+    print(_("saved credentials for {username!r}").format(username=username))
     return 0
 
 
 def _run_check() -> int:
     health = credentials.health_check()
-    print(f"path:         {health.path}")
-    print(f"present:      {'yes' if health.present else 'no'}")
-    print(f"parsable:     {'yes' if health.parsable else 'no'}")
-    print(f"permissions:  {'0600' if health.permissions_ok else 'NEEDS REPAIR'}")
+    # Field labels are user-facing column headers for a human-readable
+    # report, so they get translated. The values "yes" / "no" /
+    # "0600" / "NEEDS REPAIR" are also surfaced to the operator,
+    # not parsed by anything machine-readable.
+    print(_("path:         {value}").format(value=health.path))
+    print(
+        _("present:      {value}").format(value=_("yes") if health.present else _("no"))
+    )
+    print(
+        _("parsable:     {value}").format(
+            value=_("yes") if health.parsable else _("no")
+        )
+    )
+    print(
+        _("permissions:  {value}").format(
+            value="0600" if health.permissions_ok else _("NEEDS REPAIR")
+        )
+    )
     if health.ok:
-        print("status:       OK")
+        print(_("status:       OK"))
         return 0
     hint = health.remediation()
-    print(f"status:       FAIL — {hint}")
+    print(_("status:       FAIL — {hint}").format(hint=hint))
     return 1
 
 
 def _run_repair() -> int:
     creds = credentials.load()
     if creds is None:
-        print(f"no credentials at {credentials.default_path()}; nothing to repair")
+        print(
+            _("no credentials at {path}; nothing to repair").format(
+                path=credentials.default_path()
+            )
+        )
         return 1
     changed = credentials.repair_permissions()
     if changed:
-        print(f"vm.toml permissions tightened to 0600 at {credentials.default_path()}")
+        print(
+            _("vm.toml permissions tightened to 0600 at {path}").format(
+                path=credentials.default_path()
+            )
+        )
     else:
-        print(f"vm.toml permissions already 0600 at {credentials.default_path()}")
+        print(
+            _("vm.toml permissions already 0600 at {path}").format(
+                path=credentials.default_path()
+            )
+        )
     print(
-        f"note: full guest password re-apply for {creds.username!r} requires a "
-        "running daemon and is wired through `display.session_starter` "
-        "before the next RAIL spawn."
+        _(
+            "note: full guest password re-apply for {username!r} requires a "
+            "running daemon and is wired through `display.session_starter` "
+            "before the next RAIL spawn."
+        ).format(username=creds.username)
     )
     return 0

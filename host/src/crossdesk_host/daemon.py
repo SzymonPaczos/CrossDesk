@@ -1,6 +1,19 @@
 import os
 from pathlib import Path
 
+# Configure structured logging FIRST — before importing any module that
+# captures `structlog.get_logger(...)` (or stdlib logging) at import
+# time. Without this ordering every servicer's module-level logger
+# binds to the default factory before configure_logging() rewires
+# structlog's processors / contextvars / JSON renderer; the servicer
+# never observes the configured stream and trace_id binding never
+# reaches its log records. Discovered during the trace-propagation
+# completion sweep — each ipc/* module that does
+# ``logger = get_logger(__name__)`` at module scope was a victim.
+from crossdesk_host.observability import configure_logging, get_logger
+
+configure_logging()
+
 import grpc
 
 try:
@@ -14,7 +27,6 @@ from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
-from crossdesk_host.observability import configure_logging, get_logger
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
 from crossdesk_host.proto.crossdesk.v1 import (
     control_pb2_grpc,
@@ -24,7 +36,6 @@ from crossdesk_host.proto.crossdesk.v1 import (
 )
 from crossdesk_host.transport.real import RealTransport
 
-configure_logging()
 logger = get_logger("host.daemon")
 
 

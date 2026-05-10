@@ -78,7 +78,7 @@ branch names and the user merges by hand later.
 
 ## Active
 
-<!-- Currently in flight. Move to Recent on completion. -->
+- [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
 
 ## Recent
 

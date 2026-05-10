@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from pathlib import Path
 from typing import AsyncIterator
 
@@ -40,6 +41,13 @@ from crossdesk_host.proto.crossdesk.v1 import (
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKI = _REPO_ROOT / "infra" / "certs" / "pki"
+
+# 32-byte mount_token — the wire contract enforces exactly this length on
+# MountResult / LockReport / ReleaseAck (filesystem.py MOUNT_TOKEN_LEN).
+# Wrong-length frames are silently dropped at the host servicer, so every
+# smoke frame carrying one MUST use this constant or the test would pass
+# while the frame was rejected. See FOLLOWUPS:64-69.
+_MOUNT_TOKEN: bytes = b"\xab" * 32
 
 
 pytestmark = pytest.mark.skipif(
@@ -241,12 +249,15 @@ async def test_heartbeat_ping_pong_roundtrip(host_server, channel_factory) -> No
 # ---------------------------------------------------------------------------
 
 
-async def test_filesystem_mount_result_recorded(host_server, channel_factory) -> None:
+async def test_filesystem_mount_result_recorded(
+    host_server, channel_factory, caplog: pytest.LogCaptureFixture
+) -> None:
     """Connect to ShareChannel, push a MountResult(STATUS_MOUNTED), then close.
 
-    We can't peek at the live servicer's `active_shares` from out here, but we
-    can prove the bidi handshake completes without auth/wire errors and the
-    server processes our frame (no AbortError raised over the wire).
+    Beyond proving the bidi handshake completes without auth/wire errors, this
+    asserts the host log line for the accept-path fired. Without that check
+    the 32-byte ``mount_token`` enforcement could silently drop the frame and
+    the test would still pass — the regression FOLLOWUPS:64-69 was filed for.
     """
     fp = _guest_fingerprint()
     nonce = b"smoke-filesystem"
@@ -259,6 +270,7 @@ async def test_filesystem_mount_result_recorded(host_server, channel_factory) ->
             mount_result=filesystem_pb2.MountResult(
                 share_id="smoke-share-1",
                 status=filesystem_pb2.MountResult.Status.STATUS_MOUNTED,
+                mount_token=_MOUNT_TOKEN,
             ),
         )
 
@@ -271,10 +283,32 @@ async def test_filesystem_mount_result_recorded(host_server, channel_factory) ->
             async for _ in stub.ShareChannel(guest_frames()):
                 break
 
-        try:
-            await asyncio.wait_for(consume(), timeout=1.0)
-        except (asyncio.TimeoutError, grpc.aio.AioRpcError):
-            pass  # Expected: server never produces output on its own
+        with caplog.at_level(logging.INFO, logger="crossdesk_host.ipc.filesystem"):
+            try:
+                await asyncio.wait_for(consume(), timeout=1.0)
+            except (asyncio.TimeoutError, grpc.aio.AioRpcError):
+                pass  # Expected: server never produces output on its own
+
+    # Accept path: filesystem.py:_process_guest_frame mount_result branch
+    # logs "MountResult for share <id>: <status>". The reject path logs
+    # "rejected: mount_token len=…" instead. A failure here means the
+    # 32-byte enforcement silently dropped the frame.
+    fs_records = [
+        r for r in caplog.records if r.name == "crossdesk_host.ipc.filesystem"
+    ]
+    accept_lines = [
+        r for r in fs_records if "MountResult for share smoke-share-1" in r.message
+    ]
+    reject_lines = [r for r in fs_records if "rejected: mount_token len=" in r.message]
+    assert accept_lines, (
+        "Host did not log the MountResult accept path — the smoke frame was "
+        "silently dropped (likely mount_token length mismatch). Captured "
+        f"records: {[(r.levelname, r.message) for r in fs_records]}"
+    )
+    assert not reject_lines, (
+        "Host logged a mount_token rejection for the smoke frame: "
+        f"{[(r.levelname, r.message) for r in reject_lines]}"
+    )
 
 
 async def test_filesystem_rejects_fingerprint_spoof(
@@ -293,9 +327,13 @@ async def test_filesystem_rejects_fingerprint_spoof(
                 stream_nonce=b"fs-spoof-stream1",
                 sequence=1,
             ),
+            # Valid 32-byte mount_token even though auth fires first — keeps
+            # the test focused on auth rejection so a future reader doesn't
+            # wonder whether the missing token was load-bearing.
             mount_result=filesystem_pb2.MountResult(
                 share_id="x",
                 status=filesystem_pb2.MountResult.Status.STATUS_MOUNTED,
+                mount_token=_MOUNT_TOKEN,
             ),
         )
 

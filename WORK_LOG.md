@@ -81,6 +81,7 @@ branch names and the user merges by hand later.
 <!-- Currently in flight. Move to Recent on completion. -->
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
+- [2026-05-10 15:35] START · agent: claude-code · branch: chore/smoke-e2e-mount-token-audit · task: smoke-e2e-mount-token-audit · note: P0 FOLLOWUPS:64-69. Audit test_smoke_e2e.py for missing/wrong-length mount_token on MountResult/LockReport/ReleaseAck after 32-byte enforcement. Initial read: test_filesystem_mount_result_recorded constructs MountResult with NO mount_token (defaults to b"") — silently dropped at _token_ok. Will add 32-byte token + caplog assertions; spoof test fine because auth fires before token check.
 
 ## Recent
 

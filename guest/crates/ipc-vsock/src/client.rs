@@ -39,6 +39,9 @@ impl AuthCarrier {
             peer_cert_fingerprint: self.peer_cert_fingerprint.clone(),
             stream_nonce: self.stream_nonce.clone(),
             sequence: seq,
+            // Guest-originated frames leave traceparent empty; the host
+            // stamps it on ServerFrame when it initiates a request.
+            traceparent: String::new(),
         }
     }
 }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from typing import Optional
 
 import pytest
@@ -11,7 +12,10 @@ from crossdesk_host.ipc.verify_coordinator import (
     NoActiveSession,
     VerifyCoordinator,
 )
+from crossdesk_host.observability.trace_ctx import parse_traceparent
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
+
+_W3C_RE = re.compile(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$")
 
 
 def _ok_result(request_id: str) -> control_pb2.VerifyCredentialsResult:
@@ -117,3 +121,51 @@ async def test_deliver_unknown_request_id_is_noop(caplog: pytest.LogCaptureFixtu
     # No raise, no crash — just a warning log.
     coord.deliver(_ok_result("ghost-request"))
     assert any("unknown request_id" in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_verify_stamps_w3c_traceparent_on_outgoing_frame() -> None:
+    """ServerFrame.auth.traceparent must be a valid W3C traceparent string."""
+    coord = VerifyCoordinator()
+    outbound: asyncio.Queue[Optional[control_pb2.ServerFrame]] = asyncio.Queue()
+    coord.register_session(outbound)
+
+    verify_task = asyncio.create_task(coord.verify("user", "pass"))
+    frame = await asyncio.wait_for(outbound.get(), timeout=1.0)
+    assert frame is not None
+
+    tp = frame.auth.traceparent
+    assert _W3C_RE.match(tp), f"traceparent not W3C-compliant: {tp!r}"
+    parsed = parse_traceparent(tp)
+    assert parsed is not None
+    assert parsed.is_valid()
+
+    # Clean up the pending task.
+    rid = frame.verify_credentials.request_id
+    coord.deliver(_ok_result(rid))
+    await asyncio.wait_for(verify_task, timeout=1.0)
+
+
+@pytest.mark.asyncio
+async def test_verify_consecutive_calls_produce_distinct_trace_ids() -> None:
+    """Each verify() call must mint a fresh trace_id (root span)."""
+    coord = VerifyCoordinator()
+    outbound: asyncio.Queue[Optional[control_pb2.ServerFrame]] = asyncio.Queue()
+    coord.register_session(outbound)
+
+    task_a = asyncio.create_task(coord.verify("u", "p"))
+    frame_a = await asyncio.wait_for(outbound.get(), timeout=1.0)
+    assert frame_a is not None
+    coord.deliver(_ok_result(frame_a.verify_credentials.request_id))
+    await asyncio.wait_for(task_a, timeout=1.0)
+
+    task_b = asyncio.create_task(coord.verify("u", "p"))
+    frame_b = await asyncio.wait_for(outbound.get(), timeout=1.0)
+    assert frame_b is not None
+    coord.deliver(_ok_result(frame_b.verify_credentials.request_id))
+    await asyncio.wait_for(task_b, timeout=1.0)
+
+    ctx_a = parse_traceparent(frame_a.auth.traceparent)
+    ctx_b = parse_traceparent(frame_b.auth.traceparent)
+    assert ctx_a is not None and ctx_b is not None
+    assert ctx_a.trace_id != ctx_b.trace_id, "consecutive verify() calls must produce distinct trace_ids"

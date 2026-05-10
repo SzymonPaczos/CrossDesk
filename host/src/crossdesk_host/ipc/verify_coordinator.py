@@ -34,6 +34,7 @@ from crossdesk_host.observability.trace_ctx import (
     clear_log_context,
     generate_root,
 )
+from crossdesk_host.proto.crossdesk.v1 import common_pb2
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
 
 # Stdlib logger (not structlog facade) on purpose: ``configure_logging``
@@ -109,13 +110,11 @@ class VerifyCoordinator:
     ) -> control_pb2.VerifyCredentialsResult:
         """Send a VerifyCredentials request to the active session and await result.
 
-        A fresh W3C trace context is minted per call and bound to
-        structlog's contextvars so every log line emitted while we wait
-        for the guest's response carries the same ``trace_id`` —
-        operators can grep one ID and see both the host-side request
-        emit and the eventual ``deliver()`` resolution. The ServerFrame
-        itself does not carry traceparent (no proto field for it on
-        this payload variant); this binding correlates host logs only.
+        A fresh W3C trace context is minted per call, bound to
+        structlog's contextvars (so every log line carries the same
+        ``trace_id``), and stamped into ``ServerFrame.auth.traceparent``
+        so the guest handler can log under the same root trace and
+        operators can correlate host dispatch ↔ guest handler in one grep.
 
         Raises:
             NoActiveSession: no guest session is currently registered.
@@ -139,7 +138,13 @@ class VerifyCoordinator:
             password=password,
             domain=domain,
         )
-        frame = control_pb2.ServerFrame(verify_credentials=request)
+        # Stamp the current trace context so the guest can log under the
+        # same trace_id and operators can correlate host dispatch ↔ guest
+        # handler in one grep.
+        frame = control_pb2.ServerFrame(
+            verify_credentials=request,
+            auth=common_pb2.AuthContext(traceparent=trace_ctx.to_traceparent()),
+        )
 
         # Push to the first registered session. Multi-VM routing (e.g.,
         # by libvirt domain UUID) is a follow-up if/when we host more

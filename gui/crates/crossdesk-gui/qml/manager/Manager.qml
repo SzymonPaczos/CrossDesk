@@ -15,45 +15,312 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // Sidebar
+        // ── Sidebar ───────────────────────────────────────────
         Rectangle {
             id: sidebar
-            Layout.preferredWidth: 180
+            Layout.preferredWidth: 220
             Layout.fillHeight: true
             color: palette.alternateBase
 
+            // Right border
+            Rectangle {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 1
+                color: palette.mid
+            }
+
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 8
-                spacing: 4
+                spacing: 0
+
+                // Brand header
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 52
+                    color: "transparent"
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 1
+                        color: palette.mid
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 12
+                        spacing: 10
+
+                        // Crossdesk logo mark
+                        Rectangle {
+                            width: 24
+                            height: 24
+                            radius: 6
+                            color: palette.highlight
+
+                            Rectangle {
+                                x: 4; y: 5
+                                width: 11; height: 9
+                                color: "white"
+                                opacity: 1.0
+                            }
+                            Rectangle {
+                                x: 9; y: 10
+                                width: 11; height: 9
+                                color: "black"
+                                opacity: 0.5
+                            }
+                        }
+
+                        ColumnLayout {
+                            spacing: 1
+                            Label {
+                                text: "CrossDesk"
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                color: palette.text
+                            }
+                            Label {
+                                text: qsTr("Manager")
+                                font.pixelSize: 11
+                                color: palette.placeholderText
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+                    }
+                }
+
+                // "MANAGE" section label
+                Item {
+                    Layout.fillWidth: true
+                    height: 30
+                    Label {
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        anchors.left: parent.left
+                        anchors.leftMargin: 16
+                        text: qsTr("MANAGE")
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        color: palette.placeholderText
+                        font.letterSpacing: 0.8
+                    }
+                }
 
                 Repeater {
+                    id: manageItems
                     model: [
-                        { id: "dashboard", label: qsTr("Dashboard"), icon: "📊" },
-                        { id: "apps",      label: qsTr("Apps"),      icon: "🪟" },
-                        { id: "storage",   label: qsTr("Storage"),   icon: "💾" },
-                        { id: "lifecycle", label: qsTr("Lifecycle"), icon: "⏻" },
-                        { id: "diagnose",  label: qsTr("Diagnose"),  icon: "🩺" },
-                        { id: "logs",      label: qsTr("Logs"),      icon: "📜" },
-                        { id: "settings",  label: qsTr("Settings"),  icon: "⚙" },
-                        { id: "about",     label: qsTr("About"),     icon: "ℹ" },
+                        { id: "dashboard", label: qsTr("Dashboard"), icon: "qrc:/icons/dashboard.svg" },
+                        { id: "apps",      label: qsTr("Apps"),      icon: "qrc:/icons/apps.svg" },
+                        { id: "storage",   label: qsTr("Storage"),   icon: "qrc:/icons/storage.svg" },
+                        { id: "lifecycle", label: qsTr("Lifecycle"), icon: "qrc:/icons/lifecycle.svg" },
                     ]
 
-                    delegate: Button {
+                    delegate: Item {
+                        required property var modelData
                         Layout.fillWidth: true
-                        flat: true
-                        checkable: true
-                        checked: stack.currentItem && stack.currentItem.paneId === modelData.id
-                        text: modelData.icon + "  " + modelData.label
-                        onClicked: stack.replace(paneSource(modelData.id))
+                        height: 34
+
+                        readonly property bool isActive:
+                            stack.currentItem && stack.currentItem.paneId === modelData.id
+
+                        // Accent indicator bar
+                        Rectangle {
+                            id: accentBar
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 6
+                            anchors.bottomMargin: 6
+                            width: 3
+                            radius: 2
+                            color: palette.highlight
+                            visible: parent.isActive
+                        }
+
+                        Rectangle {
+                            id: itemBg
+                            anchors.fill: parent
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            radius: 4
+                            color: parent.isActive
+                                   ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.12)
+                                   : hoverHandler.hovered
+                                     ? Qt.rgba(palette.mid.r, palette.mid.g, palette.mid.b, 0.6)
+                                     : "transparent"
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 10
+                            spacing: 10
+
+                            Image {
+                                source: modelData.icon
+                                width: 18
+                                height: 18
+                                sourceSize: Qt.size(18, 18)
+                                // Tint active icon with highlight, inactive with muted text
+                                // (SVGs use currentColor but QML Image doesn't support that
+                                //  directly — colorize does the same job)
+                                layer.enabled: true
+                                layer.effect: null   // rendered as-is; relies on SVG currentColor default (black)
+                                opacity: parent.parent.isActive ? 1.0 : 0.55
+                            }
+
+                            Label {
+                                text: modelData.label
+                                font.pixelSize: 12
+                                font.weight: parent.parent.parent.isActive ? Font.DemiBold : Font.Normal
+                                color: parent.parent.parent.isActive ? palette.highlight : palette.text
+                                Layout.fillWidth: true
+                            }
+                        }
+
+                        HoverHandler { id: hoverHandler }
+
+                        TapHandler {
+                            onTapped: stack.replace(paneSource(modelData.id))
+                        }
+                    }
+                }
+
+                // "SYSTEM" section label
+                Item {
+                    Layout.fillWidth: true
+                    height: 30
+                    Label {
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        anchors.left: parent.left
+                        anchors.leftMargin: 16
+                        text: qsTr("SYSTEM")
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        color: palette.placeholderText
+                        font.letterSpacing: 0.8
+                    }
+                }
+
+                Repeater {
+                    id: systemItems
+                    model: [
+                        { id: "diagnose",  label: qsTr("Diagnose"),  icon: "qrc:/icons/diagnose.svg" },
+                        { id: "logs",      label: qsTr("Logs"),      icon: "qrc:/icons/logs.svg" },
+                        { id: "settings",  label: qsTr("Settings"),  icon: "qrc:/icons/settings.svg" },
+                        { id: "about",     label: qsTr("About"),     icon: "qrc:/icons/about.svg" },
+                    ]
+
+                    delegate: Item {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        height: 34
+
+                        readonly property bool isActive:
+                            stack.currentItem && stack.currentItem.paneId === modelData.id
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 6
+                            anchors.bottomMargin: 6
+                            width: 3
+                            radius: 2
+                            color: palette.highlight
+                            visible: parent.isActive
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            radius: 4
+                            color: parent.isActive
+                                   ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.12)
+                                   : hoverHandler2.hovered
+                                     ? Qt.rgba(palette.mid.r, palette.mid.g, palette.mid.b, 0.6)
+                                     : "transparent"
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 10
+                            spacing: 10
+
+                            Image {
+                                source: modelData.icon
+                                width: 18
+                                height: 18
+                                sourceSize: Qt.size(18, 18)
+                                opacity: parent.parent.parent.isActive ? 1.0 : 0.55
+                            }
+
+                            Label {
+                                text: modelData.label
+                                font.pixelSize: 12
+                                font.weight: parent.parent.parent.isActive ? Font.DemiBold : Font.Normal
+                                color: parent.parent.parent.isActive ? palette.highlight : palette.text
+                                Layout.fillWidth: true
+                            }
+                        }
+
+                        HoverHandler { id: hoverHandler2 }
+
+                        TapHandler {
+                            onTapped: stack.replace(paneSource(modelData.id))
+                        }
                     }
                 }
 
                 Item { Layout.fillHeight: true }
+
+                // Sidebar footer
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 44
+                    color: "transparent"
+
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 1
+                        color: palette.mid
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 14
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        Label {
+                            text: qsTr("Language:")
+                            font.pixelSize: 11
+                            color: palette.placeholderText
+                        }
+                        ComboBox {
+                            id: langSwitch
+                            model: ["en", "pl"]
+                            font.pixelSize: 11
+                            Layout.preferredWidth: 68
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
+                }
             }
         }
 
-        // Main pane
+        // ── Main pane ─────────────────────────────────────────
         StackView {
             id: stack
             Layout.fillWidth: true
@@ -76,7 +343,5 @@ Item {
         return "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Dashboard.qml";
     }
 
-    // Expose mgr to the loaded panes via a global property the panes
-    // bind through `Manager.mgr`.
     property alias mgrInstance: mgr
 }

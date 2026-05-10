@@ -11,125 +11,368 @@ Item {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 16
         contentWidth: width
 
         ColumnLayout {
-            width: dashboard.width - 32
-            spacing: 16
+            width: dashboard.width
+            spacing: 0
 
-            // Status card
-            Frame {
+            // ── Pane header ───────────────────────────────────
+            Rectangle {
                 Layout.fillWidth: true
+                height: 52
+                color: palette.alternateBase
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: palette.mid
+                }
+
                 ColumnLayout {
-                    spacing: 8
-                    RowLayout {
-                        spacing: 12
-                        Label {
-                            text: severityDot(mgr.fsm_severity)
-                            font.pixelSize: 18
-                        }
-                        Label {
-                            text: mgr.fsm_state
-                            font.bold: true
-                            font.pixelSize: 18
-                        }
-                        Item { Layout.fillWidth: true }
-                        Label {
-                            text: qsTr("Uptime: %1").arg(mgr.uptime_label)
-                            color: palette.placeholderText
-                        }
-                    }
+                    anchors.fill: parent
+                    anchors.leftMargin: 24
+                    anchors.rightMargin: 24
+                    spacing: 1
                     Label {
-                        text: qsTr("Heartbeat RTT: %1 ms").arg(mgr.ewma_rtt_ms)
-                    }
-                    Label {
-                        text: qsTr("AuthContext rejections: %1").arg(mgr.auth_rejections)
-                    }
-                    Label {
-                        text: qsTr("Active mounts: %1").arg(mgr.active_mounts.length)
+                        text: qsTr("Dashboard")
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                        color: palette.text
+                        font.letterSpacing: -0.3
                     }
                 }
             }
 
-            // Resources
-            Frame {
+            // ── Content ───────────────────────────────────────
+            ColumnLayout {
                 Layout.fillWidth: true
-                ColumnLayout {
-                    spacing: 8
-                    Label {
-                        text: qsTr("Resources")
-                        font.bold: true
-                    }
-                    RowLayout {
-                        spacing: 8
-                        Label { text: qsTr("CPU"); Layout.preferredWidth: 60 }
-                        ProgressBar {
-                            from: 0; to: 100; value: mgr.cpu_percent
+                Layout.margins: 24
+                spacing: 16
+
+                // Status card
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: palette.base
+                    border.color: palette.mid
+                    border.width: 1
+                    radius: 6
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 0
+                        spacing: 0
+
+                        // Card header
+                        Rectangle {
                             Layout.fillWidth: true
+                            height: 38
+                            color: "transparent"
+                            radius: 6
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 1
+                                color: palette.mid
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 14
+                                anchors.rightMargin: 14
+                                Label {
+                                    text: qsTr("VM Status")
+                                    font.pixelSize: 12
+                                    font.weight: Font.DemiBold
+                                }
+                                Item { Layout.fillWidth: true }
+                                Label {
+                                    text: qsTr("Uptime: %1").arg(mgr.uptime_label)
+                                    font.pixelSize: 11
+                                    color: palette.placeholderText
+                                }
+                            }
                         }
-                        Label { text: mgr.cpu_percent + " %"; Layout.preferredWidth: 50 }
-                    }
-                    RowLayout {
-                        spacing: 8
-                        Label { text: qsTr("RAM"); Layout.preferredWidth: 60 }
-                        ProgressBar {
-                            from: 0; to: 100; value: mgr.ram_percent
+
+                        // Card body
+                        RowLayout {
                             Layout.fillWidth: true
-                        }
-                        Label { text: mgr.ram_label; Layout.preferredWidth: 140 }
-                    }
-                }
-            }
+                            Layout.margins: 14
+                            spacing: 16
 
-            // Recent activity
-            Frame {
-                Layout.fillWidth: true
-                ColumnLayout {
-                    spacing: 4
-                    Label {
-                        text: qsTr("Recent activity")
-                        font.bold: true
-                    }
-                    Repeater {
-                        model: mgr.recent_activity
-                        delegate: Label {
-                            text: modelData
-                            font.family: "monospace"
+                            // Severity dot
+                            Rectangle {
+                                width: 14
+                                height: 14
+                                radius: 7
+                                color: severityColor(mgr.fsm_severity)
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            ColumnLayout {
+                                spacing: 2
+                                Label {
+                                    text: mgr.fsm_state
+                                    font.pixelSize: 15
+                                    font.weight: Font.Bold
+                                    font.family: "monospace"
+                                    color: palette.text
+                                    font.letterSpacing: 0.8
+                                }
+                                Label {
+                                    text: qsTr("Heartbeat RTT: %1 ms").arg(mgr.ewma_rtt_ms)
+                                    font.pixelSize: 11
+                                    color: palette.placeholderText
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            GridLayout {
+                                columns: 2
+                                rowSpacing: 8
+                                columnSpacing: 28
+
+                                Label {
+                                    text: qsTr("AuthCtx rejections")
+                                    font.pixelSize: 10
+                                    color: palette.placeholderText
+                                    font.capitalization: Font.AllUppercase
+                                    font.letterSpacing: 0.4
+                                }
+                                Label {
+                                    text: mgr.auth_rejections
+                                    font.pixelSize: 12
+                                    font.family: "monospace"
+                                }
+
+                                Label {
+                                    text: qsTr("Active mounts")
+                                    font.pixelSize: 10
+                                    color: palette.placeholderText
+                                    font.capitalization: Font.AllUppercase
+                                    font.letterSpacing: 0.4
+                                }
+                                Label {
+                                    text: mgr.active_mounts.length
+                                    font.pixelSize: 12
+                                    font.family: "monospace"
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            // Quick actions
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-                Button {
-                    text: qsTr("Launch app...")
-                    onClicked: dashboard.parent.parent.replace(
-                        "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Apps.qml")
+                // Resources card
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: palette.base
+                    border.color: palette.mid
+                    border.width: 1
+                    radius: 6
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 38
+                            color: "transparent"
+                            radius: 6
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 1
+                                color: palette.mid
+                            }
+
+                            Label {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: 14
+                                text: qsTr("Resources")
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.margins: 14
+                            spacing: 14
+
+                            // CPU bar
+                            ColumnLayout {
+                                spacing: 6
+                                RowLayout {
+                                    Label {
+                                        text: qsTr("CPU")
+                                        font.pixelSize: 12
+                                        font.weight: Font.Medium
+                                        Layout.preferredWidth: 44
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Label {
+                                        text: mgr.cpu_percent + " %"
+                                        font.pixelSize: 11
+                                        font.family: "monospace"
+                                        color: palette.placeholderText
+                                    }
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 6
+                                    radius: 3
+                                    color: palette.mid
+
+                                    Rectangle {
+                                        width: parent.width * (mgr.cpu_percent / 100.0)
+                                        height: parent.height
+                                        radius: 3
+                                        color: palette.highlight
+                                    }
+                                }
+                            }
+
+                            // RAM bar
+                            ColumnLayout {
+                                spacing: 6
+                                RowLayout {
+                                    Label {
+                                        text: qsTr("RAM")
+                                        font.pixelSize: 12
+                                        font.weight: Font.Medium
+                                        Layout.preferredWidth: 44
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Label {
+                                        text: mgr.ram_label
+                                        font.pixelSize: 11
+                                        font.family: "monospace"
+                                        color: palette.placeholderText
+                                    }
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 6
+                                    radius: 3
+                                    color: palette.mid
+
+                                    Rectangle {
+                                        width: parent.width * (mgr.ram_percent / 100.0)
+                                        height: parent.height
+                                        radius: 3
+                                        color: palette.highlight
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                Button {
-                    text: qsTr("Suspend VM")
-                    onClicked: mgr.suspend()
+
+                // Recent activity card
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: palette.base
+                    border.color: palette.mid
+                    border.width: 1
+                    radius: 6
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 38
+                            color: "transparent"
+                            radius: 6
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 1
+                                color: palette.mid
+                            }
+
+                            Label {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: 14
+                                text: qsTr("Recent activity")
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.margins: 14
+                            spacing: 4
+
+                            Repeater {
+                                model: mgr.recent_activity
+                                delegate: Label {
+                                    text: modelData
+                                    font.family: "monospace"
+                                    font.pixelSize: 11
+                                    color: palette.text
+                                    Layout.fillWidth: true
+                                }
+                            }
+
+                            Label {
+                                visible: mgr.recent_activity.length === 0
+                                text: qsTr("No recent activity.")
+                                color: palette.placeholderText
+                                font.pixelSize: 12
+                            }
+                        }
+                    }
                 }
-                Button {
-                    text: qsTr("View logs")
-                    onClicked: dashboard.parent.parent.replace(
-                        "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Logs.qml")
+
+                // Quick actions row
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Button {
+                        text: qsTr("Launch app…")
+                        onClicked: dashboard.parent.parent.replace(
+                            "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Apps.qml")
+                    }
+                    Button {
+                        text: qsTr("Suspend VM")
+                        onClicked: mgr.suspend()
+                    }
+                    Button {
+                        text: qsTr("View logs")
+                        onClicked: dashboard.parent.parent.replace(
+                            "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Logs.qml")
+                    }
+                    Item { Layout.fillWidth: true }
                 }
-                Item { Layout.fillWidth: true }
+
+                // Bottom spacer
+                Item { height: 8 }
             }
         }
     }
 
-    function severityDot(sev) {
+    function severityColor(sev) {
         switch (sev) {
-            case "ok":       return "🟢";
-            case "warn":     return "🟡";
-            case "critical": return "🔴";
-            default:         return "⚪";
+            case "ok":       return "#4caf50";
+            case "warn":     return "#ff9800";
+            case "critical": return "#f44336";
+            default:         return "#9e9e9e";
         }
     }
 }

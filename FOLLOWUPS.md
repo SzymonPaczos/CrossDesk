@@ -615,19 +615,19 @@ underserved by the comparable VM-management tooling. See
   `cli/install_cmd.py`, `cli/main.py`, and the `installer/` package
   remain English-literal — follow-up wave can wrap them as user
   testing surfaces them.
-- **[P0] [PARTIAL 2026-05-10] `qsTr("...")` markers on every QML
-  string in `gui/`.** Audit on entry-point pages
-  (`Main.qml`, `Manager.qml`, `wizard/InstallWizard.qml`,
-  `wizard/Step1Iso.qml`, `wizard/Step2Identity.qml`,
-  `wizard/Step3Resources.qml`) confirms they are already
-  `qsTr()`-clean — strings are picked up by the existing
+- **[P0] [✅ DONE 2026-05-10] `qsTr("...")` markers on every QML
+  string in `gui/`.** Full line-audit of all manager pages confirmed
+  `qsTr()`-clean: `Apps.qml`, `Storage.qml`, `Lifecycle.qml`,
+  `Diagnose.qml`, `Logs.qml`, `Settings.qml`, `Dashboard.qml`.
+  Entry-point pages (`Main.qml`, `Manager.qml`,
+  `wizard/InstallWizard.qml`, `wizard/Step1Iso.qml`,
+  `wizard/Step2Identity.qml`, `wizard/Step3Resources.qml`) were
+  already confirmed clean in the prior pass. All user-visible strings
+  are picked up by the existing
   `gui/crates/crossdesk-gui/i18n/crossdesk_pl.ts`. `About.qml`
   intentionally has 1 brand string ("CrossDesk Manager", not
   translated) plus 1 deliberate Polish easter-egg per ROADMAP
-  (Phase 4 SPOF blurb). Remaining manager pages
-  (`Apps.qml`, `Storage.qml`, `Lifecycle.qml`, `Diagnose.qml`,
-  `Logs.qml`, `Settings.qml`) were not line-audited in this pass —
-  follow-up.
+  (Phase 4 SPOF blurb) — left as-is by design.
 - **[P0] [✅ DONE 2026-05-10] `i18n/` directory at repo root with
   templates.** `i18n/crossdesk-host.pot` (gettext skeleton),
   `i18n/pl/LC_MESSAGES/.gitkeep` placeholder for Polish .po,

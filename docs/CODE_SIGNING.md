@@ -132,6 +132,73 @@ in the wild is anchored to it.
    Document any compromise as a known issue and ship a v0.x.y+1
    release that uninstalls the old root via autounattend on upgrade.
 
+## CI integration
+
+The release workflow at [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+fires on every `v*.*.*` tag push. Job 2 (`sign-agent`) Authenticode-signs
+the freshly-cross-compiled `CrossDeskAgent.exe` inside the runner using
+the same `infra/code-signing/sign-agent.sh` wrapper that developers run
+locally — same osslsigncode invocation, same RFC3161 timestamp, same
+verify round-trip. The PFX is supplied through one secret.
+
+### Secret: `CROSSDESK_SIGNING_PFX_BASE64`
+
+Repository-level secret holding the **base64-encoded** contents of
+`infra/code-signing/pki/publisher-signing.pfx`. Base64 is the
+established pattern for binary GitHub Secrets — secrets are stored as
+strings, and decoding the payload at job start avoids any chance of
+embedded control characters tripping up the runner shell.
+
+**Set it (one-time, after `./generate.sh` on the signing host):**
+
+```sh
+# macOS
+base64 -i infra/code-signing/pki/publisher-signing.pfx | pbcopy
+# Linux
+base64 -w0 infra/code-signing/pki/publisher-signing.pfx | xclip -sel clip
+```
+
+Then **Settings → Secrets and variables → Actions → New repository
+secret**, name `CROSSDESK_SIGNING_PFX_BASE64`, paste, save.
+
+**Rotate it** every time the leaf is rotated:
+
+```sh
+./infra/code-signing/generate.sh --rotate-leaf
+base64 -i infra/code-signing/pki/publisher-signing.pfx | pbcopy
+# Then update the secret in the GitHub UI (it overwrites in place).
+```
+
+GitHub does not version secrets — overwriting is destructive. If a
+release is mid-flight, wait for it to drain before rotating, or temp-
+disable the workflow to avoid signing two releases with two different
+leaves in the same window.
+
+### Failure modes
+
+The signing job is structured so that **a missing secret warns rather
+than fails** the whole release:
+
+- **Secret unset** (e.g., first run from a fork, before the bootstrap
+  procedure above): the job emits `::warning::CrossDeskAgent.exe will
+  be published UNSIGNED — set CROSSDESK_SIGNING_PFX_BASE64 before
+  tagging the next release.` and lets the unsigned binary flow into
+  the release. The release body advertises `signed = false` so users
+  can avoid that build.
+- **Secret set but PFX malformed / wrong password / leaf expired**:
+  `osslsigncode sign` fails inside the wrapper, the job fails red,
+  and `publish-release` never runs. Fix the PFX and re-run the
+  workflow from the same tag (Actions UI → Re-run all jobs).
+
+### Why no separate sign-only workflow
+
+Combining build + sign in one workflow keeps the trust boundary tight:
+the signed binary never leaves the GitHub Actions runner before
+upload, and the runner is destroyed when the job finishes. A
+sign-only workflow that consumed a previously-uploaded artifact would
+widen the surface (artifact storage retention window, per-artifact
+ACLs) for no reduction in operational cost.
+
 ## Threat model integration
 
 Tracked in [docs/THREAT_MODEL.md](THREAT_MODEL.md) C2 (Guest agent)

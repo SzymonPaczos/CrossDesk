@@ -54,45 +54,13 @@ class ShareHostFrame(_message.Message):
         detach: Global___DetachRequest | None = ...,
         lock_query: Global___LockQuery | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "detach",
-        b"detach",
-        "lock_query",
-        b"lock_query",
-        "mount",
-        b"mount",
-        "payload",
-        b"payload",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "detach", b"detach", "lock_query", b"lock_query", "mount", b"mount", "payload", b"payload", "sent_at", b"sent_at"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "detach",
-        b"detach",
-        "lock_query",
-        b"lock_query",
-        "mount",
-        b"mount",
-        "payload",
-        b"payload",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "detach", b"detach", "lock_query", b"lock_query", "mount", b"mount", "payload", b"payload", "sent_at", b"sent_at"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
-        "mount", "detach", "lock_query"
-    ]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
-        "payload", b"payload"
-    ]  # noqa: Y015
-    def WhichOneof(
-        self, oneof_group: _WhichOneofArgType_payload
-    ) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["mount", "detach", "lock_query"]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
 
 Global___ShareHostFrame: _TypeAlias = ShareHostFrame  # noqa: Y015
 
@@ -104,10 +72,7 @@ class MountRequest(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _AccessModeEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[MountRequest._AccessMode.ValueType],
-        _builtins.type,
-    ):
+    class _AccessModeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[MountRequest._AccessMode.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         ACCESS_UNSPECIFIED: MountRequest._AccessMode.ValueType  # 0
         ACCESS_READ_ONLY: MountRequest._AccessMode.ValueType  # 1
@@ -164,24 +129,9 @@ class MountRequest(_message.Message):
         idle_release_after: _duration_pb2.Duration | None = ...,
         mount_token: _builtins.bytes = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "idle_release_after", b"idle_release_after"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["idle_release_after", b"idle_release_after"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "access_mode",
-        b"access_mode",
-        "focal_filename",
-        b"focal_filename",
-        "guest_drive_letter",
-        b"guest_drive_letter",
-        "idle_release_after",
-        b"idle_release_after",
-        "mount_token",
-        b"mount_token",
-        "share_id",
-        b"share_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["access_mode", b"access_mode", "focal_filename", b"focal_filename", "guest_drive_letter", b"guest_drive_letter", "idle_release_after", b"idle_release_after", "mount_token", b"mount_token", "share_id", b"share_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -212,16 +162,7 @@ class DetachRequest(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "force",
-        b"force",
-        "mount_token",
-        b"mount_token",
-        "reason",
-        b"reason",
-        "share_id",
-        b"share_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["force", b"force", "mount_token", b"mount_token", "reason", b"reason", "share_id", b"share_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -246,9 +187,7 @@ class LockQuery(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "mount_token", b"mount_token", "share_id", b"share_id"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["mount_token", b"mount_token", "share_id", b"share_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -295,53 +234,13 @@ class ShareGuestFrame(_message.Message):
         detach_result: Global___DetachResult | None = ...,
         incident: Global___ShareIncident | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "detach_result",
-        b"detach_result",
-        "incident",
-        b"incident",
-        "lock_report",
-        b"lock_report",
-        "mount_result",
-        b"mount_result",
-        "payload",
-        b"payload",
-        "release_ack",
-        b"release_ack",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "detach_result", b"detach_result", "incident", b"incident", "lock_report", b"lock_report", "mount_result", b"mount_result", "payload", b"payload", "release_ack", b"release_ack", "sent_at", b"sent_at"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "auth",
-        b"auth",
-        "detach_result",
-        b"detach_result",
-        "incident",
-        b"incident",
-        "lock_report",
-        b"lock_report",
-        "mount_result",
-        b"mount_result",
-        "payload",
-        b"payload",
-        "release_ack",
-        b"release_ack",
-        "sent_at",
-        b"sent_at",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["auth", b"auth", "detach_result", b"detach_result", "incident", b"incident", "lock_report", b"lock_report", "mount_result", b"mount_result", "payload", b"payload", "release_ack", b"release_ack", "sent_at", b"sent_at"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal[
-        "mount_result", "lock_report", "release_ack", "detach_result", "incident"
-    ]  # noqa: Y015
-    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal[
-        "payload", b"payload"
-    ]  # noqa: Y015
-    def WhichOneof(
-        self, oneof_group: _WhichOneofArgType_payload
-    ) -> _WhichOneofReturnType_payload | None: ...
+    _WhichOneofReturnType_payload: _TypeAlias = _typing.Literal["mount_result", "lock_report", "release_ack", "detach_result", "incident"]  # noqa: Y015
+    _WhichOneofArgType_payload: _TypeAlias = _typing.Literal["payload", b"payload"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType_payload) -> _WhichOneofReturnType_payload | None: ...
 
 Global___ShareGuestFrame: _TypeAlias = ShareGuestFrame  # noqa: Y015
 
@@ -353,10 +252,7 @@ class MountResult(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _StatusEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[MountResult._Status.ValueType],
-        _builtins.type,
-    ):
+    class _StatusEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[MountResult._Status.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         STATUS_UNSPECIFIED: MountResult._Status.ValueType  # 0
         STATUS_MOUNTED: MountResult._Status.ValueType  # 1
@@ -393,16 +289,7 @@ class MountResult(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "detail",
-        b"detail",
-        "mount_token",
-        b"mount_token",
-        "share_id",
-        b"share_id",
-        "status",
-        b"status",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "mount_token", b"mount_token", "share_id", b"share_id", "status", b"status"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -429,9 +316,7 @@ class LockReport(_message.Message):
     pending_writes_bytes: _builtins.int
     """bajty czekające na fsync"""
     @_builtins.property
-    def handles(
-        self,
-    ) -> _containers.RepeatedCompositeFieldContainer[Global___FileHandle]: ...
+    def handles(self) -> _containers.RepeatedCompositeFieldContainer[Global___FileHandle]: ...
     @_builtins.property
     def observed_at(self) -> _common_pb2.TimingMark: ...
     def __init__(
@@ -444,24 +329,9 @@ class LockReport(_message.Message):
         handles: _abc.Iterable[Global___FileHandle] | None = ...,
         observed_at: _common_pb2.TimingMark | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "observed_at", b"observed_at"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["observed_at", b"observed_at"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "handles",
-        b"handles",
-        "mount_token",
-        b"mount_token",
-        "observed_at",
-        b"observed_at",
-        "open_handles",
-        b"open_handles",
-        "pending_writes_bytes",
-        b"pending_writes_bytes",
-        "share_id",
-        b"share_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["handles", b"handles", "mount_token", b"mount_token", "observed_at", b"observed_at", "open_handles", b"open_handles", "pending_writes_bytes", b"pending_writes_bytes", "share_id", b"share_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -475,9 +345,7 @@ class FileHandle(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _ModeEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[FileHandle._Mode.ValueType], _builtins.type
-    ):
+    class _ModeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[FileHandle._Mode.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         MODE_UNSPECIFIED: FileHandle._Mode.ValueType  # 0
         MODE_READ: FileHandle._Mode.ValueType  # 1
@@ -508,16 +376,7 @@ class FileHandle(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "exclusive_lock",
-        b"exclusive_lock",
-        "mode",
-        b"mode",
-        "path_on_share",
-        b"path_on_share",
-        "process_id",
-        b"process_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["exclusive_lock", b"exclusive_lock", "mode", b"mode", "path_on_share", b"path_on_share", "process_id", b"process_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -557,22 +416,9 @@ class ReleaseAck(_message.Message):
         total_bytes_written: _builtins.int = ...,
         final_handle_count_observed: _builtins.int = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "released_at", b"released_at"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["released_at", b"released_at"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "final_handle_count_observed",
-        b"final_handle_count_observed",
-        "mount_token",
-        b"mount_token",
-        "released_at",
-        b"released_at",
-        "share_id",
-        b"share_id",
-        "total_bytes_written",
-        b"total_bytes_written",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["final_handle_count_observed", b"final_handle_count_observed", "mount_token", b"mount_token", "released_at", b"released_at", "share_id", b"share_id", "total_bytes_written", b"total_bytes_written"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -586,10 +432,7 @@ class DetachResult(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _StatusEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[DetachResult._Status.ValueType],
-        _builtins.type,
-    ):
+    class _StatusEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[DetachResult._Status.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         STATUS_UNSPECIFIED: DetachResult._Status.ValueType  # 0
         STATUS_DETACHED: DetachResult._Status.ValueType  # 1
@@ -621,9 +464,7 @@ class DetachResult(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "detail", b"detail", "share_id", b"share_id", "status", b"status"
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "share_id", b"share_id", "status", b"status"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -637,10 +478,7 @@ class ShareIncident(_message.Message):
         ValueType = _typing.NewType("ValueType", _builtins.int)
         V: _TypeAlias = ValueType  # noqa: Y015
 
-    class _KindEnumTypeWrapper(
-        _enum_type_wrapper._EnumTypeWrapper[ShareIncident._Kind.ValueType],
-        _builtins.type,
-    ):
+    class _KindEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[ShareIncident._Kind.ValueType], _builtins.type):
         DESCRIPTOR: _descriptor.EnumDescriptor
         KIND_UNSPECIFIED: ShareIncident._Kind.ValueType  # 0
         KIND_TOKEN_MISMATCH: ShareIncident._Kind.ValueType  # 1
@@ -680,20 +518,9 @@ class ShareIncident(_message.Message):
         detail: _builtins.str = ...,
         observed_at: _common_pb2.TimingMark | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal[
-        "observed_at", b"observed_at"
-    ]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["observed_at", b"observed_at"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal[
-        "detail",
-        b"detail",
-        "kind",
-        b"kind",
-        "observed_at",
-        b"observed_at",
-        "share_id",
-        b"share_id",
-    ]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["detail", b"detail", "kind", b"kind", "observed_at", b"observed_at", "share_id", b"share_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

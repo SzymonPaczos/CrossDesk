@@ -4,15 +4,18 @@
 # source: crossdesk/v1/heartbeat.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
-
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
-
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "crossdesk/v1/heartbeat.proto"
+    _runtime_version.Domain.PUBLIC,
+    6,
+    31,
+    1,
+    '',
+    'crossdesk/v1/heartbeat.proto'
 )
 # @@protoc_insertion_point(imports)
 
@@ -22,41 +25,38 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
 from crossdesk.v1 import common_pb2 as crossdesk_dot_v1_dot_common__pb2
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x1c\x63rossdesk/v1/heartbeat.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x19\x63rossdesk/v1/common.proto"\xce\x01\n\tHostFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12"\n\x04ping\x18\n \x01(\x0b\x32\x12.crossdesk.v1.PingH\x00\x12\x30\n\tdirective\x18\x0b \x01(\x0b\x32\x1b.crossdesk.v1.HostDirectiveH\x00\x12\x37\n\x0eprofile_update\x18\x0c \x01(\x0b\x32\x1d.crossdesk.v1.AdaptiveProfileH\x00\x42\t\n\x07payload"\x91\x01\n\nGuestFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12"\n\x04pong\x18\n \x01(\x0b\x32\x12.crossdesk.v1.PongH\x00\x12+\n\x06signal\x18\x0b \x01(\x0b\x32\x19.crossdesk.v1.GuestSignalH\x00\x42\t\n\x07payload"n\n\x04Ping\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x1e\n\x16host_send_monotonic_ns\x18\x02 \x01(\x06\x12\x34\n\x11last_observed_rtt\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration"\xd5\x01\n\x04Pong\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x1e\n\x16host_send_monotonic_ns\x18\x02 \x01(\x06\x12\x1f\n\x17guest_recv_monotonic_ns\x18\x03 \x01(\x06\x12\x1f\n\x17guest_send_monotonic_ns\x18\x04 \x01(\x06\x12\'\n\x05state\x18\x05 \x01(\x0e\x32\x18.crossdesk.v1.GuestState\x12\x30\n\x08pressure\x18\x06 \x01(\x0b\x32\x1e.crossdesk.v1.ResourcePressure"Y\n\x10ResourcePressure\x12\x13\n\x0b\x63pu_percent\x18\x01 \x01(\r\x12\x16\n\x0ememory_percent\x18\x02 \x01(\r\x12\x18\n\x10\x64isk_io_pressure\x18\x03 \x01(\r"\xdf\x02\n\x0f\x41\x64\x61ptiveProfile\x12+\n\x08\x65wma_rtt\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\x12)\n\x06jitter\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x38\n\x15\x63urrent_ping_interval\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x31\n\x0emiss_threshold\x18\x04 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1e\n\x16\x63onsecutive_miss_count\x18\x05 \x01(\r\x12\x31\n\x0bnext_action\x18\x06 \x01(\x0e\x32\x1c.crossdesk.v1.RecoveryAction\x12\x34\n\x11next_action_after\x18\x07 \x01(\x0b\x32\x19.google.protobuf.Duration"\xe2\x01\n\rHostDirective\x12.\n\x04kind\x18\x01 \x01(\x0e\x32 .crossdesk.v1.HostDirective.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t"\x90\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16KIND_REQUEST_DIAG_DUMP\x10\x01\x12"\n\x1eKIND_REQUEST_GRACEFUL_SHUTDOWN\x10\x02\x12\x18\n\x14KIND_FREEZE_NEW_WORK\x10\x03\x12\x18\n\x14KIND_RESUME_NEW_WORK\x10\x04"\x91\x02\n\x0bGuestSignal\x12,\n\x04kind\x18\x01 \x01(\x0e\x32\x1e.crossdesk.v1.GuestSignal.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\x12-\n\x0bobserved_at\x18\x03 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark"\x94\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12"\n\x1eKIND_SELF_DETECTED_DEGRADATION\x10\x01\x12!\n\x1dKIND_SHUTDOWN_INITIATED_BY_OS\x10\x02\x12\x15\n\x11KIND_DRIVER_FAULT\x10\x03\x12\x18\n\x14KIND_DIAG_DUMP_READY\x10\x04*\xc8\x01\n\nGuestState\x12\x1b\n\x17GUEST_STATE_UNSPECIFIED\x10\x00\x12\x17\n\x13GUEST_STATE_BOOTING\x10\x01\x12\x15\n\x11GUEST_STATE_READY\x10\x02\x12\x1b\n\x17GUEST_STATE_RAIL_ACTIVE\x10\x03\x12\x17\n\x13GUEST_STATE_FS_BUSY\x10\x04\x12\x18\n\x14GUEST_STATE_DEGRADED\x10\x05\x12\x1d\n\x19GUEST_STATE_SHUTTING_DOWN\x10\x06*\xd3\x01\n\x0eRecoveryAction\x12\x1f\n\x1bRECOVERY_ACTION_UNSPECIFIED\x10\x00\x12\x18\n\x14RECOVERY_ACTION_NONE\x10\x01\x12\x1b\n\x17RECOVERY_ACTION_OBSERVE\x10\x02\x12 \n\x1cRECOVERY_ACTION_REQUEST_DIAG\x10\x03\x12%\n!RECOVERY_ACTION_GRACEFUL_SHUTDOWN\x10\x04\x12 \n\x1cRECOVERY_ACTION_HARD_DESTROY\x10\x05\x32T\n\x10HeartbeatService\x12@\n\x07\x43hannel\x12\x18.crossdesk.v1.GuestFrame\x1a\x17.crossdesk.v1.HostFrame(\x01\x30\x01\x62\x06proto3'
-)
+
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x63rossdesk/v1/heartbeat.proto\x12\x0c\x63rossdesk.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x19\x63rossdesk/v1/common.proto\"\xce\x01\n\tHostFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12\"\n\x04ping\x18\n \x01(\x0b\x32\x12.crossdesk.v1.PingH\x00\x12\x30\n\tdirective\x18\x0b \x01(\x0b\x32\x1b.crossdesk.v1.HostDirectiveH\x00\x12\x37\n\x0eprofile_update\x18\x0c \x01(\x0b\x32\x1d.crossdesk.v1.AdaptiveProfileH\x00\x42\t\n\x07payload\"\x91\x01\n\nGuestFrame\x12\'\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x19.crossdesk.v1.AuthContext\x12\"\n\x04pong\x18\n \x01(\x0b\x32\x12.crossdesk.v1.PongH\x00\x12+\n\x06signal\x18\x0b \x01(\x0b\x32\x19.crossdesk.v1.GuestSignalH\x00\x42\t\n\x07payload\"n\n\x04Ping\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x1e\n\x16host_send_monotonic_ns\x18\x02 \x01(\x06\x12\x34\n\x11last_observed_rtt\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xd5\x01\n\x04Pong\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x1e\n\x16host_send_monotonic_ns\x18\x02 \x01(\x06\x12\x1f\n\x17guest_recv_monotonic_ns\x18\x03 \x01(\x06\x12\x1f\n\x17guest_send_monotonic_ns\x18\x04 \x01(\x06\x12\'\n\x05state\x18\x05 \x01(\x0e\x32\x18.crossdesk.v1.GuestState\x12\x30\n\x08pressure\x18\x06 \x01(\x0b\x32\x1e.crossdesk.v1.ResourcePressure\"Y\n\x10ResourcePressure\x12\x13\n\x0b\x63pu_percent\x18\x01 \x01(\r\x12\x16\n\x0ememory_percent\x18\x02 \x01(\r\x12\x18\n\x10\x64isk_io_pressure\x18\x03 \x01(\r\"\xdf\x02\n\x0f\x41\x64\x61ptiveProfile\x12+\n\x08\x65wma_rtt\x18\x01 \x01(\x0b\x32\x19.google.protobuf.Duration\x12)\n\x06jitter\x18\x02 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x38\n\x15\x63urrent_ping_interval\x18\x03 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x31\n\x0emiss_threshold\x18\x04 \x01(\x0b\x32\x19.google.protobuf.Duration\x12\x1e\n\x16\x63onsecutive_miss_count\x18\x05 \x01(\r\x12\x31\n\x0bnext_action\x18\x06 \x01(\x0e\x32\x1c.crossdesk.v1.RecoveryAction\x12\x34\n\x11next_action_after\x18\x07 \x01(\x0b\x32\x19.google.protobuf.Duration\"\xe2\x01\n\rHostDirective\x12.\n\x04kind\x18\x01 \x01(\x0e\x32 .crossdesk.v1.HostDirective.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\"\x90\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16KIND_REQUEST_DIAG_DUMP\x10\x01\x12\"\n\x1eKIND_REQUEST_GRACEFUL_SHUTDOWN\x10\x02\x12\x18\n\x14KIND_FREEZE_NEW_WORK\x10\x03\x12\x18\n\x14KIND_RESUME_NEW_WORK\x10\x04\"\x91\x02\n\x0bGuestSignal\x12,\n\x04kind\x18\x01 \x01(\x0e\x32\x1e.crossdesk.v1.GuestSignal.Kind\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\t\x12-\n\x0bobserved_at\x18\x03 \x01(\x0b\x32\x18.crossdesk.v1.TimingMark\"\x94\x01\n\x04Kind\x12\x14\n\x10KIND_UNSPECIFIED\x10\x00\x12\"\n\x1eKIND_SELF_DETECTED_DEGRADATION\x10\x01\x12!\n\x1dKIND_SHUTDOWN_INITIATED_BY_OS\x10\x02\x12\x15\n\x11KIND_DRIVER_FAULT\x10\x03\x12\x18\n\x14KIND_DIAG_DUMP_READY\x10\x04*\xc8\x01\n\nGuestState\x12\x1b\n\x17GUEST_STATE_UNSPECIFIED\x10\x00\x12\x17\n\x13GUEST_STATE_BOOTING\x10\x01\x12\x15\n\x11GUEST_STATE_READY\x10\x02\x12\x1b\n\x17GUEST_STATE_RAIL_ACTIVE\x10\x03\x12\x17\n\x13GUEST_STATE_FS_BUSY\x10\x04\x12\x18\n\x14GUEST_STATE_DEGRADED\x10\x05\x12\x1d\n\x19GUEST_STATE_SHUTTING_DOWN\x10\x06*\xd3\x01\n\x0eRecoveryAction\x12\x1f\n\x1bRECOVERY_ACTION_UNSPECIFIED\x10\x00\x12\x18\n\x14RECOVERY_ACTION_NONE\x10\x01\x12\x1b\n\x17RECOVERY_ACTION_OBSERVE\x10\x02\x12 \n\x1cRECOVERY_ACTION_REQUEST_DIAG\x10\x03\x12%\n!RECOVERY_ACTION_GRACEFUL_SHUTDOWN\x10\x04\x12 \n\x1cRECOVERY_ACTION_HARD_DESTROY\x10\x05\x32T\n\x10HeartbeatService\x12@\n\x07\x43hannel\x12\x18.crossdesk.v1.GuestFrame\x1a\x17.crossdesk.v1.HostFrame(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(
-    DESCRIPTOR, "crossdesk.v1.heartbeat_pb2", _globals
-)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crossdesk.v1.heartbeat_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-    DESCRIPTOR._loaded_options = None
-    _globals["_GUESTSTATE"]._serialized_start = 1741
-    _globals["_GUESTSTATE"]._serialized_end = 1941
-    _globals["_RECOVERYACTION"]._serialized_start = 1944
-    _globals["_RECOVERYACTION"]._serialized_end = 2155
-    _globals["_HOSTFRAME"]._serialized_start = 106
-    _globals["_HOSTFRAME"]._serialized_end = 312
-    _globals["_GUESTFRAME"]._serialized_start = 315
-    _globals["_GUESTFRAME"]._serialized_end = 460
-    _globals["_PING"]._serialized_start = 462
-    _globals["_PING"]._serialized_end = 572
-    _globals["_PONG"]._serialized_start = 575
-    _globals["_PONG"]._serialized_end = 788
-    _globals["_RESOURCEPRESSURE"]._serialized_start = 790
-    _globals["_RESOURCEPRESSURE"]._serialized_end = 879
-    _globals["_ADAPTIVEPROFILE"]._serialized_start = 882
-    _globals["_ADAPTIVEPROFILE"]._serialized_end = 1233
-    _globals["_HOSTDIRECTIVE"]._serialized_start = 1236
-    _globals["_HOSTDIRECTIVE"]._serialized_end = 1462
-    _globals["_HOSTDIRECTIVE_KIND"]._serialized_start = 1318
-    _globals["_HOSTDIRECTIVE_KIND"]._serialized_end = 1462
-    _globals["_GUESTSIGNAL"]._serialized_start = 1465
-    _globals["_GUESTSIGNAL"]._serialized_end = 1738
-    _globals["_GUESTSIGNAL_KIND"]._serialized_start = 1590
-    _globals["_GUESTSIGNAL_KIND"]._serialized_end = 1738
-    _globals["_HEARTBEATSERVICE"]._serialized_start = 2157
-    _globals["_HEARTBEATSERVICE"]._serialized_end = 2241
+  DESCRIPTOR._loaded_options = None
+  _globals['_GUESTSTATE']._serialized_start=1741
+  _globals['_GUESTSTATE']._serialized_end=1941
+  _globals['_RECOVERYACTION']._serialized_start=1944
+  _globals['_RECOVERYACTION']._serialized_end=2155
+  _globals['_HOSTFRAME']._serialized_start=106
+  _globals['_HOSTFRAME']._serialized_end=312
+  _globals['_GUESTFRAME']._serialized_start=315
+  _globals['_GUESTFRAME']._serialized_end=460
+  _globals['_PING']._serialized_start=462
+  _globals['_PING']._serialized_end=572
+  _globals['_PONG']._serialized_start=575
+  _globals['_PONG']._serialized_end=788
+  _globals['_RESOURCEPRESSURE']._serialized_start=790
+  _globals['_RESOURCEPRESSURE']._serialized_end=879
+  _globals['_ADAPTIVEPROFILE']._serialized_start=882
+  _globals['_ADAPTIVEPROFILE']._serialized_end=1233
+  _globals['_HOSTDIRECTIVE']._serialized_start=1236
+  _globals['_HOSTDIRECTIVE']._serialized_end=1462
+  _globals['_HOSTDIRECTIVE_KIND']._serialized_start=1318
+  _globals['_HOSTDIRECTIVE_KIND']._serialized_end=1462
+  _globals['_GUESTSIGNAL']._serialized_start=1465
+  _globals['_GUESTSIGNAL']._serialized_end=1738
+  _globals['_GUESTSIGNAL_KIND']._serialized_start=1590
+  _globals['_GUESTSIGNAL_KIND']._serialized_end=1738
+  _globals['_HEARTBEATSERVICE']._serialized_start=2157
+  _globals['_HEARTBEATSERVICE']._serialized_end=2241
 # @@protoc_insertion_point(module_scope)

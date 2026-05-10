@@ -729,3 +729,170 @@ class Settings(_message.Message):
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
 Global___Settings: _TypeAlias = Settings  # noqa: Y015
+
+@_typing.final
+class GetMetricsRequest(_message.Message):
+    """-----------------------------------------------------------------------------
+    Metrics snapshot
+    -----------------------------------------------------------------------------
+    """
+
+    DESCRIPTOR: _descriptor.Descriptor
+
+    NAME_PREFIX_FIELD_NUMBER: _builtins.int
+    @_builtins.property
+    def name_prefix(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
+        """Optional: only metrics whose name starts with one of these
+        prefixes are returned. Empty list ⇒ every metric in the
+        registry (the default for the CLI).
+        """
+
+    def __init__(
+        self,
+        *,
+        name_prefix: _abc.Iterable[_builtins.str] | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["name_prefix", b"name_prefix"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetMetricsRequest: _TypeAlias = GetMetricsRequest  # noqa: Y015
+
+@_typing.final
+class Metric(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    class _Type:
+        ValueType = _typing.NewType("ValueType", _builtins.int)
+        V: _TypeAlias = ValueType  # noqa: Y015
+
+    class _TypeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[Metric._Type.ValueType], _builtins.type):
+        DESCRIPTOR: _descriptor.EnumDescriptor
+        TYPE_UNSPECIFIED: Metric._Type.ValueType  # 0
+        COUNTER: Metric._Type.ValueType  # 1
+        GAUGE: Metric._Type.ValueType  # 2
+        HISTOGRAM: Metric._Type.ValueType  # 3
+
+    class Type(_Type, metaclass=_TypeEnumTypeWrapper): ...
+    TYPE_UNSPECIFIED: Metric.Type.ValueType  # 0
+    COUNTER: Metric.Type.ValueType  # 1
+    GAUGE: Metric.Type.ValueType  # 2
+    HISTOGRAM: Metric.Type.ValueType  # 3
+
+    @_typing.final
+    class LabelsEntry(_message.Message):
+        DESCRIPTOR: _descriptor.Descriptor
+
+        KEY_FIELD_NUMBER: _builtins.int
+        VALUE_FIELD_NUMBER: _builtins.int
+        key: _builtins.str
+        value: _builtins.str
+        def __init__(
+            self,
+            *,
+            key: _builtins.str = ...,
+            value: _builtins.str = ...,
+        ) -> None: ...
+        _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+        def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+        _ClearFieldArgType: _TypeAlias = _typing.Literal["key", b"key", "value", b"value"]  # noqa: Y015
+        def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+        def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+    NAME_FIELD_NUMBER: _builtins.int
+    TYPE_FIELD_NUMBER: _builtins.int
+    LABELS_FIELD_NUMBER: _builtins.int
+    SCALAR_FIELD_NUMBER: _builtins.int
+    HISTOGRAM_FIELD_NUMBER: _builtins.int
+    name: _builtins.str
+    type: Global___Metric.Type.ValueType
+    scalar: _builtins.float
+    """counter (rounded to integer caller-side) or gauge"""
+    @_builtins.property
+    def labels(self) -> _containers.ScalarMap[_builtins.str, _builtins.str]:
+        """Reserved for label support — Phase 7. The current Registry has
+        no per-metric labels, so this field is always empty on the wire
+        until labelled metrics land.
+        """
+
+    @_builtins.property
+    def histogram(self) -> Global___HistogramSnapshot: ...
+    def __init__(
+        self,
+        *,
+        name: _builtins.str = ...,
+        type: Global___Metric.Type.ValueType = ...,
+        labels: _abc.Mapping[_builtins.str, _builtins.str] | None = ...,
+        scalar: _builtins.float = ...,
+        histogram: Global___HistogramSnapshot | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["histogram", b"histogram", "scalar", b"scalar", "value", b"value"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["histogram", b"histogram", "labels", b"labels", "name", b"name", "scalar", b"scalar", "type", b"type", "value", b"value"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType_value: _TypeAlias = _typing.Literal["scalar", "histogram"]  # noqa: Y015
+    _WhichOneofArgType_value: _TypeAlias = _typing.Literal["value", b"value"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType_value) -> _WhichOneofReturnType_value | None: ...
+
+Global___Metric: _TypeAlias = Metric  # noqa: Y015
+
+@_typing.final
+class HistogramSnapshot(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    P50_FIELD_NUMBER: _builtins.int
+    P95_FIELD_NUMBER: _builtins.int
+    P99_FIELD_NUMBER: _builtins.int
+    MIN_FIELD_NUMBER: _builtins.int
+    MAX_FIELD_NUMBER: _builtins.int
+    COUNT_FIELD_NUMBER: _builtins.int
+    p50: _builtins.float
+    """Percentiles in seconds (or whatever unit the histogram was fed).
+    Mirrors hdrhistogram's get_value_at_percentile, scaled back from
+    the µs internal representation; min/max are the actual recorded
+    extremes, count is the number of samples.
+    """
+    p95: _builtins.float
+    p99: _builtins.float
+    min: _builtins.float
+    max: _builtins.float
+    count: _builtins.int
+    def __init__(
+        self,
+        *,
+        p50: _builtins.float = ...,
+        p95: _builtins.float = ...,
+        p99: _builtins.float = ...,
+        min: _builtins.float = ...,
+        max: _builtins.float = ...,
+        count: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["count", b"count", "max", b"max", "min", b"min", "p50", b"p50", "p95", b"p95", "p99", b"p99"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___HistogramSnapshot: _TypeAlias = HistogramSnapshot  # noqa: Y015
+
+@_typing.final
+class GetMetricsResponse(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    METRICS_FIELD_NUMBER: _builtins.int
+    @_builtins.property
+    def metrics(self) -> _containers.RepeatedCompositeFieldContainer[Global___Metric]: ...
+    def __init__(
+        self,
+        *,
+        metrics: _abc.Iterable[Global___Metric] | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["metrics", b"metrics"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetMetricsResponse: _TypeAlias = GetMetricsResponse  # noqa: Y015

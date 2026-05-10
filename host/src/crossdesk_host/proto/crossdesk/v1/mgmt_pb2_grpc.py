@@ -113,6 +113,11 @@ class ManagementServiceStub(object):
                 request_serializer=crossdesk_dot_v1_dot_mgmt__pb2.Empty.SerializeToString,
                 response_deserializer=crossdesk_dot_v1_dot_mgmt__pb2.SettingsResponse.FromString,
                 _registered_method=True)
+        self.GetMetrics = channel.unary_unary(
+                '/crossdesk.v1.ManagementService/GetMetrics',
+                request_serializer=crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsRequest.SerializeToString,
+                response_deserializer=crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsResponse.FromString,
+                _registered_method=True)
 
 
 class ManagementServiceServicer(object):
@@ -224,6 +229,17 @@ class ManagementServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetMetrics(self, request, context):
+        """Snapshot of in-memory observability metrics. Counters / gauges
+        serialise as ``Metric.scalar``; histograms collapse to a small
+        percentile + min/max/count summary. Used by the ``crossdesk
+        metrics`` CLI and the microbench harness — Prometheus scraping
+        is out of scope per DEC-0006 (in-memory only).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ManagementServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -291,6 +307,11 @@ def add_ManagementServiceServicer_to_server(servicer, server):
                     servicer.ReadSettings,
                     request_deserializer=crossdesk_dot_v1_dot_mgmt__pb2.Empty.FromString,
                     response_serializer=crossdesk_dot_v1_dot_mgmt__pb2.SettingsResponse.SerializeToString,
+            ),
+            'GetMetrics': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMetrics,
+                    request_deserializer=crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsRequest.FromString,
+                    response_serializer=crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -658,6 +679,33 @@ class ManagementService(object):
             '/crossdesk.v1.ManagementService/ReadSettings',
             crossdesk_dot_v1_dot_mgmt__pb2.Empty.SerializeToString,
             crossdesk_dot_v1_dot_mgmt__pb2.SettingsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMetrics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/crossdesk.v1.ManagementService/GetMetrics',
+            crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsRequest.SerializeToString,
+            crossdesk_dot_v1_dot_mgmt__pb2.GetMetricsResponse.FromString,
             options,
             channel_credentials,
             insecure,

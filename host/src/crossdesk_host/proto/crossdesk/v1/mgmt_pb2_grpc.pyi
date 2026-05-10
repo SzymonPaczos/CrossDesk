@@ -77,6 +77,13 @@ class ManagementServiceStub:
     see what was clamped/normalised).
     """
     ReadSettings: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.SettingsResponse]
+    GetMetrics: _grpc.UnaryUnaryMultiCallable[_mgmt_pb2.GetMetricsRequest, _mgmt_pb2.GetMetricsResponse]
+    """Snapshot of in-memory observability metrics. Counters / gauges
+    serialise as ``Metric.scalar``; histograms collapse to a small
+    percentile + min/max/count summary. Used by the ``crossdesk
+    metrics`` CLI and the microbench harness — Prometheus scraping
+    is out of scope per DEC-0006 (in-memory only).
+    """
 
 @_typing.type_check_only
 class ManagementServiceAsyncStub(ManagementServiceStub):
@@ -127,6 +134,13 @@ class ManagementServiceAsyncStub(ManagementServiceStub):
     see what was clamped/normalised).
     """
     ReadSettings: _aio.UnaryUnaryMultiCallable[_mgmt_pb2.Empty, _mgmt_pb2.SettingsResponse]  # type: ignore[assignment]
+    GetMetrics: _aio.UnaryUnaryMultiCallable[_mgmt_pb2.GetMetricsRequest, _mgmt_pb2.GetMetricsResponse]  # type: ignore[assignment]
+    """Snapshot of in-memory observability metrics. Counters / gauges
+    serialise as ``Metric.scalar``; histograms collapse to a small
+    percentile + min/max/count summary. Used by the ``crossdesk
+    metrics`` CLI and the microbench harness — Prometheus scraping
+    is out of scope per DEC-0006 (in-memory only).
+    """
 
 class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
     """=============================================================================
@@ -252,5 +266,18 @@ class ManagementServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _mgmt_pb2.Empty,
         context: _ServicerContext,
     ) -> _typing.Union[_mgmt_pb2.SettingsResponse, _abc.Awaitable[_mgmt_pb2.SettingsResponse]]: ...
+
+    @_abc_1.abstractmethod
+    def GetMetrics(
+        self,
+        request: _mgmt_pb2.GetMetricsRequest,
+        context: _ServicerContext,
+    ) -> _typing.Union[_mgmt_pb2.GetMetricsResponse, _abc.Awaitable[_mgmt_pb2.GetMetricsResponse]]:
+        """Snapshot of in-memory observability metrics. Counters / gauges
+        serialise as ``Metric.scalar``; histograms collapse to a small
+        percentile + min/max/count summary. Used by the ``crossdesk
+        metrics`` CLI and the microbench harness — Prometheus scraping
+        is out of scope per DEC-0006 (in-memory only).
+        """
 
 def add_ManagementServiceServicer_to_server(servicer: ManagementServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

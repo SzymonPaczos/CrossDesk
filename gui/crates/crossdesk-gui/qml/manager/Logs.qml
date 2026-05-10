@@ -83,6 +83,9 @@ Item {
         }
 
         // ── Log view (dark terminal panel) ────────────────────
+        // Terminal panels are always dark by convention — same semantic
+        // exception as severity colours. Text colours below are calibrated
+        // for legibility on this dark background, not for system palette.
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -90,7 +93,7 @@ Item {
             Layout.rightMargin: 24
             Layout.topMargin: 16
             Layout.bottomMargin: 16
-            color: "#0e0e0e"
+            color: "#1e1e1e"
             radius: 6
             border.color: palette.mid
             border.width: 1
@@ -116,7 +119,6 @@ Item {
                         width: logListView.width - 28
                         height: logLabel.implicitHeight + 2
 
-                        // Color-code by level prefix in the line
                         readonly property color lineColor: {
                             var l = modelData.toLowerCase();
                             if (l.indexOf("error") !== -1 || l.indexOf("critical") !== -1)

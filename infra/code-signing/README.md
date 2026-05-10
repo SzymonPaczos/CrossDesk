@@ -23,6 +23,16 @@ Produces under `./pki/`:
 
 ## Sign a release binary
 
+**Production path:** every `v*.*.*` tag pushed to GitHub triggers
+[`.github/workflows/release.yml`](../../.github/workflows/release.yml),
+which cross-compiles `CrossDeskAgent.exe` and runs `sign-agent.sh`
+against the PFX decoded from the `CROSSDESK_SIGNING_PFX_BASE64`
+repository secret. See `docs/CODE_SIGNING.md` "CI integration" for
+the secret-setup procedure.
+
+**Manual fallback** (dev signing, CI bypass, or pre-release smoke
+test):
+
 ```sh
 ./sign-agent.sh path/to/CrossDeskAgent.exe
 ```

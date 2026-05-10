@@ -1,0 +1,257 @@
+name: Release
+
+# Triggered when a semver tag like `v0.1.0` is pushed to the repo, or
+# manually via the Actions UI for dry-runs against an arbitrary ref.
+#
+# Pipeline:
+#   1. build-agent       — cross-compile CrossDeskAgent.exe via MinGW
+#                          on a Linux runner.
+#   2. sign-agent        — Authenticode-sign with the publisher leaf
+#                          cert decoded from the
+#                          CROSSDESK_SIGNING_PFX_BASE64 secret. Skips
+#                          (with a warning, not a failure) if the
+#                          secret is missing — keeps fork dispatches
+#                          and bootstrap runs viable.
+#   3. build-host-wheel  — Python 3.12 sdist+wheel for the orchestrator.
+#   4. publish-release   — gh release with signed binary,
+#                          publisher root CA, host wheel, AUR PKGBUILD
+#                          tarball, Nix flake, and SHA256SUMS.
+#
+# Secrets:
+#   CROSSDESK_SIGNING_PFX_BASE64
+#     base64-encoded PKCS#12 of infra/code-signing/pki/publisher-signing.pfx.
+#     On the signing host:
+#       base64 -i infra/code-signing/pki/publisher-signing.pfx | pbcopy
+#     Then paste into Settings → Secrets and variables → Actions.
+#     Rotate when the leaf rotates (`./generate.sh --rotate-leaf`).
+#     See docs/CODE_SIGNING.md "CI integration" for the full procedure.
+#
+# Action pinning: third-party Actions are SHA-pinned; the comment next
+# to each `uses:` says which release the SHA corresponds to. First-
+# party `actions/*` and `github/*` keep their major-version tag (same
+# convention as ci.yml + security.yml).
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ref to release from (branch, tag, or SHA)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write   # publish-release needs to create the GH release
+
+jobs:
+  build-agent:
+    name: Cross-compile CrossDeskAgent.exe (MinGW)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+      - name: Install MinGW cross-toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+      - name: cargo build --release (Windows target)
+        working-directory: guest
+        # Same target triple as ci.yml `rust-guest-cross-compile`. The
+        # binary lands as `agent.exe` because the `[[bin]]` name in
+        # crates/agent-svc/Cargo.toml is `agent`.
+        run: cargo build --release --target x86_64-pc-windows-gnu -p agent-svc
+      - name: Stage binary as CrossDeskAgent.exe
+        # The shipping name is CrossDeskAgent.exe (matches the NT
+        # service name CrossDeskAgent — see REQUIREMENTS F1.9 +
+        # docs/CODE_SIGNING.md). Copy under that name so the artifact
+        # downloaded by sign-agent has the user-facing filename.
+        run: |
+          mkdir -p artifact
+          cp guest/target/x86_64-pc-windows-gnu/release/agent.exe \
+             artifact/CrossDeskAgent.exe
+      - name: Upload unsigned binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-unsigned
+          path: artifact/CrossDeskAgent.exe
+          if-no-files-found: error
+          retention-days: 7
+
+  sign-agent:
+    name: Authenticode-sign CrossDeskAgent.exe
+    needs: build-agent
+    runs-on: ubuntu-latest
+    # We don't gate on the secret here because GitHub doesn't expose
+    # secrets to `if:` conditions on the job level. Instead the steps
+    # below check at runtime and either sign or skip+warn. That keeps
+    # `needs:` happy in publish-release regardless of whether the PFX
+    # was available.
+    outputs:
+      signed: ${{ steps.sign.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - name: Install osslsigncode
+        # Same tool the manual signer (infra/code-signing/sign-agent.sh)
+        # wraps — picked because it cross-compiles cleanly to Linux/macOS,
+        # matching the dev-host story in docs/CODE_SIGNING.md.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osslsigncode
+      - name: Download unsigned binary
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-unsigned
+          path: artifact
+      - name: Decode signing PFX from secret
+        id: pfx
+        env:
+          PFX_BASE64: ${{ secrets.CROSSDESK_SIGNING_PFX_BASE64 }}
+        run: |
+          if [ -z "${PFX_BASE64:-}" ]; then
+            echo "::warning::CROSSDESK_SIGNING_PFX_BASE64 secret is unset; sign step will be skipped."
+            echo "have_pfx=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # umask before write so the PFX never lands world-readable on
+          # the runner's tmp filesystem (defence-in-depth; the runner is
+          # ephemeral).
+          umask 077
+          PFX_PATH="$RUNNER_TEMP/publisher-signing.pfx"
+          printf '%s' "$PFX_BASE64" | base64 -d > "$PFX_PATH"
+          echo "pfx_path=$PFX_PATH" >> "$GITHUB_OUTPUT"
+          echo "have_pfx=true" >> "$GITHUB_OUTPUT"
+      - name: Sign with osslsigncode
+        id: sign
+        if: steps.pfx.outputs.have_pfx == 'true'
+        env:
+          CROSSDESK_SIGNING_PFX: ${{ steps.pfx.outputs.pfx_path }}
+        run: |
+          chmod +x infra/code-signing/sign-agent.sh
+          infra/code-signing/sign-agent.sh artifact/CrossDeskAgent.exe
+          # Drop the `*.unsigned.bak` the helper leaves behind so the
+          # release artifact tree contains only the signed binary.
+          rm -f artifact/CrossDeskAgent.exe.unsigned.bak
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+      - name: Skip-sign warning
+        if: steps.pfx.outputs.have_pfx != 'true'
+        run: |
+          echo "::warning::CrossDeskAgent.exe will be published UNSIGNED — set CROSSDESK_SIGNING_PFX_BASE64 before tagging the next release."
+          echo "signed=false" >> "$GITHUB_OUTPUT"
+      - name: Upload (possibly-signed) binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-final
+          path: artifact/CrossDeskAgent.exe
+          if-no-files-found: error
+          retention-days: 7
+      - name: Wipe PFX from runner
+        # Runner is ephemeral, but explicit shred is cheap insurance
+        # against any caching layer that might persist $RUNNER_TEMP.
+        if: always() && steps.pfx.outputs.have_pfx == 'true'
+        run: |
+          shred -u "${{ steps.pfx.outputs.pfx_path }}" 2>/dev/null || \
+            rm -f "${{ steps.pfx.outputs.pfx_path }}"
+
+  build-host-wheel:
+    name: Build host wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build deps
+        # libvirt-dev / libsystemd-dev pulled because pyproject [linux]
+        # extra compiles libvirt-python + systemd-python from sdist —
+        # but `pip wheel host/` (without extras) skips them, so this is
+        # belt-and-braces.
+        run: |
+          python -m pip install --upgrade pip build
+          sudo apt-get update
+          sudo apt-get install -y libvirt-dev libsystemd-dev pkg-config
+      - name: Build wheel
+        run: |
+          mkdir -p dist
+          python -m build --wheel --outdir dist host/
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-wheel
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [build-agent, sign-agent, build-host-wheel]
+    runs-on: ubuntu-latest
+    # Skip on workflow_dispatch dry-runs (no tag → no release to cut).
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Download signed agent
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-final
+          path: release-assets
+      - name: Download host wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: host-wheel
+          path: release-assets
+      - name: Stage publisher root CA + AUR PKGBUILD + flake
+        # Root CA is the trust anchor users (or their distro packagers)
+        # need to verify CrossDeskAgent.exe outside a CrossDesk guest.
+        # Shipped alongside every release so the checksum manifest
+        # below covers it too.
+        run: |
+          cp infra/code-signing/pki/publisher-root-ca.crt \
+             release-assets/publisher-root-ca.crt
+          tar -czf release-assets/aur-PKGBUILD.tar.gz \
+              -C packaging aur
+          cp flake.nix release-assets/flake.nix
+      - name: Generate SHA256SUMS
+        # Single manifest covers everything attached to the release.
+        # Users verify with `sha256sum -c SHA256SUMS` after `gh release
+        # download`.
+        working-directory: release-assets
+        run: |
+          sha256sum * | tee SHA256SUMS
+      - name: Create GitHub release
+        # softprops/action-gh-release@v2.6.2 — third-party action, pinned
+        # to commit SHA per security.yml convention. Bump alongside a
+        # security.yml refresh to avoid drift.
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+        with:
+          files: release-assets/*
+          draft: true   # human review the asset list before publishing
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          body: |
+            ## CrossDesk ${{ github.ref_name }}
+
+            Signed = `${{ needs.sign-agent.outputs.signed }}` (false ⇒
+            `CROSSDESK_SIGNING_PFX_BASE64` was unset at build time;
+            re-run after adding the secret if you intend to ship a
+            verified-publisher build).
+
+            Verify the agent signature with the bundled root CA:
+
+            ```sh
+            osslsigncode verify -CAfile publisher-root-ca.crt \
+                CrossDeskAgent.exe
+            ```
+
+            See `docs/CODE_SIGNING.md` for the full trust story.

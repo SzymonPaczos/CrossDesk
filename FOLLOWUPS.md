@@ -61,12 +61,16 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
   `agent-svc/host_uuid.rs`, `rail-bridge/windows.rs`) compile clean;
   three pre-existing API drift bugs in those modules were fixed at
   the same time.
-- **End-to-end mTLS smoke test against the new 32-byte `mount_token`.**
-  Unit tests cover length-rejection (`tests/test_filesystem_service.py`).
-  `tests/test_smoke_e2e.py` was green during the audit but should be
-  re-read to confirm any frame it emits over the wire carries a 32-byte
-  token. If it currently constructs a `MountResult`/`LockReport`/
-  `ReleaseAck` without one, those frames will now be dropped silently.
+- **[✅ DONE 2026-05-10] End-to-end mTLS smoke test against the new
+  32-byte `mount_token`.** Audit found `test_filesystem_mount_result_recorded`
+  was constructing `MountResult` with no `mount_token` field — the bytes
+  default of `b""` (length 0) made the host silently drop the frame while
+  the test passed (it only checked the bidi handshake). Fixed in
+  `chore/smoke-e2e-mount-token-audit`: module-level `_MOUNT_TOKEN` (32
+  bytes) shared by both filesystem smoke tests, plus a `caplog`
+  assertion on `crossdesk_host.ipc.filesystem` that the accept-path
+  log line fires AND no rejection line is emitted. Mutation-tested
+  (shrink to 31 bytes ⇒ test fails red with the rejection message).
 
 ## Phase work still owed
 

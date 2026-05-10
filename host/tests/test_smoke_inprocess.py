@@ -39,10 +39,12 @@ from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
+from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
 from crossdesk_host.proto.crossdesk.v1 import (
+    control_pb2,
     control_pb2_grpc,
     filesystem_pb2_grpc,
     heartbeat_pb2_grpc,
@@ -108,7 +110,13 @@ def cargo_built_agent() -> Path:
 
 
 @pytest.fixture
-async def host_with_port_and_logs():
+def verify_coordinator() -> VerifyCoordinator:
+    """One coordinator per test; injected into ControlServiceServicer below."""
+    return VerifyCoordinator()
+
+
+@pytest.fixture
+async def host_with_port_and_logs(verify_coordinator: VerifyCoordinator):
     """Boot the host gRPC server on a free TCP port, mount the
     TraceContextInterceptor, and pipe structlog output into a buffer
     the test can inspect. Yields ``(port, log_buffer)``."""
@@ -131,7 +139,7 @@ async def host_with_port_and_logs():
     auth = AuthValidator()
     libvirt = LibvirtControllerMock()
     control_pb2_grpc.add_ControlServiceServicer_to_server(
-        ControlServiceServicer(auth), server
+        ControlServiceServicer(auth, verify_coordinator=verify_coordinator), server
     )
     heartbeat_pb2_grpc.add_HeartbeatServiceServicer_to_server(
         HeartbeatServiceServicer(auth, libvirt), server
@@ -323,6 +331,84 @@ async def test_traceparent_propagates_from_agent_to_host_logs(
         assert host_trace_id == agent_trace_id, (
             f"trace_id mismatch: agent={agent_trace_id!r} " f"host={host_trace_id!r}"
         )
+    finally:
+        if proc.returncode is None:
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+        drain_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await drain_task
+
+
+async def test_verify_credentials_roundtrip_through_real_agent(
+    host_with_port_and_logs: "tuple[int, io.StringIO]",
+    verify_coordinator: VerifyCoordinator,
+    cargo_built_agent: Path,
+    tmp_path: Path,
+) -> None:
+    """End-to-end VerifyCredentials: host pushes ServerFrame.verify_credentials
+    via VerifyCoordinator, the live Rust agent's ``handle_server_frame``
+    dispatches to the mock ``credentials.rs`` impl, and the result comes
+    back as ClientFrame.verify_credentials_result, resolving the host's
+    awaited future.
+
+    Uses the agent mock's ``__inject_<status>__`` username convention so
+    the test exercises both the OK path and a structured failure path
+    without depending on real LogonUserW (Stage 4 / post-hardware).
+    """
+    port, _ = host_with_port_and_logs
+    pki = _stage_agent_pki(tmp_path)
+
+    env = {
+        **os.environ,
+        "CROSSDESK_PKI_DIR": str(pki),
+        "CROSSDESK_HOST_ENDPOINT": f"https://127.0.0.1:{port}",
+        "CROSSDESK_DOMAIN_UUID": "verify-rpc-test",
+        "RUST_LOG": "info",
+    }
+
+    proc = await asyncio.create_subprocess_exec(
+        str(cargo_built_agent),
+        env=env,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stderr_sink: list[bytes] = []
+    drain_task = asyncio.create_task(_drain_subprocess_logs(proc, stderr_sink))
+
+    try:
+        # Wait for ClientHello → ServerAccept to complete; servicer
+        # registers the session with VerifyCoordinator at that point.
+        deadline = asyncio.get_event_loop().time() + 30.0
+        while asyncio.get_event_loop().time() < deadline:
+            if verify_coordinator.session_count() > 0:
+                break
+            await asyncio.sleep(0.1)
+        else:
+            agent_stderr = b"".join(stderr_sink).decode("utf-8", errors="replace")
+            pytest.fail(
+                "session never registered with VerifyCoordinator within 30s; "
+                f"agent stderr:\n{agent_stderr}"
+            )
+
+        ok = await verify_coordinator.verify(
+            "__inject_ok__", "ignored", timeout=10.0
+        )
+        assert (
+            ok.status == control_pb2.VerifyCredentialsResult.Status.STATUS_OK
+        ), f"expected OK, got {ok}"
+
+        bad = await verify_coordinator.verify(
+            "__inject_bad__", "ignored", timeout=10.0
+        )
+        assert bad.status == (
+            control_pb2.VerifyCredentialsResult.Status.STATUS_FAIL_BAD_CREDENTIALS
+        ), f"expected FAIL_BAD_CREDENTIALS, got {bad}"
     finally:
         if proc.returncode is None:
             proc.terminate()

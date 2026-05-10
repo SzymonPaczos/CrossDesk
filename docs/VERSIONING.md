@@ -222,3 +222,82 @@ dockur/windows has its own versioning for the container image
 (`ghcr.io/dockur/windows:11`) but that is the container, not the
 WinApps tooling itself. Mismatches between WinApps and dockur
 versions are silent until something breaks at runtime.
+
+## Appendix: capability flag inventory
+
+Authoritative list of every flag advertised through
+`ClientHello.supported_features` / `ServerAccept.negotiated_features`
+(`proto/crossdesk/v1/control.proto`). The negotiation rule is
+**intersection**: the host advertises its set, the guest sends its
+set in `ClientHello`, and the host returns
+`ServerAccept.negotiated_features = host ∩ guest`. Both sides MUST
+treat any flag missing from `negotiated_features` as not available
+for the lifetime of that session.
+
+Naming convention: `<area>.<version>` (dot-separated) for stable
+flags; `exp:<area>` for experimental flags whose semantics may
+change before promotion. Flag names are case-sensitive lowercase
+ASCII.
+
+### Stable flags
+
+| Flag | Status | Introduced | Negotiated by | Semantics |
+|------|--------|------------|---------------|-----------|
+| `rail.v1` | stable | v0.1.0 | both | Host accepts `RailWindowEvent` frames from the guest and translates them into FreeRDP RAIL spawns. Guest emits the events for every top-level Win32 window of every launched app. Required for the core "Windows app as native Linux window" experience. |
+| `virtiofs.jit` | stable | v0.1.0 | host advertises | JIT (just-in-time) hot-plug of VirtioFS shares per opened file. Guest must support `MountResult` / `LockReport` / `ReleaseAck` flow with 32-byte `mount_token` validation. Required for `crossdesk launch <app> <file>` where `<file>` lives on the Linux host. |
+
+### Planned flags (named here so they don't collide once shipped)
+
+| Flag | Target | Semantics |
+|------|--------|-----------|
+| `auth.verify-credentials.v1` | post-Stage 4 (real `LogonUserW`) | Guest implements the `ServerFrame.verify_credentials` → `ClientFrame.verify_credentials_result` round-trip with real Windows LSA. Today's mock-impl handler (Stages 1-3) does not advertise this flag yet — it accepts the request but returns deterministic mock responses. The flag flips to "stable, both" once `agent-svc/credentials.rs::windows_impl` calls real `LogonUserW`. |
+| `trace.w3c.v1` | post-DEC-0006 wire-format extension | Guest stamps `traceparent` on every outgoing frame's `AuthContext`-adjacent metadata so host-side spans can correlate with guest-side spans. Currently DEC-0006 covers gRPC-metadata-level traceparent; per-frame stamping needs a proto edit (owner approval). |
+| `gpu.passthrough.v1` | Phase 4.5 (post-MVP) | Guest accepts `GpuPassthroughConfig` over the control plane and binds the passed-through GPU device to the FreeRDP RAIL pipeline. Hardware-gated (`crossdesk doctor` must report a Tier-1 GPU vendor). |
+| `looking-glass.v1` | post-Phase 4.5 | Guest enables Looking Glass IVSHMEM channel for low-latency display path. Negotiated independently of `gpu.passthrough.v1`. |
+
+### Experimental flags
+
+`exp:` prefix marks any flag whose wire-level semantics or behaviour
+may change between minor versions. The host MUST NOT enable an
+experimental feature in production without an explicit opt-in (env
+var or config flag). Currently no `exp:*` flags are in flight. When
+one is added, append a row above with status="experimental" and a
+"reconsider when" note.
+
+### Flag retirement procedure
+
+1. Mark the row in this appendix as `deprecated` and add a
+   `Deprecated since:` column entry.
+2. Host stops advertising the flag in a MINOR release; logs a
+   structured warning (`event="capability_deprecated"`,
+   `flag="<name>"`) every time a guest attempts to negotiate it.
+3. Remove from advertisement entirely in the next MAJOR.
+4. Never re-use a retired flag name for a different feature — pick
+   `<area>.v<n+1>` if the area returns with new semantics.
+
+### Out of scope for negotiation
+
+The following are **not** capability flags and are negotiated
+elsewhere:
+
+- **mTLS cipher suites** — pinned at install time via the PKI
+  scaffolding; not part of the application-level handshake.
+- **Wire-format version** — covered by `host_version` /
+  `guest_version` semver compatibility (`is_compatible` in
+  `host/src/crossdesk_host/ipc/version_negotiation.py`). N-1 minor
+  rule applies; mismatches are rejected with
+  `AuthFailure.CODE_FEATURE_NEGOTIATION_FAILED` before any
+  capability negotiation runs.
+- **Configuration knobs** (`vm.toml`, `peripherals.toml`) — local
+  to one side, never crosses the wire.
+
+### Code references
+
+- Host advertises: `host/src/crossdesk_host/ipc/control.py`
+  (`HOST_SUPPORTED_FEATURES`).
+- Guest advertises: `guest/crates/agent-svc/src/session.rs`
+  (`ClientHello { supported_features: vec![...] }`).
+- Negotiation (intersection): `host/src/crossdesk_host/ipc/version_negotiation.py`
+  (`negotiate_features`).
+- Wire format: `proto/crossdesk/v1/control.proto`
+  (`ClientHello.supported_features` + `ServerAccept.negotiated_features`).

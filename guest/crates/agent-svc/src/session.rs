@@ -12,6 +12,11 @@ use proto::crossdesk::v1::client_frame::Payload;
 use crate::credentials::handle_verify_credentials;
 use crate::host_uuid::read_host_domain_uuid;
 
+/// Wire-protocol major version. Must match the host's CROSSDESK_PROTOCOL_VERSION.
+/// On a major bump the host rejects the connection; the guest logs a warning but
+/// stays lenient (host is authoritative on compatibility decisions per N-1 rule).
+const PROTOCOL_VERSION: &str = "1";
+
 pub async fn run_control_session<T>(
     mut client: ControlServiceClient<T>,
     auth: AuthCarrier,
@@ -54,6 +59,7 @@ where
             host_version: "0.1.0".to_string(),
             supported_features: vec!["rail.v1".to_string()],
             host_domain_uuid,
+            protocol_version: PROTOCOL_VERSION.to_string(),
         })),
     };
 
@@ -89,7 +95,24 @@ async fn handle_server_frame(
     let Some(payload) = frame.payload else { return };
     match payload {
         proto::crossdesk::v1::server_frame::Payload::Accept(accept) => {
-            info!("Server Accepted session: {:?}", accept.negotiated_features);
+            info!(
+                protocol_version = %accept.protocol_version,
+                features = ?accept.negotiated_features,
+                "Server accepted session",
+            );
+            // Guest is lenient: log a warning on major mismatch but do not
+            // hard-reject (host is authoritative on compatibility per N-1 rule).
+            if !accept.protocol_version.is_empty() {
+                let host_major = accept.protocol_version.chars().next().unwrap_or('0');
+                let our_major = PROTOCOL_VERSION.chars().next().unwrap_or('0');
+                if host_major != our_major {
+                    warn!(
+                        host_protocol_version = %accept.protocol_version,
+                        our_protocol_version = %PROTOCOL_VERSION,
+                        "Protocol major version mismatch — consider upgrading the agent",
+                    );
+                }
+            }
         }
         proto::crossdesk::v1::server_frame::Payload::AuthFailure(err) => {
             error!("Auth Failure: {:?}", err);

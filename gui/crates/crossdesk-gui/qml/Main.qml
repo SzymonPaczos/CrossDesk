@@ -10,10 +10,9 @@ ApplicationWindow {
     visible: true
     title: qsTr("CrossDesk Manager")
 
-    // Route between landing (no VM yet), wizard (installing), and the
-    // full Manager (post-install). Phase 6 wires the route based on
-    // an install-state flag the daemon would expose; for the dev mode
-    // the user clicks "Open Manager" or "New Windows VM".
+    // Phase 6 (mock): hardcoded true → Manager opens directly.
+    // Phase 7 Week 27: replace with mgmt::Status has_vm field from daemon.
+    readonly property bool hasVm: true
 
     WizardState {
         id: wizard
@@ -47,52 +46,15 @@ ApplicationWindow {
     StackView {
         id: stack
         anchors.fill: parent
-        initialItem: landingComponent
-    }
+        initialItem: "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Manager.qml"
 
-    Component {
-        id: landingComponent
-        Item {
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 16
-
-                Label {
-                    text: qsTr("Welcome to CrossDesk")
-                    font.pixelSize: 22
-                    font.bold: true
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                Label {
-                    text: qsTr("Provision a Windows guest to get started, or open the Manager if you've already installed.")
-                    color: palette.placeholderText
-                    Layout.alignment: Qt.AlignHCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                    Layout.preferredWidth: 400
-                }
-
-                RowLayout {
-                    spacing: 12
-                    Layout.alignment: Qt.AlignHCenter
-
-                    Button {
-                        text: qsTr("New Windows VM")
-                        onClicked: {
-                            wizard.reset();
-                            stack.push("qrc:/qt/qml/com/crossdesk/gui/qml/wizard/InstallWizard.qml", {
-                                "wizard": wizard,
-                                "rootStack": stack
-                            });
-                        }
-                    }
-
-                    Button {
-                        text: qsTr("Open Manager")
-                        onClicked: stack.push("qrc:/qt/qml/com/crossdesk/gui/qml/manager/Manager.qml")
-                    }
-                }
+        Component.onCompleted: {
+            if (!root.hasVm) {
+                wizard.reset();
+                stack.push("qrc:/qt/qml/com/crossdesk/gui/qml/wizard/InstallWizard.qml", {
+                    "wizard": wizard,
+                    "rootStack": stack
+                });
             }
         }
     }

@@ -34,6 +34,7 @@ from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
 from crossdesk_host.lifecycle import LifecycleCoordinator
+from crossdesk_host.observability import child_span_scope
 from crossdesk_host.observability.log import get_logger
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2, mgmt_pb2_grpc
 from crossdesk_host.watchdog import HeartbeatFsm, State
@@ -113,15 +114,18 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         request: mgmt_pb2.Empty,
         context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[mgmt_pb2.StatusFrame]:
-        logger.info("mgmt_status_stream_opened")
-        try:
-            while not context.cancelled():
-                yield self._build_status_frame()
-                await asyncio.sleep(self.push_interval_seconds)
-        except asyncio.CancelledError:
-            pass
-        finally:
-            logger.info("mgmt_status_stream_closed")
+        with child_span_scope():
+            logger.info("rpc_start", method="Status")
+            logger.info("mgmt_status_stream_opened")
+            try:
+                while not context.cancelled():
+                    yield self._build_status_frame()
+                    await asyncio.sleep(self.push_interval_seconds)
+            except asyncio.CancelledError:
+                pass
+            finally:
+                logger.info("mgmt_status_stream_closed")
+                logger.info("rpc_end", method="Status")
 
     def _build_status_frame(self) -> mgmt_pb2.StatusFrame:
         uptime_seconds = max(0.0, time.time() - self.state.boot_time)
@@ -168,8 +172,11 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         request: mgmt_pb2.Empty,
         context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[mgmt_pb2.AppEntry]:
-        for entry in self._curated_apps():
-            yield entry
+        with child_span_scope():
+            logger.info("rpc_start", method="ListApps")
+            for entry in self._curated_apps():
+                yield entry
+            logger.info("rpc_end", method="ListApps")
 
     async def ListDiscoveredApps(  # noqa: N802
         self,
@@ -179,8 +186,11 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # Phase 8 Week 34 wires this to the guest's RegistryScannerService.
         # For now the daemon returns nothing; GUI shows "no discoveries
         # yet" message.
-        if False:  # pragma: no cover
-            yield mgmt_pb2.AppEntry()
+        with child_span_scope():
+            logger.info("rpc_start", method="ListDiscoveredApps")
+            if False:  # pragma: no cover
+                yield mgmt_pb2.AppEntry()
+            logger.info("rpc_end", method="ListDiscoveredApps")
 
     def _curated_apps(self) -> List[mgmt_pb2.AppEntry]:
         # Curated tier loader lands in Phase 8 Week 33; wire the four
@@ -213,21 +223,25 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         request: mgmt_pb2.Empty,
         context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[mgmt_pb2.MountEntry]:
-        try:
-            while not context.cancelled():
-                for entry in self.state.active_mounts:
-                    yield entry
-                await asyncio.sleep(self.push_interval_seconds)
-                # Re-yield on every tick so a freshly-attached mount
-                # appears at the next interval. Phase 8 will replace
-                # this with an event-driven push.
-                if not self.state.active_mounts:
-                    # Empty stream — keep the connection alive but don't
-                    # yield empties; the GUI handles "no mounts" via the
-                    # absence of frames during a window.
-                    pass
-        except asyncio.CancelledError:
-            pass
+        with child_span_scope():
+            logger.info("rpc_start", method="ListMounts")
+            try:
+                while not context.cancelled():
+                    for entry in self.state.active_mounts:
+                        yield entry
+                    await asyncio.sleep(self.push_interval_seconds)
+                    # Re-yield on every tick so a freshly-attached mount
+                    # appears at the next interval. Phase 8 will replace
+                    # this with an event-driven push.
+                    if not self.state.active_mounts:
+                        # Empty stream — keep the connection alive but don't
+                        # yield empties; the GUI handles "no mounts" via the
+                        # absence of frames during a window.
+                        pass
+            except asyncio.CancelledError:
+                pass
+            finally:
+                logger.info("rpc_end", method="ListMounts")
 
     # ------------------------------------------------------------------
     # Imperative actions
@@ -243,75 +257,98 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # rail_manager / FreeRDPInvocation machinery; integration into
         # mgmt lands when the daemon's main entry point holds shared
         # references (Phase 7).
-        logger.info(
-            "mgmt_launch_request",
-            app_id=request.app_id,
-            file_path=request.file_path,
-        )
-        self.state.append_activity(
-            mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
-            f"Launch requested: {request.app_id}",
-        )
-        return mgmt_pb2.LaunchResponse(
-            ok=True, request_id=f"mgmt-{int(time.time() * 1000)}"
-        )
+        with child_span_scope():
+            logger.info("rpc_start", method="Launch")
+            logger.info(
+                "mgmt_launch_request",
+                app_id=request.app_id,
+                file_path=request.file_path,
+            )
+            self.state.append_activity(
+                mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
+                f"Launch requested: {request.app_id}",
+            )
+            response = mgmt_pb2.LaunchResponse(
+                ok=True, request_id=f"mgmt-{int(time.time() * 1000)}"
+            )
+            logger.info("rpc_end", method="Launch")
+            return response
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.ActionAck:
-        try:
-            if self.coordinator is not None:
-                self.coordinator.on_prepare_for_sleep()
-            else:
-                self.libvirt_ctl.suspend()
-            self.state.append_activity(
-                mgmt_pb2.RecentActivity.Kind.KIND_SUSPEND, "Manual suspend"
-            )
-            return mgmt_pb2.ActionAck(ok=True)
-        except Exception as exc:
-            return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
+        with child_span_scope():
+            logger.info("rpc_start", method="Suspend")
+            try:
+                if self.coordinator is not None:
+                    self.coordinator.on_prepare_for_sleep()
+                else:
+                    self.libvirt_ctl.suspend()
+                self.state.append_activity(
+                    mgmt_pb2.RecentActivity.Kind.KIND_SUSPEND, "Manual suspend"
+                )
+                logger.info("rpc_end", method="Suspend")
+                return mgmt_pb2.ActionAck(ok=True)
+            except Exception as exc:
+                logger.info("rpc_end_early", method="Suspend", reason="libvirt_error")
+                return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
 
     async def Resume(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.ActionAck:
-        try:
-            if self.coordinator is not None:
-                self.coordinator.on_resumed()
-            else:
-                self.libvirt_ctl.resume()
-            self.state.append_activity(
-                mgmt_pb2.RecentActivity.Kind.KIND_RESUME, "Manual resume"
-            )
-            return mgmt_pb2.ActionAck(ok=True)
-        except Exception as exc:
-            return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
+        with child_span_scope():
+            logger.info("rpc_start", method="Resume")
+            try:
+                if self.coordinator is not None:
+                    self.coordinator.on_resumed()
+                else:
+                    self.libvirt_ctl.resume()
+                self.state.append_activity(
+                    mgmt_pb2.RecentActivity.Kind.KIND_RESUME, "Manual resume"
+                )
+                logger.info("rpc_end", method="Resume")
+                return mgmt_pb2.ActionAck(ok=True)
+            except Exception as exc:
+                logger.info("rpc_end_early", method="Resume", reason="libvirt_error")
+                return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
 
     async def HardDestroy(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.ActionAck:
-        try:
-            self.libvirt_ctl.hard_destroy()
-            self.state.last_hard_destroy = datetime.now(timezone.utc)
-            self.state.append_activity(
-                mgmt_pb2.RecentActivity.Kind.KIND_HARD_DESTROY,
-                "Manual HARD_DESTROY",
-            )
-            return mgmt_pb2.ActionAck(ok=True)
-        except Exception as exc:
-            return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
+        with child_span_scope():
+            logger.info("rpc_start", method="HardDestroy")
+            try:
+                self.libvirt_ctl.hard_destroy()
+                self.state.last_hard_destroy = datetime.now(timezone.utc)
+                self.state.append_activity(
+                    mgmt_pb2.RecentActivity.Kind.KIND_HARD_DESTROY,
+                    "Manual HARD_DESTROY",
+                )
+                logger.info("rpc_end", method="HardDestroy")
+                return mgmt_pb2.ActionAck(ok=True)
+            except Exception as exc:
+                logger.info(
+                    "rpc_end_early",
+                    method="HardDestroy",
+                    reason="libvirt_error",
+                )
+                return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
 
     async def RotateCredentials(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.CredentialsResponse:
-        existing = credentials.load()
-        username = existing.username if existing else "crossdesk"
-        new_creds = credentials.generate(username)
-        credentials.save(new_creds)
-        return mgmt_pb2.CredentialsResponse(
-            username=new_creds.username,
-            keyring_key="crossdesk/vm/password",
-            last_rotated=_ts(),
-        )
+        with child_span_scope():
+            logger.info("rpc_start", method="RotateCredentials")
+            existing = credentials.load()
+            username = existing.username if existing else "crossdesk"
+            new_creds = credentials.generate(username)
+            credentials.save(new_creds)
+            logger.info("rpc_end", method="RotateCredentials")
+            return mgmt_pb2.CredentialsResponse(
+                username=new_creds.username,
+                keyring_key="crossdesk/vm/password",
+                last_rotated=_ts(),
+            )
 
     # ------------------------------------------------------------------
     # Diagnostics
@@ -320,34 +357,42 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
     async def RunDiagnostics(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.DiagnosticsReport:
-        results = run_all()
-        proto_status = {
-            DoctorStatus.OK: mgmt_pb2.DiagnosticsCheck.Status.STATUS_OK,
-            DoctorStatus.WARN: mgmt_pb2.DiagnosticsCheck.Status.STATUS_WARN,
-            DoctorStatus.FAIL: mgmt_pb2.DiagnosticsCheck.Status.STATUS_FAIL,
-        }
-        return mgmt_pb2.DiagnosticsReport(
-            checks=[
-                mgmt_pb2.DiagnosticsCheck(
-                    name=r.name,
-                    status=proto_status[r.status],
-                    message=r.message,
-                )
-                for r in results
-            ],
-            any_failed=has_failures(results),
-        )
+        with child_span_scope():
+            logger.info("rpc_start", method="RunDiagnostics")
+            results = run_all()
+            proto_status = {
+                DoctorStatus.OK: mgmt_pb2.DiagnosticsCheck.Status.STATUS_OK,
+                DoctorStatus.WARN: mgmt_pb2.DiagnosticsCheck.Status.STATUS_WARN,
+                DoctorStatus.FAIL: mgmt_pb2.DiagnosticsCheck.Status.STATUS_FAIL,
+            }
+            report = mgmt_pb2.DiagnosticsReport(
+                checks=[
+                    mgmt_pb2.DiagnosticsCheck(
+                        name=r.name,
+                        status=proto_status[r.status],
+                        message=r.message,
+                    )
+                    for r in results
+                ],
+                any_failed=has_failures(results),
+            )
+            logger.info("rpc_end", method="RunDiagnostics")
+            return report
 
     async def ExportDiagnosticBundle(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.DiagnosticBundle:
         # Phase 9 Week 37 wires the actual zip generation. For now
         # return an empty bundle so callers can verify the round-trip.
-        return mgmt_pb2.DiagnosticBundle(
-            zip_payload=b"",
-            filename=f"crossdesk-diag-{int(time.time())}.zip",
-            generated_at=_ts(),
-        )
+        with child_span_scope():
+            logger.info("rpc_start", method="ExportDiagnosticBundle")
+            bundle = mgmt_pb2.DiagnosticBundle(
+                zip_payload=b"",
+                filename=f"crossdesk-diag-{int(time.time())}.zip",
+                generated_at=_ts(),
+            )
+            logger.info("rpc_end", method="ExportDiagnosticBundle")
+            return bundle
 
     # ------------------------------------------------------------------
     # Settings
@@ -358,15 +403,24 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         request: mgmt_pb2.SettingsRequest,
         context: grpc.aio.ServicerContext,
     ) -> mgmt_pb2.SettingsResponse:
-        s = _settings_from_proto(request.desired)
-        s = settings.clamp(s)
-        settings.save(s)
-        return mgmt_pb2.SettingsResponse(current=_settings_to_proto(s))
+        with child_span_scope():
+            logger.info("rpc_start", method="UpdateSettings")
+            s = _settings_from_proto(request.desired)
+            s = settings.clamp(s)
+            settings.save(s)
+            logger.info("rpc_end", method="UpdateSettings")
+            return mgmt_pb2.SettingsResponse(current=_settings_to_proto(s))
 
     async def ReadSettings(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext
     ) -> mgmt_pb2.SettingsResponse:
-        return mgmt_pb2.SettingsResponse(current=_settings_to_proto(settings.load()))
+        with child_span_scope():
+            logger.info("rpc_start", method="ReadSettings")
+            response = mgmt_pb2.SettingsResponse(
+                current=_settings_to_proto(settings.load())
+            )
+            logger.info("rpc_end", method="ReadSettings")
+            return response
 
 
 def _settings_from_proto(p: mgmt_pb2.Settings) -> settings.Settings:

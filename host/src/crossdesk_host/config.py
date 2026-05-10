@@ -74,10 +74,7 @@ def _repo_pki_dir() -> Path:
     relative to the repo root. Production installs override via TOML or
     by passing a config file explicitly.
     """
-    # config/__init__.py lives at host/src/crossdesk_host/config/__init__.py
-    # so we need 5 parents to reach the repo root (config/ → crossdesk_host/
-    # → src/ → host/ → repo-root).
-    return Path(__file__).resolve().parent.parent.parent.parent.parent / "infra" / "certs" / "pki"
+    return Path(__file__).resolve().parent.parent.parent.parent / "infra" / "certs" / "pki"
 
 
 class PathsConfig(BaseModel):
@@ -350,7 +347,7 @@ def _env_overrides(env: Mapping[str, str]) -> Dict[str, Any]:
     for key, raw in env.items():
         if not key.startswith(_ENV_PREFIX):
             continue
-        suffix = key[len(_ENV_PREFIX):]
+        suffix = key[len(_ENV_PREFIX) :]
         parts = suffix.split("__")
         if len(parts) != 2:
             # Only one nesting level is meaningful (sections are flat).

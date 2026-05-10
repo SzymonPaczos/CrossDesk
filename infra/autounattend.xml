@@ -188,26 +188,52 @@
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c mkdir "C:\CrossDesk"</CommandLine>
         </SynchronousCommand>
-        <!-- D: is the tools ISO (second CD-ROM), containing CrossDeskAgent.exe. -->
+        <!-- D: is the tools ISO (second CD-ROM), containing CrossDeskAgent.exe
+             AND publisher-root-ca.crt (the CrossDesk publisher root CA whose
+             private leaf signed CrossDeskAgent.exe). Importing the root into
+             Cert:\LocalMachine\Root makes Windows treat the agent as a
+             Verified Publisher inside this guest only — see
+             docs/CODE_SIGNING.md for the threat-model bounds. -->
         <SynchronousCommand wcm:action="add">
           <Order>2</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c copy /Y "D:\publisher-root-ca.crt" "C:\CrossDesk\publisher-root-ca.crt"</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c certutil -addstore -f Root "C:\CrossDesk\publisher-root-ca.crt"</CommandLine>
+        </SynchronousCommand>
+        <!-- Defender exclusion (belt-and-suspenders alongside the signature).
+             Targets the install dir + the on-disk binary path + the running
+             process image. Real-time scan plus heuristic ML can still flag a
+             freshly-installed unsigned-looking NT service that opens AF_VSOCK
+             and runs gRPC; this exclusion is scoped to one folder + one
+             executable name, not the entire system. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>4</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>powershell -NoProfile -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath 'C:\CrossDesk\','C:\Windows\System32\CrossDeskAgent.exe' -ErrorAction SilentlyContinue; Add-MpPreference -ExclusionProcess 'CrossDeskAgent.exe' -ErrorAction SilentlyContinue"</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>5</Order>
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c copy /Y "D:\CrossDeskAgent.exe" "C:\Windows\System32\CrossDeskAgent.exe"</CommandLine>
         </SynchronousCommand>
         <!-- Note: sc.exe requires a space after each = sign. -->
         <SynchronousCommand wcm:action="add">
-          <Order>3</Order>
+          <Order>6</Order>
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c sc create CrossDeskAgent binPath= "C:\Windows\System32\CrossDeskAgent.exe" start= auto type= own DisplayName= "CrossDesk Agent"</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
-          <Order>4</Order>
+          <Order>7</Order>
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c sc start CrossDeskAgent</CommandLine>
         </SynchronousCommand>
         <!-- Disable auto-logon to prevent a login loop on subsequent boots. -->
         <SynchronousCommand wcm:action="add">
-          <Order>5</Order>
+          <Order>8</Order>
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d 0 /f</CommandLine>
         </SynchronousCommand>

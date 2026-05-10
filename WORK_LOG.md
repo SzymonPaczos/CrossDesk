@@ -82,9 +82,10 @@ branch names and the user merges by hand later.
 
 - [2026-05-09 20:55] START · agent: claude-code · branch: docs/distribution-overview · task: distribution-overview · note: new docs/DISTRIBUTION.md — visual entry for packaging+update flow (5 formats, release pipeline, dual-layer update apt/dnf/yay/nix/pip vs crossdesk upgrade RPC, Flatpak/Snap/AppImage rejection contrast). Adds 1 nav row to AGENTS.md, 1 cross-ref line to PACKAGING.md. Doc-only, no code.
 - [2026-05-10 19:30] START · agent: claude-code · branch: feat/traceparent-on-wire · task: traceparent-in-authcontext · note: Resume after context-limit break. USER-APPROVED proto edit. Add `string traceparent = 4;` to common.proto AuthContext. Host VerifyCoordinator stamps traceparent on outgoing ServerFrame; AuthValidator parses + binds on incoming frames. Tests assert W3C-format propagation.
-- [2026-05-10 19:30] START · agent: claude-code · branch: feat/get-metrics-rpc · task: get-metrics-rpc · note: Re-spawn after stuck Subagent A (worktree had no code). USER-APPROVED proto edit. GetMetrics RPC in mgmt.proto + servicer + `crossdesk metrics` CLI. FOLLOWUPS:381-385.
-
 ## Recent
+
+- [2026-05-10 19:30] START · agent: claude-code · branch: feat/get-metrics-rpc · task: get-metrics-rpc · note: Re-spawn after stuck Subagent A (worktree had no code). USER-APPROVED proto edit. GetMetrics RPC in mgmt.proto + servicer + `crossdesk metrics` CLI. FOLLOWUPS:381-385.
+- [2026-05-10 20:00] END · agent: claude-code · branch: feat/get-metrics-rpc · task: get-metrics-rpc · note: result: success → branch pushed at 1012e32 (NOT merged — left for user review). 5 commits: proto+stubs+servicer+CLI+tests. Gates: mypy --strict 97 source files clean; pytest 470 passed + 12 skipped.
 
 - [2026-05-10 18:12] START · agent: claude-code · branch: feat/span-wiring-mgmt · task: span-wiring-mgmt · note: P1 SPAN_COVERAGE.md follow-up. child_span_scope() wired into every ManagementService RPC.
 - [2026-05-10 19:30] END · agent: claude-code · branch: feat/span-wiring-mgmt · task: span-wiring-mgmt · note: result: success → merged as a006887. child_span_scope in every mgmt RPC, SPAN_COVERAGE.md ✅, 124 new test lines.

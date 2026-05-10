@@ -80,6 +80,9 @@ branch names and the user merges by hand later.
 
 ## Recent
 
+- [2026-05-11 00:00] START · agent: claude-code · branch: feat/gui-i18n-and-polish · task: gui-i18n-and-polish · note: Full i18n pipeline: 133 Polish strings, QTranslator C++ bridge, LANG auto-detect, no-VM empty state, sidebar ComboBox removal, Dashboard nav fix, Settings restart hints.
+- [2026-05-11 01:00] END · agent: claude-code · branch: feat/gui-i18n-and-polish · task: gui-i18n-and-polish · note: result: success → merged as 90cc9db. All plan steps done: lrelease via build.rs; translator.{h,cpp}; mod.rs unsafe extern; main.rs LANG detect; manager.rs CROSSDESK_HAS_VM env var; Manager.qml no-VM overlay + launchWizard bridge; Dashboard StackView.view nav; Settings restart hints. 0 cargo warnings. Merged + stale branches/worktrees cleaned up.
+
 - [2026-05-10 21:00] START · agent: claude-code · branch: feat/gui-startup-flow · task: gui-startup-flow · note: User request. Remove landing screen; Manager is always the base; InstallWizard pushed on top when hasVm=false. Step1Iso gets Back button (→ Manager). docs/GUI_DESIGN.md for icon/visual design brief.
 - [2026-05-10 21:15] END · agent: claude-code · branch: feat/gui-startup-flow · task: gui-startup-flow · note: result: success → branch at a733f16 (NOT merged). Main.qml: initialItem=Manager.qml, Component.onCompleted pushes wizard when !hasVm. Step1Iso: signal cancel() + Back button. InstallWizard: onCancel→rootStack.pop(). manager.rs: has_vm bool qproperty. docs/GUI_DESIGN.md: full screen/icon/color brief. Gates: cargo check gui clean.
 

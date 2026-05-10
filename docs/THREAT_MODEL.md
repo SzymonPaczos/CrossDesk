@@ -138,6 +138,7 @@ There are no other approved channels.
 |-|--------|--------|------------|----------|
 | **S** | TA1 spoofs config to redirect host to another VM | File rewrite | Config writable by user; TA1 has same privileges | Medium — accepted |
 | **T** | TA1 modifies `vm.toml` to swap in known credentials | File rewrite | Mode 0600; loaded once at start; runtime mtime check | Medium |
+| **T** | Credential drift: host `vm.toml` diverges from guest Windows password | Out-of-band password change inside the guest (gpedit, manual `net user`, malware in VM, restored snapshot) bypasses `crossdesk vm credentials rotate` two-phase commit | Pre-spawn `VerifyCredentials` RPC piggy-backed on the `OpenSession` bidi stream (host→guest); guest `LogonUserW` probe; typed `VerifyResult` with structured `repair_hint` per status; `display.session_starter.spawn_rail_with_auth_check` raises `AuthHealthCheckFailed` and aborts the FreeRDP spawn rather than letting xfreerdp fail downstream | Low — 🚧 mock guest impl today (`agent-svc/credentials.rs::mock_impl`); real `LogonUserW` pending Stage 4 / post-hardware. Until then the guarantee is "drift is detected and surfaced with an actionable hint" rather than "drift is detected against real Windows LSA" |
 | **I** | TA1 reads `vm.toml` and obtains Windows password | Same-user read | Standard same-user access | Medium — recommend FDE |
 | **D** | TA1 fills disk with state files | Disk fill | Same-user filesystem usage; no defense | Low — non-malicious case |
 | **E** | n/a | — | — | None |

@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import importlib
+import io
+import json
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import MagicMock
 
 import pytest
+import structlog
 
 from crossdesk_host.ipc.management import (
     ManagementServiceServicer,
@@ -13,6 +18,11 @@ from crossdesk_host.ipc.management import (
 )
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.lifecycle import LifecycleCoordinator
+from crossdesk_host.observability import (
+    TraceContext,
+    bind_to_log_context,
+    configure_logging,
+)
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2
 from crossdesk_host.watchdog import HeartbeatFsm
 
@@ -218,3 +228,117 @@ async def test_update_settings_clamps_invalid(
     )
     assert response.current.theme == "system"
     assert response.current.hidpi_scale == 0
+
+
+# ---------------------------------------------------------------------------
+# Span coverage (per docs/SPAN_COVERAGE.md)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def captured_log() -> Iterator[io.StringIO]:
+    """Pipe the JSON Lines log stream into an in-memory buffer so the
+    span-coverage test can inspect the structured records emitted by
+    each RPC handler.
+
+    The management module is reloaded after `configure_logging` so its
+    module-level `logger = get_logger(...)` snapshot picks up the new
+    JSON renderer + buffer stream. Without the reload we'd see the
+    pre-configure default console renderer write to stderr instead.
+    """
+    buf = io.StringIO()
+    configure_logging(stream=buf)
+    import crossdesk_host.ipc.management as management_module
+
+    importlib.reload(management_module)
+    structlog.contextvars.clear_contextvars()
+    try:
+        yield buf
+    finally:
+        structlog.contextvars.clear_contextvars()
+
+
+def _records(buf: io.StringIO) -> list[dict[str, object]]:
+    return [json.loads(line) for line in buf.getvalue().splitlines() if line.strip()]
+
+
+def _reloaded_servicer() -> ManagementServiceServicer:
+    # After importlib.reload, the symbols in this module's import scope
+    # still point at the pre-reload class — re-fetch from the live
+    # module so the servicer instance carries the freshly-bound logger.
+    import crossdesk_host.ipc.management as management_module
+
+    libvirt = LibvirtControllerMock()
+    state = management_module.MgmtState(fsm=HeartbeatFsm())
+    return management_module.ManagementServiceServicer(state, libvirt)
+
+
+async def test_rpc_handler_emits_rpc_start_with_span_id(
+    captured_log: io.StringIO,
+    context: MagicMock,
+) -> None:
+    """Every Management handler must mint a per-call span_id while
+    inheriting the upstream trace_id (when one is bound). ReadSettings
+    is the simplest probe — pure read path, no I/O surprises.
+    """
+    parent = TraceContext(trace_id="a" * 32, span_id="b" * 16)
+    bind_to_log_context(parent)
+
+    servicer = _reloaded_servicer()
+    await servicer.ReadSettings(mgmt_pb2.Empty(), context)
+
+    records = _records(captured_log)
+    starts = [r for r in records if r.get("event") == "rpc_start"]
+    assert starts, f"no rpc_start record emitted: {records}"
+    start = starts[0]
+    assert start["method"] == "ReadSettings"
+    span_id = start.get("span_id")
+    assert isinstance(span_id, str) and span_id, "span_id must be non-empty"
+    # Inherits the bound parent's trace_id, mints a fresh span_id.
+    assert start["trace_id"] == parent.trace_id
+    assert span_id != parent.span_id
+
+
+async def test_rpc_handler_mints_root_when_no_parent(
+    captured_log: io.StringIO,
+    context: MagicMock,
+) -> None:
+    """No upstream trace bound → handler still gets a non-empty
+    span_id (and trace_id) from the freshly-minted root span.
+    """
+    servicer = _reloaded_servicer()
+    await servicer.ReadSettings(mgmt_pb2.Empty(), context)
+
+    starts = [r for r in _records(captured_log) if r.get("event") == "rpc_start"]
+    assert starts, "no rpc_start record emitted"
+    start = starts[0]
+    assert isinstance(start.get("span_id"), str) and start["span_id"]
+    assert isinstance(start.get("trace_id"), str) and start["trace_id"]
+
+
+async def test_rpc_end_early_fires_on_validation_failure(
+    captured_log: io.StringIO,
+    context: MagicMock,
+) -> None:
+    """Error paths must emit a terminal `rpc_end_early` so trace
+    backends see a span-close event even when the happy-path
+    `rpc_end` is skipped.
+    """
+    import crossdesk_host.ipc.management as management_module
+
+    libvirt = LibvirtControllerMock()
+    libvirt.hooks.fail_next_hard_destroy = True
+    servicer = management_module.ManagementServiceServicer(
+        management_module.MgmtState(fsm=HeartbeatFsm()), libvirt
+    )
+
+    response = await servicer.HardDestroy(mgmt_pb2.Empty(), context)
+    assert not response.ok
+
+    records = _records(captured_log)
+    early = [r for r in records if r.get("event") == "rpc_end_early"]
+    assert early, f"expected rpc_end_early, got: {records}"
+    assert early[0]["method"] == "HardDestroy"
+    # And no successful terminal event for the same call.
+    ends = [r for r in records if r.get("event") == "rpc_end"]
+    assert not ends, f"rpc_end should not fire on failure path: {ends}"

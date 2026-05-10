@@ -79,6 +79,7 @@ branch names and the user merges by hand later.
 ## Active
 
 - [2026-05-10 20:25] START · agent: claude-code · branch: chore/i18n-qml-manager-pages · task: i18n-qml-manager-pages · note: Audit qsTr() coverage on 7 manager QML pages (Apps, Storage, Lifecycle, Diagnose, Logs, Settings, Dashboard); wrap bare strings; update FOLLOWUPS PARTIAL→DONE.
+- [2026-05-10 21:00] START · agent: claude-code · branch: feat/crossdesk-logs-cli · task: crossdesk-logs-cli · note: P1 FOLLOWUPS:1133-1142. `crossdesk logs` CLI: host (journal/file), libvirt, freerdp sources; --since, --follow, --component, --json, --lines; interleaved by timestamp; fully mocked tests; guest deferred to P2.
 
 ## Recent
 

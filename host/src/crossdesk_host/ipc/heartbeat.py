@@ -18,6 +18,7 @@ the FSM core.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import AsyncIterator, Optional
 
@@ -26,7 +27,6 @@ from google.protobuf import duration_pb2
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
-from crossdesk_host.observability.log import get_logger
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2, heartbeat_pb2_grpc
 from crossdesk_host.watchdog import (
     FsmConfig,
@@ -37,7 +37,11 @@ from crossdesk_host.watchdog import (
     TickOutput,
 )
 
-logger = get_logger("host.ipc.heartbeat")
+# Stdlib logger (not the structlog facade) so the per-call
+# ``configure_logging`` from tests + production reconfigures the live
+# stream. The facade caches its factory on import; see the same comment
+# in verify_coordinator.py.
+logger = logging.getLogger(__name__)
 
 
 def _ns_to_duration(ns: Optional[int]) -> duration_pb2.Duration:
@@ -120,19 +124,19 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         out = fsm.tick(TickInput(pong_received=True, rtt_ns=rtt_ns))
                     else:
                         logger.info(
-                            "heartbeat_unexpected_payload",
-                            kind=guest_frame.WhichOneof("payload"),
+                            "heartbeat_unexpected_payload kind=%s",
+                            guest_frame.WhichOneof("payload"),
                         )
                         out = fsm.tick(TickInput(pong_received=False))
 
                 state_changed = out.state != last_state
                 if state_changed:
                     logger.info(
-                        "heartbeat_state_transition",
-                        from_state=last_state.value,
-                        to_state=out.state.value,
-                        miss_count=out.consecutive_miss_count,
-                        ewma_rtt_ns=out.ewma_rtt_ns,
+                        "heartbeat_state_transition from=%s to=%s miss=%d ewma_rtt_ns=%s",
+                        last_state.value,
+                        out.state.value,
+                        out.consecutive_miss_count,
+                        out.ewma_rtt_ns,
                     )
                     last_state = out.state
 
@@ -153,9 +157,9 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                     == RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN
                 ):
                     logger.warning(
-                        "heartbeat_graceful_shutdown_dispatched",
-                        attempt=out.soft_attempts,
-                        backoff_seconds=out.next_action_after_seconds,
+                        "heartbeat_graceful_shutdown_dispatched attempt=%d backoff_s=%s",
+                        out.soft_attempts,
+                        out.next_action_after_seconds,
                     )
                     self.libvirt_ctl.graceful_shutdown()
                 elif out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
@@ -167,4 +171,4 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 await asyncio.sleep(self.ping_interval_seconds)
 
         except grpc.RpcError as e:
-            logger.error("heartbeat_rpc_error", error=str(e))
+            logger.error("heartbeat_rpc_error error=%s", e)

@@ -344,6 +344,229 @@ async def test_traceparent_propagates_from_agent_to_host_logs(
             await drain_task
 
 
+async def test_traceparent_propagates_to_all_three_planes(
+    host_with_port_and_logs: "tuple[int, io.StringIO]",
+    cargo_built_agent: Path,
+    tmp_path: Path,
+) -> None:
+    """W3C Trace Context completeness check across CONTROL, HEARTBEAT,
+    and FILESYSTEM planes.
+
+    The earlier test asserts a single non-empty trace_id appears on
+    *some* host log line — sufficient to prove the interceptor wires up,
+    but it doesn't catch the failure mode where one plane's gRPC client
+    forgot to mount ``inject_interceptor`` (or the host dropped the
+    interceptor for a specific service). This test waits until each
+    plane has emitted at least one structured log line, then asserts:
+
+    1. Each plane's first-call log carries a non-empty trace_id.
+    2. All three planes share the same trace_id (DEC-0006: one root
+       per agent session, propagated everywhere).
+    3. The trace_id matches the one the agent minted (printed to
+       stderr at startup).
+    """
+    port, log_buffer = host_with_port_and_logs
+    pki = _stage_agent_pki(tmp_path)
+
+    env = {
+        **os.environ,
+        "CROSSDESK_PKI_DIR": str(pki),
+        "CROSSDESK_HOST_ENDPOINT": f"https://127.0.0.1:{port}",
+        "CROSSDESK_DOMAIN_UUID": "trace-all-planes",
+        "RUST_LOG": "info",
+    }
+
+    proc = await asyncio.create_subprocess_exec(
+        str(cargo_built_agent),
+        env=env,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stderr_sink: list[bytes] = []
+    drain_task = asyncio.create_task(_drain_subprocess_logs(proc, stderr_sink))
+
+    # Per-plane → distinctive event-substring of that plane's first
+    # servicer log (fires the moment the gRPC stream opens). We match on
+    # the ``event`` field rather than ``component`` because stdlib log
+    # records flow through structlog's foreign_pre_chain without their
+    # logger name being copied — the per-plane signal lives in the
+    # log message itself.
+    expected_event_markers = {
+        "control": "New ControlSession stream initiated",
+        "heartbeat": "heartbeat_channel_opened",
+        "filesystem": "Filesystem channel established",
+    }
+
+    async def _collect_per_plane_trace_ids() -> dict[str, str]:
+        """Return ``{plane: trace_id}`` once each plane has produced
+        at least one log line with a non-empty trace_id, or {} on timeout.
+        """
+        deadline = asyncio.get_event_loop().time() + 30.0
+        found: dict[str, str] = {}
+        while asyncio.get_event_loop().time() < deadline:
+            for line in log_buffer.getvalue().splitlines():
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                tid = rec.get("trace_id", "")
+                if not (isinstance(tid, str) and len(tid) == 32 and tid != "0" * 32):
+                    continue
+                event = rec.get("event", "")
+                if not isinstance(event, str):
+                    continue
+                for plane, needle in expected_event_markers.items():
+                    if plane in found:
+                        continue
+                    if needle in event:
+                        found[plane] = tid
+            if len(found) == len(expected_event_markers):
+                return found
+            await asyncio.sleep(0.1)
+        return found
+
+    try:
+        per_plane = await _collect_per_plane_trace_ids()
+        missing = set(expected_event_markers) - set(per_plane)
+        assert not missing, (
+            f"plane(s) never produced a trace_id-bearing log line: {missing}; "
+            f"got per_plane={per_plane}; "
+            f"buffer (last 2KB):\n{log_buffer.getvalue()[-2000:]}"
+        )
+
+        unique_trace_ids = set(per_plane.values())
+        assert len(unique_trace_ids) == 1, (
+            "planes carried different trace_ids — they should share one "
+            f"root per session: {per_plane}"
+        )
+        host_trace_id = next(iter(unique_trace_ids))
+
+        agent_stderr_blob = b"".join(stderr_sink)
+        agent_match = _TRACE_ID_AGENT_RE.search(agent_stderr_blob)
+        assert agent_match is not None, (
+            "agent never logged its minted trace_id; agent stderr:\n"
+            + agent_stderr_blob.decode("utf-8", errors="replace")[:2000]
+        )
+        agent_trace_id = agent_match.group(1).decode("ascii")
+
+        assert host_trace_id == agent_trace_id, (
+            f"trace_id mismatch: agent={agent_trace_id!r} "
+            f"host={host_trace_id!r}"
+        )
+    finally:
+        if proc.returncode is None:
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+        drain_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await drain_task
+
+
+async def test_verify_coordinator_binds_fresh_trace_per_call(
+    host_with_port_and_logs: "tuple[int, io.StringIO]",
+    verify_coordinator: VerifyCoordinator,
+    cargo_built_agent: Path,
+    tmp_path: Path,
+) -> None:
+    """Server-initiated VerifyCredentials must carry a host-side trace
+    context per call so operators can correlate dispatch ↔ resolve logs.
+
+    The ServerFrame itself doesn't carry traceparent (no proto field
+    on this payload variant — wire-format change is owner-approval
+    territory), so this test verifies the host-side guarantee:
+    ``verify_coordinator.verify()`` mints a fresh trace context, binds
+    it, and the ``verify_credentials_dispatch`` log line carries it.
+    Two consecutive calls produce two distinct trace_ids — proving the
+    binding doesn't leak across calls.
+    """
+    port, log_buffer = host_with_port_and_logs
+    pki = _stage_agent_pki(tmp_path)
+
+    env = {
+        **os.environ,
+        "CROSSDESK_PKI_DIR": str(pki),
+        "CROSSDESK_HOST_ENDPOINT": f"https://127.0.0.1:{port}",
+        "CROSSDESK_DOMAIN_UUID": "verify-trace-test",
+        "RUST_LOG": "info",
+    }
+
+    proc = await asyncio.create_subprocess_exec(
+        str(cargo_built_agent),
+        env=env,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    stderr_sink: list[bytes] = []
+    drain_task = asyncio.create_task(_drain_subprocess_logs(proc, stderr_sink))
+
+    def _trace_ids_for_dispatch_lines() -> list[str]:
+        """Pull trace_id from every host log line that emitted a
+        ``verify_credentials_dispatch`` event."""
+        out: list[str] = []
+        for line in log_buffer.getvalue().splitlines():
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            event = rec.get("event", "")
+            if isinstance(event, str) and "verify_credentials_dispatch" in event:
+                tid = rec.get("trace_id", "")
+                if isinstance(tid, str):
+                    out.append(tid)
+        return out
+
+    try:
+        deadline = asyncio.get_event_loop().time() + 30.0
+        while asyncio.get_event_loop().time() < deadline:
+            if verify_coordinator.session_count() > 0:
+                break
+            await asyncio.sleep(0.1)
+        else:
+            agent_stderr = b"".join(stderr_sink).decode("utf-8", errors="replace")
+            pytest.fail(
+                "session never registered with VerifyCoordinator within 30s; "
+                f"agent stderr:\n{agent_stderr}"
+            )
+
+        # Two back-to-back verifies — each should mint its own trace.
+        await verify_coordinator.verify("__inject_ok__", "ignored", timeout=10.0)
+        await verify_coordinator.verify("__inject_ok__", "ignored", timeout=10.0)
+
+        # Allow the structured log emission to flush.
+        await asyncio.sleep(0.1)
+
+        dispatch_traces = _trace_ids_for_dispatch_lines()
+        assert len(dispatch_traces) >= 2, (
+            "expected at least 2 verify_credentials_dispatch log lines; "
+            f"got {dispatch_traces}; buffer tail:\n{log_buffer.getvalue()[-2000:]}"
+        )
+        first_two = dispatch_traces[:2]
+        for tid in first_two:
+            assert (
+                isinstance(tid, str) and len(tid) == 32 and tid != "0" * 32
+            ), f"verify dispatch line missing valid trace_id: {tid!r}"
+        assert (
+            first_two[0] != first_two[1]
+        ), f"two consecutive verify calls reused the same trace_id: {first_two}"
+    finally:
+        if proc.returncode is None:
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+        drain_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await drain_task
+
+
 async def test_verify_credentials_roundtrip_through_real_agent(
     host_with_port_and_logs: "tuple[int, io.StringIO]",
     verify_coordinator: VerifyCoordinator,

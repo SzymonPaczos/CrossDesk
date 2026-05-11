@@ -225,10 +225,10 @@ Items:
 Source: *Performance budgets — enforcement* in FOLLOWUPS.
 
 Items:
-- **[P0] `pytest-benchmark` and `criterion` harness configured.** `host/benches/` and `guest/benches/`. One bench file per N1.* metric (stubs OK initially).
-- **[P0] `bench_check.py` tool.** Compares JSON results to `.github/perf-baselines.json`; fails on >20% regression.
-- **[P0] CI job `microbench`** on every PR. Runs benches, invokes `bench_check.py`, posts a comment summary.
-- **[P0] Initial baselines committed** — first measurements with placeholder values until real measurements replace them.
+- ✅ **[P0] `pytest-benchmark` and `criterion` harness configured.** `host/benches/` and `guest/benches/`. One bench file per N1.* metric (stubs OK initially).
+- ✅ **[P0] `bench_check.py` tool.** Compares JSON results to `.github/perf-baselines.json`; fails on >20% regression. Extended with `--baseline`/`--results` flags.
+- ✅ **[P0] CI job `microbench`** on every PR. Runs benches, invokes `bench_check.py`, posts a comment summary.
+- ✅ **[P0] Initial baselines committed** — first measurements with placeholder values until real measurements replace them.
 
 **Acceptance:**
 - Microbench CI job is green
@@ -240,7 +240,7 @@ Items:
 
 Items:
 - Verify all Phase 4 acceptance from prior weeks holds together
-- Versioning handshake (DEC-0007) — implement `Hello` message + N-1 minor compat matrix in client + server. Currently in *Versioning & compatibility* in FOLLOWUPS.
+- ✅ Versioning handshake (DEC-0007) — `protocol_version` in `ClientHello`/`ServerAccept`; `agent_version` in `StatusFrame`; host rejects major mismatch with `CODE_FEATURE_NEGOTIATION_FAILED`; guest logs warning on mismatch; `crossdesk version` CLI shows all three.
 - Buffer for spillover
 
 **Acceptance:**
@@ -282,8 +282,8 @@ Source: *Internationalization* in FOLLOWUPS + lean profile from FOLLOWUPS.
 
 Items:
 - **[P0] CrossDesk Lean profile** (opt-in via `crossdesk install --lean`). `infra/lean_profile.ps1` invoked from `<FirstLogonCommands>` in `autounattend.xml`. Removes Edge, Cortana, OneDrive setup, Teams personal, Xbox app etc. Keeps .NET, Visual C++, Windows Update, Windows Defender.
-- **[P0] gettext + Qt tr() i18n setup.** Configure in Python host + QML. Mark all user-facing strings. Build tooling (`Makefile` or `scripts/i18n.sh`).
-- **[P0] Polish translations** for the install flow + main CLI commands.
+- ✅ **[P0] gettext + Qt tr() i18n setup.** `crossdesk_host.i18n` module; `scripts/i18n.sh extract|compile`; all QML pages wrapped in `qsTr()`; Qt `.qm` files compiled via `build.rs`.
+- 🚧 **[P0] Polish translations** — GUI complete (133 strings, 0 unfinished in `crossdesk_pl.ts`). CLI install flow and remaining print() sites are P1 follow-up; LANG auto-detect from env wired in GUI.
 
 **Acceptance:**
 - `crossdesk install --lean` produces a Win11 image with idle RAM ≤1.5 GB (N1.5a)

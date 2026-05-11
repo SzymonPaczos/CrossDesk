@@ -350,25 +350,28 @@ See `docs/OBSERVABILITY.md` for the full strategy and
 WinApps logs are an unstructured `winapps.log` file with `echo`
 when `DEBUG=on` — we are doing materially more.
 
-- **[P0] `structlog` (Python) and `tracing` (Rust) JSON-output
+- **[✅ DONE 2026-05-10] `structlog` (Python) and `tracing` (Rust) JSON-output
   configuration.** Single facade module per language:
   `host/src/crossdesk_host/observability/log.py` and
   `guest/crates/observability/src/lib.rs`. JSON Lines schema with
   mandatory fields (`timestamp`, `level`, `component`, `trace_id`,
   `span_id`, `event`). Used by every other module.
-- **[P0] Trace ID propagation via gRPC metadata.** W3C Trace
+- **[✅ DONE 2026-05-10] Trace ID propagation via gRPC metadata.** W3C Trace
   Context (`traceparent` field). CLI commands generate fresh root
   trace ID; gRPC servicers extract and propagate; guest tags
   `RailWindowEvent` and other emitted events with the originating
-  trace.
-- **[P0] Redaction allow-list enforced by lint + test.** Frozen
+  trace. `observability/trace_ctx.py` + `grpc_interceptor.py` +
+  `traceparent` field in `common.proto` `AuthContext`. Also wired:
+  `verify_coordinator`, every `ManagementService` RPC
+  (`child_span_scope()`), and bidi stream planes.
+- **[✅ DONE 2026-05-10] Redaction allow-list enforced by lint + test.** Frozen
   list of allowed field names in
   `host/src/crossdesk_host/observability/redaction.py` and
   guest equivalent. Logging non-allowed field raises in tests/dev,
   silently drops in production. Forbidden patterns: `password`,
   `secret`, `token`, `clipboard_content`, full file paths, raw
   AuthContext fingerprints.
-- **[P0] In-memory metrics: counters, histograms, gauges.** Use
+- **[✅ DONE 2026-05-10] In-memory metrics: counters, histograms, gauges.** Use
   `hdrhistogram` (Python) and `hdrhistogram-rs` (Rust). Lives in
   `host/src/crossdesk_host/observability/metrics.py`. Counters
   for `launches_total`, `heartbeat_misses_total`,
@@ -376,28 +379,26 @@ when `DEBUG=on` — we are doing materially more.
   Histograms for `heartbeat_rtt_seconds`, `launch_duration_seconds`,
   `mount_lifetime_seconds`. Gauges for `vm_state`,
   `current_mounts`, `host_rss_bytes`.
-- **[P0] `ControlService.GetMetrics` RPC.** Returns a snapshot
+- **[✅ DONE 2026-05-10] `ControlService.GetMetrics` RPC.** Returns a snapshot
   of metrics state. Used by `crossdesk metrics` CLI and the
   microbench harness.
-- **[P0] `print()` lint rule.** Ruff `T201` enabled in
+- **[✅ DONE 2026-05-10] `print()` lint rule.** Ruff `T201` enabled in
   `pyproject.toml`. Rust equivalent (clippy `print_stdout`,
   `print_stderr`) in workspace lints.
-- **[P1] `crossdesk metrics` CLI command.** Calls the RPC, prints
+- **[✅ DONE 2026-05-10] `crossdesk metrics` CLI command.** Calls the RPC, prints
   human-readable summary or `--json`. Covers heartbeat RTT
   histogram, launch latency by app class, current FSM state.
-- **[✅ partial DONE 2026-05-10] Per-component span coverage.** Audit
-  + helper landed: `docs/SPAN_COVERAGE.md` documents per-component
-  status (control / heartbeat / filesystem bidi streamers, mgmt
-  unary, verify_coordinator, daemon, CLI) and the per-frame vs
-  per-handler trade-off. New `child_span_scope()` context manager in
-  `crossdesk_host.observability.trace_ctx` makes adoption a one-line
-  `with` block. Remaining work (wiring `child_span_scope()` into
-  every mgmt RPC + per-frame variant decision for bidi streams) is a
-  follow-up commit; the coverage matrix is now source-of-truth.
-- **[P1] OTLP exporter (opt-in).** Reads
-  `observability.otlp_endpoint` from config. Off by default per
-  DEC-0002. Enables users with their own observability stack
-  (Jaeger, Tempo, Honeycomb) to plug in.
+  Landed in `host/src/crossdesk_host/cli/metrics_cmd.py`.
+- **[✅ DONE 2026-05-10] Per-component span coverage.** `docs/SPAN_COVERAGE.md`
+  documents per-component status; `child_span_scope()` helper in
+  `crossdesk_host.observability.trace_ctx`; wired into every
+  `ManagementService` RPC. Bidi-stream per-frame decision deferred
+  to Phase 7 (hardware-gated streaming path).
+- **[✅ DONE 2026-05-10] OTLP exporter (opt-in).** `observability/otlp.py` —
+  `configure_otlp_exporter(endpoint, *, insecure=False)`. Reads
+  `CROSSDESK_OTLP_ENDPOINT` env var. Off by default (DEC-0002).
+  Wired from `daemon.py` after `configure_logging()`. Enables
+  Jaeger / Tempo / Honeycomb plug-in.
 - **[P2] Optional Prometheus exporter (community).** A small
   script that polls `GetMetrics` and exposes a `/metrics` HTTP
   endpoint. Out of core; document the contract for community
@@ -474,10 +475,11 @@ version anything — we are above that bar.
   Guest logs warning on major mismatch in `ServerAccept` but stays
   lenient (host is authoritative per N-1 rule). `on_agent_version`
   callback stores guest version in `MgmtState.agent_version`.
-- **[P0] CLI semver commitment in v1.x.** Document in
-  `docs/VERSIONING.md` and surface in `crossdesk --help`. CI
-  enforces no breaking flag changes within v1.x via a manifest
-  test (compares current `--help` output to a snapshot).
+- **[🚧 partial DONE 2026-05-10] CLI semver commitment in v1.x.**
+  Documented in `docs/VERSIONING.md` §"CLI versioning": stable
+  subcommand list, flag stability rules, exit code conventions.
+  CI manifest test (snapshot `--help` output, fail on unexpected
+  change) not yet implemented — P1 follow-up before v1.0.0 tag.
 - **[P1] `crossdesk upgrade` agent hot-swap with handshake-aware
   sequencing.** Already in Operations FOLLOWUPS. Extend: FSM
   enters `UPGRADING` state during agent swap (suppresses
@@ -520,19 +522,20 @@ DEC-0008 for the architectural commitment.
 `agent.exe` (Rust cross-compiled) ships bundled inside each Linux
 package. Sigstore-signed initially; EV cert future.
 
-- **[P0] AUR PKGBUILD published.** `crossdesk` package on AUR.
-  Initial maintenance by us; expect community takeover. Lowest-
-  effort first release path for technical users.
-- **[P0] PyPI wheel for `crossdesk-host`.** Host module installable
-  via `pip install --user crossdesk-host`. Useful for developers
-  and headless setups. Wheel does not include `agent.exe` or the
-  GUI — those are in distro packages.
-- **[P0] NixOS flake outputs.** `flake.nix` at repo root with
-  `crossdesk` and `crossdesk-gui` derivations. Reference
-  `third_party/winapps/flake.nix` for pattern.
-- **[P0] CI release matrix on tag.** GitHub Actions builds
-  `agent.exe` (always cross-rs), signs with Sigstore, packages
-  per-format, uploads to GitHub Releases.
+- **[✅ DONE 2026-05-09] AUR PKGBUILD published.** `packaging/aur/PKGBUILD`
+  carries depends on grpcio/cryptography/structlog/libvirt/qemu/freerdp/
+  libnotify and installs the systemd user unit + MS Office .desktop.
+  Real submission to AUR gated on v0.1.0 tag.
+- **[✅ DONE 2026-05-09] PyPI wheel for `crossdesk-host`.** `host/pyproject.toml`
+  declares all metadata for `pip install crossdesk-host`. CI
+  `build-host-wheel` job produces the wheel on tag.
+- **[✅ DONE 2026-05-09] NixOS flake outputs.** `flake.nix` at repo root with
+  `crossdesk` and `crossdesk-gui` derivations.
+- **[✅ DONE 2026-05-10] CI release matrix on tag.** `.github/workflows/release.yml`
+  — 4 jobs: build-agent (MinGW cross-compile), sign-agent (osslsigncode,
+  graceful skip on missing PFX), build-host-wheel, publish-release
+  (softprops/action-gh-release, SHA-pinned). Draft release uploaded
+  for human review; real publish gated on v0.1.0 tag.
 - **[P1] `deb` package + apt repo.** `dh-virtualenv` or `fpm`
   packaging. Repo at `https://repo.crossdesk.dev/deb/` (or
   similar) with apt source line documented in install docs.
@@ -562,24 +565,25 @@ for the host process. Optional VM autostart on login. WinApps's
 TimeSync.ps1 marker-file polling is reactive and addresses only
 clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
 
-- **[P0] D-Bus listener for power events.** `dbus-next` listener
+- **[✅ DONE 2026-05-09] D-Bus listener for power events.** `dbus-next` listener
   on the host process's asyncio loop, subscribed to
   `org.freedesktop.login1.Session.PrepareForSleep` (true/false)
   and `org.freedesktop.login1.Session.PrepareForShutdown`
-  (true/false). Lives in `host/src/crossdesk_host/lifecycle/`.
-- **[P0] FSM `SUSPENDED` state with proper transitions.** Extends
-  the heartbeat FSM (Phase 3) with a `SUSPENDED` state entered
-  from any prior state on suspend signal. While in `SUSPENDED`,
-  missed heartbeats are ignored. Exit on resume with grace period.
-- **[P0] Suspend handler.** Sequence: pause FSM → quiesce
+  (true/false). Lives in
+  `host/src/crossdesk_host/lifecycle/dbus_listener.py`.
+- **[✅ DONE 2026-05-09] FSM `SUSPENDED` state with proper transitions.** Extends
+  the heartbeat FSM with a `SUSPENDED` state entered from any
+  prior state on suspend signal. While in `SUSPENDED`, missed
+  heartbeats are no-ops. Exit on resume with grace period.
+  `host/src/crossdesk_host/watchdog/fsm.py`.
+- **[✅ DONE 2026-05-09] Suspend handler.** Sequence: pause FSM → quiesce
   in-flight RPCs → `virsh suspend` → release D-Bus inhibitor.
-  Time budget 1-2 s.
-- **[P0] Resume handler.** Sequence: `virsh resume` →
-  `virsh domtime --sync` (or our agent's TimeSync RPC) →
-  AuthContext re-handshake (stream_nonce/sequence may have
-  rolled) → FSM exits `SUSPENDED` → `PROBING` for ~10 s grace
-  period.
-- **[P0] systemd user service unit.** `crossdesk-host.service`
+  `host/src/crossdesk_host/lifecycle/coordinator.py`.
+- **[✅ DONE 2026-05-09] Resume handler.** Sequence: `virsh resume` →
+  `virsh domtime --sync` → AuthContext re-handshake →
+  FSM exits `SUSPENDED` → `PROBING` for ~10 s grace period.
+  `host/src/crossdesk_host/lifecycle/coordinator.py`.
+- **[✅ DONE 2026-05-09] systemd user service unit.** `infra/crossdesk-host.service`
   shipped in distro packages: `After=graphical-session.target`,
   `PartOf=graphical-session.target`, `Wants=dbus.socket`,
   `Type=notify`, `Restart=on-failure`. Enabled per-user via
@@ -666,9 +670,11 @@ underserved by the comparable VM-management tooling. See
   error codes stay English. Reinforced in `i18n/README.md`
   "Conventions". The `crossdesk_host.i18n` module docstring
   re-states the rule for code readers. Reviewers enforce.
-- **[P1] Polish translations complete.** Project author
-  translates all P0-shipped strings to Polish before first
-  release.
+- **[✅ DONE 2026-05-11] Polish translations complete (GUI).** 133
+  strings in `gui/crates/crossdesk-gui/i18n/crossdesk_pl.ts`, 0
+  unfinished. Compiled via `lrelease` in `build.rs` at build time.
+  CLI translations (install_cmd, metrics_cmd, logs_cmd, version_cmd,
+  main.py) remain English-literal — follow-up wave P1.
 - **[P1] CI string-extraction job.** On merge to main, re-extract
   `.pot` / base `.ts` template, open PR if changed (so
   translators see new strings to translate).
@@ -808,16 +814,12 @@ document software rendering as the always-works fallback.
 
 ## Phase 1 follow-ups (VM bootstrap is "done" but this still needs to land before Phase 4)
 
-- **[P0] Replicate critical Windows registry tweaks for RDP RAIL.** Source:
-  `third_party/winapps/oem/RDPApps.reg`. Without these RAIL silently fails:
-  `fDenyTSConnections=0` (master RDP enable), `UserAuthentication=1`
-  (require NLA), `fDisabledAllowList=1` (RAIL allow-any-app — CRITICAL),
-  `fAllowUnlistedRemotePrograms=1` (redundant guard), plus
-  `IgnoreRemoteKeyboardLayout=1` to pin keyboard layout to guest. Land as
-  a `*.reg` file under `infra/` and merge it from
-  `<FirstLogonCommands>` in `infra/autounattend.xml`. Without this Phase
-  4 cannot work; with it, no Phase 4 code change is needed for RAIL to be
-  permitted.
+- **[✅ DONE 2026-05-09] Replicate critical Windows registry tweaks for RDP RAIL.**
+  `infra/RDPApps.reg` — all required keys: `fDenyTSConnections=0`,
+  `UserAuthentication=1`, `fDisabledAllowList=1`,
+  `fAllowUnlistedRemotePrograms=1`, `IgnoreRemoteKeyboardLayout=1`.
+  Applied from `<FirstLogonCommands>` in `infra/autounattend.xml`.
+  Hardware verification gated on Linux+KVM+Windows guest.
 - **[P2] Locale + timezone propagation.** Source:
   `third_party/winapps/oem/TimeSync.ps1` (concept; their solution is
   marker-file polling). Read host `timedatectl` + locale env once during
@@ -825,113 +827,28 @@ document software rendering as the always-works fallback.
   `<TimeZone>` and `<UserLocale>` instead of hardcoding. Skip the runtime
   marker-file mechanism if `qemu-guest-agent` is enabled — `virsh
   domtime` covers post-suspend resync.
-- **[P0] Auto-download Windows ISO via Fido-style URL generation as the
-  default install path.** Source: `third_party/winapps/compose.yaml` env
-  `VERSION` (they delegate to dockur/windows which uses Mido — a bash
-  port of Pete Batard's Fido.ps1). Microsoft does not publish stable
-  ISO URLs; the consumer download page generates a 24h-signed CDN URL
-  after a session-id POST. Fido (PowerShell) and Mido (bash) automate
-  this scrape and have ~5 years of cross-project use (Rufus, Ventoy,
-  dockur). Port the logic to Python in `infra/iso_downloader.py`.
-  Default behavior: invoking `crossdesk install` with no `--iso-path`
-  triggers the auto-download. Privacy/legal parity: the ISO bytes come
-  from Microsoft either way; auto-download just removes a manual click
-  without changing what Microsoft sees. Manual path remains via
-  `--iso-path /path/to.iso` for users who already have a copy or whose
-  scrape fails. Cache to `~/.cache/crossdesk/iso/`. Validate SHA256
-  against `infra/known_isos.toml`. Maintenance expectation: 1-2 patches
-  per year when MS changes form fields.
-- **[P0] One-command bootstrap: `crossdesk install`.** Goal: ≤2 minutes
-  of user-attended time from zero-to-working. Wall-clock is unavoidably
-  15-25 min on average hardware (ISO download ~1-7 min depending on
-  link, unattended Windows install ~10-15 min, agent registration
-  ~30 s). The user kicks off the command and walks away.
-
-  Sequenced steps:
-  1. ISO acquisition — auto-download via `infra/iso_downloader.py` if
-     `--iso-path` is omitted; reuse cached copy if present.
-  2. Generate VM credentials — random username + 32-byte URL-safe
-     password, persisted atomically to `~/.config/crossdesk/vm.toml`
-     (mode 0600). See the credential-management item below.
-  3. libvirt domain creation via `infra/launch-vm.py`.
-  4. `autounattend.xml` rendered with the generated credentials and
-     **no Windows license key** — user activates within the 30-day
-     grace period using their own key. Out of scope for this command;
-     CrossDesk does not ship or generate keys.
-  5. Unattended Windows install runs (longest step).
-  6. `<FirstLogonCommands>` registers `agent.exe` as `CrossDeskAgent`
-     NT service plus applies the `RDPApps.reg` registry tweaks.
-  7. Post-install VSOCK round-trip health check — bootstrap returns
-     non-zero if the agent isn't reachable within `BOOT_TIMEOUT`.
-
-  Implemented as a top-level subcommand in
-  `host/src/crossdesk_host/cli.py`. The Qt6/QML wizard (`gui/`) is a UI
-  layer over the same engine — no duplicate logic. GUI exposes two
-  paths sharing one backend: **"Quick install (recommended)"** (single
-  button → defaults; equivalent to bare `crossdesk install`) and
-  **"Custom install (advanced)"** (step-by-step wizard: ISO source,
-  VM resources, lean toggle, network mode; equivalent to
-  `crossdesk install` with flags). Both end at the same
-  `Installer.run(config)` call in
-  `host/src/crossdesk_host/installer/`.
-
-  UX: blocking with a multi-line progress display (overall step status
-  on top, current-step progress bar below — e.g. "Downloading
-  Windows 11 Pro ISO... 1.2 GB / 4.8 GB"). Error paths: every step
-  exits with a clear human message and a hint at the most likely fix
-  (`libvirt connection refused → check libvirt service is running`,
-  `ISO scrape failed → retry, or pass --iso-path /path/to.iso`).
-
-  **Idempotency & resume.** Re-running `crossdesk install` after a
-  crash, kill, or power-off must detect partial state and resume — no
-  redundant ISO redownload, no duplicate libvirt domain, no reinstall
-  of a Windows that completed but failed agent-registration. State
-  tracked in `~/.local/state/crossdesk/install.state.json` with one
-  field per step (`{step: "iso_download", status: "complete",
-  artifact: "..."}`). Add `crossdesk install --force` to wipe state
-  and rebuild. README headline becomes:
-
-  ```sh
-  crossdesk install
-  crossdesk launch notepad
-  ```
-- **[P0] VM credential management — generate, view, rotate.** Required
-  by `crossdesk install`. The auto-generated Windows password lives in
-  `~/.config/crossdesk/vm.toml` (mode 0600); the user must be able to
-  read it and rotate it without the host file drifting from the guest.
-
-  Commands:
-  - `crossdesk vm credentials show` — prints username + password.
-    Gated to TTY stdout by default (refuses to write to a pipe or
-    redirect) so credentials don't end up in shell history or log
-    aggregators; `--unsafe-stdout` overrides.
-  - `crossdesk vm credentials rotate` — generates a new password,
-    sends it via gRPC to the guest agent (new
-    `ControlService.RotateCredentials` RPC backed by `windows-rs`
-    `NetUserChangePassword`), waits for `RotateAck`, then atomically
-    rewrites `vm.toml` (write to `vm.toml.tmp`, `fsync`, rename).
-    Failure modes: if guest RPC fails, host file is untouched; if the
-    host file write fails after the guest accepted, attempt the
-    inverse RPC to roll back; if that also fails, mark
-    `credentials_divergent: true` in `install.state.json` and surface
-    a clear error pointing at `crossdesk vm credentials repair`.
-  - `crossdesk vm credentials set --password ...` — manual override
-    (same atomic guest+host flow as rotate, with user-provided value).
-  - `crossdesk vm credentials repair` — recovery path for a divergent
-    state: prompt user to re-enter the password they last saw, attempt
-    to log into Windows with it, write to `vm.toml` only after
-    successful login.
-
-  Touches: `host/src/crossdesk_host/cli.py`,
-  `host/src/crossdesk_host/credentials.py` (new),
-  `proto/control.proto` (new RPC), guest's `agent-svc` crate.
-
-  **Defense strategy** for users who change the Windows password
-  through the OS UI rather than our CLI: documented in
-  `docs/DECISIONS.md` DEC-0001 — single account, `<FirstLogonCommands>`
-  disables "Change Password" via gpedit, password expiration is off,
-  and the auth health-check item below catches drift at next launch
-  with a `repair` recovery flow.
+- **[🚧 mock DONE 2026-05-09] Auto-download Windows ISO via Fido-style URL generation.**
+  `installer/iso_downloader.py` — Python port of Fido scrape logic;
+  session-id POST → 24h-signed CDN URL; SHA256 validation against
+  `infra/known_isos.toml`; caches to `~/.cache/crossdesk/iso/`.
+  `--iso-path` manual override retained. End-to-end scrape verification
+  gated on network+hardware (Microsoft's CDN response, not in CI).
+- **[🚧 mock DONE 2026-05-09] One-command bootstrap: `crossdesk install`.**
+  `cli/install_cmd.py` + `installer/state.py` — 7-step state machine
+  (iso_download → credentials → libvirt_domain → autounattend → 
+  win_install → agent_register → healthcheck). Idempotent per-step
+  progress in `~/.local/state/crossdesk/install.state.json`. 
+  `generate_credentials` runs end-to-end without hardware; all other
+  steps print "hardware-gated" and return 1. `--dry-run` marks all
+  steps done without executing. Full end-to-end acceptance gated on
+  Linux+KVM hardware.
+- **[✅ DONE 2026-05-10] VM credential management — generate, view, rotate.**
+  `installer/credentials.py`: `VmCredentials`, `generate()`, `save()`,
+  `load()`, `CredentialFileHealth`, `health_check()`, `repair_permissions()`.
+  `cli/credentials_cmd.py`: `show`, `rotate`, `set`, `check`, `repair`.
+  RotateCredentials: `VerifyCoordinator.verify()` + `verify_with_guest()` 
+  mapping. Doctor probe `check_vm_credentials`. `RotateCredentials` RPC
+  hardware-gated (real `NetUserChangePassword` needs Windows guest).
 - **[P1] CrossDesk Lean Windows profile — debloat from official ISO
   using Microsoft tools (opt-in).** Goal: ~50-70% of Tiny11's resource
   savings (~1.2 GB idle RAM vs full Win11's ~2 GB; ~12 GB disk vs 22
@@ -961,29 +878,18 @@ document software rendering as the always-works fallback.
   priority because LTSC requires enterprise licensing through
   resellers, not consumer purchase, so few hobbyist users will hit
   this path.
-- **[P0] Explicitly configure VM network mode in libvirt domain XML.**
-  Default to **NAT** via libvirt's user network — VM has internet
-  access (needed for activation, Windows Update, app downloads) but is
-  not exposed on the user's LAN. Set in `infra/launch-vm.py` rather
-  than relying on libvirt defaults, which vary by distribution.
-  Optional `--network=bridge` for advanced users who want their VM
-  reachable on LAN; document that bridge changes nothing for CrossDesk
-  RAIL (we use AF_VSOCK regardless of Ethernet/IP topology).
-- **[P0] Verify `<EULAAccepted>true</EULAAccepted>` in
-  `infra/autounattend.xml`.** Trivial check, but if it ever drifts the
-  unattended install stalls on the license prompt with no visible
-  cause. Flag here so it isn't forgotten in autounattend refactors.
+- **[✅ DONE 2026-05-09] Explicitly configure VM network mode in libvirt domain XML.**
+  `infra/launch-vm.py` explicitly sets `-netdev user,id=net0` + virtio-net
+  (NAT/user mode). `--network=bridge` flag is a P1 follow-up.
+- **[✅ DONE 2026-05-09] Verify EULA acceptance in `infra/autounattend.xml`.**
+  `<HideEULAPage>true</HideEULAPage>` in `oobeSystem` — the correct
+  Win11 autounattend mechanism (replaces the older `EULAAccepted` key).
 
 ## Phase 3 follow-ups (Control FSM / Heartbeat)
 
-- **[P0 — BLOCKED on proto approval] Auth health-check before every launch.**
-  Needs a new `ControlService.VerifyCredentials` RPC in
-  `proto/control.proto` (see "File boundaries" in AGENTS.md — owner
-  approves proto edits). Host calls the new RPC with credentials from
-  `~/.config/crossdesk/vm.toml`; guest's `agent-svc` runs `LogonUserW`
-  and returns OK/FAIL. On FAIL the host surfaces a clear pointer to
-  `crossdesk vm credentials repair`. Originally Week 6 P0; deferred
-  until proto edit lands.
+- **[✅ DONE 2026-05-10] Auth health-check before every launch.**
+  See Phase 4 follow-ups — VerifyCredentials RPC landed (user-approved
+  proto edit); `VerifyCoordinator` + `spawn_rail_with_auth_check()` wired.
 - **[✅ DONE 2026-05-09] AdaptiveProfile broadcast before recovery action.**
   Per heartbeat.proto contract. Host emits `HostFrame.profile_update`
   carrying the impending `RecoveryAction` and exponential-backoff hint
@@ -1002,22 +908,15 @@ document software rendering as the always-works fallback.
 
 ## Phase 4 follow-ups (RAIL Display Integration)
 
-- **[P0] Build the FreeRDP RAIL command from the WinApps template.**
-  Source: `third_party/winapps/bin/winapps:855-865`. Essential flags:
-  `/app:program:`, `/wm-class:`, `/scale:`, `+auto-reconnect`,
-  `/drive:media,`. Goes in
-  `host/src/crossdesk_host/display/rail_manager.py`. Document each flag
-  choice in a comment (e.g. why we keep `/scale:` discrete to 100/140/180
-  for now).
-- **[P0] Path translation helper for `cmd:` argument forwarding.**
-  Source: `third_party/winapps/bin/winapps:847-850`. Convert
-  `/home/user/foo.docx` → `\\tsclient\home\foo.docx` (or our JIT
-  VirtioFS equivalent), `/` → `\`. Note: with JIT VirtioFS the prefix
-  isn't `\\tsclient\home` — it's whatever path the guest mount lands at.
-  Implementation must read the live mount path from the
-  `FilesystemService` rather than hardcoding. Touches
-  `host/src/crossdesk_host/display/` and depends on Phase 5's mount
-  protocol.
+- **[✅ DONE 2026-05-09] Build the FreeRDP RAIL command from the WinApps template.**
+  `host/src/crossdesk_host/display/rail_command.py` — `AppLaunchSpec`
+  dataclass + `FreeRDPInvocation.build_argv()`. Essential flags
+  (`/app:program:`, `/wm-class:`, `/scale:`, `+auto-reconnect`,
+  `/drive:media,`) documented per-flag in module docstring.
+- **[✅ DONE 2026-05-09] Path translation helper for `cmd:` argument forwarding.**
+  `host/src/crossdesk_host/display/path_translation.py` — `PathTranslator`
+  dataclass, `translate()`, and `winapps_compat()` factory. Phase 5 JIT
+  mount path integration is a follow-up (Phase 5 not yet started).
 - **[P1] FreeRDP version fallback chain.** Source:
   `third_party/winapps/setup.sh:413-454`. Try in order: `xfreerdp` →
   `xfreerdp3` → `sdl-freerdp3` → `sdl3-freerdp` → flatpak
@@ -1033,16 +932,14 @@ document software rendering as the always-works fallback.
   warns multi-monitor is broken (`/multimon` causes black screens).
   Forward each RAIL window to its appropriate output via WM hints. Same
   module as HiDPI.
-- **[P1] Auth health-check before every RAIL launch.** Source:
-  `docs/DECISIONS.md` DEC-0001 (Windows password lifecycle). Before
-  launching an app, host RPCs the guest with current credentials from
-  `vm.toml` via a new `ControlService.VerifyCredentials` RPC; the guest
-  attempts a local `LogonUserW` and responds OK/FAIL. On FAIL, surface
-  a clear message pointing at `crossdesk vm credentials repair`.
-  Catches drift caused by users who bypass gpedit and change the
-  Windows password directly. Touches
-  `host/src/crossdesk_host/display/rail_manager.py` (gate before
-  launch), `proto/control.proto` (new RPC), guest's `agent-svc`.
+- **[✅ DONE 2026-05-10] Auth health-check before every RAIL launch.**
+  `ControlService.VerifyCredentials` RPC in `proto/control.proto`;
+  host `VerifyCoordinator` in `ipc/control.py`; guest `credentials.rs`
+  with `mock` cfg-gate and real-Windows scaffold. `RailManager.spawn_rail`
+  gated by `session_starter.spawn_rail_with_auth_check()` (raises
+  `AuthHealthCheckFailed` with `repair_hint`). `crossdesk vm credentials
+  check` + `repair` CLI subcommands. `doctor` probe `check_vm_credentials`.
+  Real `LogonUserW` call hardware-gated (Stage 4).
 
 ## Post-MVP (winapps-parity features beyond Phase 5)
 

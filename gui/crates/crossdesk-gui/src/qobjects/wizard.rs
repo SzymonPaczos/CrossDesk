@@ -2,10 +2,8 @@ use cxx_qt_lib::QString;
 
 use crate::wizard::progress;
 
-/// Minimum/maximum bounds for the resource sliders on Step 3.
-const RAM_GB_DEFAULT: i32 = 8;
-const VCPU_DEFAULT: i32 = 4;
-const DISK_GB_DEFAULT: i32 = 80;
+/// Fixed disk size: qcow2 is thin-provisioned so the cap rarely matters in practice.
+const DISK_GB: i32 = 64;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -17,13 +15,15 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
+        // User-supplied
         #[qproperty(QString, iso_path)]
-        #[qproperty(QString, vm_name)]
-        #[qproperty(QString, timezone)]
-        #[qproperty(QString, locale)]
-        #[qproperty(i32, ram_gb)]
-        #[qproperty(i32, vcpu)]
+        // Auto-detected from host — shown read-only on the review step
+        #[qproperty(QString, host_timezone)]
+        #[qproperty(QString, host_locale)]
+        #[qproperty(i32, host_ram_gb)]
+        #[qproperty(i32, host_vcpu)]
         #[qproperty(i32, disk_gb)]
+        // Progress tracking
         #[qproperty(i32, current_step)]
         #[qproperty(i32, total_steps)]
         #[qproperty(i32, progress_pct)]
@@ -50,11 +50,10 @@ pub mod qobject {
 
 pub struct WizardStateRust {
     iso_path: QString,
-    vm_name: QString,
-    timezone: QString,
-    locale: QString,
-    ram_gb: i32,
-    vcpu: i32,
+    host_timezone: QString,
+    host_locale: QString,
+    host_ram_gb: i32,
+    host_vcpu: i32,
     disk_gb: i32,
     current_step: i32,
     total_steps: i32,
@@ -68,12 +67,11 @@ impl Default for WizardStateRust {
     fn default() -> Self {
         Self {
             iso_path: QString::default(),
-            vm_name: QString::from("windows-11-dev"),
-            timezone: QString::from("Europe/Warsaw"),
-            locale: QString::from("en-US"),
-            ram_gb: RAM_GB_DEFAULT,
-            vcpu: VCPU_DEFAULT,
-            disk_gb: DISK_GB_DEFAULT,
+            host_timezone: QString::default(),
+            host_locale: QString::default(),
+            host_ram_gb: 0,
+            host_vcpu: 0,
+            disk_gb: DISK_GB,
             current_step: 0,
             total_steps: progress::total_steps() as i32,
             progress_pct: 0,
@@ -86,8 +84,67 @@ impl Default for WizardStateRust {
 
 impl cxx_qt::Initialize for qobject::WizardState {
     fn initialize(self: std::pin::Pin<&mut Self>) {
-        // No-op: defaults set via Default impl. Kept for future signal wiring.
+        let mut this = self;
+        this.as_mut().set_host_timezone(QString::from(&detect_timezone()));
+        this.as_mut().set_host_locale(QString::from(&detect_locale()));
+        this.as_mut().set_host_ram_gb(detect_ram_gb());
+        this.as_mut().set_host_vcpu(detect_vcpu());
     }
+}
+
+/// Read /etc/localtime symlink to get the IANA timezone name.
+/// Falls back to TZ env var, then "UTC".
+fn detect_timezone() -> String {
+    // Linux/macOS: /etc/localtime → .../zoneinfo/Region/City
+    if let Ok(target) = std::fs::read_link("/etc/localtime") {
+        let s = target.to_string_lossy();
+        if let Some(idx) = s.find("zoneinfo/") {
+            return s[idx + "zoneinfo/".len()..].to_owned();
+        }
+    }
+    std::env::var("TZ").unwrap_or_else(|_| "UTC".to_owned())
+}
+
+/// Return the BCP-47 language tag from LANG env or system locale fallback.
+fn detect_locale() -> String {
+    // LANG=pl_PL.UTF-8 → "pl-PL"
+    if let Ok(lang) = std::env::var("LANG") {
+        let base = lang.split('.').next().unwrap_or("");
+        if !base.is_empty() && base != "C" && base != "POSIX" {
+            return base.replace('_', "-");
+        }
+    }
+    "en-US".to_owned()
+}
+
+/// 50% of physical RAM, clamped to [4, 16] GB.
+fn detect_ram_gb() -> i32 {
+    let total_gb = read_total_ram_gb();
+    ((total_gb / 2).max(4)).min(16)
+}
+
+fn read_total_ram_gb() -> i32 {
+    // Linux: /proc/meminfo MemTotal in kB
+    if let Ok(text) = std::fs::read_to_string("/proc/meminfo") {
+        for line in text.lines() {
+            if let Some(rest) = line.strip_prefix("MemTotal:") {
+                let kb: i64 = rest.split_whitespace().next()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0);
+                return (kb / 1024 / 1024) as i32;
+            }
+        }
+    }
+    // macOS / fallback: assume 16 GB
+    16
+}
+
+/// Half of available parallelism, clamped to [2, 8].
+fn detect_vcpu() -> i32 {
+    let cpus = std::thread::available_parallelism()
+        .map(|n| n.get() as i32)
+        .unwrap_or(4);
+    ((cpus / 2).max(2)).min(8)
 }
 
 impl qobject::WizardState {

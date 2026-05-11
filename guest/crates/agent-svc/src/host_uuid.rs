@@ -54,12 +54,17 @@ mod smbios {
     fn read_smbios_table() -> anyhow::Result<Vec<u8>> {
         // Two-call idiom: first probe with a zero buffer to get the size, then
         // allocate and fill.
+        // Safety: `None` for the buffer is documented by the Win32 API as a
+        // size probe — no memory is read or written by the kernel.
         let size = unsafe { GetSystemFirmwareTable(SMBIOS_PROVIDER, 0, None) };
         if size == 0 {
             anyhow::bail!("GetSystemFirmwareTable returned 0 (SMBIOS unavailable)");
         }
 
         let mut buf = vec![0u8; size as usize];
+        // Safety: `buf` is a freshly-allocated Vec<u8> of exactly `size` bytes;
+        // the kernel writes at most `size` bytes and we trust the just-probed
+        // length. `&mut buf` provides a unique mutable reference for the call.
         let written = unsafe { GetSystemFirmwareTable(SMBIOS_PROVIDER, 0, Some(&mut buf)) };
         if written == 0 || written as usize > buf.len() {
             anyhow::bail!(

@@ -19,6 +19,8 @@ pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
     };
 
     let mut process_id = 0;
+    // Safety: `hwnd` is supplied by the OS WinEvent callback and is valid for the
+    // duration of this call; `&mut process_id` is a unique stack reference.
     unsafe {
         GetWindowThreadProcessId(hwnd, Some(&mut process_id));
     }
@@ -26,6 +28,8 @@ pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
     let mut geometry = None;
     if event != EVENT_OBJECT_DESTROY {
         let mut rect = windows::Win32::Foundation::RECT::default();
+        // Safety: `hwnd` is the callback-supplied handle (still valid here);
+        // `&mut rect` is a unique mutable stack reference.
         unsafe {
             if GetWindowRect(hwnd, &mut rect).is_ok() {
                 geometry = Some(Rect {
@@ -40,6 +44,9 @@ pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
 
     let mut title = String::new();
     if event == EVENT_OBJECT_CREATE || event == EVENT_OBJECT_NAMECHANGE {
+        // Safety: `hwnd` is the callback-supplied handle. The two-call idiom
+        // (length probe then read) is the documented Win32 pattern; `buf` is
+        // sized to fit the just-probed `len + 1` UTF-16 code units (incl. NUL).
         unsafe {
             let len = GetWindowTextLengthW(hwnd);
             if len > 0 {

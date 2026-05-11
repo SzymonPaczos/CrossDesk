@@ -35,7 +35,7 @@ class DBusNotifier(Notifier):
     def is_available(self) -> bool:
         if self._available_cached is None:
             try:
-                import dbus_next  # type: ignore[import-not-found]  # noqa: F401
+                import dbus_next  # type: ignore[import]  # noqa: F401
 
                 self._available_cached = True
             except ImportError:

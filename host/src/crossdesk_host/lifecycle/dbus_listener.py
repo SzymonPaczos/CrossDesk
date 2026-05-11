@@ -33,8 +33,8 @@ async def start_listener(coordinator: LifecycleCoordinator) -> asyncio.Task[None
     Raises ``RuntimeError`` if ``dbus-next`` isn't installed.
     """
     try:
-        from dbus_next import BusType  # type: ignore[import-not-found]
-        from dbus_next.aio import MessageBus  # type: ignore[import-not-found]
+        from dbus_next import BusType  # type: ignore[import]
+        from dbus_next.aio import MessageBus  # type: ignore[import]
     except ImportError as exc:
         raise RuntimeError(
             "dbus-next not installed; install with "
@@ -51,7 +51,7 @@ async def start_listener(coordinator: LifecycleCoordinator) -> asyncio.Task[None
     manager = proxy.get_interface("org.freedesktop.login1.Manager")
 
     handler: Callable[[bool], None] = _make_handler(coordinator)
-    manager.on_prepare_for_sleep(handler)
+    manager.on_prepare_for_sleep(handler)  # type: ignore[attr-defined]
 
     logger.info("dbus_listener_subscribed")
     return asyncio.create_task(_keepalive())

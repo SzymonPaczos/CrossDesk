@@ -953,19 +953,16 @@ document software rendering as the always-works fallback.
   `WOW6432Node` 32-bit views, UWP via `Get-AppxPackage`, Chocolatey
   shims, Scoop shims. Fix winapps' gap: they only do `App Paths` and
   miss anything in `Uninstall`-only or `WOW6432Node`.
-- **[P0] `.desktop` file generator.** Source:
-  `third_party/winapps/setup.sh:1359-1406` (`waConfigureApp`). Standard
-  freedesktop entry: `Exec=crossdesk launch <app-id> %F`,
-  `StartupWMClass=<full name>`, `MimeType=...`. Output to
-  `~/.local/share/applications/crossdesk-*.desktop`. Module under
-  `host/`.
-- **[P0] MS Office URL scheme handler.** Source:
-  `third_party/winapps/apps/ms-office-protocol-handler.desktop`. Single
-  `.desktop` file claiming `x-scheme-handler/ms-word`,
-  `x-scheme-handler/ms-excel`, `ms-powerpoint`, `ms-outlook`,
-  `ms-access`, `ms-visio`, `ms-project`, `ms-teams`, `ms-whiteboard`,
-  `ms-officeapp`. Routes Office links from browsers to the VM. ~10
-  lines of work; quietly killer UX feature.
+- **[✅ DONE 2026-05-11] `.desktop` file generator.**
+  `host/src/crossdesk_host/integrations/mime.py` — `install_app()`:
+  writes `crossdesk-<id>.desktop` with `Exec`, `StartupWMClass`,
+  `MimeType`, `Categories`; idempotent. `uninstall_app()` /
+  `uninstall_all()` mirror uninstall.py cleanup. 18 tests.
+- **[✅ DONE 2026-05-11] MS Office URL scheme handler.**
+  `install_office_handler()` in `integrations/mime.py` writes
+  `crossdesk-ms-office-handler.desktop` claiming all 10 ms-* URL scheme
+  MIME types. `NoDisplay=true` so it stays invisible in launchers while
+  routing Office links from browsers to the Windows guest.
 - **[P1] Adopt the 91-app catalog as a starting point.** Source:
   `third_party/winapps/apps/<name>/info` (91 entries). Copy the
   non-trademark fields (`WIN_EXECUTABLE`, `MIME_TYPES`, `CATEGORIES`)

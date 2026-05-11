@@ -125,6 +125,20 @@ pub struct ManagerStateRust {
     daemon_connected: bool,
 }
 
+/// Returns true when the CrossDesk install state file exists on disk,
+/// meaning `crossdesk install` completed at least partially on this machine.
+/// Phase 7 daemon handshake is the authoritative check; this is the Phase 6 proxy.
+fn detect_has_vm() -> bool {
+    use std::path::PathBuf;
+    let state_dir = std::env::var("XDG_STATE_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let home = std::env::var("HOME").unwrap_or_else(|_| "/".to_owned());
+            PathBuf::from(home).join(".local/state")
+        });
+    state_dir.join("crossdesk/install.state.json").exists()
+}
+
 impl cxx_qt::Initialize for qobject::ManagerState {
     fn initialize(self: core::pin::Pin<&mut Self>) {
         // Phase 7 Week 27 will subscribe to mgmt::Status and fill these from
@@ -156,10 +170,14 @@ impl cxx_qt::Initialize for qobject::ManagerState {
         this.as_mut().set_hidpi_scale(0);
         this.as_mut().set_diagnostics(QStringList::default());
         this.as_mut().set_diagnostics_any_failed(false);
-        // Honour CROSSDESK_HAS_VM=0 so the no-VM UI state is testable without a daemon.
-        let has_vm = std::env::var("CROSSDESK_HAS_VM")
-            .map(|v| v != "0")
-            .unwrap_or(true);
+        // CROSSDESK_HAS_VM=0/1 overrides the on-disk check (useful in tests / CI).
+        // Without the override: presence of install.state.json means the install
+        // wizard ran and a VM domain was created on this machine.
+        let has_vm = match std::env::var("CROSSDESK_HAS_VM").as_deref() {
+            Ok("0") => false,
+            Ok("1") => true,
+            _ => detect_has_vm(),
+        };
         this.as_mut().set_has_vm(has_vm);
         // Phase 7: set to true when the mgmt socket handshake succeeds.
         this.as_mut().set_daemon_connected(false);

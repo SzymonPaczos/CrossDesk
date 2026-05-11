@@ -4,18 +4,6 @@
 <context>
     <name>About</name>
     <message>
-        <source>Version 0.1.0 (pre-release)</source>
-        <translation type="vanished">Wersja 0.1.0 (przed-wydanie)</translation>
-    </message>
-    <message>
-        <source>Run Windows applications as native Wayland or X11 windows.</source>
-        <translation type="vanished">Uruchamiaj aplikacje Windows jako natywne okna Wayland lub X11.</translation>
-    </message>
-    <message>
-        <source>License: GPL-3.0-or-later</source>
-        <translation type="vanished">Licencja: GPL-3.0-or-later</translation>
-    </message>
-    <message>
         <location filename="../qml/manager/About.qml" line="31"/>
         <source>About</source>
         <translation>O programie</translation>
@@ -102,14 +90,6 @@
         <translation>RTT heartbeat: %1 ms</translation>
     </message>
     <message>
-        <source>AuthContext rejections: %1</source>
-        <translation type="vanished">Odrzucenia AuthContext: %1</translation>
-    </message>
-    <message>
-        <source>Active mounts: %1</source>
-        <translation type="vanished">Aktywne mounty: %1</translation>
-    </message>
-    <message>
         <location filename="../qml/manager/Dashboard.qml" line="40"/>
         <source>Dashboard</source>
         <translation>Panel główny</translation>
@@ -160,10 +140,6 @@
         <translation>Uruchom aplikację…</translation>
     </message>
     <message>
-        <source>Launch app...</source>
-        <translation type="vanished">Uruchom aplikację...</translation>
-    </message>
-    <message>
         <location filename="../qml/manager/Dashboard.qml" line="357"/>
         <source>Suspend VM</source>
         <translation>Uśpij maszynę</translation>
@@ -200,10 +176,6 @@
         <location filename="../qml/manager/Diagnose.qml" line="197"/>
         <source>No diagnostics data. Run a check to see results.</source>
         <translation>Brak danych diagnostycznych. Uruchom sprawdzenie, aby zobaczyć wyniki.</translation>
-    </message>
-    <message>
-        <source>Export diagnostic bundle</source>
-        <translation type="vanished">Eksportuj paczkę diagnostyczną</translation>
     </message>
 </context>
 <context>
@@ -291,17 +263,9 @@
         <source>FSM state</source>
         <translation>Stan FSM</translation>
     </message>
-    <message>
-        <source>EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</source>
-        <translation type="vanished">EWMA RTT: %1 ms   miss_count: %2   soft_attempts: %3</translation>
-    </message>
 </context>
 <context>
     <name>Logs</name>
-    <message>
-        <source>Filter:</source>
-        <translation type="vanished">Filtr:</translation>
-    </message>
     <message>
         <location filename="../qml/manager/Logs.qml" line="34"/>
         <source>Logs</source>
@@ -325,22 +289,6 @@
         <location filename="../qml/Main.qml" line="49"/>
         <source>CrossDesk Manager</source>
         <translation>Menedżer CrossDesk</translation>
-    </message>
-    <message>
-        <source>Language:</source>
-        <translation type="vanished">Język:</translation>
-    </message>
-    <message>
-        <source>No virtual machines yet.</source>
-        <translation type="vanished">Brak maszyn wirtualnych.</translation>
-    </message>
-    <message>
-        <source>Provision a Windows guest to get started.</source>
-        <translation type="vanished">Zainstaluj maszynę Windows, aby rozpocząć.</translation>
-    </message>
-    <message>
-        <source>New Windows VM</source>
-        <translation type="vanished">Nowa maszyna Windows</translation>
     </message>
 </context>
 <context>
@@ -415,22 +363,6 @@
         <source>Open setup wizard</source>
         <translation>Otwórz kreatora instalacji</translation>
     </message>
-    <message>
-        <source>Language:</source>
-        <translation type="vanished">Język:</translation>
-    </message>
-    <message>
-        <source>Welcome to CrossDesk</source>
-        <translation type="vanished">Witaj w CrossDesk</translation>
-    </message>
-    <message>
-        <source>Provision a Windows guest to get started, or open the Manager if you&apos;ve already installed.</source>
-        <translation type="vanished">Zainstaluj system Windows aby rozpocząć, lub otwórz Menedżera jeśli już go masz.</translation>
-    </message>
-    <message>
-        <source>Open Manager</source>
-        <translation type="vanished">Otwórz Menedżera</translation>
-    </message>
 </context>
 <context>
     <name>ProgressView</name>
@@ -454,26 +386,6 @@
         <source>Close</source>
         <translation>Zamknij</translation>
     </message>
-    <message>
-        <source>Booting Windows installer…</source>
-        <translation type="vanished">Uruchamianie instalatora Windows…</translation>
-    </message>
-    <message>
-        <source>Partitioning virtual disk…</source>
-        <translation type="vanished">Tworzenie partycji na dysku wirtualnym…</translation>
-    </message>
-    <message>
-        <source>Installing Windows…</source>
-        <translation type="vanished">Instalowanie systemu Windows…</translation>
-    </message>
-    <message>
-        <source>Applying autounattend.xml…</source>
-        <translation type="vanished">Stosowanie autounattend.xml…</translation>
-    </message>
-    <message>
-        <source>Registering CrossDesk agent NT service…</source>
-        <translation type="vanished">Rejestrowanie usługi NT agenta CrossDesk…</translation>
-    </message>
 </context>
 <context>
     <name>Settings</name>
@@ -481,10 +393,6 @@
         <location filename="../qml/manager/Settings.qml" line="84"/>
         <source>General</source>
         <translation>Ogólne</translation>
-    </message>
-    <message>
-        <source>Theme:</source>
-        <translation type="vanished">Motyw:</translation>
     </message>
     <message>
         <location filename="../qml/manager/Settings.qml" line="172"/>
@@ -495,10 +403,6 @@
         <location filename="../qml/manager/Settings.qml" line="221"/>
         <source>VM</source>
         <translation>Maszyna</translation>
-    </message>
-    <message>
-        <source>Credentials:</source>
-        <translation type="vanished">Poświadczenia:</translation>
     </message>
     <message>
         <location filename="../qml/manager/Settings.qml" line="34"/>
@@ -586,14 +490,6 @@
         <translation>Progi heartbeat / odtwarzania</translation>
     </message>
     <message>
-        <source>HiDPI scale:</source>
-        <translation type="vanished">Skala HiDPI:</translation>
-    </message>
-    <message>
-        <source>Advanced (FSM tuning)</source>
-        <translation type="vanished">Zaawansowane (strojenie FSM)</translation>
-    </message>
-    <message>
         <location filename="../qml/manager/Settings.qml" line="395"/>
         <source>These knobs balance false-positive HARD_DESTROY against false-negative hung sessions. Defaults are safe for most users.</source>
         <translation>Te ustawienia balansują między fałszywym HARD_DESTROY a niewykrytą zawieszoną sesją. Domyślne wartości są bezpieczne dla większości użytkowników.</translation>
@@ -675,22 +571,6 @@
         <location filename="../qml/wizard/Step1Iso.qml" line="354"/>
         <source>Continue</source>
         <translation>Kontynuuj</translation>
-    </message>
-    <message>
-        <source>Choose the Windows installation ISO. The image will be attached as a virtual CD-ROM during the autounattend bootstrap.</source>
-        <translation type="vanished">Wskaż obraz ISO instalatora Windows. Zostanie podpięty jako wirtualny CD-ROM podczas bootstrapu autounattend.</translation>
-    </message>
-    <message>
-        <source>No ISO selected</source>
-        <translation type="vanished">Nie wybrano pliku ISO</translation>
-    </message>
-    <message>
-        <source>Browse…</source>
-        <translation type="vanished">Przeglądaj…</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation type="vanished">Dalej</translation>
     </message>
 </context>
 <context>

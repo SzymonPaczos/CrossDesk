@@ -44,6 +44,7 @@ fn main() {
                 "qml/manager/Settings.qml",
                 "qml/manager/About.qml",
             ],
+            qrc_files: &["qml.qrc"],
             ..Default::default()
         })
         .build();

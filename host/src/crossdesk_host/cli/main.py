@@ -30,6 +30,7 @@ from crossdesk_host.cli import (
     uninstall_cmd,
     version_cmd,
 )
+from crossdesk_host.i18n import _
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -69,8 +70,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         # surface a clear "not yet wired" message rather than failing
         # silently. The end-to-end path lands with the install pipeline
         # close-out (Week 17 first-launch experience).
-        print(f"crossdesk launch: app={args.app!r} file={args.file!r}")
-        print("(launch path is hardware-gated; run `crossdesk doctor` first)")
+        print(_("crossdesk launch: app={app!r} file={file!r}").format(app=args.app, file=args.file))
+        print(_("(launch path is hardware-gated; run `crossdesk doctor` first)"))
         return 0
     if args.command == "vm":
         if args.vm_command == "credentials":

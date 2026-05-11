@@ -13,6 +13,7 @@ import argparse
 from pathlib import Path
 from typing import List
 
+from crossdesk_host.i18n import _
 from crossdesk_host.installer import credentials, state
 
 _STEPS: List[str] = [
@@ -48,20 +49,20 @@ def run(args: argparse.Namespace) -> int:
     s = state.load(state_path)
     _ensure_steps(s)
 
-    print(f"crossdesk install (state at {state_path})")
+    print(_("crossdesk install (state at {path})").format(path=state_path))
     if args.dry_run:
-        print("dry-run mode: no libvirt or network calls")
+        print(_("dry-run mode: no libvirt or network calls"))
 
     next_step = s.first_unfinished()
     if next_step is None:
-        print("all steps already done; nothing to do")
+        print(_("all steps already done; nothing to do"))
         return 0
 
     for step in _STEPS:
         if s.is_done(step):
-            print(f"  ✓ {step} (already done)")
+            print(_("  ✓ {step} (already done)").format(step=step))
             continue
-        print(f"  → {step}")
+        print(_("  → {step}").format(step=step))
         if args.dry_run:
             s.mark(step, "done")
             state.save(s, state_path)
@@ -74,12 +75,12 @@ def run(args: argparse.Namespace) -> int:
             credentials.save(creds)
             s.mark(step, "done")
             state.save(s, state_path)
-            print(f"    saved credentials for user {creds.username!r}")
+            print(_("    saved credentials for user {user!r}").format(user=creds.username))
             continue
-        print(f"    {step}: hardware-gated; not implemented in --no-hardware mode")
+        print(_("    {step}: hardware-gated; not implemented in --no-hardware mode").format(step=step))
         s.mark(step, "pending")
         state.save(s, state_path)
         return 1
 
-    print("install complete")
+    print(_("install complete"))
     return 0

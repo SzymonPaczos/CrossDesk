@@ -60,4 +60,16 @@ ApplicationWindow {
         anchors.fill: parent
         initialItem: "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Manager.qml"
     }
+
+    // Auto-launch wizard on first load when no VM is installed.
+    // Qt.callLater defers until the event loop tick after initialItem is fully
+    // instantiated (StackView loads URL items asynchronously).
+    Component.onCompleted: {
+        Qt.callLater(function() {
+            var mgr = stack.currentItem;
+            if (mgr && !mgr.mgrInstance.has_vm) {
+                launchWizard();
+            }
+        });
+    }
 }

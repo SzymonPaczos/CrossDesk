@@ -2,17 +2,10 @@
 //! Manager pane (Dashboard / Apps / Storage / Lifecycle / Diagnose /
 //! Logs / Settings / About).
 //!
-//! Phase 6: mock-driven. The qobject exposes properties and invokables;
-//! a stub data source seeds canned values so the Mac dev environment
-//! can render every pane against believable data without a daemon.
-//!
-//! Phase 7 Week 27 swaps the stub for a tonic gRPC client connected to
-//! `unix://$XDG_RUNTIME_DIR/crossdesk-host.sock`. The QML doesn't need
-//! to know — it sees the same property names, just real values.
+//! All fields start empty / disconnected. Phase 7 Week 27 subscribes to
+//! mgmt::Status and overwrites them with live daemon data.
 
 use cxx_qt_lib::{QList, QString, QStringList};
-
-use crate::manager::format::{format_bytes, format_stars, format_uptime, fsm_severity};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -131,36 +124,35 @@ pub struct ManagerStateRust {
 
 impl cxx_qt::Initialize for qobject::ManagerState {
     fn initialize(self: core::pin::Pin<&mut Self>) {
-        // Seed mock state so QML has something to render against in
-        // Mac dev mode. Phase 7 Week 27 will subscribe to mgmt::Status
-        // and overwrite these fields on every push.
+        // Phase 7 Week 27 will subscribe to mgmt::Status and fill these from
+        // a live daemon. Until then, everything starts empty / disconnected
+        // so the UI shows genuine "not connected" state rather than fake data.
         let mut this = self;
-        this.as_mut().set_vm_state(QString::from("RUNNING"));
-        this.as_mut().set_fsm_state(QString::from("HEALTHY"));
-        this.as_mut().set_fsm_severity(QString::from(fsm_severity("HEALTHY")));
-        this.as_mut().set_uptime_label(QString::from(&format_uptime(
-            std::time::Duration::from_secs(842),
-        )));
-        this.as_mut().set_ewma_rtt_ms(1);
-        this.as_mut().set_cpu_percent(12);
-        this.as_mut().set_ram_percent(48);
-        this.as_mut().set_ram_label(QString::from(&format!(
-            "{} / {}",
-            format_bytes(2 * 1024 * 1024 * 1024),
-            format_bytes(4 * 1024 * 1024 * 1024)
-        )));
+        this.as_mut().set_vm_state(QString::from("UNKNOWN"));
+        this.as_mut().set_fsm_state(QString::from("UNKNOWN"));
+        this.as_mut().set_fsm_severity(QString::from("warn"));
+        this.as_mut().set_uptime_label(QString::from("—"));
+        this.as_mut().set_ewma_rtt_ms(0);
+        this.as_mut().set_miss_count(0);
+        this.as_mut().set_soft_attempts(0);
+        this.as_mut().set_auth_rejections(0);
+        this.as_mut().set_cpu_percent(0);
+        this.as_mut().set_ram_percent(0);
+        this.as_mut().set_ram_label(QString::from("—"));
         this.as_mut().set_running_apps(QStringList::default());
-        let curated = mock_curated_apps();
-        this.as_mut().set_curated_apps(qsl(&curated));
+        this.as_mut().set_curated_apps(QStringList::default());
         this.as_mut().set_discovered_apps(QStringList::default());
         this.as_mut().set_active_mounts(QStringList::default());
         this.as_mut().set_recent_mounts(QStringList::default());
-        this.as_mut().set_recent_activity(qsl(&mock_activity()));
-        this.as_mut().set_log_lines(qsl(&mock_log_lines()));
+        this.as_mut().set_recent_activity(QStringList::default());
+        this.as_mut().set_log_lines(QStringList::default());
         this.as_mut().set_language(QString::from("auto"));
         this.as_mut().set_theme(QString::from("system"));
+        this.as_mut().set_telemetry_enabled(false);
+        this.as_mut().set_lean_mode(false);
         this.as_mut().set_hidpi_scale(0);
-        this.as_mut().set_diagnostics(qsl(&mock_diagnostics()));
+        this.as_mut().set_diagnostics(QStringList::default());
+        this.as_mut().set_diagnostics_any_failed(false);
         // Honour CROSSDESK_HAS_VM=0 so the no-VM UI state is testable without a daemon.
         let has_vm = std::env::var("CROSSDESK_HAS_VM")
             .map(|v| v != "0")
@@ -208,6 +200,8 @@ impl qobject::ManagerState {
     }
 }
 
+// Phase 7: used to convert Vec<String> daemon responses into QStringList.
+#[allow(dead_code)]
 fn qsl(items: &[String]) -> QStringList {
     let mut list = QList::<QString>::default();
     for s in items {
@@ -216,67 +210,14 @@ fn qsl(items: &[String]) -> QStringList {
     QStringList::from(&list)
 }
 
-fn mock_curated_apps() -> Vec<String> {
-    vec![
-        format!("notepad|Notepad|Built-in|{}", format_stars(5)),
-        format!("calc|Calculator|Built-in|{}", format_stars(5)),
-        format!("cmd|Command Prompt|Built-in|{}", format_stars(5)),
-        format!("paint|Paint|Built-in|{}", format_stars(5)),
-        format!("word|Microsoft Word|Office|{}", format_stars(4)),
-        format!("excel|Microsoft Excel|Office|{}", format_stars(5)),
-    ]
-}
-
-fn mock_activity() -> Vec<String> {
-    vec![
-        "16:04  ✓ Notepad launched".to_string(),
-        "16:01  ↻ Suspend → Resume cycle (1.7 s)".to_string(),
-        "15:43  ✓ JIT mount: ~/Documents/spec.docx → Word, 12.4 s".to_string(),
-        "15:42  ✓ JIT detach: spec.docx (LockReport: 0 handles)".to_string(),
-    ]
-}
-
-fn mock_log_lines() -> Vec<String> {
-    vec![
-        "16:04:23 [info]    heartbeat_state_transition HEALTHY→DEGRADED".to_string(),
-        "16:04:23 [warn]    heartbeat_graceful_shutdown_dispatched".to_string(),
-        "16:04:24 [info]    heartbeat_state_transition DEGRADED→HEALTHY".to_string(),
-        "16:04:30 [info]    rail_create hwnd=0x4321 title='Notepad'".to_string(),
-    ]
-}
-
-fn mock_diagnostics() -> Vec<String> {
-    vec![
-        "ok|kvm_device|".to_string(),
-        "ok|freerdp|xfreerdp 3.5.1".to_string(),
-        "ok|libvirt|".to_string(),
-        "warn|notify-send|notify-send not on PATH".to_string(),
-    ]
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::manager::format::fsm_severity;
 
     #[test]
     fn fsm_severity_round_trip() {
         assert_eq!(fsm_severity("HEALTHY"), "ok");
         assert_eq!(fsm_severity("DEGRADED"), "warn");
-    }
-
-    #[test]
-    fn mock_curated_apps_has_office() {
-        let apps = mock_curated_apps();
-        assert!(apps.iter().any(|a| a.contains("word|Microsoft Word")));
-    }
-
-    #[test]
-    fn mock_activity_chronological_format() {
-        let lines = mock_activity();
-        for line in lines {
-            // each line begins with HH:MM
-            assert!(&line[2..3] == ":");
-        }
+        assert_eq!(fsm_severity("UNKNOWN"), "warn");
     }
 }

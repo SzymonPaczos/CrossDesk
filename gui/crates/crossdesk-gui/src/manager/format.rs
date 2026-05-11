@@ -4,6 +4,10 @@
 //! is awkward to unit-test directly; routing the formatting through a
 //! plain Rust module gives us full coverage on the i18n + display
 //! logic without spinning up a Qt event loop.
+//!
+//! Functions are called by Phase 7 daemon integration; allow dead_code
+//! until that wiring lands.
+#![allow(dead_code)]
 
 use std::time::Duration;
 
@@ -83,7 +87,8 @@ pub fn fsm_severity(raw: &str) -> &'static str {
     }
 }
 
-/// Compatibility-rating star formatter. 0 stars → "unrated".
+/// Compatibility-rating star formatter. 0 stars → "unrated". Phase 7: used in app catalog.
+#[allow(dead_code)]
 pub fn format_stars(n: u32) -> String {
     if n == 0 {
         return "unrated".to_string();

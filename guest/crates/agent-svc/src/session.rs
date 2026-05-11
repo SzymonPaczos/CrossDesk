@@ -1,13 +1,12 @@
 use tokio::sync::mpsc;
 use tonic::Request;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 use ipc_vsock::client::AuthCarrier;
-use proto::crossdesk::v1::{
-    control_service_client::ControlServiceClient,
-    ClientFrame, ClientHello, ServerFrame,
-};
 use proto::crossdesk::v1::client_frame::Payload;
+use proto::crossdesk::v1::{
+    control_service_client::ControlServiceClient, ClientFrame, ClientHello, ServerFrame,
+};
 
 use crate::credentials::handle_verify_credentials;
 use crate::host_uuid::read_host_domain_uuid;

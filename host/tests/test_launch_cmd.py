@@ -15,7 +15,6 @@ import pytest
 from crossdesk_host.cli.launch_cmd import _launch, _resolve_display_name
 from crossdesk_host.lifecycle.notifications import RecordingNotifier
 
-
 # ---------------------------------------------------------------------------
 # _resolve_display_name
 # ---------------------------------------------------------------------------

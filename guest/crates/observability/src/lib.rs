@@ -29,8 +29,7 @@ const SERVICE_NAME: &str = "crossdesk-guest";
 /// the process and no extra goroutines are spawned. With it, every
 /// `tracing` span is exported to that endpoint via OTLP-over-gRPC.
 pub fn init() -> Result<(), tracing_subscriber::util::TryInitError> {
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
     let json_layer = fmt::layer()
         .json()
@@ -57,7 +56,8 @@ pub fn init() -> Result<(), tracing_subscriber::util::TryInitError> {
 /// We swallow exporter-build errors and log them via `tracing` rather
 /// than aborting init: a misconfigured OTLP endpoint must never
 /// prevent the agent from starting.
-fn build_otlp_layer<S>() -> Option<tracing_opentelemetry::OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>>
+fn build_otlp_layer<S>(
+) -> Option<tracing_opentelemetry::OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>>
 where
     S: tracing::Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a>,
 {
@@ -168,8 +168,8 @@ mod tests {
         let line = std::str::from_utf8(&bytes).unwrap().trim();
         assert!(!line.is_empty(), "no log line emitted");
 
-        let v: serde_json::Value = serde_json::from_str(line)
-            .unwrap_or_else(|e| panic!("not JSON: {e}; line:\n{line}"));
+        let v: serde_json::Value =
+            serde_json::from_str(line).unwrap_or_else(|e| panic!("not JSON: {e}; line:\n{line}"));
 
         // tracing-subscriber's JSON format puts user fields under
         // `fields`. Schema sanity: timestamp + level + target + fields.
@@ -177,7 +177,10 @@ mod tests {
             assert!(v.get(required).is_some(), "missing field {required}");
         }
         let fields = v.get("fields").unwrap();
-        assert_eq!(fields.get("component").and_then(|s| s.as_str()), Some("guest.tests.log"));
+        assert_eq!(
+            fields.get("component").and_then(|s| s.as_str()),
+            Some("guest.tests.log")
+        );
         assert_eq!(fields.get("key").and_then(|s| s.as_str()), Some("value"));
     }
 }

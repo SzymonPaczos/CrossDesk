@@ -27,7 +27,12 @@ pub fn handle_verify_credentials(req: &VerifyCredentialsRequest) -> VerifyCreden
     }
 }
 
-fn make_result(req: &VerifyCredentialsRequest, status: Status, detail: &str, win32: u32) -> VerifyCredentialsResult {
+fn make_result(
+    req: &VerifyCredentialsRequest,
+    status: Status,
+    detail: &str,
+    win32: u32,
+) -> VerifyCredentialsResult {
     VerifyCredentialsResult {
         request_id: req.request_id.clone(),
         status: status as i32,

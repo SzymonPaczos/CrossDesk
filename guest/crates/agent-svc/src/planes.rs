@@ -62,13 +62,8 @@ pub async fn run_with_pki(pki_path: &Path, endpoint: String) -> anyhow::Result<(
     // Stamping `host.crt` here used to silently fail the spoof check.
     let own_fp = fingerprint_sha256(&pki.cert_pem)?;
 
-    let channel = ipc_vsock::channel::connect(
-        &pki.ca_pem,
-        &pki.cert_pem,
-        &pki.key_pem,
-        endpoint,
-    )
-    .await?;
+    let channel =
+        ipc_vsock::channel::connect(&pki.ca_pem, &pki.cert_pem, &pki.key_pem, endpoint).await?;
 
     // Each plane is a separate gRPC stream; the host's AuthValidator
     // tracks expected sequence numbers keyed by `stream_nonce`. We
@@ -100,10 +95,7 @@ pub async fn run_with_pki(pki_path: &Path, endpoint: String) -> anyhow::Result<(
         AuthCarrier::new(own_fp.clone()),
     ));
     let filesystem_handle = tokio::spawn(crate::filesystem::run_filesystem_channel(
-        FilesystemServiceClient::with_interceptor(
-            channel,
-            inject_interceptor(trace_root),
-        ),
+        FilesystemServiceClient::with_interceptor(channel, inject_interceptor(trace_root)),
         AuthCarrier::new(own_fp),
     ));
 

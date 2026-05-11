@@ -13,10 +13,10 @@
 //! satisfy `tower::Service<Uri, Response = TokioIo<TcpStream>>`,
 //! which is the abstraction tonic 0.12 requires.
 
+use hyper_util::rt::TokioIo;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use tonic::transport::Uri;
 use tower::Service;

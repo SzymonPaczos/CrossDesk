@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 
 from crossdesk_host.integrations.mime import (
+    _OFFICE_MIME_TYPES,
     install_app,
     install_office_handler,
     uninstall_all,
     uninstall_app,
-    _OFFICE_MIME_TYPES,
 )
 
 

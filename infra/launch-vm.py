@@ -3,13 +3,27 @@
 launch-vm.py — Bootstrap launcher for the CrossDesk Windows guest VM.
 
 Usage:
-    python3 infra/launch-vm.py <windows.iso> <tools.iso>
+    python3 infra/launch-vm.py <windows.iso> <tools.iso> [--gpu-pci BDF[,BDF...]]
 
     windows.iso  — Downloaded Windows 10/11 installation ISO.
     tools.iso    — ISO containing autounattend.xml + CrossDeskAgent.exe at root.
+    --gpu-pci    — Optional: one or more PCI Bus:Device.Function addresses of the
+                   GPU and companion audio device to pass through via VFIO
+                   (e.g. --gpu-pci 01:00.0,01:00.1). The devices must already be
+                   bound to vfio-pci (see docs/GPU_PASSTHROUGH.md). When omitted,
+                   the VM uses software rendering (virtio-gpu / VNC debug).
+
+GPU passthrough notes:
+    Tier 1 GPUs (NVIDIA RTX 20/30/40, AMD RDNA2/3 multi-GPU): pass all BDF
+    addresses for the GPU plus its audio function.
+
+    Tier 2 (older NVIDIA): add kvm=off and hv_vendor_id=AuthenticAMD to the
+    -cpu flag to hide the virtualisation from the driver (done automatically
+    when --nvidia-hide-vm is also passed).
 
 Requirements (install via distro package manager):
     qemu-system-x86_64, qemu-img, ovmf, swtpm
+    vfio-pci module (for --gpu-pci; load: modprobe vfio-pci)
 
 The script creates crossdesk-win.qcow2 and efivars.fd in the current directory
 on first run; subsequent runs reuse them (install does not repeat).
@@ -17,6 +31,7 @@ on first run; subsequent runs reuse them (install does not repeat).
 
 from __future__ import annotations
 
+import argparse
 import shutil
 import socket
 import subprocess
@@ -24,6 +39,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import List
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
@@ -148,13 +164,18 @@ def build_qemu_cmd(
     tools_iso: Path,
     ovmf_code: Path,
     tpm_sock: Path,
-) -> list[str]:
-    return [
+    gpu_pci_ids: List[str] = [],
+    nvidia_hide_vm: bool = False,
+) -> List[str]:
+    # kvm=off + hv_vendor_id spoof hides the hypervisor from older NVIDIA drivers
+    cpu_flags = "host,kvm=off,hv_vendor_id=AuthenticAMD" if nvidia_hide_vm else "host"
+
+    cmd = [
         "qemu-system-x86_64",
         "-name",    "CrossDesk-Win",
         # q35 chipset; smm=on required for OVMF Secure Boot / Win11 compatibility
         "-machine", "q35,accel=kvm,smm=on",
-        "-cpu",     "host",
+        "-cpu",     cpu_flags,
         "-smp",     str(VCPUS),
         "-m",       str(RAM_MB),
         # ── UEFI ──────────────────────────────────────────────────────────
@@ -177,23 +198,55 @@ def build_qemu_cmd(
         # ── AF_VSOCK for Phase 2 gRPC transport ───────────────────────────
         # Requires: modprobe vhost_vsock (or CONFIG_VHOST_VSOCK=y in kernel)
         "-device",  f"vhost-vsock-pci,guest-cid={VSOCK_CID}",
-        # ── Display: headless; attach VNC on :0 (port 5900) for debugging ─
-        "-display", "none",
-        "-vnc",     "127.0.0.1:0",
     ]
+
+    if gpu_pci_ids:
+        # Pass through each BDF via VFIO; first function gets multifunction=on so
+        # the guest sees the whole slot (GPU + audio companion) as one PCI device.
+        for i, bdf in enumerate(gpu_pci_ids):
+            extra = ",multifunction=on" if i == 0 else ""
+            cmd += ["-device", f"vfio-pci,host={bdf}{extra}"]
+        # With a real GPU, render directly to the display — no VNC overlay.
+        cmd += ["-display", "none"]
+    else:
+        # Software rendering fallback; VNC on :0 (port 5900) for debugging.
+        cmd += [
+            "-display", "none",
+            "-vnc",     "127.0.0.1:0",
+        ]
+
+    return cmd
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        print(__doc__)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Bootstrap launcher for the CrossDesk Windows guest VM.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("windows_iso", type=Path, help="Windows 10/11 installation ISO")
+    parser.add_argument("tools_iso", type=Path, help="ISO containing autounattend.xml + CrossDeskAgent.exe")
+    parser.add_argument(
+        "--gpu-pci",
+        metavar="BDF[,BDF...]",
+        help=(
+            "Comma-separated PCI Bus:Device.Function addresses for GPU passthrough "
+            "(e.g. 01:00.0,01:00.1). Devices must already be bound to vfio-pci."
+        ),
+    )
+    parser.add_argument(
+        "--nvidia-hide-vm",
+        action="store_true",
+        help="Add kvm=off + hv_vendor_id=AuthenticAMD to hide the VM from older NVIDIA drivers (Tier 2).",
+    )
+    args = parser.parse_args()
 
-    windows_iso = Path(sys.argv[1])
-    tools_iso = Path(sys.argv[2])
+    gpu_pci_ids: List[str] = []
+    if args.gpu_pci:
+        gpu_pci_ids = [bdf.strip() for bdf in args.gpu_pci.split(",") if bdf.strip()]
 
-    preflight(windows_iso, tools_iso)
+    preflight(args.windows_iso, args.tools_iso)
 
     ovmf_code = find_first(_OVMF_CODE_CANDIDATES)
     ovmf_vars = find_first(_OVMF_VARS_CANDIDATES)
@@ -205,7 +258,14 @@ def main() -> None:
     tpm_proc, tpm_sock = start_swtpm(tpm_state)
 
     try:
-        cmd = build_qemu_cmd(windows_iso, tools_iso, ovmf_code, tpm_sock)
+        cmd = build_qemu_cmd(
+            args.windows_iso,
+            args.tools_iso,
+            ovmf_code,
+            tpm_sock,
+            gpu_pci_ids=gpu_pci_ids,
+            nvidia_hide_vm=args.nvidia_hide_vm,
+        )
         print("+ " + " ".join(cmd))
         subprocess.run(cmd, check=True)
     finally:

@@ -1,167 +1,170 @@
-# SOME DESCRIPTIVE TITLE.
-# This file is put in the public domain.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# CrossDesk host — Polish translations
+# Copyright (C) 2026 CrossDesk Contributors
+# This file is distributed under the same license as the crossdesk-host package.
+# Szymon Paczos <szymon-paczos@protonmail.com>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: crossdesk-host 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: FROZEN\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2026-05-11 00:00+0000\n"
+"Last-Translator: Szymon Paczos <szymon-paczos@protonmail.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: host/src/crossdesk_host/cli/uninstall_cmd.py:20
 msgid "removed:"
-msgstr ""
+msgstr "usunięto:"
 
 #: host/src/crossdesk_host/cli/uninstall_cmd.py:24
 msgid "skipped:"
-msgstr ""
+msgstr "pominięto:"
 
 #: host/src/crossdesk_host/cli/uninstall_cmd.py:28
 msgid "failed:"
-msgstr ""
+msgstr "błąd:"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:52
 #, python-brace-format
 msgid "crossdesk install (state at {path})"
-msgstr ""
+msgstr "crossdesk install (stan zapisany w {path})"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:54
 msgid "dry-run mode: no libvirt or network calls"
-msgstr ""
+msgstr "tryb testowy: bez wywołań libvirt i sieci"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:58
 msgid "all steps already done; nothing to do"
-msgstr ""
+msgstr "wszystkie kroki zostały wykonane; nic do zrobienia"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:63
 #, python-brace-format
 msgid "  ✓ {step} (already done)"
-msgstr ""
+msgstr "  ✓ {step} (wykonano)"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:65
 #, python-brace-format
 msgid "  → {step}"
-msgstr ""
+msgstr "  → {step}"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:78
 msgid "    saved credentials for user {user!r}"
-msgstr ""
+msgstr "    zapisano dane logowania dla użytkownika {user!r}"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:80
 #, python-brace-format
 msgid "    {step}: hardware-gated; not implemented in --no-hardware mode"
-msgstr ""
+msgstr "    {step}: wymaga sprzętu; niedostępne bez maszyny wirtualnej"
 
 #: host/src/crossdesk_host/cli/install_cmd.py:85
 msgid "install complete"
-msgstr ""
+msgstr "instalacja zakończona"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:51
 msgid "unknown credentials action: {action!r}"
-msgstr ""
+msgstr "nieznana operacja: {action!r}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:58
 #, python-brace-format
 msgid "no credentials at {path}"
-msgstr ""
+msgstr "brak danych logowania w {path}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:60
 #, python-brace-format
 msgid "username = {username}"
-msgstr ""
+msgstr "użytkownik = {username}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:61
 #, python-brace-format
 msgid "password = {password}"
-msgstr ""
+msgstr "hasło = {password}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:68
 msgid "no existing credentials; run `crossdesk install` first"
-msgstr ""
+msgstr "brak danych logowania; najpierw uruchom `crossdesk install`"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:72
 msgid "host updated for {username!r}"
-msgstr ""
+msgstr "zaktualizowano dane hosta dla {username!r}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:75
 msgid ""
 "(guest password change is hardware-gated; run `crossdesk vm credentials "
 "repair` once VM is reachable)"
 msgstr ""
+"(zmiana hasła gościa wymaga działającej maszyny; uruchom `crossdesk vm "
+"credentials repair` gdy maszyna jest dostępna)"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:84
 msgid "password: "
-msgstr ""
+msgstr "hasło: "
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:86
 msgid "saved credentials for {username!r}"
-msgstr ""
+msgstr "zapisano dane logowania dla {username!r}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:96
 #, python-brace-format
 msgid "path:         {value}"
-msgstr ""
+msgstr "ścieżka:      {value}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:98
 #, python-brace-format
 msgid "present:      {value}"
-msgstr ""
+msgstr "obecny:       {value}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:98
 #: host/src/crossdesk_host/cli/credentials_cmd.py:102
 msgid "yes"
-msgstr ""
+msgstr "tak"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:98
 #: host/src/crossdesk_host/cli/credentials_cmd.py:102
 msgid "no"
-msgstr ""
+msgstr "nie"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:101
 #, python-brace-format
 msgid "parsable:     {value}"
-msgstr ""
+msgstr "odczytywalny: {value}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:106
 #, python-brace-format
 msgid "permissions:  {value}"
-msgstr ""
+msgstr "uprawnienia:  {value}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:107
 msgid "NEEDS REPAIR"
-msgstr ""
+msgstr "WYMAGA NAPRAWY"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:111
 msgid "status:       OK"
-msgstr ""
+msgstr "status:       OK"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:114
 #, python-brace-format
 msgid "status:       FAIL — {hint}"
-msgstr ""
+msgstr "status:       BŁĄD — {hint}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:122
 #, python-brace-format
 msgid "no credentials at {path}; nothing to repair"
-msgstr ""
+msgstr "brak danych logowania w {path}; nic do naprawy"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:130
 #, python-brace-format
 msgid "vm.toml permissions tightened to 0600 at {path}"
-msgstr ""
+msgstr "uprawnienia vm.toml ustawione na 0600 w {path}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:136
 #, python-brace-format
 msgid "vm.toml permissions already 0600 at {path}"
-msgstr ""
+msgstr "uprawnienia vm.toml już 0600 w {path}"
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:142
 msgid ""
@@ -169,107 +172,114 @@ msgid ""
 "daemon and is wired through `display.session_starter` before the next RAIL "
 "spawn."
 msgstr ""
+"uwaga: pełna zmiana hasła gościa dla {username!r} wymaga działającego "
+"demona i nastąpi przez `display.session_starter` przed kolejnym "
+"uruchomieniem RAIL."
 
 #: host/src/crossdesk_host/cli/version_cmd.py:50
 msgid "CrossDesk host"
-msgstr ""
+msgstr "CrossDesk host"
 
 #: host/src/crossdesk_host/cli/version_cmd.py:51
 msgid "Agent"
-msgstr ""
+msgstr "Agent"
 
 #: host/src/crossdesk_host/cli/version_cmd.py:52
 msgid "Protocol"
-msgstr ""
+msgstr "Protokół"
 
 #: host/src/crossdesk_host/cli/version_cmd.py:53
 msgid "Commit"
-msgstr ""
+msgstr "Commit"
 
 #: host/src/crossdesk_host/cli/version_cmd.py:86
 #: host/src/crossdesk_host/cli/version_cmd.py:88
 #: host/src/crossdesk_host/cli/version_cmd.py:91
 msgid "daemon not running"
-msgstr ""
+msgstr "demon nie działa"
 
 #: host/src/crossdesk_host/cli/version_cmd.py:95
 msgid "not connected"
-msgstr ""
+msgstr "nie połączono"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:69
 msgid "invalid duration {text!r}: expected e.g. 5m, 1h, 30s, 2h30m"
-msgstr ""
+msgstr "nieprawidłowy czas {text!r}: oczekiwano np. 5m, 1h, 30s, 2h30m"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:223
 #, python-brace-format
 msgid "warning: could not read host log file {path}: {err}"
-msgstr ""
+msgstr "ostrzeżenie: nie można odczytać pliku dziennika hosta {path}: {err}"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:228
 #, python-brace-format
 msgid ""
 "warning: host logs not available (no systemd journal; no log file at {path})"
 msgstr ""
+"ostrzeżenie: dziennik hosta niedostępny (brak dziennika systemd; brak pliku "
+"dziennika w {path})"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:282
 #, python-brace-format
 msgid "warning: libvirt logs not available (file not found: {path})"
-msgstr ""
+msgstr "ostrzeżenie: dziennik libvirt niedostępny (plik nie znaleziony: {path})"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:288
 #, python-brace-format
 msgid "warning: could not read libvirt log {path}: {err}"
-msgstr ""
+msgstr "ostrzeżenie: nie można odczytać dziennika libvirt {path}: {err}"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:325
 msgid ""
 "warning: FreeRDP logs not available (checked ~/.config/freerdp/client/X11/"
 "log and ~/.local/share/FreeRDP/log/*.log)"
 msgstr ""
+"ostrzeżenie: dziennik FreeRDP niedostępny (sprawdzono ~/.config/freerdp/"
+"client/X11/log i ~/.local/share/FreeRDP/log/*.log)"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:335
 #, python-brace-format
 msgid "warning: could not read FreeRDP log {path}: {err}"
-msgstr ""
+msgstr "ostrzeżenie: nie można odczytać dziennika FreeRDP {path}: {err}"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:591
 #, python-brace-format
 msgid "warning: libvirt log not found, skipping follow: {path}"
-msgstr ""
+msgstr "ostrzeżenie: dziennik libvirt nie znaleziony, pomijam śledzenie: {path}"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:602
 msgid "warning: no log sources available for --follow"
-msgstr ""
+msgstr "ostrzeżenie: brak dostępnych źródeł dziennika dla --follow"
 
 #: host/src/crossdesk_host/cli/logs_cmd.py:629
 msgid "warning: guest log streaming is not yet implemented (P2 scope)"
-msgstr ""
+msgstr "ostrzeżenie: strumieniowanie dziennika gościa nie jest jeszcze zaimplementowane (zakres P2)"
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:78
 #, python-brace-format
 msgid "error talking to daemon at {socket}: {code} {detail}"
-msgstr ""
+msgstr "błąd komunikacji z demonem {socket}: {code} {detail}"
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:126
 msgid "no metrics registered"
-msgstr ""
+msgstr "brak zarejestrowanych metryk"
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:139
 msgid "counters"
-msgstr ""
+msgstr "liczniki"
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:141
 msgid "gauges"
-msgstr ""
+msgstr "wskaźniki"
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:167
 msgid "histograms"
-msgstr ""
+msgstr "histogramy"
 
 #: host/src/crossdesk_host/cli/main.py:73
 msgid "crossdesk launch: app={app!r} file={file!r}"
-msgstr ""
+msgstr "crossdesk launch: aplikacja={app!r} plik={file!r}"
 
 #: host/src/crossdesk_host/cli/main.py:74
 msgid "(launch path is hardware-gated; run `crossdesk doctor` first)"
-msgstr ""
+msgstr "(uruchomienie wymaga sprzętu; najpierw uruchom `crossdesk doctor`)"

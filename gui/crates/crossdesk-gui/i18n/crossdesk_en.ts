@@ -290,22 +290,6 @@
         <source>CrossDesk Manager</source>
         <translation>CrossDesk Manager</translation>
     </message>
-    <message>
-        <source>Language:</source>
-        <translation type="vanished">Language:</translation>
-    </message>
-    <message>
-        <source>No virtual machines yet.</source>
-        <translation type="vanished">No virtual machines yet.</translation>
-    </message>
-    <message>
-        <source>Provision a Windows guest to get started.</source>
-        <translation type="vanished">Provision a Windows guest to get started.</translation>
-    </message>
-    <message>
-        <source>New Windows VM</source>
-        <translation type="vanished">New Windows VM</translation>
-    </message>
 </context>
 <context>
     <name>Manager</name>
@@ -379,10 +363,6 @@
         <source>Open setup wizard</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Language:</source>
-        <translation type="obsolete">Language:</translation>
-    </message>
 </context>
 <context>
     <name>ProgressView</name>
@@ -405,26 +385,6 @@
         <location filename="../qml/wizard/ProgressView.qml" line="139"/>
         <source>Close</source>
         <translation>Close</translation>
-    </message>
-    <message>
-        <source>Booting Windows installer…</source>
-        <translation type="vanished">Booting Windows installer…</translation>
-    </message>
-    <message>
-        <source>Partitioning virtual disk…</source>
-        <translation type="vanished">Partitioning virtual disk…</translation>
-    </message>
-    <message>
-        <source>Installing Windows…</source>
-        <translation type="vanished">Installing Windows…</translation>
-    </message>
-    <message>
-        <source>Applying autounattend.xml…</source>
-        <translation type="vanished">Applying autounattend.xml…</translation>
-    </message>
-    <message>
-        <source>Registering CrossDesk agent NT service…</source>
-        <translation type="vanished">Registering CrossDesk agent NT service…</translation>
     </message>
 </context>
 <context>
@@ -611,22 +571,6 @@
         <location filename="../qml/wizard/Step1Iso.qml" line="354"/>
         <source>Continue</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Choose the Windows installation ISO. The image will be attached as a virtual CD-ROM during the autounattend bootstrap.</source>
-        <translation type="vanished">Choose the Windows installation ISO. The image will be attached as a virtual CD-ROM during the autounattend bootstrap.</translation>
-    </message>
-    <message>
-        <source>No ISO selected</source>
-        <translation type="vanished">No ISO selected</translation>
-    </message>
-    <message>
-        <source>Browse…</source>
-        <translation type="vanished">Browse…</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation type="vanished">Next</translation>
     </message>
 </context>
 <context>

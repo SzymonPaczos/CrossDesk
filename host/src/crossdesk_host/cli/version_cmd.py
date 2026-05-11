@@ -47,17 +47,21 @@ def run(args: argparse.Namespace) -> int:  # noqa: ARG001
     agent_ver, daemon_status = _agent_version()
     commit = _commit()
 
-    label_w = max(len("CrossDesk host"), len("Agent"), len("Protocol"), len("Commit"))
+    lbl_host = _("CrossDesk host")
+    lbl_agent = _("Agent")
+    lbl_protocol = _("Protocol")
+    lbl_commit = _("Commit")
+    label_w = max(len(lbl_host), len(lbl_agent), len(lbl_protocol), len(lbl_commit))
 
     def row(label: str, value: str, note: str = "") -> str:
         note_part = f"  ({note})" if note else ""
         return f"  {label:<{label_w}}  {value}{note_part}"
 
     lines = [
-        row("CrossDesk host", host_ver),
-        row("Agent", agent_ver, daemon_status),
-        row("Protocol", CROSSDESK_PROTOCOL_VERSION),
-        row("Commit", commit),
+        row(lbl_host, host_ver),
+        row(lbl_agent, agent_ver, daemon_status),
+        row(lbl_protocol, CROSSDESK_PROTOCOL_VERSION),
+        row(lbl_commit, commit),
     ]
     print("\n".join(lines))
     return 0

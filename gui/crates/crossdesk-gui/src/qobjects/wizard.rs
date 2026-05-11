@@ -15,7 +15,12 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
-        // User-supplied
+        // ISO source: "download" (fetch from Microsoft) or "browse" (local file)
+        #[qproperty(QString, iso_source)]
+        // --- download mode ---
+        #[qproperty(QString, download_edition)]
+        #[qproperty(QString, download_language)]
+        // --- browse mode ---
         #[qproperty(QString, iso_path)]
         // Auto-detected from host — shown read-only on the review step
         #[qproperty(QString, host_timezone)]
@@ -49,6 +54,9 @@ pub mod qobject {
 }
 
 pub struct WizardStateRust {
+    iso_source: QString,
+    download_edition: QString,
+    download_language: QString,
     iso_path: QString,
     host_timezone: QString,
     host_locale: QString,
@@ -66,6 +74,9 @@ pub struct WizardStateRust {
 impl Default for WizardStateRust {
     fn default() -> Self {
         Self {
+            iso_source: QString::from("download"),
+            download_edition: QString::from("Windows 11 Pro"),
+            download_language: QString::default(), // filled from host_locale in initialize()
             iso_path: QString::default(),
             host_timezone: QString::default(),
             host_locale: QString::default(),
@@ -85,11 +96,31 @@ impl Default for WizardStateRust {
 impl cxx_qt::Initialize for qobject::WizardState {
     fn initialize(self: std::pin::Pin<&mut Self>) {
         let mut this = self;
+        let locale = detect_locale();
         this.as_mut().set_host_timezone(QString::from(&detect_timezone()));
-        this.as_mut().set_host_locale(QString::from(&detect_locale()));
+        this.as_mut().set_host_locale(QString::from(&locale));
         this.as_mut().set_host_ram_gb(detect_ram_gb());
         this.as_mut().set_host_vcpu(detect_vcpu());
+        // Pre-select the download language that matches the host locale.
+        this.as_mut().set_download_language(QString::from(&locale_to_download_language(&locale)));
     }
+}
+
+/// Map a BCP-47 locale code to the Windows ISO language label used by Microsoft's API.
+fn locale_to_download_language(locale: &str) -> String {
+    match locale.split('-').next().unwrap_or("en") {
+        "pl" => "Polish",
+        "de" => "German",
+        "fr" => "French",
+        "es" => "Spanish",
+        "it" => "Italian",
+        "pt" => "Portuguese (Brazil)",
+        "ja" => "Japanese",
+        "ko" => "Korean",
+        "zh" => "Chinese (Simplified)",
+        _    => "English (International)",
+    }
+    .to_owned()
 }
 
 /// Read /etc/localtime symlink to get the IANA timezone name.
@@ -189,6 +220,8 @@ impl qobject::WizardState {
     }
 
     pub fn reset(mut self: std::pin::Pin<&mut Self>) {
+        self.as_mut().set_iso_source(QString::from("download"));
+        self.as_mut().set_iso_path(QString::default());
         self.as_mut().set_current_step(0);
         self.as_mut().set_progress_pct(0);
         self.as_mut().set_progress_label(QString::from(""));

@@ -186,19 +186,16 @@
         <translation>Instalacja maszyny Windows</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/InstallWizard.qml" line="42"/>
         <source>Media</source>
-        <translation>Nośnik</translation>
+        <translation type="vanished">Nośnik</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/InstallWizard.qml" line="43"/>
         <source>Identity</source>
-        <translation>Tożsamość</translation>
+        <translation type="vanished">Tożsamość</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/InstallWizard.qml" line="44"/>
         <source>Resources</source>
-        <translation>Zasoby</translation>
+        <translation type="vanished">Zasoby</translation>
     </message>
 </context>
 <context>
@@ -349,33 +346,38 @@
         <translation>O programie</translation>
     </message>
     <message>
+        <location filename="../qml/manager/Manager.qml" line="330"/>
         <source>Daemon not running</source>
         <translation>Demon nie działa</translation>
     </message>
     <message>
+        <location filename="../qml/manager/Manager.qml" line="337"/>
         <source>Windows VM is installed but the host daemon is not running.</source>
         <translation>Maszyna wirtualna Windows jest zainstalowana, ale demon hosta nie działa.</translation>
     </message>
     <message>
+        <location filename="../qml/manager/Manager.qml" line="343"/>
         <source>Start it with:</source>
         <translation>Uruchom poleceniem:</translation>
     </message>
     <message>
+        <location filename="../qml/manager/Manager.qml" line="376"/>
         <source>Retry connection</source>
         <translation>Ponów połączenie</translation>
     </message>
     <message>
-        <location filename="../qml/manager/Manager.qml" line="335"/>
+        <location filename="../qml/manager/Manager.qml" line="413"/>
         <source>No Windows VM installed</source>
         <translation>Brak maszyny wirtualnej Windows</translation>
     </message>
     <message>
-        <location filename="../qml/manager/Manager.qml" line="342"/>
+        <location filename="../qml/manager/Manager.qml" line="420"/>
         <source>Run the setup wizard to provision a Windows guest.</source>
         <translation>Uruchom kreatora instalacji, aby skonfigurować maszynę Windows.</translation>
     </message>
     <message>
-        <location filename="../qml/manager/Manager.qml" line="348"/>
+        <location filename="../qml/manager/Manager.qml" line="380"/>
+        <location filename="../qml/manager/Manager.qml" line="426"/>
         <source>Open setup wizard</source>
         <translation>Otwórz kreatora instalacji</translation>
     </message>
@@ -514,186 +516,216 @@
 <context>
     <name>Step1Iso</name>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="21"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="22"/>
         <source>Select Windows ISO image</source>
         <translation>Wybierz obraz ISO systemu Windows</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="22"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="23"/>
         <source>ISO images (*.iso)</source>
         <translation>Obrazy ISO (*.iso)</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="22"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="23"/>
         <source>All files (*)</source>
         <translation>Wszystkie pliki (*)</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="82"/>
         <source>Step 1 of 3 — Installation media</source>
-        <translation>Krok 1 z 3 — Nośnik instalacyjny</translation>
+        <translation type="vanished">Krok 1 z 3 — Nośnik instalacyjny</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="89"/>
         <source>Drop a .iso file or pick from downloads detected on your system.</source>
-        <translation>Upuść plik .iso lub wybierz z pobranych plików wykrytych w systemie.</translation>
+        <translation type="vanished">Upuść plik .iso lub wybierz z pobranych plików wykrytych w systemie.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="116"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="280"/>
         <source>Drag a Windows ISO here</source>
         <translation>Przeciągnij obraz ISO Windows tutaj</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="123"/>
         <source>or click to browse · Windows 10 / 11 supported</source>
-        <translation>lub kliknij, aby przeglądać · obsługiwane Windows 10 / 11</translation>
+        <translation type="vanished">lub kliknij, aby przeglądać · obsługiwane Windows 10 / 11</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="129"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="70"/>
+        <source>Install Windows</source>
+        <translation>Instalacja Windows</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="77"/>
+        <source>Download Windows 11 Pro automatically, or provide your own ISO.</source>
+        <translation>Pobierz Windows 11 Pro automatycznie lub wskaż własny plik ISO.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="114"/>
+        <source>Download from Microsoft</source>
+        <translation>Pobierz od Microsoftu</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="120"/>
+        <source>~5 GB · free · official source</source>
+        <translation>~5 GB · bezpłatnie · oficjalne źródło</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="156"/>
+        <source>I already have an ISO</source>
+        <translation>Mam już plik ISO</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="162"/>
+        <source>Browse or detect from Downloads</source>
+        <translation>Przeglądaj lub wykryj z Pobranych</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="202"/>
+        <source>Edition</source>
+        <translation>Edycja</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="221"/>
+        <source>Language</source>
+        <translation>Język</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="248"/>
+        <source>The ISO will be cached in ~/.cache/crossdesk/iso/ for future installs.</source>
+        <translation>Plik ISO zostanie zapisany w ~/.cache/crossdesk/iso/ do przyszłych instalacji.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="285"/>
         <source>Browse files…</source>
         <translation>Przeglądaj pliki…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="141"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="297"/>
         <source>ISO selected</source>
         <translation>ISO wybrane</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="158"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="309"/>
         <source>Change…</source>
         <translation>Zmień…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="183"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="321"/>
         <source>Scanning Downloads…</source>
         <translation>Skanowanie pobranych…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="192"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="328"/>
         <source>DETECTED ON THIS SYSTEM</source>
         <translation>WYKRYTE W SYSTEMIE</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="313"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="388"/>
         <source>No Windows ISO files found in Downloads — use Browse above.</source>
         <translation>Nie znaleziono plików ISO Windows w Pobranych — użyj przycisku Przeglądaj powyżej.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="347"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="398"/>
+        <source>Your VM will use %1 GB RAM · %2 vCPU · 64 GB disk · %3</source>
+        <translation>Twoja maszyna będzie używać %1 GB RAM · %2 vCPU · 64 GB dysku · %3</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="427"/>
         <source>Cancel</source>
         <translation>Anuluj</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="354"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="434"/>
+        <source>Install</source>
+        <translation>Instaluj</translation>
+    </message>
+    <message>
         <source>Continue</source>
-        <translation>Kontynuuj</translation>
+        <translation type="vanished">Kontynuuj</translation>
     </message>
 </context>
 <context>
     <name>Step2Identity</name>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="33"/>
         <source>Step 2 of 3 — VM identity</source>
-        <translation>Krok 2 z 3 — Tożsamość maszyny</translation>
+        <translation type="vanished">Krok 2 z 3 — Tożsamość maszyny</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="40"/>
         <source>These values are baked into autounattend.xml. The guest will boot pre-named and pre-localized.</source>
-        <translation>Te wartości trafiają do autounattend.xml. Maszyna wstanie z gotową nazwą i lokalizacją.</translation>
+        <translation type="vanished">Te wartości trafiają do autounattend.xml. Maszyna wstanie z gotową nazwą i lokalizacją.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="70"/>
         <source>VM name</source>
-        <translation>Nazwa maszyny</translation>
+        <translation type="vanished">Nazwa maszyny</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="80"/>
         <source>e.g. Windows-11</source>
-        <translation>np. Windows-11</translation>
+        <translation type="vanished">np. Windows-11</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="84"/>
         <source>Timezone</source>
-        <translation>Strefa czasowa</translation>
+        <translation type="vanished">Strefa czasowa</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="97"/>
         <source>Locale</source>
-        <translation>Język systemu</translation>
+        <translation type="vanished">Język systemu</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="136"/>
         <source>Back</source>
-        <translation>Wstecz</translation>
+        <translation type="vanished">Wstecz</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step2Identity.qml" line="143"/>
         <source>Next</source>
-        <translation>Dalej</translation>
+        <translation type="vanished">Dalej</translation>
     </message>
 </context>
 <context>
     <name>Step3Resources</name>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="33"/>
         <source>Step 3 of 3 — Hardware resources</source>
-        <translation>Krok 3 z 3 — Zasoby sprzętowe</translation>
+        <translation type="vanished">Krok 3 z 3 — Zasoby sprzętowe</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="40"/>
         <source>Defaults are tuned for development workloads. Production tuning is out of scope for the wizard.</source>
-        <translation>Domyślne wartości pod pracę deweloperską. Dostrajanie pod produkcję jest poza zakresem kreatora.</translation>
+        <translation type="vanished">Domyślne wartości pod pracę deweloperską. Dostrajanie pod produkcję jest poza zakresem kreatora.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="73"/>
         <source>RAM</source>
-        <translation>RAM</translation>
+        <translation type="vanished">RAM</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="95"/>
         <source>Minimum 4 GB recommended for Windows 11.</source>
-        <translation>Minimum 4 GB zalecane dla Windows 11.</translation>
+        <translation type="vanished">Minimum 4 GB zalecane dla Windows 11.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="121"/>
         <source>vCPU</source>
-        <translation>vCPU</translation>
+        <translation type="vanished">vCPU</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="143"/>
         <source>Shares physical cores — does not subtract from host.</source>
-        <translation>Współdzieli fizyczne rdzenie — nie odejmuje ich od systemu hosta.</translation>
+        <translation type="vanished">Współdzieli fizyczne rdzenie — nie odejmuje ich od systemu hosta.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="169"/>
         <source>Disk</source>
-        <translation>Dysk</translation>
+        <translation type="vanished">Dysk</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="79"/>
-        <location filename="../qml/wizard/Step3Resources.qml" line="175"/>
         <source>%1 GB</source>
-        <translation>%1 GB</translation>
+        <translation type="vanished">%1 GB</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="127"/>
         <source>%1 cores</source>
-        <translation>%1 rdzeni</translation>
+        <translation type="vanished">%1 rdzeni</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="191"/>
         <source>Thin-provisioned qcow2 — only used space is allocated.</source>
-        <translation>Rzadki qcow2 — alokuje tylko używane miejsce.</translation>
+        <translation type="vanished">Rzadki qcow2 — alokuje tylko używane miejsce.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="224"/>
         <source>Back</source>
-        <translation>Wstecz</translation>
+        <translation type="vanished">Wstecz</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step3Resources.qml" line="231"/>
         <source>Install</source>
-        <translation>Instaluj</translation>
+        <translation type="vanished">Instaluj</translation>
     </message>
 </context>
 <context>

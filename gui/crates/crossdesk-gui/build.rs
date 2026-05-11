@@ -31,7 +31,6 @@ fn main() {
                 "qml/Main.qml",
                 "qml/wizard/InstallWizard.qml",
                 "qml/wizard/Step1Iso.qml",
-                "qml/wizard/Step2Review.qml",
                 "qml/wizard/ProgressView.qml",
                 "qml/manager/Manager.qml",
                 "qml/manager/Dashboard.qml",

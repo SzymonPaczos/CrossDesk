@@ -24,7 +24,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from importlib.metadata import PackageNotFoundError, version as pkg_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as pkg_version
 from typing import Optional
 
 import grpc

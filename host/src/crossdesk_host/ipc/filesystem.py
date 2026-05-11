@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 import uuid
 from typing import AsyncIterator, Dict
@@ -9,7 +10,6 @@ from google.protobuf.duration_pb2 import Duration
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2, filesystem_pb2_grpc
-import contextlib
 
 logger = logging.getLogger(__name__)
 

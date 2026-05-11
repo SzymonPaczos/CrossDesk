@@ -12,13 +12,13 @@ credentials stay stable.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
-import contextlib
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib  # type: ignore[import-not-found,unused-ignore]

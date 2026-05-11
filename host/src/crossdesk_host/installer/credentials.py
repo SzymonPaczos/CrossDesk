@@ -21,17 +21,16 @@ is the user-facing instruction shown by RAIL spawn / doctor / CLI.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import secrets
 import stat
 import string
+import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
-
-import sys
-import contextlib
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib  # type: ignore[import-not-found,unused-ignore]

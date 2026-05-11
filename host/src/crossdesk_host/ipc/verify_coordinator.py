@@ -34,8 +34,7 @@ from crossdesk_host.observability.trace_ctx import (
     clear_log_context,
     generate_root,
 )
-from crossdesk_host.proto.crossdesk.v1 import common_pb2
-from crossdesk_host.proto.crossdesk.v1 import control_pb2
+from crossdesk_host.proto.crossdesk.v1 import common_pb2, control_pb2
 
 # Stdlib logger (not structlog facade) on purpose: ``configure_logging``
 # replaces the stdlib root handler per call, which means our log lines

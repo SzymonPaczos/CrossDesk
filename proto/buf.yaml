@@ -43,6 +43,21 @@ lint:
     - COMMENT_ONEOF
     - COMMENT_RPC
     - COMMENT_SERVICE
+    # Bidirectional streaming RPCs use a framed message design
+    # (ClientFrame / ServerFrame, GuestFrame / HostFrame) rather than
+    # per-RPC request/response wrappers — the frame carries a oneof
+    # payload so it naturally routes multiple call types over one stream.
+    # Renaming to OpenSessionRequest etc. would require one message type
+    # per RPC variant, defeating the streaming design.
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    # Empty is the standard no-argument sentinel for RPCs that need no
+    # input (Suspend, Resume, HardDestroy, etc.) — reuse is intentional.
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    # filesystem.proto AccessMode values use ACCESS_ prefix rather than
+    # ACCESS_MODE_ — the shorter prefix is unambiguous given the enum
+    # name and changing it would be a wire-breaking rename.
+    - ENUM_VALUE_PREFIX
 
 # Wire-compat policy.
 #

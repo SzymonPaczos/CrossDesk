@@ -20,7 +20,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, List, Optional
 
 
 class Status(enum.Enum):
@@ -207,7 +207,10 @@ _NVIDIA_TIER1_DEVICE_PREFIX = ("1e", "1f", "20", "21", "22", "23", "24", "25", "
 # RDNA2 = Navi 21/22/23/24 (0x73*), RDNA3 = Navi 31/32/33 (0x74*)
 _AMD_TIER1_DEVICE_PREFIX = ("73", "74")
 
-_VGA_CLASS_PATTERN = re.compile(r"^([0-9a-f]{2}:[0-9a-f]{2}\.[0-9a-f])\s.*?\[0[23][0-9a-f]{2}\].*?\[([0-9a-f]{4}):([0-9a-f]{4})\]", re.IGNORECASE)
+_VGA_CLASS_PATTERN = re.compile(  # noqa: E501
+    r"^([0-9a-f]{2}:[0-9a-f]{2}\.[0-9a-f])\s.*?\[0[23][0-9a-f]{2}\].*?\[([0-9a-f]{4}):([0-9a-f]{4})\]",
+    re.IGNORECASE,
+)
 _KERNEL_DRIVER_PATTERN = re.compile(r"^\s+Kernel driver in use:\s+(.+)$", re.MULTILINE)
 
 

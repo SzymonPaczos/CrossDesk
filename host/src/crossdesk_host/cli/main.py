@@ -35,7 +35,6 @@ from crossdesk_host.cli import (
     version_cmd,
     vm_cmd,
 )
-from crossdesk_host.i18n import _
 
 
 def _build_parser() -> argparse.ArgumentParser:

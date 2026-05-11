@@ -13,32 +13,32 @@ from crossdesk_host.observability import configure_logging, get_logger
 
 configure_logging()
 
-import grpc
+import grpc  # noqa: E402
 
 try:
-    import systemd.daemon as systemd_daemon
+    import systemd.daemon as systemd_daemon  # noqa: E402
 except ImportError:
     systemd_daemon = None
 
-from crossdesk_host.ipc.auth import AuthValidator
-from crossdesk_host.ipc.control import ControlServiceServicer
-from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
-from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
-from crossdesk_host.ipc.management import (
+from crossdesk_host.ipc.auth import AuthValidator  # noqa: E402
+from crossdesk_host.ipc.control import ControlServiceServicer  # noqa: E402
+from crossdesk_host.ipc.filesystem import FilesystemServiceServicer  # noqa: E402
+from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer  # noqa: E402
+from crossdesk_host.ipc.management import (  # noqa: E402
     ManagementServiceServicer,
     MgmtState,
     mgmt_socket_path,
 )
-from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
-from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
-from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env
-from crossdesk_host.proto.crossdesk.v1 import (
+from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
+from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
+from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402
+from crossdesk_host.proto.crossdesk.v1 import (  # noqa: E402
     control_pb2_grpc,
     filesystem_pb2_grpc,
     heartbeat_pb2_grpc,
     mgmt_pb2_grpc,
 )
-from crossdesk_host.transport.real import RealTransport
+from crossdesk_host.transport.real import RealTransport  # noqa: E402
 
 # OTLP span exporter wires here, after configure_logging() (which ran
 # above before servicer imports — see the comment at the top of this

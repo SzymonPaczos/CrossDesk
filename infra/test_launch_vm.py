@@ -1,4 +1,4 @@
-"""Tests for infra/launch-vm.py GPU passthrough support.
+"""Tests for infra/launch-vm.py GPU passthrough support and elastic resources.
 
 Run from repo root:
     python3 -m pytest infra/test_launch_vm.py
@@ -99,3 +99,25 @@ class TestBuildQemuCmdNvidiaHideVm:
         idx = cmd.index("-cpu")
         assert "kvm=off" in cmd[idx + 1]
         assert "vfio-pci,host=01:00.0,multifunction=on" in " ".join(cmd)
+
+
+class TestBuildQemuCmdElasticResources:
+    def test_balloon_device_present(self) -> None:
+        cmd = _cmd()
+        assert "virtio-balloon-pci,id=balloon0" in " ".join(cmd)
+
+    def test_drive_has_discard_unmap(self) -> None:
+        cmd = _cmd()
+        drive_args = [v for i, v in enumerate(cmd) if i > 0 and cmd[i - 1] == "-drive"]
+        disk_drive = next(v for v in drive_args if "qcow2" in v)
+        assert "discard=unmap" in disk_drive
+
+    def test_ram_mb_arg_overrides_default(self) -> None:
+        cmd = _cmd(ram_mb=2048)
+        idx = cmd.index("-m")
+        assert cmd[idx + 1] == "2048"
+
+    def test_ram_mb_default_is_module_constant(self) -> None:
+        cmd = _cmd()
+        idx = cmd.index("-m")
+        assert cmd[idx + 1] == str(launch_vm.RAM_MB)

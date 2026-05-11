@@ -142,3 +142,25 @@ class RealLibvirtController(LibvirtController):
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"detach_virtiofs({share_id!r}) failed: {exc}") from exc
         return True
+
+    def set_memory(self, target_mib: int) -> None:
+        import libvirt
+
+        domain = self._domain()
+        logger.info("set_memory: balloon target → %d MiB", target_mib)
+        try:
+            # virDomainSetMemory expects KiB
+            domain.setMemory(target_mib * 1024)
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"set_memory({target_mib} MiB) failed: {exc}") from exc
+
+    def get_memory_stats(self) -> dict[str, int]:
+        import libvirt
+
+        domain = self._domain()
+        try:
+            raw: dict[str, int] = domain.memoryStats()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"get_memory_stats failed: {exc}") from exc
+        # libvirt returns KiB; convert to MiB for consistent units
+        return {k: v // 1024 for k, v in raw.items()}

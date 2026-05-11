@@ -42,6 +42,9 @@ class MockHooks:
     """Shares currently attached. Tests assert this matches the
     expected state after a sequence of attach/detach calls."""
 
+    memory_mib: int = 4096
+    """Current balloon target in MiB. Adjusted by set_memory()."""
+
 
 class LibvirtControllerMock(LibvirtController):
     """In-memory libvirt controller. No external side effects — just
@@ -132,3 +135,17 @@ class LibvirtControllerMock(LibvirtController):
         self.hooks.attached_shares.discard(share_id)
         self.hooks.detach_virtiofs_count += 1
         return True
+
+    def set_memory(self, target_mib: int) -> None:
+        logger.info(
+            "[LIBVIRT MOCK] set_memory: %d MiB (was %d MiB)",
+            target_mib,
+            self.hooks.memory_mib,
+        )
+        self.hooks.memory_mib = target_mib
+
+    def get_memory_stats(self) -> dict[str, int]:
+        return {
+            "actual": self.hooks.memory_mib,
+            "available": self.hooks.memory_mib,
+        }

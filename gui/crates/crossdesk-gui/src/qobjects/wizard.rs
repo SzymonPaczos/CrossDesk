@@ -145,10 +145,11 @@ fn detect_locale() -> String {
     "en-US".to_owned()
 }
 
-/// 50% of physical RAM, clamped to [4, 16] GB.
+/// 50% of physical RAM, clamped to [4, 8] GB.
+/// Balloon device lets the daemon shrink/grow at runtime up to this ceiling.
 fn detect_ram_gb() -> i32 {
     let total_gb = read_total_ram_gb();
-    ((total_gb / 2).max(4)).min(16)
+    ((total_gb / 2).max(4)).min(8)
 }
 
 fn read_total_ram_gb() -> i32 {

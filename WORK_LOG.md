@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-11 22:38] START · agent: claude-code · branch: chore/audit-2026-05-11 · task: audit-2026-05-11 · note: 6-fazowy audyt (linters auto-fix, dead code, rust safety, docs publicznych API, testy, raport docs/AUDIT_AUTOMATED_2026-05-11.md) — boundaries respektowane (proto/THREAT_MODEL/DECISIONS/REQUIREMENTS/GOALS/MVP_SCOPE/ROADMAP/AGENTS poza zakresem).
+
 ## Recent
 
 - [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub

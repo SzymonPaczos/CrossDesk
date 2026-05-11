@@ -40,8 +40,7 @@ Page {
                 Repeater {
                     model: [
                         qsTr("Media"),
-                        qsTr("Identity"),
-                        qsTr("Resources"),
+                        qsTr("Review"),
                     ]
 
                     delegate: RowLayout {
@@ -123,17 +122,8 @@ Page {
     }
     Component {
         id: step2Component
-        Step2Identity {
+        Step2Review {
             property int stepIndex: 1
-            wizard: page.wizard
-            onBack: stepStack.pop()
-            onNext: stepStack.push(step3Component)
-        }
-    }
-    Component {
-        id: step3Component
-        Step3Resources {
-            property int stepIndex: 2
             wizard: page.wizard
             onBack: stepStack.pop()
             onInstall: {

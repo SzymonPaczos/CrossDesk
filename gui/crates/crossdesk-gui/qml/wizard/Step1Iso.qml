@@ -174,82 +174,45 @@ Item {
                 }
 
                 // ── Download mode ──────────────────────────────
-                ColumnLayout {
+                Rectangle {
                     visible: isDownloadMode
                     Layout.leftMargin: 32
                     Layout.rightMargin: 32
-                    spacing: 10
+                    Layout.fillWidth: true
+                    color: palette.base
+                    border.color: palette.mid
+                    border.width: 1
+                    radius: 6
+                    implicitHeight: dlCol.implicitHeight + 32
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        color: palette.base
-                        border.color: palette.mid
-                        border.width: 1
-                        radius: 6
-                        implicitHeight: dlGrid.implicitHeight + 28
+                    ColumnLayout {
+                        id: dlCol
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 16
+                        spacing: 6
 
-                        GridLayout {
-                            id: dlGrid
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.margins: 16
-                            columns: 2
-                            rowSpacing: 14
-                            columnSpacing: 16
-
-                            Label {
-                                text: qsTr("Edition")
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                                color: palette.placeholderText
-                                Layout.preferredWidth: 80
-                            }
-                            ComboBox {
-                                model: [
-                                    "Windows 11 Pro",
-                                    "Windows 11 Home",
-                                    "Windows 10 Pro",
-                                ]
-                                currentIndex: Math.max(0, model.indexOf(wizard.download_edition))
-                                Layout.fillWidth: true
-                                font.pixelSize: 12
-                                onActivated: wizard.download_edition = currentText
-                            }
-
-                            Label {
-                                text: qsTr("Language")
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                                color: palette.placeholderText
-                            }
-                            ComboBox {
-                                model: [
-                                    "English (International)",
-                                    "Polish",
-                                    "German",
-                                    "French",
-                                    "Spanish",
-                                    "Italian",
-                                    "Portuguese (Brazil)",
-                                    "Japanese",
-                                    "Korean",
-                                    "Chinese (Simplified)",
-                                ]
-                                currentIndex: Math.max(0, model.indexOf(wizard.download_language))
-                                Layout.fillWidth: true
-                                font.pixelSize: 12
-                                onActivated: wizard.download_language = currentText
-                            }
+                        Label {
+                            text: qsTr("Windows 11 Pro · %1").arg(wizard.download_language)
+                            font.pixelSize: 13
+                            font.weight: Font.DemiBold
+                            color: palette.text
                         }
-                    }
-
-                    Label {
-                        text: qsTr("The ISO will be cached in ~/.cache/crossdesk/iso/ for future installs.")
-                        font.pixelSize: 11
-                        color: palette.placeholderText
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
+                        Label {
+                            text: qsTr("~5 GB · downloaded automatically from Microsoft")
+                            font.pixelSize: 12
+                            color: palette.placeholderText
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                        }
+                        Label {
+                            text: qsTr("Cached in ~/.cache/crossdesk/iso/ — reused on reinstall.")
+                            font.pixelSize: 11
+                            color: palette.placeholderText
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                        }
                     }
                 }
 

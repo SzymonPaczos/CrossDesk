@@ -718,7 +718,7 @@ DEC-0009.
   initramfs-tools), GPU + audio function PCI ID identification,
   optional `--commit` to write changes vs `--dry-run` default.
   Plus `crossdesk gpu verify` to confirm post-reboot binding.
-- **[P0] libvirt domain XML extension for `<hostdev>`.**
+- **[✅ DONE 2026-05-11] libvirt domain XML extension for `<hostdev>`.**
   `infra/launch-vm.py` adds GPU + audio function `<hostdev>`
   blocks based on detected configuration. Plus
   `<features><kvm><hidden state='on'/></kvm></features>` for old

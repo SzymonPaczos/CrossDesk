@@ -145,27 +145,9 @@ fn detect_locale() -> String {
     "en-US".to_owned()
 }
 
-/// 50% of physical RAM, clamped to [4, 8] GB.
-/// Balloon device lets the daemon shrink/grow at runtime up to this ceiling.
+/// Windows 11 minimum requirement. Balloon daemon grows this at runtime.
 fn detect_ram_gb() -> i32 {
-    let total_gb = read_total_ram_gb();
-    ((total_gb / 2).max(4)).min(8)
-}
-
-fn read_total_ram_gb() -> i32 {
-    // Linux: /proc/meminfo MemTotal in kB
-    if let Ok(text) = std::fs::read_to_string("/proc/meminfo") {
-        for line in text.lines() {
-            if let Some(rest) = line.strip_prefix("MemTotal:") {
-                let kb: i64 = rest.split_whitespace().next()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0);
-                return (kb / 1024 / 1024) as i32;
-            }
-        }
-    }
-    // macOS / fallback: assume 16 GB
-    16
+    4
 }
 
 /// Half of available parallelism, clamped to [2, 8].

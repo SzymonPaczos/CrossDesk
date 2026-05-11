@@ -91,7 +91,7 @@ message VmStatus {
   }
   State state = 1;
   google.protobuf.Duration uptime = 2;
-  google.protobuf.Timestamp last_hard_destroy = 3;  // unset if never
+  google.protobuf.Timestamp last_hard_destroy = 3; // unset if never
 }
 
 message HeartbeatStatus {
@@ -106,7 +106,7 @@ message HeartbeatStatus {
 }
 
 message ResourceUsage {
-  uint32 cpu_percent = 1;       // 0-100
+  uint32 cpu_percent = 1; // 0-100
   uint32 ram_percent = 2;
   uint64 ram_used_bytes = 3;
   uint64 ram_total_bytes = 4;
@@ -136,7 +136,7 @@ message RecentActivity {
     KIND_AUTH_REJECTION = 9;
   }
   Kind kind = 1;
-  string detail = 2;       // human-readable, already i18n'd by the daemon
+  string detail = 2; // human-readable, already i18n'd by the daemon
   google.protobuf.Timestamp timestamp = 3;
 }
 
@@ -149,10 +149,10 @@ message AppEntry {
   string display_name = 2;
   string executable_guest_path = 3;
   repeated string mime_types = 4;
-  string icon_data_uri = 5;     // "data:image/png;base64,..." or empty
-  uint32 compatibility_stars = 6;  // 0-5; 0 = no rating
+  string icon_data_uri = 5; // "data:image/png;base64,..." or empty
+  uint32 compatibility_stars = 6; // 0-5; 0 = no rating
   string compatibility_notes = 7;
-  string category = 8;          // "Office", "Adobe", "Built-in", ...
+  string category = 8; // "Office", "Adobe", "Built-in", ...
   Tier tier = 9;
   enum Tier {
     TIER_UNSPECIFIED = 0;
@@ -170,7 +170,7 @@ message MountEntry {
   string share_id = 1;
   string host_path = 2;
   string guest_path = 3;
-  string app_id = 4;            // which RAIL app holds it
+  string app_id = 4; // which RAIL app holds it
   uint32 process_id = 5;
   google.protobuf.Timestamp mounted_at = 6;
   uint32 open_handles = 7;
@@ -183,13 +183,13 @@ message MountEntry {
 
 message LaunchRequest {
   string app_id = 1;
-  string file_path = 2;          // optional; triggers JIT mount
+  string file_path = 2; // optional; triggers JIT mount
 }
 
 message LaunchResponse {
   bool ok = 1;
-  string error = 2;              // populated when ok=false
-  string request_id = 3;         // correlates with AppLaunchRequest on guest plane
+  string error = 2; // populated when ok=false
+  string request_id = 3; // correlates with AppLaunchRequest on guest plane
 }
 
 message ActionAck {
@@ -227,7 +227,7 @@ message DiagnosticsCheck {
 }
 
 message DiagnosticBundle {
-  bytes zip_payload = 1;          // capped server-side at 16 MB
+  bytes zip_payload = 1; // capped server-side at 16 MB
   string filename = 2;
   google.protobuf.Timestamp generated_at = 3;
 }
@@ -245,13 +245,13 @@ message SettingsResponse {
 }
 
 message Settings {
-  string language = 1;            // "en", "pl", or "auto"
-  string theme = 2;               // "system", "light", "dark"
+  string language = 1; // "en", "pl", or "auto"
+  string theme = 2; // "system", "light", "dark"
   bool telemetry_enabled = 3;
   bool keyring_enabled = 4;
   bool lean_mode = 5;
-  string network_mode = 6;        // "nat", "bridged"
-  uint32 hidpi_scale = 7;         // 100/140/180; 0 = auto-detect
+  string network_mode = 6; // "nat", "bridged"
+  uint32 hidpi_scale = 7; // 100/140/180; 0 = auto-detect
   bool multi_monitor_placement = 8;
 
   // Auto-suspend
@@ -292,7 +292,7 @@ message Metric {
   // until labelled metrics land.
   map<string, string> labels = 3;
   oneof value {
-    double scalar = 4;            // counter (rounded to integer caller-side) or gauge
+    double scalar = 4; // counter (rounded to integer caller-side) or gauge
     HistogramSnapshot histogram = 5;
   }
 }

@@ -75,7 +75,7 @@ message ClientFrame {
 message ClientHello {
   string host_version = 1;
   // Capability advertisement; Guest odpowiada wynegocjowanym podzbiorem.
-  repeated string supported_features = 2;  // np. "rail.v1", "virtiofs.jit"
+  repeated string supported_features = 2; // np. "rail.v1", "virtiofs.jit"
   // UUID domeny libvirt po stronie hosta. Guest porównuje z własnym
   // SMBIOS-injected UUID, żeby wykryć live-migration / host swap.
   string host_domain_uuid = 3;
@@ -86,7 +86,7 @@ message ClientHello {
 }
 
 message AppLaunchRequest {
-  string request_id = 1;                  // UUID; koreluje AppLaunched/Failed
+  string request_id = 1; // UUID; koreluje AppLaunched/Failed
   string executable_guest_path = 2;
   repeated string argv = 3;
   // Opcjonalny share_id z filesystem.proto, który MUSI być w stanie ATTACHED
@@ -98,13 +98,13 @@ message AppLaunchRequest {
 
 message AppFocusRequest {
   string request_id = 1;
-  uint64 window_id = 2;  // HWND z wcześniejszego RailWindowEvent
+  uint64 window_id = 2; // HWND z wcześniejszego RailWindowEvent
 }
 
 message AppCloseRequest {
   string request_id = 1;
   uint64 window_id = 2;
-  bool force = 3;        // false ⇒ WM_CLOSE; true ⇒ TerminateProcess
+  bool force = 3; // false ⇒ WM_CLOSE; true ⇒ TerminateProcess
 }
 
 message SessionTerminate {
@@ -147,7 +147,7 @@ message ServerFrame {
 message ServerAccept {
   string guest_version = 1;
   repeated string negotiated_features = 2;
-  string guest_smbios_uuid = 3;  // p. ClientHello.host_domain_uuid
+  string guest_smbios_uuid = 3; // p. ClientHello.host_domain_uuid
   // Echoes the protocol_version the guest is responding under.
   string protocol_version = 4;
 }
@@ -172,8 +172,8 @@ message AppLaunched {
 
 message AppLaunchFailed {
   string request_id = 1;
-  string error = 2;       // human-readable
-  uint32 ntstatus = 3;    // 0 jeśli niezwiązane z Win32
+  string error = 2; // human-readable
+  uint32 ntstatus = 3; // 0 jeśli niezwiązane z Win32
 }
 
 message AppLifecycleEvent {
@@ -194,7 +194,7 @@ message AppLifecycleEvent {
 // aplikacji; konsumowane przez display engine hosta (FreeRDP/RAIL).
 // -----------------------------------------------------------------------------
 message RailWindowEvent {
-  uint64 window_id = 1;     // HWND
+  uint64 window_id = 1; // HWND
   uint32 process_id = 2;
   enum Kind {
     KIND_UNSPECIFIED = 0;
@@ -215,7 +215,7 @@ message RailWindowEvent {
   // Geometria znacząca tylko dla CREATED / MOVED / RESIZED.
   Rect geometry = 4;
   string title = 5;
-  bytes icon_png = 6;       // wypełniane tylko dla CREATED / ICON_CHANGED
+  bytes icon_png = 6; // wypełniane tylko dla CREATED / ICON_CHANGED
 }
 
 message Rect {
@@ -240,23 +240,23 @@ message SessionClosed {
 // kiedyś było wiele in-flight verifies, host musi je rozróżnić.
 // -----------------------------------------------------------------------------
 message VerifyCredentialsRequest {
-  string request_id = 1;        // UUID; koreluje z VerifyCredentialsResult
-  string username = 2;          // np. "crossdesk" — z ~/.config/crossdesk/vm.toml
-  string password = 3;          // plaintext na czas RPC
-  string domain = 4;            // optional; "" lub "." = local account
+  string request_id = 1; // UUID; koreluje z VerifyCredentialsResult
+  string username = 2; // np. "crossdesk" — z ~/.config/crossdesk/vm.toml
+  string password = 3; // plaintext na czas RPC
+  string domain = 4; // optional; "" lub "." = local account
 }
 
 message VerifyCredentialsResult {
-  string request_id = 1;        // odbicie z requesta
+  string request_id = 1; // odbicie z requesta
   enum Status {
     STATUS_UNSPECIFIED = 0;
     STATUS_OK = 1;
-    STATUS_FAIL_BAD_CREDENTIALS = 2;   // ERROR_LOGON_FAILURE
-    STATUS_FAIL_ACCOUNT_LOCKED = 3;    // ERROR_ACCOUNT_LOCKED_OUT
-    STATUS_FAIL_PASSWORD_EXPIRED = 4;  // ERROR_PASSWORD_EXPIRED / MUST_CHANGE
-    STATUS_UNAVAILABLE = 5;            // guest LSA niedostępne / agent error
+    STATUS_FAIL_BAD_CREDENTIALS = 2; // ERROR_LOGON_FAILURE
+    STATUS_FAIL_ACCOUNT_LOCKED = 3; // ERROR_ACCOUNT_LOCKED_OUT
+    STATUS_FAIL_PASSWORD_EXPIRED = 4; // ERROR_PASSWORD_EXPIRED / MUST_CHANGE
+    STATUS_UNAVAILABLE = 5; // guest LSA niedostępne / agent error
   }
   Status status = 2;
-  string detail = 3;            // human-readable; bezpieczne do logowania
-  uint32 win32_error = 4;       // surowy GetLastError dla diagnostyki
+  string detail = 3; // human-readable; bezpieczne do logowania
+  uint32 win32_error = 4; // surowy GetLastError dla diagnostyki
 }

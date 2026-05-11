@@ -25,6 +25,7 @@ from crossdesk_host.cli import (
     credentials_cmd,
     doctor_cmd,
     install_cmd,
+    launch_cmd,
     logs_cmd,
     metrics_cmd,
     uninstall_cmd,
@@ -41,10 +42,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     install_cmd.add_subparser(sub)
-
-    launch = sub.add_parser("launch", help="Launch a registered Windows app")
-    launch.add_argument("app", help="App id (e.g. notepad)")
-    launch.add_argument("file", nargs="?", default=None, help="Optional file argument")
+    launch_cmd.add_subparser(sub)
 
     vm = sub.add_parser("vm", help="VM lifecycle commands")
     vm_sub = vm.add_subparsers(dest="vm_command", required=True)
@@ -66,13 +64,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.command == "install":
         return install_cmd.run(args)
     if args.command == "launch":
-        # Launch wires through the daemon's gRPC OpenSession; for now
-        # surface a clear "not yet wired" message rather than failing
-        # silently. The end-to-end path lands with the install pipeline
-        # close-out (Week 17 first-launch experience).
-        print(_("crossdesk launch: app={app!r} file={file!r}").format(app=args.app, file=args.file))
-        print(_("(launch path is hardware-gated; run `crossdesk doctor` first)"))
-        return 0
+        return launch_cmd.run(args)
     if args.command == "vm":
         if args.vm_command == "credentials":
             return credentials_cmd.run(args)

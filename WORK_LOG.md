@@ -78,9 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
-
 ## Recent
+
+- [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
+- [2026-05-11 12:30] END · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: result: success → branch pushed at dd7f04f (NOT merged). launch_cmd.py: socket-check, SubprocessNotifier, Phase 4 RAIL stub log, display-name via catalog→table→title(); main.py: launch_cmd.run() replaces inline stub; 8 tests all mocked; mypy --strict 102 files clean; pytest 594/594 passed.
 
 - [2026-05-11 12:00] START · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: autopause after idle + VM autostart systemd unit + sleep/wake sync stub
 - [2026-05-11 13:00] END · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: result: success → branch pushed at dd4bded (NOT merged). AutopauseController (asyncio.Event, no busy-loop, Phase 7 FSM stub) + sleep_sync.py stubs + vm_cmd.py autostart enable/disable + main.py wiring + 8 unit tests; mypy --strict 105 files clean.

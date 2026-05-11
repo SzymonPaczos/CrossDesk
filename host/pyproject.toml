@@ -130,6 +130,10 @@ select = ["E", "F", "I", "T201"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "--strict-markers"
+# bench_*.py files hold microbench functions (pytest-benchmark); collected
+# alongside test_*.py so `pytest benches/` discovers them without explicit
+# file listing.
+python_files = ["test_*.py", "bench_*.py"]
 markers = [
     "linux_only: requires real libvirt + KVM (run only on Linux+KVM hardware)",
     "integration: in-process host+guest mock harness",

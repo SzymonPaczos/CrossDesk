@@ -1,5 +1,5 @@
 {
-  "_README": "Initial perf baselines for crossdesk microbench gates. Values in nanoseconds; pytest-benchmark JSON output keys these by test id. Update via dedicated PR; bench_check.py fails if a test runs >20% slower than the matching baseline. First wave: heartbeat FSM hot path. Real measurements replace these placeholders once the microbench CI job has run on a stable runner.",
+  "_README": "Initial perf baselines for crossdesk microbench gates. Values in nanoseconds; pytest-benchmark JSON output keys these by test id. Update via dedicated PR with measurement evidence; bench_check.py fails if a test runs >20% slower than the matching baseline. 0 baseline means collect-only (no gate yet). Real measurements replace placeholders once the microbench CI job has run on a stable runner.",
   "_threshold_pct": 20,
   "tests": {
     "test_bench_pong_tick_healthy": {
@@ -13,6 +13,38 @@
     "test_bench_full_recovery_cycle": {
       "ns_mean": 100000,
       "comment": "16 misses driving HEALTHY -> HARD_DESTROY. Aggregates per-tick cost; tighter than 16 * single-tick because the FSM short-circuits in HARD_DESTROY."
+    },
+    "test_bench_N1_1_launch_metric_record": {
+      "ns_mean": 0,
+      "comment": "N1.1 — cost of recording one launch-duration observation into Histogram. 0 = collect first-run data on CI runner; gate activates after first real measurement PR."
+    },
+    "test_bench_N1_1_registry_snapshot": {
+      "ns_mean": 0,
+      "comment": "N1.1 — cost of snapshotting the full metrics registry (warm, 50 observations). 0 = collect-only."
+    },
+    "test_bench_N1_2_suspend_transition": {
+      "ns_mean": 0,
+      "comment": "N1.2 — cost of HEALTHY->SUSPENDED->PROBING FSM cycle. Must complete before systemd inhibitor is released. 0 = collect-only."
+    },
+    "test_bench_N1_2_resume_transition": {
+      "ns_mean": 0,
+      "comment": "N1.2 — cost of suspend()+resume() back-to-back. 0 = collect-only."
+    },
+    "test_bench_N1_2_healthy_tick_rate": {
+      "ns_mean": 5000,
+      "comment": "N1.2 — steady-state HEALTHY tick at warm EWMA. Same order as pong path; kept nonzero so regressions in the hot path gate immediately."
+    },
+    "test_bench_N1_6_escalation_to_hard_destroy": {
+      "ns_mean": 0,
+      "comment": "N1.6 — full HEALTHY->HARD_DESTROY escalation cycle via consecutive misses. 0 = collect-only; gate activates after first real measurement PR."
+    },
+    "test_bench_N1_6_recovery_metric_record": {
+      "ns_mean": 0,
+      "comment": "N1.6 — cost of recording one 45 s recovery observation into Histogram. 0 = collect-only."
+    },
+    "test_bench_N1_6_fsm_miss_tick": {
+      "ns_mean": 5000,
+      "comment": "N1.6 — per-miss-tick from HEALTHY. Kept nonzero; same order as pong path."
     }
   }
 }

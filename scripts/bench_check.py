@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 """Compare pytest-benchmark JSON output against committed baselines.
 
-Run via:
+Two equivalent calling conventions are supported:
 
+    # Positional report + named baselines (original)
     pytest host/benches --benchmark-json=bench-out.json
     python scripts/bench_check.py bench-out.json
+
+    # Named flags (CI convention, matches task spec)
+    python scripts/bench_check.py \
+        --baseline .github/perf-baselines.json \
+        --results bench-results.json
 
 Exits 0 if every measured benchmark stays within ``_threshold_pct``
 of its baseline, exits 1 (with a summary on stderr) otherwise. The
 microbench CI job invokes this and posts the summary as a PR comment.
+
+First-run behaviour: if a benchmark name appears in the results but not
+in the baseline ``tests`` dict, the name is printed as informational
+and the run exits 0. The baseline file itself is not mutated —
+baseline updates require dedicated ``perf: update baselines`` PRs.
 
 Baselines live in ``.github/perf-baselines.json`` (single source of
 truth; updates land via dedicated PRs so a perf change is reviewed
@@ -21,7 +32,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 def _load_json(path: Path) -> Dict[str, Any]:
@@ -45,30 +56,65 @@ def _measured_means(report: Dict[str, Any]) -> Dict[str, float]:
     return out
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="microbench gate")
+    # Support both calling conventions:
+    #   bench_check.py <report>            (original positional form)
+    #   bench_check.py --results <report>  (CI named-flag form)
     parser.add_argument(
         "report",
+        nargs="?",
         type=Path,
-        help="pytest-benchmark JSON output to check",
+        default=None,
+        help="pytest-benchmark JSON output to check (positional form)",
     )
     parser.add_argument(
+        "--results",
+        type=Path,
+        default=None,
+        dest="results",
+        help="pytest-benchmark JSON output to check (named-flag form)",
+    )
+    # --baselines is the original flag; --baseline is the CI-friendly alias.
+    baseline_group = parser.add_mutually_exclusive_group()
+    baseline_group.add_argument(
         "--baselines",
         type=Path,
-        default=Path(".github/perf-baselines.json"),
-        help="path to baseline JSON (default: .github/perf-baselines.json)",
+        default=None,
+        dest="baseline_path",
+        help="path to baseline JSON",
+    )
+    baseline_group.add_argument(
+        "--baseline",
+        type=Path,
+        default=None,
+        dest="baseline_path",
+        help="path to baseline JSON (alias for --baselines)",
     )
     args = parser.parse_args(argv)
 
-    if not args.report.exists():
-        print(f"bench report missing: {args.report}", file=sys.stderr)
+    # Resolve report path: --results takes precedence over positional.
+    report_path: Optional[Path] = args.results if args.results is not None else args.report
+    if report_path is None:
+        parser.error("supply either a positional <report> or --results <path>")
+        return 2  # unreachable but satisfies mypy
+
+    # Resolve baseline path: explicit flag or default.
+    baseline_path: Path = (
+        args.baseline_path
+        if args.baseline_path is not None
+        else Path(".github/perf-baselines.json")
+    )
+
+    if not report_path.exists():
+        print(f"bench report missing: {report_path}", file=sys.stderr)
         return 2
-    if not args.baselines.exists():
-        print(f"baselines missing: {args.baselines}", file=sys.stderr)
+    if not baseline_path.exists():
+        print(f"baselines missing: {baseline_path}", file=sys.stderr)
         return 2
 
-    report = _load_json(args.report)
-    baselines = _load_json(args.baselines)
+    report = _load_json(report_path)
+    baselines = _load_json(baseline_path)
 
     threshold_pct = float(baselines.get("_threshold_pct", 20))
     expected_tests: Dict[str, Dict[str, Any]] = baselines.get("tests", {})

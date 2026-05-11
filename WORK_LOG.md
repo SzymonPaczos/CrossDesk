@@ -78,9 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
-- [2026-05-11 22:38] START · agent: claude-code · branch: chore/audit-2026-05-11 · task: audit-2026-05-11 · note: 6-fazowy audyt (linters auto-fix, dead code, rust safety, docs publicznych API, testy, raport docs/AUDIT_AUTOMATED_2026-05-11.md) — boundaries respektowane (proto/THREAT_MODEL/DECISIONS/REQUIREMENTS/GOALS/MVP_SCOPE/ROADMAP/AGENTS poza zakresem).
-
 ## Recent
+
+- [2026-05-11 22:38] START · agent: claude-code · branch: chore/audit-2026-05-11 · task: audit-2026-05-11 · note: 6-fazowy audyt (linters auto-fix, dead code, rust safety, docs publicznych API, testy, raport docs/AUDIT_AUTOMATED_2026-05-11.md) — boundaries respektowane (proto/THREAT_MODEL/DECISIONS/REQUIREMENTS/GOALS/MVP_SCOPE/ROADMAP/AGENTS poza zakresem).
+- [2026-05-11 23:25] END · agent: claude-code · branch: chore/audit-2026-05-11 · task: audit-2026-05-11 · note: result: success → branch pushed at 7b8c7af (NOT merged — left for user review). 4 commitów: phase1 style/auto-fixes (34 files), phase3 // Safety: comments (3 files), phase4 docstrings (2 files), phase6 docs/AUDIT_AUTOMATED_2026-05-11.md (new). Phase 2 (dead code) zero changes — wszystkie znaleziska to false positives. Bramki: ruff check src/ tests/ clean; cargo clippy --workspace -- -D warnings clean na guest+gui; cargo test --workspace 31/31; pytest 621/621 passed (po --ignore=test_grpc_interceptor.py + --timeout=30 dla pre-existing pytest-asyncio fixturedef-unittest błędu z mainem). 3 manual interventions + 7 tech-debt items udokumentowane w raporcie.
 
 - [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
 - [2026-05-11 12:30] END · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: result: success → branch pushed at dd7f04f (NOT merged). launch_cmd.py: socket-check, SubprocessNotifier, Phase 4 RAIL stub log, display-name via catalog→table→title(); main.py: launch_cmd.run() replaces inline stub; 8 tests all mocked; mypy --strict 102 files clean; pytest 594/594 passed.

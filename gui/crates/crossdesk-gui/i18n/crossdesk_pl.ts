@@ -353,8 +353,12 @@
         <translation>Demon nie działa</translation>
     </message>
     <message>
-        <source>The CrossDesk host daemon is not running.</source>
-        <translation>Demon hosta CrossDesk nie jest uruchomiony.</translation>
+        <source>Windows VM is installed but the host daemon is not running.</source>
+        <translation>Maszyna wirtualna Windows jest zainstalowana, ale demon hosta nie działa.</translation>
+    </message>
+    <message>
+        <source>Start it with:</source>
+        <translation>Uruchom poleceniem:</translation>
     </message>
     <message>
         <source>Retry connection</source>

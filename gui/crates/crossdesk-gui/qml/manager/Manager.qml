@@ -334,8 +334,14 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                     }
                     Label {
-                        text: qsTr("The CrossDesk host daemon is not running.")
+                        text: qsTr("Windows VM is installed but the host daemon is not running.")
                         font.pixelSize: 13
+                        color: palette.placeholderText
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    Label {
+                        text: qsTr("Start it with:")
+                        font.pixelSize: 12
                         color: palette.placeholderText
                         Layout.alignment: Qt.AlignHCenter
                     }
@@ -362,10 +368,18 @@ Item {
 
                     Item { height: 4 }
 
-                    Button {
-                        text: qsTr("Retry connection")
+                    RowLayout {
                         Layout.alignment: Qt.AlignHCenter
-                        onClicked: mgr.refresh()
+                        spacing: 8
+
+                        Button {
+                            text: qsTr("Retry connection")
+                            onClicked: mgr.refresh()
+                        }
+                        Button {
+                            text: qsTr("Open setup wizard")
+                            onClicked: ApplicationWindow.window.launchWizard()
+                        }
                     }
                 }
             }

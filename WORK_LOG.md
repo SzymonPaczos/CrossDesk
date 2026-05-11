@@ -79,6 +79,7 @@ branch names and the user merges by hand later.
 ## Active
 
 - [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
+- [2026-05-11 11:00] START · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: TOML app catalog schema + 20 WinApps apps ported + crossdesk apps CLI
 
 ## Recent
 

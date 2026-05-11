@@ -17,8 +17,7 @@ pub mod qobject {
         #[qml_element]
         // ISO source: "download" (fetch from Microsoft) or "browse" (local file)
         #[qproperty(QString, iso_source)]
-        // --- download mode ---
-        #[qproperty(QString, download_edition)]
+        // download_language is auto-detected from host locale; shown read-only in QML
         #[qproperty(QString, download_language)]
         // --- browse mode ---
         #[qproperty(QString, iso_path)]
@@ -55,7 +54,6 @@ pub mod qobject {
 
 pub struct WizardStateRust {
     iso_source: QString,
-    download_edition: QString,
     download_language: QString,
     iso_path: QString,
     host_timezone: QString,
@@ -75,7 +73,6 @@ impl Default for WizardStateRust {
     fn default() -> Self {
         Self {
             iso_source: QString::from("download"),
-            download_edition: QString::from("Windows 11 Pro"),
             download_language: QString::default(), // filled from host_locale in initialize()
             iso_path: QString::default(),
             host_timezone: QString::default(),

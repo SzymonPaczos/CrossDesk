@@ -539,7 +539,7 @@
         <translation type="vanished">Upuść plik .iso lub wybierz z pobranych plików wykrytych w systemie.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="280"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="243"/>
         <source>Drag a Windows ISO here</source>
         <translation>Przeciągnij obraz ISO Windows tutaj</translation>
     </message>
@@ -578,62 +578,74 @@
         <translation>Przeglądaj lub wykryj z Pobranych</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="202"/>
         <source>Edition</source>
-        <translation>Edycja</translation>
+        <translation type="vanished">Edycja</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="221"/>
         <source>Language</source>
-        <translation>Język</translation>
+        <translation type="vanished">Język</translation>
+    </message>
+    <message>
+        <source>The ISO will be cached in ~/.cache/crossdesk/iso/ for future installs.</source>
+        <translation type="vanished">Plik ISO zostanie zapisany w ~/.cache/crossdesk/iso/ do przyszłych instalacji.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="197"/>
+        <source>Windows 11 Pro · %1</source>
+        <translation>Windows 11 Pro · %1</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="203"/>
+        <source>~5 GB · downloaded automatically from Microsoft</source>
+        <translation>~5 GB · pobierane automatycznie od Microsoftu</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/Step1Iso.qml" line="210"/>
+        <source>Cached in ~/.cache/crossdesk/iso/ — reused on reinstall.</source>
+        <translation>Zapisane w ~/.cache/crossdesk/iso/ — ponownie wykorzystywane przy reinstalacji.</translation>
     </message>
     <message>
         <location filename="../qml/wizard/Step1Iso.qml" line="248"/>
-        <source>The ISO will be cached in ~/.cache/crossdesk/iso/ for future installs.</source>
-        <translation>Plik ISO zostanie zapisany w ~/.cache/crossdesk/iso/ do przyszłych instalacji.</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="285"/>
         <source>Browse files…</source>
         <translation>Przeglądaj pliki…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="297"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="260"/>
         <source>ISO selected</source>
         <translation>ISO wybrane</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="309"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="272"/>
         <source>Change…</source>
         <translation>Zmień…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="321"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="284"/>
         <source>Scanning Downloads…</source>
         <translation>Skanowanie pobranych…</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="328"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="291"/>
         <source>DETECTED ON THIS SYSTEM</source>
         <translation>WYKRYTE W SYSTEMIE</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="388"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="351"/>
         <source>No Windows ISO files found in Downloads — use Browse above.</source>
         <translation>Nie znaleziono plików ISO Windows w Pobranych — użyj przycisku Przeglądaj powyżej.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="398"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="361"/>
         <source>Your VM will use %1 GB RAM · %2 vCPU · 64 GB disk · %3</source>
         <translation>Twoja maszyna będzie używać %1 GB RAM · %2 vCPU · 64 GB dysku · %3</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="427"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="390"/>
         <source>Cancel</source>
         <translation>Anuluj</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/Step1Iso.qml" line="434"/>
+        <location filename="../qml/wizard/Step1Iso.qml" line="397"/>
         <source>Install</source>
         <translation>Instaluj</translation>
     </message>

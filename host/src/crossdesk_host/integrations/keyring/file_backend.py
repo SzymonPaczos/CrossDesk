@@ -19,8 +19,9 @@ if sys.version_info >= (3, 11):
 else:  # pragma: no cover
     import tomli as _tomllib  # type: ignore[import-not-found]
 
-from crossdesk_host.integrations.keyring.base import Keyring
 import contextlib
+
+from crossdesk_host.integrations.keyring.base import Keyring
 
 
 class FileKeyring(Keyring):

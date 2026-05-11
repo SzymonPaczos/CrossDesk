@@ -18,13 +18,13 @@ schema.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
-import contextlib
 
 _SCHEMA_VERSION = 1
 

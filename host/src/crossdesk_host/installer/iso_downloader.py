@@ -18,13 +18,13 @@ mock that returns canned URLs / bytes; the default
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol
-import contextlib
+from typing import Protocol
 
 _DEFAULT_CACHE_DIR = Path.home() / ".cache" / "crossdesk" / "iso"
 

@@ -20,7 +20,6 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional, Sequence
 
-
 _APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
 
 _OFFICE_MIME_TYPES: List[str] = [

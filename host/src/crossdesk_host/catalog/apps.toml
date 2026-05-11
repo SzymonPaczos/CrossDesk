@@ -1,0 +1,252 @@
+# CrossDesk built-in app catalog.
+#
+# Ported from third_party/winapps/apps/ — executable paths, MIME types,
+# and category strings are taken verbatim from the WinApps info files.
+# Each entry maps to an AppEntry dataclass in catalog/schema.py.
+#
+# Format:
+#   [[apps]]
+#   app_id          = "<kebab-slug>"       # unique identifier
+#   name            = "<display name>"
+#   win_executable  = '<Windows path>'     # single-quotes to avoid escaping
+#   categories      = ["<category>", ...]  # freedesktop categories
+#   mime_types      = ["<mime>", ...]      # may be empty
+#   icon            = "<icon-name>"        # empty string = no icon hint
+
+# ---------------------------------------------------------------------------
+# Microsoft Office (Office 2016/365 root layout)
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "word"
+name = "Microsoft Word"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\WINWORD.EXE'
+categories = ["Office"]
+mime_types = [
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+    "application/vnd.ms-word.document.macroEnabled.12",
+    "application/vnd.ms-word.template.macroEnabled.12",
+]
+icon = "ms-word"
+
+[[apps]]
+app_id = "excel"
+name = "Microsoft Excel"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\EXCEL.EXE'
+categories = ["Office"]
+mime_types = [
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+    "application/vnd.ms-excel.sheet.macroEnabled.12",
+    "application/vnd.ms-excel.template.macroEnabled.12",
+    "application/vnd.ms-excel.addin.macroEnabled.12",
+    "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+]
+icon = "ms-excel"
+
+[[apps]]
+app_id = "powerpoint"
+name = "Microsoft PowerPoint"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\POWERPNT.EXE'
+categories = ["Office"]
+mime_types = [
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.openxmlformats-officedocument.presentationml.template",
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+    "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+    "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+    "application/vnd.ms-powerpoint.template.macroEnabled.12",
+    "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+]
+icon = "ms-powerpoint"
+
+[[apps]]
+app_id = "outlook"
+name = "Microsoft Outlook"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\OUTLOOK.EXE'
+categories = ["Office"]
+mime_types = [
+    "application/vnd.ms-outlook",
+    "application/octet-stream",
+]
+icon = "ms-outlook"
+
+[[apps]]
+app_id = "onenote"
+name = "Microsoft OneNote"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\ONENOTE.EXE'
+categories = ["Office"]
+mime_types = ["application/msonenote"]
+icon = "ms-outlook"
+
+[[apps]]
+app_id = "access"
+name = "Microsoft Access"
+win_executable = 'C:\Program Files\Microsoft Office\root\Office16\MSACCESS.EXE'
+categories = ["Office"]
+mime_types = ["application/x-msaccess"]
+icon = ""
+
+[[apps]]
+app_id = "publisher"
+name = "Microsoft Publisher"
+win_executable = 'C:\Program Files\Microsoft Office\Office16\MSPUB.EXE'
+categories = ["Office"]
+mime_types = ["application/vnd.ms-publisher"]
+icon = ""
+
+[[apps]]
+app_id = "visio"
+name = "Microsoft Visio"
+win_executable = 'C:\Program Files\Microsoft Office\root\Office16\VISIO.EXE'
+categories = ["Office"]
+mime_types = [
+    "application/vnd.ms-visio.template.main+xml",
+    "application/vnd.ms-visio.stencil.main+xml",
+    "application/vnd.ms-visio.drawing.main+xml",
+    "application/vnd.ms-visio.stencil.macroEnabled.main+xml",
+    "application/vnd.ms-visio.drawing.macroEnabled.main+xml",
+    "application/vnd.ms-visio.template.macroEnabled.main+xml",
+]
+icon = ""
+
+[[apps]]
+app_id = "project"
+name = "Microsoft Project"
+win_executable = 'C:\Program Files\Microsoft Office\root\Office16\WINPROJ.EXE'
+categories = ["Office"]
+mime_types = ["application/vnd.ms-project"]
+icon = ""
+
+# ---------------------------------------------------------------------------
+# Windows built-ins
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "mspaint"
+name = "Microsoft Paint"
+win_executable = 'C:\windows\system32\mspaint.exe'
+categories = ["Graphics"]
+mime_types = [
+    "image/png",
+    "image/bmp",
+    "image/jpeg",
+    "image/tiff",
+    "image/x-ms-bmp",
+    "image/dib",
+    "image/vnd.microsoft.icon",
+]
+icon = ""
+
+[[apps]]
+app_id = "explorer"
+name = "Microsoft Explorer"
+win_executable = 'C:\Windows\explorer.exe'
+categories = ["Windows"]
+mime_types = []
+icon = ""
+
+[[apps]]
+app_id = "powershell"
+name = "Microsoft PowerShell"
+win_executable = 'C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe'
+categories = ["Windows"]
+mime_types = []
+icon = ""
+
+[[apps]]
+app_id = "cmd"
+name = "Command Prompt"
+win_executable = 'C:\Windows\System32\cmd.exe'
+categories = ["Windows"]
+mime_types = []
+icon = "Terminal"
+
+# ---------------------------------------------------------------------------
+# Adobe
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "acrobat-dc"
+name = "Adobe Acrobat DC"
+win_executable = 'C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe'
+categories = ["Documents"]
+mime_types = ["application/pdf"]
+icon = ""
+
+[[apps]]
+app_id = "photoshop-2024"
+name = "Adobe Photoshop 2024"
+win_executable = 'C:\Program Files\Adobe\Adobe Photoshop 2024\Photoshop.exe'
+categories = ["Adobe"]
+mime_types = ["image/vnd.adobe.photoshop"]
+icon = "AdobePhotoshop"
+
+[[apps]]
+app_id = "illustrator-2024"
+name = "Adobe Illustrator 2024"
+win_executable = 'C:\Program Files\Adobe\Adobe Illustrator 2024\Support Files\Contents\Windows\Illustrator.exe'
+categories = ["Adobe"]
+mime_types = ["application/illustrator"]
+icon = "AdobeIllustrator"
+
+# ---------------------------------------------------------------------------
+# Browsers
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "iexplorer"
+name = "Internet Explorer"
+win_executable = 'C:\Program Files\Internet Explorer\iexplore.exe'
+categories = ["Network", "WebBrowser"]
+mime_types = [
+    "text/html",
+    "text/xml",
+    "application/xhtml+xml",
+    "application/xml",
+    "application/rss+xml",
+    "application/rdf+xml",
+    "image/gif",
+    "image/jpeg",
+    "image/png",
+    "x-scheme-handler/http",
+    "x-scheme-handler/https",
+    "x-scheme-handler/ftp",
+]
+icon = ""
+
+# ---------------------------------------------------------------------------
+# Development
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "visual-studio-comm"
+name = "Microsoft Visual Studio - Community Version"
+win_executable = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe'
+categories = ["Development"]
+mime_types = []
+icon = ""
+
+[[apps]]
+app_id = "ssms20"
+name = "SQL Server Management Studio"
+win_executable = 'C:\Program Files (x86)\Microsoft SQL Server Management Studio 20\Common7\IDE\Ssms.exe'
+categories = ["Development"]
+mime_types = ["text/sql"]
+icon = ""
+
+# ---------------------------------------------------------------------------
+# Graphics / other
+# ---------------------------------------------------------------------------
+
+[[apps]]
+app_id = "paint-net"
+name = "Paint.NET"
+win_executable = 'C:\Program Files\Paint.NET\paintdotnet.exe'
+categories = ["Graphic"]
+mime_types = []
+icon = "Paint.Net"

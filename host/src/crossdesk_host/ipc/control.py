@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import AsyncIterator, List, Optional
+from typing import AsyncIterator, Callable, List, Optional
 
 import grpc
 
@@ -17,6 +17,9 @@ from crossdesk_host.proto.crossdesk.v1 import control_pb2, control_pb2_grpc
 logger = logging.getLogger(__name__)
 
 HOST_VERSION = "v0.1.0"
+# Wire-protocol major version. Bumped only on incompatible frame-layout
+# changes. Both sides reject a connection when the major digits differ.
+CROSSDESK_PROTOCOL_VERSION = "1"
 # Feature flags the host advertises. The negotiation step intersects
 # this with what the client claims and the result lands in
 # ``ServerAccept.negotiated_features``.
@@ -31,6 +34,7 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         host_version: str = HOST_VERSION,
         supported_features: Optional[List[str]] = None,
         verify_coordinator: Optional[VerifyCoordinator] = None,
+        on_agent_version: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.auth_validator = auth_validator
         self.rail_manager = rail_manager if rail_manager is not None else RailManager()
@@ -41,6 +45,11 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
             else list(HOST_SUPPORTED_FEATURES)
         )
         self.verify_coordinator = verify_coordinator
+        # Called once per successful handshake with the agent's version string
+        # (from ClientHello.host_version). MgmtState hooks this to keep
+        # StatusFrame.agent_version fresh without the servicer needing to
+        # import the management module.
+        self.on_agent_version = on_agent_version
 
     async def OpenSession(
         self,
@@ -75,6 +84,32 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                     if state == "HANDSHAKE":
                         if payload_type == "hello":
                             hello = client_frame.hello
+                            # Check wire-protocol major version first — a
+                            # major mismatch means the frame layout itself
+                            # may be incompatible; reject before trying
+                            # semver compatibility.
+                            if hello.protocol_version and hello.protocol_version[0] != CROSSDESK_PROTOCOL_VERSION[0]:
+                                reason = (
+                                    f"protocol major mismatch: agent sent "
+                                    f"{hello.protocol_version!r}, host speaks "
+                                    f"{CROSSDESK_PROTOCOL_VERSION!r}"
+                                )
+                                logger.warning(
+                                    "ControlService Hello rejected: %s",
+                                    reason,
+                                )
+                                await outbound.put(
+                                    control_pb2.ServerFrame(
+                                        auth_failure=control_pb2.AuthFailure(
+                                            code=control_pb2.AuthFailure.Code.CODE_FEATURE_NEGOTIATION_FAILED,
+                                            detail=reason,
+                                        )
+                                    )
+                                )
+                                await context.abort(
+                                    grpc.StatusCode.FAILED_PRECONDITION,
+                                    f"version incompatible: {reason}",
+                                )
                             compat = is_compatible(hello.host_version, self.host_version)
                             if not compat.accepted:
                                 logger.warning(
@@ -100,17 +135,22 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                                 self.supported_features, hello.supported_features
                             )
                             logger.info(
-                                "ControlService Hello accepted: client_says=%s host=%s features=%s",
+                                "ControlService Hello accepted: client_says=%s "
+                                "host=%s protocol_version=%s features=%s",
                                 hello.host_version,
                                 self.host_version,
+                                hello.protocol_version or "(not sent)",
                                 negotiated,
                             )
+                            if self.on_agent_version is not None:
+                                self.on_agent_version(hello.host_version)
                             await outbound.put(
                                 control_pb2.ServerFrame(
                                     accept=control_pb2.ServerAccept(
                                         guest_version=self.host_version,
                                         negotiated_features=negotiated,
                                         guest_smbios_uuid=hello.host_domain_uuid,
+                                        protocol_version=CROSSDESK_PROTOCOL_VERSION,
                                     )
                                 )
                             )

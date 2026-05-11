@@ -51,6 +51,11 @@ class StatusFrame(_message.Message):
     RUNNING_APPS_FIELD_NUMBER: _builtins.int
     RECENT_ACTIVITY_FIELD_NUMBER: _builtins.int
     EMITTED_AT_FIELD_NUMBER: _builtins.int
+    AGENT_VERSION_FIELD_NUMBER: _builtins.int
+    agent_version: _builtins.str
+    """Version string from the guest agent's most recent ServerAccept handshake.
+    Empty if no successful handshake has occurred in the current session.
+    """
     @_builtins.property
     def vm(self) -> Global___VmStatus:
         """Snapshot at this instant. The daemon emits one whenever any field
@@ -76,10 +81,11 @@ class StatusFrame(_message.Message):
         running_apps: _abc.Iterable[Global___RailAppRunning] | None = ...,
         recent_activity: _abc.Iterable[Global___RecentActivity] | None = ...,
         emitted_at: _timestamp_pb2.Timestamp | None = ...,
+        agent_version: _builtins.str = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["emitted_at", b"emitted_at", "heartbeat", b"heartbeat", "resources", b"resources", "vm", b"vm"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["emitted_at", b"emitted_at", "heartbeat", b"heartbeat", "recent_activity", b"recent_activity", "resources", b"resources", "running_apps", b"running_apps", "vm", b"vm"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["agent_version", b"agent_version", "emitted_at", b"emitted_at", "heartbeat", b"heartbeat", "recent_activity", b"recent_activity", "resources", b"resources", "running_apps", b"running_apps", "vm", b"vm"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

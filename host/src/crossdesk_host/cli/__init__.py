@@ -7,6 +7,7 @@ from crossdesk_host.cli import (
     main,
     metrics_cmd,
     uninstall_cmd,
+    version_cmd,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "main",
     "metrics_cmd",
     "uninstall_cmd",
+    "version_cmd",
 ]

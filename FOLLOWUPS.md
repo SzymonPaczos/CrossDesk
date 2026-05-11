@@ -292,7 +292,7 @@ exposes none of this as typed config — they put raw FreeRDP flag
 strings in their config file. See `docs/PERIPHERALS.md` for the
 strategy and per-peripheral notes.
 
-- **[P0] Typed config schema for peripherals.** Pydantic model in
+- **[✅ DONE 2026-05-10] Typed config schema for peripherals.** Pydantic model in
   `host/src/crossdesk_host/config/peripherals.py`. Validates
   `~/.config/crossdesk/peripherals.toml` at startup. Maps each
   enabled item to FreeRDP flags + libvirt XML adjustments at VM

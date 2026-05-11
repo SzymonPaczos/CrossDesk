@@ -31,8 +31,12 @@ pub fn start_hook_thread(sender: mpsc::Sender<RailWindowEvent>) {
         // Recording the thread ID before SetWinEventHook means an early
         // shutdown signal still finds a valid target — PostThreadMessageW will
         // simply queue WM_QUIT before GetMessageW first runs.
+        // Safety: GetCurrentThreadId has no inputs and cannot fail.
         HOOK_THREAD_ID.store(unsafe { GetCurrentThreadId() }, Ordering::SeqCst);
 
+        // Safety: the SetWinEventHook + GetMessageW + DispatchMessageW + UnhookWinEvent
+        // sequence is the documented Win32 out-of-context hook pattern. All raw pointers
+        // come from this stack frame (`&mut msg`) and outlive every call that uses them.
         unsafe {
             let hook = SetWinEventHook(
                 EVENT_OBJECT_CREATE,
@@ -71,6 +75,9 @@ pub fn request_shutdown() {
     if tid == 0 {
         return;
     }
+    // Safety: PostThreadMessageW accepts any DWORD thread id; if the thread has
+    // already exited the call returns ERR_INVALID_THREAD_ID which we log and
+    // ignore — no UB regardless of `tid`'s liveness.
     unsafe {
         if let Err(e) = PostThreadMessageW(tid, WM_QUIT, WPARAM(0), LPARAM(0)) {
             error!("PostThreadMessageW(WM_QUIT) failed: {e:?}");

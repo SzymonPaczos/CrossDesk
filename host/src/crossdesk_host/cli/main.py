@@ -7,6 +7,7 @@ Subcommands:
 - ``doctor``        — pre-flight checks
 - ``metrics``       — print daemon metrics snapshot
 - ``logs``          — aggregate and display log streams
+- ``version``       — show host, agent, and protocol version
 - ``uninstall``     — clean removal
 
 The daemon (``crossdesk-host``) is a separate binary; this CLI is for
@@ -27,6 +28,7 @@ from crossdesk_host.cli import (
     logs_cmd,
     metrics_cmd,
     uninstall_cmd,
+    version_cmd,
 )
 
 
@@ -50,6 +52,7 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor_cmd.add_subparser(sub)
     logs_cmd.add_subparser(sub)
     metrics_cmd.add_subparser(sub)
+    version_cmd.add_subparser(sub)
     uninstall_cmd.add_subparser(sub)
 
     return parser
@@ -78,6 +81,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return logs_cmd.run(args)
     if args.command == "metrics":
         return metrics_cmd.run(args)
+    if args.command == "version":
+        return version_cmd.run(args)
     if args.command == "uninstall":
         return uninstall_cmd.run(args)
 

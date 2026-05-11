@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import sys
 from importlib.metadata import PackageNotFoundError, version as pkg_version
 from typing import Optional
 

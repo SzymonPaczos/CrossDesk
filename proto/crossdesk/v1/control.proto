@@ -79,6 +79,10 @@ message ClientHello {
   // UUID domeny libvirt po stronie hosta. Guest porównuje z własnym
   // SMBIOS-injected UUID, żeby wykryć live-migration / host swap.
   string host_domain_uuid = 3;
+  // CrossDesk wire-protocol major version. Currently "1". On a major
+  // version bump the receiver rejects with AuthFailure FEATURE_NEGOTIATION_FAILED
+  // rather than trying to parse an incompatible frame layout.
+  string protocol_version = 4;
 }
 
 message AppLaunchRequest {
@@ -144,6 +148,8 @@ message ServerAccept {
   string guest_version = 1;
   repeated string negotiated_features = 2;
   string guest_smbios_uuid = 3;  // p. ClientHello.host_domain_uuid
+  // Echoes the protocol_version the guest is responding under.
+  string protocol_version = 4;
 }
 
 message AuthFailure {

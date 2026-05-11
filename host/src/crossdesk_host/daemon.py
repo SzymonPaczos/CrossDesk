@@ -78,8 +78,12 @@ async def main() -> None:
         interceptors=[TraceContextInterceptor()],
     )
 
+    def _store_agent_version(version: str) -> None:
+        mgmt_state.agent_version = version
+
     control_pb2_grpc.add_ControlServiceServicer_to_server(
-        ControlServiceServicer(auth_validator), server
+        ControlServiceServicer(auth_validator, on_agent_version=_store_agent_version),
+        server,
     )
     heartbeat_pb2_grpc.add_HeartbeatServiceServicer_to_server(
         HeartbeatServiceServicer(auth_validator, libvirt_ctl), server

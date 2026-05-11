@@ -463,15 +463,17 @@ window. `Hello` handshake on first connect. See
 DEC-0007 for the architectural commitment. WinApps doesn't
 version anything — we are above that bar.
 
-- **[P0] `Hello` message in proto with handshake fields.** Add to
-  `proto/crossdesk/v1/control.proto`:
-  `protocol_version`, `host_version`, `agent_version`,
-  `capabilities` (comma-separated). Sent as the first frame on
-  both sides after mTLS + AuthContext setup.
-- **[P0] Handshake compatibility logic.** Host and guest both
-  parse the peer's Hello, apply N-1 minor rule, refuse on
-  mismatch with structured error pointing at the right next
-  command (`crossdesk upgrade` or full reinstall).
+- **[✅ DONE 2026-05-10] `Hello` message in proto with handshake fields.**
+  `protocol_version` field 4 added to `ClientHello` and `ServerAccept` in
+  `proto/crossdesk/v1/control.proto`. `agent_version` field 7 added to
+  `StatusFrame` in `mgmt.proto`. Guest stamps `protocol_version="1"` in
+  `ClientHello`; host echoes it in `ServerAccept`.
+- **[✅ DONE 2026-05-10] Handshake compatibility logic.** Host checks
+  `protocol_version` major digit in `ClientHello`; rejects with
+  `AuthFailure.CODE_FEATURE_NEGOTIATION_FAILED` on major mismatch.
+  Guest logs warning on major mismatch in `ServerAccept` but stays
+  lenient (host is authoritative per N-1 rule). `on_agent_version`
+  callback stores guest version in `MgmtState.agent_version`.
 - **[P0] CLI semver commitment in v1.x.** Document in
   `docs/VERSIONING.md` and surface in `crossdesk --help`. CI
   enforces no breaking flag changes within v1.x via a manifest
@@ -502,10 +504,11 @@ version anything — we are above that bar.
   obsoleting an older one, surface a one-time warning at startup
   until the older one is removed in MAJOR. Tooling: a registry
   in `proto/DEPRECATED.md` tracking deprecation dates.
-- **[P2] `crossdesk version` command.** Shows host version, agent
-  version (querying live VM), proto version, capabilities. Warns
-  on mismatch even if not refusing connection (e.g., when an
-  experimental flag is missing).
+- **[✅ DONE 2026-05-10] `crossdesk version` command.** Shows host
+  version (`importlib.metadata`), agent version (from `ManagementService.Status`
+  `agent_version` field), protocol version (constant "1"), and commit
+  (from package metadata, falls back to "unknown"). Handles
+  "daemon not running" and "not connected" states.
 
 ## Distribution & packaging
 

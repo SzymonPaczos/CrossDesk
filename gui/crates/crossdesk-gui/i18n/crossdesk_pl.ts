@@ -349,6 +349,18 @@
         <translation>O programie</translation>
     </message>
     <message>
+        <source>Daemon not running</source>
+        <translation>Demon nie działa</translation>
+    </message>
+    <message>
+        <source>The CrossDesk host daemon is not running.</source>
+        <translation>Demon hosta CrossDesk nie jest uruchomiony.</translation>
+    </message>
+    <message>
+        <source>Retry connection</source>
+        <translation>Ponów połączenie</translation>
+    </message>
+    <message>
         <location filename="../qml/manager/Manager.qml" line="335"/>
         <source>No Windows VM installed</source>
         <translation>Brak maszyny wirtualnej Windows</translation>

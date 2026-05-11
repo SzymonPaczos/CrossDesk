@@ -418,19 +418,27 @@ for the full strategy.
 WinApps and Cassowary publish no SLOs and run no benchmarks. Our
 positioning depends on enforcing what we promise.
 
-- **[P0] `pytest-benchmark` and `criterion` harness configured.**
+- **[✅ DONE 2026-05-10] `pytest-benchmark` and `criterion` harness configured.**
   `host/benches/` (Python) and `guest/benches/` (Rust). One bench
   file per N1.* metric (stubs OK initially). Naming convention:
-  `bench_N1_X_Y_<metric_name>`.
-- **[P0] `bench_check.py` tool.** Loads baseline file
+  `bench_N1_X_Y_<metric_name>`. Implemented: bench_N1_1_cold_launch.py
+  (metric recording + registry snapshot), bench_N1_2_suspend.py (FSM
+  suspend/resume transitions + healthy tick rate), bench_N1_6_recovery.py
+  (HARD_DESTROY escalation + recovery metric record). `python_files`
+  expanded in pyproject.toml so `pytest benches/` discovers bench_*.py.
+- **[✅ DONE 2026-05-10] `bench_check.py` tool.** Loads baseline file
   (`.github/perf-baselines.json`), compares JSON-format bench
   results to baselines, fails if any metric regresses by >20%.
-- **[P0] CI job `microbench` on every PR.** Runs Python and Rust
-  microbenches, invokes `bench_check.py`, posts a PR comment
-  summarizing improvements and regressions above noise threshold.
-- **[P0] Initial baselines committed.** First measurements in
-  `.github/perf-baselines.json`. Updates require dedicated
-  `perf: update baselines` PRs with measurement evidence.
+  Extended to support `--baseline`/`--results` named flags (CI
+  convention) alongside the original positional form.
+- **[✅ DONE 2026-05-10] CI job `microbench` on every PR.** Runs Python
+  microbenches on ubuntu-latest Python 3.12, invokes bench_check.py
+  with `--baseline`/`--results` flags, pass/fail gate. No PR comment
+  yet (P1 automation). timeout-minutes: 10.
+- **[✅ DONE 2026-05-10] Initial baselines committed.** `.github/perf-baselines.json`
+  expanded with 8 new bench entries covering N1.1, N1.2, N1.6 metrics.
+  FSM-hot-path entries kept nonzero (5000 ns); new histogram/escalation
+  entries set to 0 (collect-only) until real CI runner measurements land.
 - **[P1] Integration benchmarks.** `host/tests/benchmarks/`:
   `bench_install_pipeline.py`, `bench_cold_launch_lightweight.py`
   (N1.1a), `bench_recovery_destroy_start.py` (N1.6a). Slower;

@@ -120,6 +120,40 @@ jobs:
         # locally to normalise.
         run: buf format --diff --exit-code
 
+  microbench:
+    name: Microbench gate (N1.* perf regression check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        working-directory: host
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[mock,dev]"
+      - name: Run microbenchmarks
+        working-directory: host
+        # --benchmark-only: skip regular tests, run bench functions only.
+        # --benchmark-json: emit machine-readable output for bench_check.py.
+        # -q: suppress per-test output — the JSON file is the artefact.
+        run: |
+          python -m pytest benches/ \
+            --benchmark-only \
+            --benchmark-json=bench-results.json \
+            -q
+      - name: Check perf regression
+        # bench_check.py exits 1 if any baseline-gated metric regresses by
+        # >20%. 0-baseline entries are informational (collect-only) and
+        # never fail. The baselines file is the single source of truth;
+        # updates require a dedicated perf: PR.
+        run: |
+          python scripts/bench_check.py \
+            --baseline .github/perf-baselines.json \
+            --results host/bench-results.json
+
   linux-kvm-smoke:
     name: Linux + KVM smoke (placeholder — needs self-hosted runner)
     runs-on: ubuntu-latest

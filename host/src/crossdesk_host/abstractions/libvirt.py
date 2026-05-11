@@ -58,3 +58,24 @@ class LibvirtController(Protocol):
         """Hot-unplug a virtiofs share. Returns ``True`` on success or
         if the share was already detached (idempotent)."""
         ...
+
+    def set_memory(self, target_mib: int) -> None:
+        """Adjust the balloon target (virDomainSetMemory).
+
+        ``target_mib`` must be ≤ the domain's maxMemory set at creation time.
+        The balloon driver in the guest inflates/deflates to match; Windows
+        releases or acquires the difference without a restart.
+
+        No-op if the balloon device is not present in the domain config.
+        Raises ``RuntimeError`` on libvirt error.
+        """
+        ...
+
+    def get_memory_stats(self) -> dict[str, int]:
+        """Query balloon statistics from the guest (virDomainMemoryStats).
+
+        Returns a dict with MiB values for keys the balloon driver exposes:
+        ``actual``, ``rss``, ``available``, ``unused``, ``usable``, etc.
+        Empty dict if balloon stats are unavailable (driver not loaded in guest).
+        """
+        ...

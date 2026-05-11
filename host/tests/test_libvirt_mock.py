@@ -76,3 +76,23 @@ def test_graceful_shutdown_counter() -> None:
     ctl = LibvirtControllerMock()
     ctl.graceful_shutdown()
     assert ctl.hooks.graceful_shutdown_count == 1
+
+
+def test_set_memory_updates_hooks_and_get_stats() -> None:
+    ctl = LibvirtControllerMock()
+    assert ctl.hooks.memory_mib == 4096  # default
+
+    ctl.set_memory(2048)
+    assert ctl.hooks.memory_mib == 2048
+    stats = ctl.get_memory_stats()
+    assert stats["actual"] == 2048
+
+    ctl.set_memory(6144)
+    assert ctl.get_memory_stats()["actual"] == 6144
+
+
+def test_get_memory_stats_returns_dict_with_actual() -> None:
+    ctl = LibvirtControllerMock()
+    stats = ctl.get_memory_stats()
+    assert "actual" in stats
+    assert isinstance(stats["actual"], int)

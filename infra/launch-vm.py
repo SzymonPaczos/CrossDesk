@@ -164,6 +164,7 @@ def build_qemu_cmd(
     tools_iso: Path,
     ovmf_code: Path,
     tpm_sock: Path,
+    ram_mb: int = RAM_MB,
     gpu_pci_ids: List[str] = [],
     nvidia_hide_vm: bool = False,
 ) -> List[str]:
@@ -177,7 +178,9 @@ def build_qemu_cmd(
         "-machine", "q35,accel=kvm,smm=on",
         "-cpu",     cpu_flags,
         "-smp",     str(VCPUS),
-        "-m",       str(RAM_MB),
+        "-m",       str(ram_mb),
+        # ── Balloon (daemon adjusts guest RAM at runtime via virDomainSetMemory) ──
+        "-device",  "virtio-balloon-pci,id=balloon0",
         # ── UEFI ──────────────────────────────────────────────────────────
         "-drive",   f"if=pflash,format=raw,readonly=on,file={ovmf_code}",
         "-drive",   f"if=pflash,format=raw,file={EFIVARS}",
@@ -186,7 +189,9 @@ def build_qemu_cmd(
         "-tpmdev",  "emulator,id=tpm0,chardev=chrtpm",
         "-device",  "tpm-tis,tpmdev=tpm0",
         # ── Storage ───────────────────────────────────────────────────────
-        "-drive",   f"file={DISK_IMAGE},if=virtio,format=qcow2,cache=writeback",
+        # discard=unmap enables TRIM: Windows can return freed blocks to the host,
+        # keeping the thin-provisioned qcow2 image compact over time.
+        "-drive",   f"file={DISK_IMAGE},if=virtio,format=qcow2,cache=writeback,discard=unmap",
         # cdrom index=0 → C: (install source), index=1 → D: (tools ISO)
         "-drive",   f"file={windows_iso},media=cdrom,readonly=on,index=0",
         "-drive",   f"file={tools_iso},media=cdrom,readonly=on,index=1",
@@ -236,6 +241,16 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--ram-mb",
+        type=int,
+        default=RAM_MB,
+        metavar="MiB",
+        help=(
+            f"Guest RAM ceiling in MiB (default: {RAM_MB}). "
+            "The balloon device allows the daemon to shrink/grow below this at runtime."
+        ),
+    )
+    parser.add_argument(
         "--nvidia-hide-vm",
         action="store_true",
         help="Add kvm=off + hv_vendor_id=AuthenticAMD to hide the VM from older NVIDIA drivers (Tier 2).",
@@ -263,6 +278,7 @@ def main() -> None:
             args.tools_iso,
             ovmf_code,
             tpm_sock,
+            ram_mb=args.ram_mb,
             gpu_pci_ids=gpu_pci_ids,
             nvidia_hide_vm=args.nvidia_hide_vm,
         )

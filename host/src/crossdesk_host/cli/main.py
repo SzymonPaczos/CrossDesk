@@ -6,6 +6,7 @@ Subcommands:
 - ``vm credentials`` — show / rotate / set / repair VM password
 - ``doctor``        — pre-flight checks
 - ``metrics``       — print daemon metrics snapshot
+- ``logs``          — aggregate and display log streams
 - ``uninstall``     — clean removal
 
 The daemon (``crossdesk-host``) is a separate binary; this CLI is for
@@ -23,6 +24,7 @@ from crossdesk_host.cli import (
     credentials_cmd,
     doctor_cmd,
     install_cmd,
+    logs_cmd,
     metrics_cmd,
     uninstall_cmd,
 )
@@ -46,6 +48,7 @@ def _build_parser() -> argparse.ArgumentParser:
     credentials_cmd.add_subparser(vm_sub)
 
     doctor_cmd.add_subparser(sub)
+    logs_cmd.add_subparser(sub)
     metrics_cmd.add_subparser(sub)
     uninstall_cmd.add_subparser(sub)
 
@@ -71,6 +74,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             return credentials_cmd.run(args)
     if args.command == "doctor":
         return doctor_cmd.run(args)
+    if args.command == "logs":
+        return logs_cmd.run(args)
     if args.command == "metrics":
         return metrics_cmd.run(args)
     if args.command == "uninstall":

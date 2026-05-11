@@ -79,9 +79,11 @@ branch names and the user merges by hand later.
 ## Active
 
 - [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
-- [2026-05-11 12:00] START · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: autopause after idle + VM autostart systemd unit + sleep/wake sync stub
 
 ## Recent
+
+- [2026-05-11 12:00] START · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: autopause after idle + VM autostart systemd unit + sleep/wake sync stub
+- [2026-05-11 13:00] END · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: result: success → branch pushed at dd4bded (NOT merged). AutopauseController (asyncio.Event, no busy-loop, Phase 7 FSM stub) + sleep_sync.py stubs + vm_cmd.py autostart enable/disable + main.py wiring + 8 unit tests; mypy --strict 105 files clean.
 
 - [2026-05-11 11:00] START · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: TOML app catalog schema + 20 WinApps apps ported + crossdesk apps CLI
 - [2026-05-11 11:30] END · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: result: success → branch pushed at 2d4fda3 (NOT merged). AppEntry dataclass + 20-app apps.toml (WinApps-sourced execs+MIMEs) + load_catalog/find_app + crossdesk apps list/install CLI + 17 tests; mypy --strict 108 files clean; 613 passed + 12 pre-existing async errors.

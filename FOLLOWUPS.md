@@ -705,14 +705,13 @@ old with hide-the-VM); Tier 3 out (Intel Arc + single-GPU). Full
 deliberation in `docs/GPU_PASSTHROUGH.md`; ADR `docs/DECISIONS.md`
 DEC-0009.
 
-- **[P0] `crossdesk doctor` GPU detection.** Enumerate GPUs
-  (`lspci -nnk`), identify vendor + chip, check IOMMU enabled
-  (`/sys/class/iommu/`), check IOMMU group composition
-  (`/sys/kernel/iommu_groups/`), classify into Tier 1/2/3.
-  Output structured: `{tier, host_gpu, available_for_passthrough,
-  warnings, blockers}`. ~200-400 lines in
-  `host/src/crossdesk_host/diagnostics.py`. Wired into `crossdesk
-  install` as a pre-step.
+- **[✅ DONE 2026-05-11] `crossdesk doctor` GPU detection.**
+  `check_gpu_passthrough()` in `doctor/checks.py`: parses `lspci -nn`
+  for VGA-class devices, reads `/sys/class/iommu/` (IOMMU enabled check),
+  reads `/sys/bus/pci/devices/<id>/iommu_group` symlinks, classifies
+  Tier 1/2/3 per DEC-0009. `GpuPassthroughResult` dataclass with tier,
+  candidates, warnings, blockers. 25 tests (all sys paths injectable).
+  `GPU_CHECKS` list ready to wire into `crossdesk gpu setup`.
 - **[P0] `crossdesk gpu setup` helper.** Walks user through
   per-distro kernel cmdline params (GRUB, systemd-boot, NixOS),
   per-distro initramfs binding (mkinitcpio, dracut,

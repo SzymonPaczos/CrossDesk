@@ -1,6 +1,7 @@
 """crossdesk CLI subcommand modules."""
 
 from crossdesk_host.cli import (
+    apps_cmd,
     credentials_cmd,
     doctor_cmd,
     install_cmd,
@@ -11,6 +12,7 @@ from crossdesk_host.cli import (
 )
 
 __all__ = [
+    "apps_cmd",
     "credentials_cmd",
     "doctor_cmd",
     "install_cmd",

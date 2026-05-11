@@ -51,8 +51,10 @@ pub mod qobject {
         // Diagnose
         #[qproperty(QStringList, diagnostics)]
         #[qproperty(bool, diagnostics_any_failed)]
-        // Routing — Phase 7 will query daemon; Phase 6 mock always true
+        // has_vm: VM image exists on disk (read from env or real check).
+        // daemon_connected: host daemon is reachable (Phase 7 sets true on first Status push).
         #[qproperty(bool, has_vm)]
+        #[qproperty(bool, daemon_connected)]
         type ManagerState = super::ManagerStateRust;
 
         #[qinvokable]
@@ -120,6 +122,7 @@ pub struct ManagerStateRust {
     diagnostics: QStringList,
     diagnostics_any_failed: bool,
     has_vm: bool,
+    daemon_connected: bool,
 }
 
 impl cxx_qt::Initialize for qobject::ManagerState {
@@ -158,6 +161,8 @@ impl cxx_qt::Initialize for qobject::ManagerState {
             .map(|v| v != "0")
             .unwrap_or(true);
         this.as_mut().set_has_vm(has_vm);
+        // Phase 7: set to true when the mgmt socket handshake succeeds.
+        this.as_mut().set_daemon_connected(false);
     }
 }
 

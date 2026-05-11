@@ -290,17 +290,87 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            // Normal panes — shown when a VM is installed
+            // State 1: VM installed + daemon connected → normal panes
             StackView {
                 id: stack
                 anchors.fill: parent
-                visible: mgr.has_vm
-                initialItem: mgr.has_vm
+                visible: mgr.has_vm && mgr.daemon_connected
+                initialItem: (mgr.has_vm && mgr.daemon_connected)
                     ? "qrc:/qt/qml/com/crossdesk/gui/qml/manager/Dashboard.qml"
                     : ""
             }
 
-            // Empty state — shown when no VM is installed
+            // State 2: VM installed but daemon not running
+            Rectangle {
+                anchors.fill: parent
+                visible: mgr.has_vm && !mgr.daemon_connected
+                color: palette.window
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 12
+
+                    // Warning icon placeholder
+                    Rectangle {
+                        Layout.alignment: Qt.AlignHCenter
+                        width: 56; height: 56; radius: 14
+                        color: Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.12)
+                        border.color: palette.mid
+                        border.width: 1
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: "⚠"
+                            font.pixelSize: 28
+                            color: palette.placeholderText
+                        }
+                    }
+
+                    Label {
+                        text: qsTr("Daemon not running")
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                        color: palette.text
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    Label {
+                        text: qsTr("The CrossDesk host daemon is not running.")
+                        font.pixelSize: 13
+                        color: palette.placeholderText
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    // Command hint box
+                    Rectangle {
+                        Layout.alignment: Qt.AlignHCenter
+                        color: palette.base
+                        border.color: palette.mid
+                        border.width: 1
+                        radius: 4
+                        implicitWidth: cmdLabel.implicitWidth + 24
+                        implicitHeight: cmdLabel.implicitHeight + 12
+
+                        Label {
+                            id: cmdLabel
+                            anchors.centerIn: parent
+                            text: "systemctl --user start crossdesk-host"
+                            font.family: "monospace"
+                            font.pixelSize: 12
+                            color: palette.text
+                        }
+                    }
+
+                    Item { height: 4 }
+
+                    Button {
+                        text: qsTr("Retry connection")
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: mgr.refresh()
+                    }
+                }
+            }
+
+            // State 3: No VM installed (wizard was dismissed or has_vm=false fallback)
             Rectangle {
                 anchors.fill: parent
                 visible: !mgr.has_vm
@@ -312,22 +382,16 @@ Item {
 
                     Rectangle {
                         Layout.alignment: Qt.AlignHCenter
-                        width: 56
-                        height: 56
-                        radius: 14
+                        width: 56; height: 56; radius: 14
                         color: palette.highlight
 
                         Rectangle {
-                            x: 10; y: 12
-                            width: 24; height: 20
-                            color: "white"
-                            opacity: 1.0
+                            x: 10; y: 12; width: 24; height: 20
+                            color: "white"; opacity: 1.0
                         }
                         Rectangle {
-                            x: 22; y: 24
-                            width: 24; height: 20
-                            color: "black"
-                            opacity: 0.45
+                            x: 22; y: 24; width: 24; height: 20
+                            color: "black"; opacity: 0.45
                         }
                     }
 

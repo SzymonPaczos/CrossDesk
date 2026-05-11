@@ -1,6 +1,6 @@
 use ipc_vsock::client::AuthCarrier;
 use proto::crossdesk::v1::filesystem_service_client::FilesystemServiceClient;
-use proto::crossdesk::v1::{ShareGuestFrame, share_guest_frame::Payload};
+use proto::crossdesk::v1::{share_guest_frame::Payload, ShareGuestFrame};
 use tokio::sync::mpsc;
 use tokio::task::JoinSet;
 use tokio_stream::wrappers::ReceiverStream;
@@ -41,7 +41,9 @@ where
             }
         };
 
-        let Some(payload) = host_frame.payload else { continue };
+        let Some(payload) = host_frame.payload else {
+            continue;
+        };
         match payload {
             proto::crossdesk::v1::share_host_frame::Payload::Mount(req) => {
                 info!(
@@ -93,8 +95,7 @@ where
                     }
 
                     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                    let ack =
-                        fs_mount::flush::mock_generate_release_ack(&share_id, &token).await;
+                    let ack = fs_mount::flush::mock_generate_release_ack(&share_id, &token).await;
                     if tx_for_worker
                         .send(ShareGuestFrame {
                             auth: Some(auth_for_worker.next()),

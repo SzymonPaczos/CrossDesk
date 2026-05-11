@@ -22,7 +22,7 @@ fn main() {
                 Some(lang)
             }
         })
-        .unwrap_or_else(|| i18n::system_locale());
+        .unwrap_or_else(i18n::system_locale);
 
     if app.as_mut().is_some() {
         i18n::install_translator(&locale);

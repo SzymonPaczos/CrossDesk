@@ -124,7 +124,9 @@ mod tests {
 
     #[test]
     fn parse_rejects_wrong_version() {
-        assert!(parse_traceparent("01-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01").is_none());
+        assert!(
+            parse_traceparent("01-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01").is_none()
+        );
     }
 
     #[test]

@@ -27,7 +27,6 @@ from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.proto.crossdesk.v1 import common_pb2, control_pb2, mgmt_pb2
 from tests.conftest import AbortError, FakeServicerContext
 
-
 # ---------------------------------------------------------------------------
 # Proto field presence
 # ---------------------------------------------------------------------------

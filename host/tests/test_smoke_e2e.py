@@ -13,7 +13,6 @@ to have generated certs at infra/certs/pki/).
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import logging
 from pathlib import Path
 from typing import AsyncIterator

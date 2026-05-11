@@ -1,19 +1,17 @@
-use std::sync::OnceLock;
+use crate::events::build_rail_event;
+use proto::crossdesk::v1::RailWindowEvent;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::OnceLock;
 use tokio::sync::mpsc;
+use tracing::{debug, error, info};
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
 use windows::Win32::System::Threading::GetCurrentThreadId;
-use windows::Win32::UI::Accessibility::{HWINEVENTHOOK, SetWinEventHook, UnhookWinEvent};
+use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
 use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, PostThreadMessageW,
-    EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE,
-    GetWindowLongW, GWL_STYLE,
-    IsWindowVisible, MSG, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_QUIT, WS_CHILD,
-    WS_POPUP,
+    DispatchMessageW, GetMessageW, GetWindowLongW, IsWindowVisible, PostThreadMessageW,
+    EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY, EVENT_OBJECT_LOCATIONCHANGE, GWL_STYLE, MSG,
+    WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS, WM_QUIT, WS_CHILD, WS_POPUP,
 };
-use tracing::{debug, error, info};
-use proto::crossdesk::v1::RailWindowEvent;
-use crate::events::build_rail_event;
 
 static EVENT_SENDER: OnceLock<mpsc::Sender<RailWindowEvent>> = OnceLock::new();
 

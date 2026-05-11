@@ -28,7 +28,7 @@ pub fn read_host_domain_uuid() -> anyhow::Result<String> {
 #[cfg(windows)]
 mod smbios {
     use windows::Win32::System::SystemInformation::{
-        FIRMWARE_TABLE_PROVIDER, GetSystemFirmwareTable,
+        GetSystemFirmwareTable, FIRMWARE_TABLE_PROVIDER,
     };
 
     // 'RSMB' little-endian, as the Win32 API expects. Wrapped in the
@@ -135,9 +135,9 @@ mod smbios {
             // 11223344-5566-7788-99aa-bbccddeeff00:
             let bytes = [
                 0x44, 0x33, 0x22, 0x11, // time_low (LE)
-                0x66, 0x55,             // time_mid (LE)
-                0x88, 0x77,             // time_hi_and_version (LE)
-                0x99, 0xaa,             // clock_seq (BE)
+                0x66, 0x55, // time_mid (LE)
+                0x88, 0x77, // time_hi_and_version (LE)
+                0x99, 0xaa, // clock_seq (BE)
                 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, // node (BE)
             ];
             assert_eq!(
@@ -159,7 +159,10 @@ mod smbios {
             table.extend_from_slice(&[0, 0]); // empty string area terminator
 
             let uuid = find_system_info_uuid(&table).expect("uuid present");
-            assert_eq!(format_smbios_uuid(uuid), "11223344-5566-7788-99aa-bbccddeeff00");
+            assert_eq!(
+                format_smbios_uuid(uuid),
+                "11223344-5566-7788-99aa-bbccddeeff00"
+            );
         }
     }
 }

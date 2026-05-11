@@ -3,8 +3,8 @@
 //! tests call [`connect_with_transport`] supplying any
 //! `tower::Service<Uri>`.
 
-use std::io;
 use hyper_util::rt::TokioIo;
+use std::io;
 use tokio::net::TcpStream;
 use tonic::transport::{Channel, Uri};
 use tower::Service;

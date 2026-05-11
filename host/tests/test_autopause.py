@@ -14,7 +14,6 @@ import pytest
 
 from crossdesk_host.watchdog.autopause import AutopauseController
 
-
 # ---------------------------------------------------------------------------
 # Session-count bookkeeping
 # ---------------------------------------------------------------------------

@@ -67,10 +67,10 @@ message Ping {
 }
 
 message Pong {
-  uint64 sequence = 1;                       // mirror Ping.sequence
-  fixed64 host_send_monotonic_ns = 2;        // echo verbatim
-  fixed64 guest_recv_monotonic_ns = 3;       // znacznik recv po stronie Guesta
-  fixed64 guest_send_monotonic_ns = 4;       // znacznik send po stronie Guesta
+  uint64 sequence = 1; // mirror Ping.sequence
+  fixed64 host_send_monotonic_ns = 2; // echo verbatim
+  fixed64 guest_recv_monotonic_ns = 3; // znacznik recv po stronie Guesta
+  fixed64 guest_send_monotonic_ns = 4; // znacznik send po stronie Guesta
   GuestState state = 5;
   ResourcePressure pressure = 6;
 }
@@ -80,7 +80,7 @@ enum GuestState {
   GUEST_STATE_BOOTING = 1;
   GUEST_STATE_READY = 2;
   GUEST_STATE_RAIL_ACTIVE = 3;
-  GUEST_STATE_FS_BUSY = 4;        // virtiofs flush w toku; toleruj wyższy RTT
+  GUEST_STATE_FS_BUSY = 4; // virtiofs flush w toku; toleruj wyższy RTT
   GUEST_STATE_DEGRADED = 5;
   GUEST_STATE_SHUTTING_DOWN = 6;
 }
@@ -99,10 +99,10 @@ message AdaptiveProfile {
   google.protobuf.Duration ewma_rtt = 1;
   google.protobuf.Duration jitter = 2;
   google.protobuf.Duration current_ping_interval = 3;
-  google.protobuf.Duration miss_threshold = 4;        // adaptive timeout
+  google.protobuf.Duration miss_threshold = 4; // adaptive timeout
   uint32 consecutive_miss_count = 5;
   RecoveryAction next_action = 6;
-  google.protobuf.Duration next_action_after = 7;     // exponential backoff
+  google.protobuf.Duration next_action_after = 7; // exponential backoff
 }
 
 enum RecoveryAction {

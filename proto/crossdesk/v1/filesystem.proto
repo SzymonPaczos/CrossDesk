@@ -150,7 +150,7 @@ message MountResult {
   enum Status {
     STATUS_UNSPECIFIED = 0;
     STATUS_MOUNTED = 1;
-    STATUS_DEVICE_NOT_PRESENT = 2;     // libvirt attach nie zmaterializował się w czasie
+    STATUS_DEVICE_NOT_PRESENT = 2; // libvirt attach nie zmaterializował się w czasie
     STATUS_DRIVE_LETTER_TAKEN = 3;
     STATUS_PERMISSION_DENIED = 4;
     STATUS_INTERNAL_ERROR = 5;
@@ -166,7 +166,7 @@ message LockReport {
   string share_id = 1;
   bytes mount_token = 2;
   uint32 open_handles = 3;
-  uint64 pending_writes_bytes = 4;     // bajty czekające na fsync
+  uint64 pending_writes_bytes = 4; // bajty czekające na fsync
   repeated FileHandle handles = 5;
   TimingMark observed_at = 6;
 }
@@ -196,7 +196,7 @@ message ReleaseAck {
   bytes mount_token = 2;
   TimingMark released_at = 3;
   uint64 total_bytes_written = 4;
-  uint32 final_handle_count_observed = 5;  // oczekiwane 0; logujemy dla forensyki
+  uint32 final_handle_count_observed = 5; // oczekiwane 0; logujemy dla forensyki
 }
 
 message DetachResult {
@@ -204,7 +204,7 @@ message DetachResult {
   enum Status {
     STATUS_UNSPECIFIED = 0;
     STATUS_DETACHED = 1;
-    STATUS_BUSY = 2;             // otwarte handle pozostały, force=false
+    STATUS_BUSY = 2; // otwarte handle pozostały, force=false
     STATUS_NOT_FOUND = 3;
     STATUS_INTERNAL_ERROR = 4;
   }
@@ -217,10 +217,10 @@ message ShareIncident {
   enum Kind {
     KIND_UNSPECIFIED = 0;
     KIND_TOKEN_MISMATCH = 1;
-    KIND_PATH_TRAVERSAL_BLOCKED = 2;     // próba ucieczki przez symlink etc.
-    KIND_UNEXPECTED_DETACH = 3;          // urządzenie zniknęło w trakcie mount
+    KIND_PATH_TRAVERSAL_BLOCKED = 2; // próba ucieczki przez symlink etc.
+    KIND_UNEXPECTED_DETACH = 3; // urządzenie zniknęło w trakcie mount
     KIND_WRITE_FAILED = 4;
-    KIND_FORCED_DETACH = 5;              // Host wymusił detach mimo otwartych uchwytów
+    KIND_FORCED_DETACH = 5; // Host wymusił detach mimo otwartych uchwytów
   }
   Kind kind = 2;
   string detail = 3;

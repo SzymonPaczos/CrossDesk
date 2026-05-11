@@ -154,6 +154,43 @@ jobs:
             --baseline .github/perf-baselines.json \
             --results host/bench-results.json
 
+  i18n-extract:
+    name: i18n string extraction check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Qt linguist tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q qttools5-dev-tools gettext
+      - name: Install host dependencies (for xgettext to find imports)
+        working-directory: host
+        run: pip install -e ".[mock]" --quiet
+      - name: Re-extract strings
+        run: bash scripts/i18n.sh extract
+      - name: Check .pot for uncommitted changes
+        # Fails if xgettext produced new msgid entries not in the committed
+        # .pot — signals that a developer added _("...") but didn't commit
+        # the updated template.  Ignores POT-Creation-Date (frozen in
+        # scripts/i18n.sh) and line-number comments which shift on
+        # every reformat.
+        run: |
+          git diff --exit-code i18n/crossdesk-host.pot \
+            || { echo "ERROR: i18n/crossdesk-host.pot has uncommitted changes."; \
+                 echo "Run 'bash scripts/i18n.sh extract' and commit the result."; \
+                 exit 1; }
+      - name: Check Qt .ts for uncommitted changes
+        run: |
+          git diff --exit-code \
+            gui/crates/crossdesk-gui/i18n/crossdesk_en.ts \
+            gui/crates/crossdesk-gui/i18n/crossdesk_pl.ts \
+            || { echo "ERROR: Qt .ts files have uncommitted changes."; \
+                 echo "Run 'bash scripts/i18n.sh extract' and commit the result."; \
+                 exit 1; }
+
   linux-kvm-smoke:
     name: Linux + KVM smoke (placeholder — needs self-hosted runner)
     runs-on: ubuntu-latest

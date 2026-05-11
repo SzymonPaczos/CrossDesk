@@ -675,9 +675,11 @@ underserved by the comparable VM-management tooling. See
   unfinished. Compiled via `lrelease` in `build.rs` at build time.
   CLI translations (install_cmd, metrics_cmd, logs_cmd, version_cmd,
   main.py) remain English-literal — follow-up wave P1.
-- **[P1] CI string-extraction job.** On merge to main, re-extract
-  `.pot` / base `.ts` template, open PR if changed (so
-  translators see new strings to translate).
+- **[✅ DONE 2026-05-11] CI string-extraction job.** `i18n-extract` job in
+  `.github/workflows/ci.yml`: installs qttools5 + gettext, runs
+  `scripts/i18n.sh extract`, then `git diff --exit-code` on `.pot`
+  and `.ts` — fails if new `_()` / `qsTr()` calls aren't committed.
+  Runs on every push and PR.
 - **[P1] `CONTRIBUTING.md` translator section.** Workflow for
   adding a new language: copy template, edit, submit PR. Lists
   current language coverage and contributors.

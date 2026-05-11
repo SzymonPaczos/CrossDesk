@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
+
 ## Recent
 
 - [2026-05-11 00:00] START · agent: claude-code · branch: feat/gui-i18n-and-polish · task: gui-i18n-and-polish · note: Full i18n pipeline: 133 Polish strings, QTranslator C++ bridge, LANG auto-detect, no-VM empty state, sidebar ComboBox removal, Dashboard nav fix, Settings restart hints.

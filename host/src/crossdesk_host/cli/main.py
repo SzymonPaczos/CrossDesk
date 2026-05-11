@@ -4,6 +4,7 @@ Subcommands:
 - ``install``       — orchestrate VM bring-up
 - ``launch <app>``  — launch a Windows app as a RAIL window
 - ``vm credentials`` — show / rotate / set / repair VM password
+- ``vm autostart``   — enable/disable systemd user unit for autostart
 - ``doctor``        — pre-flight checks
 - ``metrics``       — print daemon metrics snapshot
 - ``logs``          — aggregate and display log streams
@@ -29,6 +30,7 @@ from crossdesk_host.cli import (
     metrics_cmd,
     uninstall_cmd,
     version_cmd,
+    vm_cmd,
 )
 from crossdesk_host.i18n import _
 
@@ -49,6 +51,7 @@ def _build_parser() -> argparse.ArgumentParser:
     vm = sub.add_parser("vm", help="VM lifecycle commands")
     vm_sub = vm.add_subparsers(dest="vm_command", required=True)
     credentials_cmd.add_subparser(vm_sub)
+    vm_cmd.add_autostart_subparser(vm_sub)
 
     doctor_cmd.add_subparser(sub)
     logs_cmd.add_subparser(sub)
@@ -76,6 +79,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.command == "vm":
         if args.vm_command == "credentials":
             return credentials_cmd.run(args)
+        if args.vm_command == "autostart":
+            return vm_cmd.run_autostart(args)
     if args.command == "doctor":
         return doctor_cmd.run(args)
     if args.command == "logs":

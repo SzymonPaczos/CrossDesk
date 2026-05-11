@@ -79,10 +79,12 @@ branch names and the user merges by hand later.
 ## Active
 
 - [2026-05-11 10:00] START · agent: claude-code · branch: feat/on-demand-launch · task: on-demand-launch · note: crossdesk launch <app-id> CLI + notification + RAIL stub
-- [2026-05-11 11:00] START · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: TOML app catalog schema + 20 WinApps apps ported + crossdesk apps CLI
 - [2026-05-11 12:00] START · agent: claude-code · branch: feat/lifecycle-polish · task: lifecycle-polish · note: autopause after idle + VM autostart systemd unit + sleep/wake sync stub
 
 ## Recent
+
+- [2026-05-11 11:00] START · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: TOML app catalog schema + 20 WinApps apps ported + crossdesk apps CLI
+- [2026-05-11 11:30] END · agent: claude-code · branch: feat/app-catalog · task: app-catalog · note: result: success → branch pushed at 2d4fda3 (NOT merged). AppEntry dataclass + 20-app apps.toml (WinApps-sourced execs+MIMEs) + load_catalog/find_app + crossdesk apps list/install CLI + 17 tests; mypy --strict 108 files clean; 613 passed + 12 pre-existing async errors.
 
 - [2026-05-11 00:00] START · agent: claude-code · branch: feat/gui-i18n-and-polish · task: gui-i18n-and-polish · note: Full i18n pipeline: 133 Polish strings, QTranslator C++ bridge, LANG auto-detect, no-VM empty state, sidebar ComboBox removal, Dashboard nav fix, Settings restart hints.
 - [2026-05-11 01:00] END · agent: claude-code · branch: feat/gui-i18n-and-polish · task: gui-i18n-and-polish · note: result: success → merged as 90cc9db. All plan steps done: lrelease via build.rs; translator.{h,cpp}; mod.rs unsafe extern; main.rs LANG detect; manager.rs CROSSDESK_HAS_VM env var; Manager.qml no-VM overlay + launchWizard bridge; Dashboard StackView.view nav; Settings restart hints. 0 cargo warnings. Merged + stale branches/worktrees cleaned up.

@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-16 12:00] START · agent: claude-code · branch: fix/dev-env-audit-followups · task: dev-env-audit-followups · note: 3 manual interventions z docs/AUDIT_AUTOMATED_2026-05-11.md — bump pytest-asyncio (>=0.23→>=1.0) i mypy (>=1.10→>=2.1) w host/pyproject.toml. Rozwiązuje (#1) pytest-asyncio FixtureDef-unittest bug z pytest 8.4, (#2) `Unused type: ignore[import]` na macOS+mypy 2.0, (#3) pytest -q hang (pochodna #1). Code bez zmian — tylko dependency floor; cofnięcie 8f3ac68 `[import]→[import-not-found]` byłoby regresją na Linux+mypy 2.1.
+
 ## Recent
 
 - [2026-05-11 22:38] START · agent: claude-code · branch: chore/audit-2026-05-11 · task: audit-2026-05-11 · note: 6-fazowy audyt (linters auto-fix, dead code, rust safety, docs publicznych API, testy, raport docs/AUDIT_AUTOMATED_2026-05-11.md) — boundaries respektowane (proto/THREAT_MODEL/DECISIONS/REQUIREMENTS/GOALS/MVP_SCOPE/ROADMAP/AGENTS poza zakresem).

@@ -32,7 +32,6 @@ from crossdesk_host.proto.crossdesk.v1 import (
     filesystem_pb2,
     heartbeat_pb2,
 )
-
 from tests.conftest import AbortError, context_with_cert
 
 

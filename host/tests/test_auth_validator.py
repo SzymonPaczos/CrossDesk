@@ -12,7 +12,6 @@ import pytest
 
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.proto.crossdesk.v1 import common_pb2
-
 from tests.conftest import AbortError, FakeServicerContext, context_with_cert
 
 

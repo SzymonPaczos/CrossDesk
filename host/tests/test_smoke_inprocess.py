@@ -33,15 +33,14 @@ Environment overrides:
 from __future__ import annotations
 
 import asyncio
-import os
-import shutil
-import subprocess
-from collections.abc import AsyncIterator
-from pathlib import Path
-
+import contextlib
 import io
 import json
+import os
 import re
+import shutil
+import subprocess
+from pathlib import Path
 
 import grpc
 import pytest
@@ -60,7 +59,6 @@ from crossdesk_host.proto.crossdesk.v1 import (
     filesystem_pb2_grpc,
     heartbeat_pb2_grpc,
 )
-import contextlib
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKI = _REPO_ROOT / "infra" / "certs" / "pki"

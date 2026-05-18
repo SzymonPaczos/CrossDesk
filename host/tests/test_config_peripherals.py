@@ -31,7 +31,6 @@ from pydantic import ValidationError
 
 from crossdesk_host.config.peripherals import PeripheralsConfig, load_peripherals_config
 
-
 # ---------------------------------------------------------------------------
 # 1. Defaults
 # ---------------------------------------------------------------------------

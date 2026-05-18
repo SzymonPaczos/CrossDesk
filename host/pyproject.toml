@@ -43,11 +43,11 @@ linux = [
 # `pip install -e .[mock]` is the canonical Mac dev install.
 mock = []
 dev = [
-    "mypy>=1.10",
+    "mypy>=2.1",
     "black>=24.4",
     "ruff>=0.5",
     "pytest>=8.2",
-    "pytest-asyncio>=0.23",
+    "pytest-asyncio>=1.0",
     "pytest-benchmark>=4.0",    # microbench harness per docs/PERFORMANCE.md
     "pytest-cov>=5.0",          # coverage reports
     "pytest-timeout>=2.3",      # bounds the in-process integration harness
@@ -65,7 +65,22 @@ packages = ["src/crossdesk_host"]
 
 [tool.mypy]
 strict = true
-python_version = "3.9"
+# mypy 2.1+ requires python_version>=3.10 even though runtime requires-python
+# stays at 3.9 (`requires-python = ">=3.9"` above). The 3.10 type system is a
+# strict superset of 3.9; we don't use PEP 604 (`X | Y`) or other 3.10-only
+# syntax in source, so this only changes type checking, not runtime support.
+python_version = "3.10"
+
+# dbus_next is unavailable on macOS dev hosts and installable on Linux. The
+# `# type: ignore[import]` super-category in dbus_listener.py + notifications.py
+# is intentional (see commit 8f3ac68) so the same source works under both:
+# - macOS without dbus_next  → [import-not-found]
+# - Linux with dbus-next     → [import-untyped]
+# mypy --strict's `warn_unused_ignores` flags whichever category isn't
+# matched on the current host. Disable it for these two modules only.
+[[tool.mypy.overrides]]
+module = ["crossdesk_host.lifecycle.dbus_listener", "crossdesk_host.integrations.notifications"]
+warn_unused_ignores = false
 
 # Generated protobuf modules use descriptor-pool attribute lookup that strict
 # mypy cannot model without stubs from `mypy-protobuf`. Skipping their imports

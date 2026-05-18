@@ -94,12 +94,14 @@ impl cxx_qt::Initialize for qobject::WizardState {
     fn initialize(self: std::pin::Pin<&mut Self>) {
         let mut this = self;
         let locale = detect_locale();
-        this.as_mut().set_host_timezone(QString::from(&detect_timezone()));
+        this.as_mut()
+            .set_host_timezone(QString::from(&detect_timezone()));
         this.as_mut().set_host_locale(QString::from(&locale));
         this.as_mut().set_host_ram_gb(detect_ram_gb());
         this.as_mut().set_host_vcpu(detect_vcpu());
         // Pre-select the download language that matches the host locale.
-        this.as_mut().set_download_language(QString::from(&locale_to_download_language(&locale)));
+        this.as_mut()
+            .set_download_language(QString::from(&locale_to_download_language(&locale)));
     }
 }
 
@@ -115,7 +117,7 @@ fn locale_to_download_language(locale: &str) -> String {
         "ja" => "Japanese",
         "ko" => "Korean",
         "zh" => "Chinese (Simplified)",
-        _    => "English (International)",
+        _ => "English (International)",
     }
     .to_owned()
 }
@@ -155,7 +157,7 @@ fn detect_vcpu() -> i32 {
     let cpus = std::thread::available_parallelism()
         .map(|n| n.get() as i32)
         .unwrap_or(4);
-    ((cpus / 2).max(2)).min(8)
+    (cpus / 2).clamp(2, 8)
 }
 
 impl qobject::WizardState {

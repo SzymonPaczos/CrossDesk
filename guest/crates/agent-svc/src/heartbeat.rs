@@ -1,14 +1,14 @@
 use std::time::Instant;
 use tokio::sync::mpsc;
 use tonic::Request;
-use tracing::{info, debug, error};
+use tracing::{debug, error, info};
 
 use ipc_vsock::client::AuthCarrier;
-use proto::crossdesk::v1::{
-    heartbeat_service_client::HeartbeatServiceClient,
-    GuestFrame, GuestState, Pong, ResourcePressure,
-};
 use proto::crossdesk::v1::guest_frame::Payload;
+use proto::crossdesk::v1::{
+    heartbeat_service_client::HeartbeatServiceClient, GuestFrame, GuestState, Pong,
+    ResourcePressure,
+};
 
 pub async fn run_heartbeat_loop<T>(
     mut client: HeartbeatServiceClient<T>,
@@ -24,7 +24,7 @@ where
 
     let (tx, rx) = mpsc::channel::<GuestFrame>(32);
     let request = Request::new(tokio_stream::wrappers::ReceiverStream::new(rx));
-    
+
     // Inicjujemy asynchronicznie strumień z Hostem
     let mut response_stream = client.channel(request).await?.into_inner();
     let epoch_start = Instant::now();
@@ -34,12 +34,14 @@ where
         match msg_result {
             Ok(host_frame) => {
                 let recv_ns = epoch_start.elapsed().as_nanos() as u64;
-                
-                if let Some(proto::crossdesk::v1::host_frame::Payload::Ping(ping)) = host_frame.payload {
+
+                if let Some(proto::crossdesk::v1::host_frame::Payload::Ping(ping)) =
+                    host_frame.payload
+                {
                     debug!("Received PING sequence: {}", ping.sequence);
-                    
+
                     let send_ns = epoch_start.elapsed().as_nanos() as u64;
-                    
+
                     let pong_frame = GuestFrame {
                         auth: Some(auth.next()),
                         payload: Some(Payload::Pong(Pong {
@@ -55,7 +57,7 @@ where
                             }),
                         })),
                     };
-                    
+
                     if tx.send(pong_frame).await.is_err() {
                         error!("Failed to send PONG frame");
                         break;

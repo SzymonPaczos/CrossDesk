@@ -1,6 +1,6 @@
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
 use rand::RngCore;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use tonic::transport::{Certificate, ClientTlsConfig, Endpoint, Identity};
 
 use proto::crossdesk::v1::AuthContext;

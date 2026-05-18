@@ -10,6 +10,6 @@ pub mod client;
 pub mod tls;
 pub mod transport;
 
-pub use transport::real::RealTransport;
 #[cfg(any(test, feature = "mock"))]
 pub use transport::mock::{MockHooks, MockTransport};
+pub use transport::real::RealTransport;

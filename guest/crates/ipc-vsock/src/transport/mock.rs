@@ -6,12 +6,12 @@
 //! Use only in tests or with `--features mock`. The cfg gate in `lib.rs`
 //! prevents production binaries from accidentally linking it.
 
+use hyper_util::rt::TokioIo;
 use std::future::Future;
 use std::io;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
-use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use tonic::transport::Uri;
 use tower::Service;

@@ -1,3 +1,13 @@
+"""CrossDesk host daemon entry point.
+
+Boots structured logging (must happen before any other ``crossdesk_host``
+import that calls ``structlog.get_logger`` at module scope), wires the
+mTLS-aware gRPC servicers, opens the libvirt control plane, and runs
+the asyncio loop until SIGTERM. Configuration is loaded once from
+``~/.config/crossdesk/config.toml`` via ``crossdesk_host.config``; the
+daemon does not reload on SIGHUP — restart instead.
+"""
+
 import os
 
 # Configure structured logging FIRST — before importing any module that
@@ -52,11 +62,15 @@ logger = get_logger("host.daemon")
 
 
 async def main() -> None:
-    # Single typed entry point for every operator-facing knob (paths,
-    # ports, mTLS material, peripherals). Defaults match the historical
-    # hardcoded values in this file so a missing config.toml keeps
-    # behaviour identical; an operator that wants to override anything
-    # drops a ``~/.config/crossdesk/config.toml`` and restarts.
+    """Run the daemon until the asyncio loop is cancelled.
+
+    Loads typed configuration from ``~/.config/crossdesk/config.toml``
+    (defaults preserved if the file is absent), wires mTLS material from
+    the configured PKI paths, instantiates the libvirt controller +
+    servicers, and starts the gRPC server. Returns when the server is
+    asked to stop; does not catch SIGTERM itself — that is the caller's
+    job (``__main__.py`` uses ``asyncio.run``).
+    """
     from crossdesk_host.config import load_from_toml
 
     cfg = load_from_toml()

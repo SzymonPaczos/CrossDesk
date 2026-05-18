@@ -11,7 +11,7 @@ pub struct MockScanner {
 
 impl MockScanner {
     #[allow(dead_code)] // Used by tests; production daemon calls default()
-                       // and seeds entries through the host's mgmt RPC.
+                        // and seeds entries through the host's mgmt RPC.
     pub fn with_canned() -> Self {
         Self {
             entries: vec![
@@ -73,8 +73,7 @@ mod tests {
     fn canned_list_covers_each_source_type() {
         let scanner = MockScanner::with_canned();
         let results = scanner.scan().unwrap();
-        let sources: std::collections::HashSet<_> =
-            results.iter().map(|e| e.source).collect();
+        let sources: std::collections::HashSet<_> = results.iter().map(|e| e.source).collect();
         assert!(sources.contains(&Source::AppPaths));
         assert!(sources.contains(&Source::UninstallHklm64));
         assert!(sources.contains(&Source::UninstallHkcu));
@@ -85,7 +84,10 @@ mod tests {
     fn canned_word_executable_is_office_path() {
         let scanner = MockScanner::with_canned();
         let results = scanner.scan().unwrap();
-        let word = results.iter().find(|e| e.canonical_id == "winword").unwrap();
+        let word = results
+            .iter()
+            .find(|e| e.canonical_id == "winword")
+            .unwrap();
         assert!(word.executable.contains("WINWORD.EXE"));
     }
 

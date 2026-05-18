@@ -31,12 +31,7 @@ async fn fail_next_connect_returns_injected_error_and_clears() {
     // real listener from a unit test without setting one up, so just assert
     // the queued failure was consumed.
     assert!(
-        transport
-            .hooks
-            .fail_next_connect
-            .lock()
-            .unwrap()
-            .is_none(),
+        transport.hooks.fail_next_connect.lock().unwrap().is_none(),
         "hook should clear after firing"
     );
 }

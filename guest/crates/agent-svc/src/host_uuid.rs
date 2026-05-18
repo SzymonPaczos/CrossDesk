@@ -28,7 +28,7 @@ pub fn read_host_domain_uuid() -> anyhow::Result<String> {
 #[cfg(windows)]
 mod smbios {
     use windows::Win32::System::SystemInformation::{
-        FIRMWARE_TABLE_PROVIDER, GetSystemFirmwareTable,
+        GetSystemFirmwareTable, FIRMWARE_TABLE_PROVIDER,
     };
 
     // 'RSMB' little-endian, as the Win32 API expects. Wrapped in the
@@ -54,12 +54,17 @@ mod smbios {
     fn read_smbios_table() -> anyhow::Result<Vec<u8>> {
         // Two-call idiom: first probe with a zero buffer to get the size, then
         // allocate and fill.
+        // Safety: `None` for the buffer is documented by the Win32 API as a
+        // size probe — no memory is read or written by the kernel.
         let size = unsafe { GetSystemFirmwareTable(SMBIOS_PROVIDER, 0, None) };
         if size == 0 {
             anyhow::bail!("GetSystemFirmwareTable returned 0 (SMBIOS unavailable)");
         }
 
         let mut buf = vec![0u8; size as usize];
+        // Safety: `buf` is a freshly-allocated Vec<u8> of exactly `size` bytes;
+        // the kernel writes at most `size` bytes and we trust the just-probed
+        // length. `&mut buf` provides a unique mutable reference for the call.
         let written = unsafe { GetSystemFirmwareTable(SMBIOS_PROVIDER, 0, Some(&mut buf)) };
         if written == 0 || written as usize > buf.len() {
             anyhow::bail!(
@@ -135,9 +140,9 @@ mod smbios {
             // 11223344-5566-7788-99aa-bbccddeeff00:
             let bytes = [
                 0x44, 0x33, 0x22, 0x11, // time_low (LE)
-                0x66, 0x55,             // time_mid (LE)
-                0x88, 0x77,             // time_hi_and_version (LE)
-                0x99, 0xaa,             // clock_seq (BE)
+                0x66, 0x55, // time_mid (LE)
+                0x88, 0x77, // time_hi_and_version (LE)
+                0x99, 0xaa, // clock_seq (BE)
                 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, // node (BE)
             ];
             assert_eq!(
@@ -159,7 +164,10 @@ mod smbios {
             table.extend_from_slice(&[0, 0]); // empty string area terminator
 
             let uuid = find_system_info_uuid(&table).expect("uuid present");
-            assert_eq!(format_smbios_uuid(uuid), "11223344-5566-7788-99aa-bbccddeeff00");
+            assert_eq!(
+                format_smbios_uuid(uuid),
+                "11223344-5566-7788-99aa-bbccddeeff00"
+            );
         }
     }
 }

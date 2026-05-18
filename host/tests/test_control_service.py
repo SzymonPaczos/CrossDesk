@@ -11,12 +11,10 @@ from typing import AsyncIterator, List
 from unittest.mock import AsyncMock, MagicMock
 
 import grpc
-import pytest
 
 from crossdesk_host.display.rail_manager import RailManager
 from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.proto.crossdesk.v1 import common_pb2, control_pb2
-
 from tests.conftest import AbortError, FakeServicerContext
 
 

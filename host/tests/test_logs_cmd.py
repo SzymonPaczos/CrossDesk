@@ -19,7 +19,6 @@ from crossdesk_host.cli.logs_cmd import (
 )
 from crossdesk_host.cli.main import main
 
-
 # ---------------------------------------------------------------------------
 # Duration parsing
 # ---------------------------------------------------------------------------

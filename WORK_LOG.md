@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 14:59] START · agent: claude-code · branch: fix/dbus-next-attr-defined · task: dbus-next-attr-defined · note: Linux+Python 3.14+mypy 2.1+dbus-next 0.2.3 surfaces 2 [attr-defined] errors on `from dbus_next import BusType` / `from dbus_next.aio import MessageBus` (dbus_listener.py:36-37). Existing `# type: ignore[import]` doesn't cover attr-defined category. Fix: extend to `[import,attr-defined]` on both lines. pyproject.toml override (warn_unused_ignores=false for dbus_listener+notifications modules) handles cross-platform asymmetry. 2-line code change + WORK_LOG.
+
 ## Recent
 
 - [2026-05-16 12:00] START · agent: claude-code · branch: fix/dev-env-audit-followups · task: dev-env-audit-followups · note: 3 manual interventions z docs/AUDIT_AUTOMATED_2026-05-11.md — bump pytest-asyncio (>=0.23→>=1.0) i mypy (>=1.10→>=2.1) w host/pyproject.toml. Rozwiązuje (#1) pytest-asyncio FixtureDef-unittest bug z pytest 8.4, (#2) `Unused type: ignore[import]` na macOS+mypy 2.0, (#3) pytest -q hang (pochodna #1). Code bez zmian — tylko dependency floor; cofnięcie 8f3ac68 `[import]→[import-not-found]` byłoby regresją na Linux+mypy 2.1.

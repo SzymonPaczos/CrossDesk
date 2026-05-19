@@ -33,8 +33,8 @@ async def start_listener(coordinator: LifecycleCoordinator) -> asyncio.Task[None
     Raises ``RuntimeError`` if ``dbus-next`` isn't installed.
     """
     try:
-        from dbus_next import BusType  # type: ignore[import]
-        from dbus_next.aio import MessageBus  # type: ignore[import]
+        from dbus_next import BusType  # type: ignore[import,attr-defined]
+        from dbus_next.aio import MessageBus  # type: ignore[import,attr-defined]
     except ImportError as exc:
         raise RuntimeError(
             "dbus-next not installed; install with "

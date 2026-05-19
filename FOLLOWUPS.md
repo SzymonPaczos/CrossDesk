@@ -761,9 +761,12 @@ underserved by the comparable VM-management tooling. See
   `scripts/i18n.sh extract`, then `git diff --exit-code` on `.pot`
   and `.ts` — fails if new `_()` / `qsTr()` calls aren't committed.
   Runs on every push and PR.
-- **[P1] `CONTRIBUTING.md` translator section.** Workflow for
-  adding a new language: copy template, edit, submit PR. Lists
-  current language coverage and contributors.
+- **[✅ DONE 2026-05-19] `CONTRIBUTING.md` translator section.**
+  Top-level `CONTRIBUTING.md` with a Translator workflow section
+  walking the 5-step add-a-language flow (`msginit` + `cp .ts` +
+  edit + `scripts/i18n.sh compile` + smoke), plus a "Current
+  language coverage" table contributors can append to. Cross-refs
+  i18n/README.md, docs/I18N.md, scripts/i18n.sh.
 - **[P2] Weblate (or similar) integration.** Hosted translation
   service so translators don't need git. Decision contingent on
   whether community contribution volume warrants the setup.

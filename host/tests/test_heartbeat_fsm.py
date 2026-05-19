@@ -241,3 +241,100 @@ async def test_auth_validator_called_for_every_pong(monkeypatch) -> None:
         pass
 
     assert sum(auth_called) == 3
+
+
+# ---------------------------------------------------------------------------
+# Error-notification wiring on HARD_DESTROY (FOLLOWUPS:1019 follow-up)
+# ---------------------------------------------------------------------------
+
+
+async def test_hard_destroy_fires_forced_stop_notification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from crossdesk_host.lifecycle.notifications import RecordingNotifier
+
+    iter_ticks = iter([asyncio.TimeoutError] * 11)
+
+    async def fake_wait_for(awaitable, timeout):
+        try:
+            tick = next(iter_ticks)
+        except StopIteration:
+            raise StopAsyncIteration
+        if tick is asyncio.TimeoutError:
+            raise asyncio.TimeoutError
+        if asyncio.iscoroutine(awaitable):
+            awaitable.close()
+        return tick
+
+    async def fake_sleep(_):
+        return None
+
+    monkeypatch.setattr(heartbeat_module.asyncio, "wait_for", fake_wait_for)
+    monkeypatch.setattr(heartbeat_module.asyncio, "sleep", fake_sleep)
+
+    libvirt = MagicMock()
+    notifier = RecordingNotifier()
+    auth = MagicMock()
+    auth.verify_auth_context = AsyncMock()
+    servicer = HeartbeatServiceServicer(auth, libvirt, notifier=notifier)
+
+    async def empty_iter():
+        if False:
+            yield
+        return
+
+    async for _ in servicer.Channel(empty_iter(), FakeServicerContext()):
+        pass
+
+    assert libvirt.hard_destroy.call_count == 1
+    assert len(notifier.calls) == 1
+    assert "force-stopped" in notifier.calls[0].summary
+    assert notifier.calls[0].urgency.value == "critical"
+
+
+async def test_soft_recovery_does_not_fire_forced_stop_notification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from crossdesk_host.lifecycle.notifications import RecordingNotifier
+
+    iter_ticks = iter([asyncio.TimeoutError] * 6 + [StopAsyncIteration])
+
+    async def fake_wait_for(awaitable, timeout):
+        try:
+            tick = next(iter_ticks)
+        except StopIteration:
+            raise StopAsyncIteration
+        if tick is asyncio.TimeoutError:
+            raise asyncio.TimeoutError
+        if tick is StopAsyncIteration:
+            raise StopAsyncIteration
+        if asyncio.iscoroutine(awaitable):
+            awaitable.close()
+        return tick
+
+    async def fake_sleep(_):
+        return None
+
+    monkeypatch.setattr(heartbeat_module.asyncio, "wait_for", fake_wait_for)
+    monkeypatch.setattr(heartbeat_module.asyncio, "sleep", fake_sleep)
+
+    libvirt = MagicMock()
+    notifier = RecordingNotifier()
+    auth = MagicMock()
+    auth.verify_auth_context = AsyncMock()
+    servicer = HeartbeatServiceServicer(auth, libvirt, notifier=notifier)
+
+    async def empty_iter():
+        if False:
+            yield
+        return
+
+    async for _ in servicer.Channel(empty_iter(), FakeServicerContext()):
+        pass
+
+    # SOFT_RECOVERY fired graceful_shutdown, not HARD_DESTROY → no
+    # forced-stop notification should be on the wire yet.
+    assert libvirt.graceful_shutdown.call_count >= 1
+    assert libvirt.hard_destroy.call_count == 0
+    assert notifier.calls == []
+

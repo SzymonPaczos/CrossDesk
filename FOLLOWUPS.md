@@ -133,15 +133,16 @@ DEC-0005 for the architectural commitment.
   build the `proto` crate without a system `protoc`. Fixed three
   pre-existing Windows-only bugs in `rail-bridge`, `agent-svc`
   (windows-0.58 API drift surfaced by first real cross-compile).
-- **[P1] Cross-rs end-to-end build for this repo.** Cross-rs runs
-  but fails on this layout: it only mounts the cargo workspace
-  (`guest/`), so `proto/build.rs`'s relative paths to
-  `CrossDesk/proto/crossdesk/v1/*.proto` (one directory above the
-  workspace) escape the container mount. Needs either a
-  `Cross.toml` volume mount, a top-level workspace `Cargo.toml` at
-  the repo root, or a vendored proto-files copy step. Required
-  before Week 22 release pipeline (CI release matrix builds
-  `agent.exe` via cross-rs).
+- **[✅ DONE 2026-05-19] Cross-rs end-to-end build for this repo.**
+  Vendoring approach: `scripts/cross-build-agent.sh` rsyncs
+  `proto/` into `guest/proto-vendored/` (gitignored) before
+  invoking `cross build`. `guest/crates/proto/build.rs` resolves
+  the IDL tree from `$CROSSDESK_PROTO_DIR` → `guest/proto-vendored/`
+  → repo-relative `../../../proto` in that order, so native
+  `cargo check --target x86_64-pc-windows-gnu` keeps using the
+  repo-relative path unchanged. Verified locally: native build
+  clean; vendored fallback exercised (created vendored dir,
+  observed build.rs picked it up).
 
 [vws]: docs/CROSS_PLATFORM_DEV.md#verified-working-command-sequence-2026-05-08
 - **[✅ DONE 2026-05-08] Transport abstraction (trait + real + mock).**

@@ -29,6 +29,10 @@ target/
 host/generated/
 guest/crates/proto/src/generated/
 buf.lock
+# cross-rs vendored copy of repo-root proto/ (populated by
+# scripts/cross-build-agent.sh — never committed, regenerated on
+# every cross build).
+guest/proto-vendored/
 
 # Build artefacts
 *.tar

@@ -947,7 +947,14 @@ document software rendering as the always-works fallback.
   gated by `session_starter.spawn_rail_with_auth_check()` (raises
   `AuthHealthCheckFailed` with `repair_hint`). `crossdesk vm credentials
   check` + `repair` CLI subcommands. `doctor` probe `check_vm_credentials`.
-  Real `LogonUserW` call hardware-gated (Stage 4).
+  Stage 4 wired 2026-05-19: `guest/crates/agent-svc/src/credentials.rs`
+  `windows_impl::verify` now calls real `LogonUserW` (LOGON32_LOGON_NETWORK
+  + LOGON32_PROVIDER_DEFAULT, UTF-16 encode, `GetLastError` → Status mapping
+  with 1326/1907/1909 explicit + Unavailable catch-all). Requires
+  `Win32_Security` feature on the workspace windows crate. End-to-end run
+  on real Windows guest is still hardware-gated. THREAT_MODEL residual-risk
+  flip + VERSIONING `auth.verify-credentials.v1` capability promotion are
+  user-owned (security claims per AGENTS.md boundaries).
 
 ## Post-MVP (winapps-parity features beyond Phase 5)
 

@@ -29,6 +29,7 @@ class MockHooks:
     fail_next_resume: bool = False
     fail_next_attach_virtiofs: bool = False
     fail_next_detach_virtiofs: bool = False
+    fail_next_is_running: bool = False
 
     hard_destroy_count: int = 0
     graceful_shutdown_count: int = 0
@@ -36,6 +37,7 @@ class MockHooks:
     resume_count: int = 0
     attach_virtiofs_count: int = 0
     detach_virtiofs_count: int = 0
+    is_running_count: int = 0
     suspended: bool = False
 
     attached_shares: set[str] = field(default_factory=set)
@@ -44,6 +46,20 @@ class MockHooks:
 
     memory_mib: int = 4096
     """Current balloon target in MiB. Adjusted by set_memory()."""
+
+    running: bool = True
+    """In-memory power state. ``graceful_shutdown`` only flips this
+    after ``shutdown_polls_remaining`` calls to ``is_running`` (so
+    tests can script "ACPI takes 3s" vs "ignores ACPI"). The flag is
+    flipped back to ``True`` by ``hard_destroy`` (which performs a
+    destroy+start) to mirror real libvirt semantics."""
+
+    shutdown_polls_remaining: int = 0
+    """Tests set this to N to make ``graceful_shutdown`` require N
+    subsequent ``is_running`` polls before the domain reports off.
+    Default 0 means the next poll already returns False (instant
+    ACPI). Set to a large value to simulate a wedged guest that never
+    honours ACPI."""
 
 
 class LibvirtControllerMock(LibvirtController):
@@ -70,6 +86,10 @@ class LibvirtControllerMock(LibvirtController):
             self.domain_name,
         )
         self.hooks.hard_destroy_count += 1
+        # Real virsh destroy+start leaves the domain running again;
+        # mirror that so subsequent is_running() observations agree.
+        self.hooks.running = True
+        self.hooks.shutdown_polls_remaining = 0
 
     def graceful_shutdown(self) -> None:
         if self.hooks.fail_next_graceful_shutdown:
@@ -80,6 +100,24 @@ class LibvirtControllerMock(LibvirtController):
             self.domain_name,
         )
         self.hooks.graceful_shutdown_count += 1
+        # ``shutdown_polls_remaining`` is the caller's pre-set knob;
+        # don't reset it here. ``is_running`` decrements until 0, at
+        # which point the domain reports off.
+
+    def is_running(self) -> bool:
+        if self.hooks.fail_next_is_running:
+            self.hooks.fail_next_is_running = False
+            raise RuntimeError("mock-injected is_running failure")
+        self.hooks.is_running_count += 1
+        if not self.hooks.running:
+            return False
+        if self.hooks.shutdown_polls_remaining > 0:
+            self.hooks.shutdown_polls_remaining -= 1
+            if self.hooks.shutdown_polls_remaining == 0:
+                self.hooks.running = False
+            return True
+        # No pending shutdown countdown: report the persistent flag.
+        return self.hooks.running
 
     def suspend(self) -> None:
         if self.hooks.fail_next_suspend:

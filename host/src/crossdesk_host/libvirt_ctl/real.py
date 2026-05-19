@@ -83,6 +83,16 @@ class RealLibvirtController(LibvirtController):
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"shutdown failed: {exc}") from exc
 
+    def is_running(self) -> bool:
+        import libvirt
+
+        domain = self._domain()
+        try:
+            # virDomain.isActive returns 1 if running, 0 if defined-but-off.
+            return bool(domain.isActive())
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"isActive failed: {exc}") from exc
+
     def suspend(self) -> None:
         import libvirt
 

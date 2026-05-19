@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 17:47] START · agent: claude-code · branch: feat/wire-error-notifications · task: wire-error-notifications · note: Follow-up to task 7 (error_notifications.py shipped 5 helpers; only notify_vm_failed_to_start wired from launch_cmd). Wires the remaining three relevant helpers to real call sites: (a) HeartbeatServiceServicer.__init__ accepts optional Notifier and fires notify_forced_stop right after libvirt_ctl.hard_destroy() in the HARD_DESTROY branch; (b) LifecycleCoordinator.__init__ accepts optional Notifier and fires notify_suspend_resume_failed when libvirt.suspend() / .resume() raise (and re-raises so the daemon still sees the error); (c) RailManager.__init__ accepts optional Notifier and fires notify_rdp_drop when FreeRDP terminate raises during _handle_destroy. notify_vm_failed_to_start has no further call site (covered by launch_cmd already); deferred.
+
 ## Recent
 
 - [2026-05-19 17:41] START · agent: claude-code · branch: feat/filesystem-controller-abstraction · task: filesystem-controller-abstraction · note: FOLLOWUPS:221 P1 Filesystem service abstraction. Today FilesystemServiceServicer calls libvirt_ctl.attach_virtiofs / detach_virtiofs directly, mixing FS lifecycle with VM lifecycle concerns. Adds `FilesystemController` Protocol (attach_share / detach_share / list_active_shares) in abstractions/ + MockFilesystemController (in-memory state + idempotence + failure-injection hooks) in filesystem_ctl/mock.py + thin LibvirtFilesystemController that wraps libvirt_ctl for production. Does NOT refactor FilesystemServiceServicer yet — call-site switch is a separate diff so the abstraction lands isolated and reviewable. Phase 5 prep.

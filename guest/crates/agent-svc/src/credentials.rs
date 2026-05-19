@@ -107,23 +107,82 @@ mod mock_impl {
 
 #[cfg(all(target_os = "windows", not(feature = "mock")))]
 mod windows_impl {
-    //! Real `LogonUserW` impl. Stage 4 (post-hardware) — placeholder
-    //! zwracający `STATUS_UNAVAILABLE` żeby ścieżka kompilowała się
-    //! cross-compile na Mac dla x86_64-pc-windows-gnu, ale nigdy nie
-    //! wprowadziła hosta w błąd że credentials są OK. Real wiring:
-    //! `windows::Win32::Security::LogonUserW` z LOGON32_LOGON_NETWORK
-    //! + LOGON32_PROVIDER_DEFAULT, mapowanie GetLastError na enum.
-
+    //! Real `LogonUserW` impl (Stage 4). LOGON32_LOGON_NETWORK +
+    //! LOGON32_PROVIDER_DEFAULT — cheapest mode: no desktop allocated,
+    //! no roaming profile loaded, runs entirely in LSA. The returned
+    //! handle is closed immediately (we only care whether the logon
+    //! would have succeeded). GetLastError is mapped to the proto
+    //! Status enum; unknown codes fall through to Unavailable so the
+    //! host can fail closed and surface a repair hint.
+    //!
+    //! Why we don't use `windows::Result` for the Win32 error: the
+    //! crate wraps BOOL returns into `Result<(), windows::core::Error>`
+    //! whose `.code()` is a HRESULT, not a raw Win32 code. To keep the
+    //! proto contract (`win32_error: uint32`) faithful we call
+    //! `GetLastError()` directly after the unsuccessful logon.
     use super::{make_result, Status};
     use proto::crossdesk::v1::{VerifyCredentialsRequest, VerifyCredentialsResult};
+    use std::iter::once;
+    use std::os::windows::ffi::OsStrExt;
+    use std::ffi::OsStr;
+    use windows::core::PCWSTR;
+    use windows::Win32::Foundation::{CloseHandle, GetLastError, HANDLE};
+    use windows::Win32::Security::{
+        LogonUserW, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT,
+    };
 
     pub fn verify(req: &VerifyCredentialsRequest) -> VerifyCredentialsResult {
-        make_result(
-            req,
-            Status::Unavailable,
-            "real LogonUserW not yet wired — Stage 4 / post-hardware",
-            0,
-        )
+        let username = to_wide(&req.username);
+        let password = to_wide(&req.password);
+        // Empty domain → local account; pass NULL pointer so LSA
+        // resolves "username" against the machine SAM database.
+        let domain_buf: Option<Vec<u16>> = if req.domain.is_empty() {
+            None
+        } else {
+            Some(to_wide(&req.domain))
+        };
+        let domain_pcwstr = match &domain_buf {
+            Some(buf) => PCWSTR(buf.as_ptr()),
+            None => PCWSTR::null(),
+        };
+
+        let mut token = HANDLE::default();
+        // Safety: LogonUserW writes to `token` (out-param) and reads
+        // null-terminated UTF-16 strings from `username`/`password`/
+        // `domain`. All buffers outlive the call.
+        let result = unsafe {
+            LogonUserW(
+                PCWSTR(username.as_ptr()),
+                domain_pcwstr,
+                PCWSTR(password.as_ptr()),
+                LOGON32_LOGON_NETWORK,
+                LOGON32_PROVIDER_DEFAULT,
+                &mut token,
+            )
+        };
+
+        if result.is_ok() {
+            if !token.is_invalid() {
+                // Safety: token was obtained from a successful
+                // LogonUserW call above; we own it and close it now.
+                let _ = unsafe { CloseHandle(token) };
+            }
+            return make_result(req, Status::Ok, "logon succeeded", 0);
+        }
+
+        // Safety: trivial FFI call, no preconditions.
+        let err = unsafe { GetLastError() }.0;
+        let (status, detail) = match err {
+            1326 => (Status::FailBadCredentials, "invalid username or password"),
+            1909 => (Status::FailAccountLocked, "account locked out"),
+            1907 => (Status::FailPasswordExpired, "password expired"),
+            _ => (Status::Unavailable, "logon failed"),
+        };
+        make_result(req, status, detail, err)
+    }
+
+    fn to_wide(s: &str) -> Vec<u16> {
+        OsStr::new(s).encode_wide().chain(once(0)).collect()
     }
 }
 

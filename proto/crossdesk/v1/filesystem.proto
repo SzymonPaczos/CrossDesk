@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package crossdesk.v1;
 
-import "google/protobuf/duration.proto";
 import "crossdesk/v1/common.proto";
+import "google/protobuf/duration.proto";
 
 // =============================================================================
 // CrossDesk Filesystem Plane — cykl życia JIT VirtioFS share'a.

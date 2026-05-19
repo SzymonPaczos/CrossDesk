@@ -48,9 +48,14 @@ cmd_extract() {
     # absolute filesystem path into every entry.
     (
         cd "$REPO_ROOT"
+        # find traversal order is filesystem-dependent (inode layout
+        # differs between dev box and CI runner), and xgettext writes
+        # `#:` source-reference comments in input order. Sort so the
+        # .pot is byte-stable regardless of where extract runs.
         find host/src -type f -name '*.py' \
             ! -path "*/proto/*" \
             -print0 \
+          | LC_ALL=C sort -z \
           | xargs -0 xgettext \
                 --language=Python \
                 --keyword=_ \

@@ -14,7 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ['3.9', '3.12']
+        # 3.9 is dropped from CI: mypy 2.1+ (dev extra) requires 3.10+,
+        # so the install step itself fails on 3.9 before any check runs.
+        # `requires-python = ">=3.9"` in pyproject is the runtime floor
+        # for end-users; bumping it is a user decision (public API).
+        python-version: ['3.12']
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -126,10 +130,12 @@ jobs:
         # Reads gui/.qmllint.ini for the warning-level overrides
         # (CXX-Qt-registered types are invisible to qmllint, and the
         # Quick.LayoutsPositioning tech-debt is tracked in FOLLOWUPS).
-        # -W 0 turns every remaining enabled warning into a hard fail.
+        # No -W flag: qmllint < 6.5 (Ubuntu 24.04 ships 6.4.2) rejects
+        # it as unknown. Errors still fail the step; warnings surface
+        # as text. Flip on -W 0 once the runner pulls Qt 6.5+.
         run: |
           find crates/crossdesk-gui/qml -name '*.qml' -print0 \
-            | xargs -0 -n 1 /usr/lib/qt6/bin/qmllint -W 0
+            | xargs -0 -n 1 /usr/lib/qt6/bin/qmllint
 
   proto:
     name: Proto lint + format

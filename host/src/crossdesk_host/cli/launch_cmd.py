@@ -25,6 +25,7 @@ from typing import Optional
 
 from crossdesk_host.i18n import _
 from crossdesk_host.ipc.management import mgmt_socket_path
+from crossdesk_host.lifecycle.error_notifications import notify_vm_failed_to_start
 from crossdesk_host.lifecycle.notifications import SubprocessNotifier
 
 logger = logging.getLogger(__name__)
@@ -130,10 +131,9 @@ def _launch(
     # and is overkill for a "is anything listening?" gate.
     sock = _socket_path_override or str(mgmt_socket_path())
     if not pathlib.Path(sock).exists():
-        print(
-            _("VM not running. Start it with: crossdesk vm start"),
-            file=sys.stderr,
-        )
+        msg = _("VM not running. Start it with: crossdesk vm start")
+        print(msg, file=sys.stderr)
+        notify_vm_failed_to_start(notifier, reason=msg)
         return 1
 
     # Notify the user before kicking off the (eventually async) launch

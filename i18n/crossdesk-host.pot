@@ -16,52 +16,110 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:20
-msgid "removed:"
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:33
+msgid "CrossDesk: VM failed to start"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:24
-msgid "skipped:"
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:34
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:86
+msgid "Run: crossdesk doctor"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:28
-msgid "failed:"
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:45
+msgid "CrossDesk: VM was force-stopped"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:52
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:46
+msgid "Heartbeat watchdog detected the guest was unresponsive."
+msgstr ""
+
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:57
+msgid "a CrossDesk app"
+msgstr ""
+
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:59
+msgid "CrossDesk: Connection dropped"
+msgstr ""
+
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:60
 #, python-brace-format
-msgid "crossdesk install (state at {path})"
+msgid "{name} disconnected; reconnecting…"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:54
-msgid "dry-run mode: no libvirt or network calls"
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:72
+msgid "CrossDesk: Guest credentials need repair"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:58
-msgid "all steps already done; nothing to do"
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:73
+msgid "Run: crossdesk vm credentials repair"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:63
+#: host/src/crossdesk_host/lifecycle/error_notifications.py:85
+msgid "CrossDesk: Sleep/resume sync failed"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:69
+msgid "invalid duration {text!r}: expected e.g. 5m, 1h, 30s, 2h30m"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:223
 #, python-brace-format
-msgid "  ✓ {step} (already done)"
+msgid "warning: could not read host log file {path}: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:65
+#: host/src/crossdesk_host/cli/logs_cmd.py:228
 #, python-brace-format
-msgid "  → {step}"
+msgid ""
+"warning: host logs not available (no systemd journal; no log file at {path})"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:78
-msgid "    saved credentials for user {user!r}"
-msgstr ""
-
-#: host/src/crossdesk_host/cli/install_cmd.py:80
+#: host/src/crossdesk_host/cli/logs_cmd.py:282
 #, python-brace-format
-msgid "    {step}: hardware-gated; not implemented in --no-hardware mode"
+msgid "warning: libvirt logs not available (file not found: {path})"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:85
-msgid "install complete"
+#: host/src/crossdesk_host/cli/logs_cmd.py:288
+#, python-brace-format
+msgid "warning: could not read libvirt log {path}: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:325
+msgid ""
+"warning: FreeRDP logs not available (checked ~/.config/freerdp/client/X11/"
+"log and ~/.local/share/FreeRDP/log/*.log)"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:335
+#, python-brace-format
+msgid "warning: could not read FreeRDP log {path}: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:591
+#, python-brace-format
+msgid "warning: libvirt log not found, skipping follow: {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:602
+msgid "warning: no log sources available for --follow"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/logs_cmd.py:629
+msgid "warning: guest log streaming is not yet implemented (P2 scope)"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:54
+msgid "No apps in catalog."
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:71
+msgid ""
+"app {app_id!r} not found in catalog; run 'crossdesk apps list' to see "
+"available apps."
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:86
+#, python-brace-format
+msgid "installed {name} → {path}"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:51
@@ -170,79 +228,137 @@ msgid ""
 "spawn."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/version_cmd.py:50
-msgid "CrossDesk host"
+#: host/src/crossdesk_host/cli/vm_cmd.py:64
+msgid "unknown autostart action: {action!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:72
+msgid "systemd not available — autostart is Linux-only; no unit file written"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:81
+#, python-brace-format
+msgid "unit file written to {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:94
+msgid "crossdesk.service enabled — will start on next login"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:97
+#, python-brace-format
+msgid "systemctl failed (exit {code}): {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:110
+msgid "systemd not available — autostart is Linux-only; nothing to disable"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:122
+msgid "crossdesk.service disabled"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:126
+#, python-brace-format
+msgid "systemctl disable exited {code} — removing unit file anyway"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:134
+#, python-brace-format
+msgid "unit file removed from {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:136
+#, python-brace-format
+msgid "unit file not present at {path}"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/version_cmd.py:51
-msgid "Agent"
+msgid "CrossDesk host"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/version_cmd.py:52
-msgid "Protocol"
+msgid "Agent"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/version_cmd.py:53
+msgid "Protocol"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/version_cmd.py:54
 msgid "Commit"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/version_cmd.py:86
-#: host/src/crossdesk_host/cli/version_cmd.py:88
-#: host/src/crossdesk_host/cli/version_cmd.py:91
+#: host/src/crossdesk_host/cli/version_cmd.py:87
+#: host/src/crossdesk_host/cli/version_cmd.py:89
+#: host/src/crossdesk_host/cli/version_cmd.py:92
 msgid "daemon not running"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/version_cmd.py:95
+#: host/src/crossdesk_host/cli/version_cmd.py:96
 msgid "not connected"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:69
-msgid "invalid duration {text!r}: expected e.g. 5m, 1h, 30s, 2h30m"
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:20
+msgid "removed:"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:223
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:24
+msgid "skipped:"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:28
+msgid "failed:"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/launch_cmd.py:134
+msgid "VM not running. Start it with: crossdesk vm start"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/launch_cmd.py:143
 #, python-brace-format
-msgid "warning: could not read host log file {path}: {err}"
+msgid "Starting {name}…"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:228
+#: host/src/crossdesk_host/cli/launch_cmd.py:154
 #, python-brace-format
-msgid ""
-"warning: host logs not available (no systemd journal; no log file at {path})"
+msgid "Launching {name}… (VM must be running)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:282
+#: host/src/crossdesk_host/cli/install_cmd.py:52
 #, python-brace-format
-msgid "warning: libvirt logs not available (file not found: {path})"
+msgid "crossdesk install (state at {path})"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:288
+#: host/src/crossdesk_host/cli/install_cmd.py:54
+msgid "dry-run mode: no libvirt or network calls"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/install_cmd.py:58
+msgid "all steps already done; nothing to do"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/install_cmd.py:63
 #, python-brace-format
-msgid "warning: could not read libvirt log {path}: {err}"
+msgid "  ✓ {step} (already done)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:325
-msgid ""
-"warning: FreeRDP logs not available (checked ~/.config/freerdp/client/X11/"
-"log and ~/.local/share/FreeRDP/log/*.log)"
-msgstr ""
-
-#: host/src/crossdesk_host/cli/logs_cmd.py:335
+#: host/src/crossdesk_host/cli/install_cmd.py:65
 #, python-brace-format
-msgid "warning: could not read FreeRDP log {path}: {err}"
+msgid "  → {step}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:591
+#: host/src/crossdesk_host/cli/install_cmd.py:78
+msgid "    saved credentials for user {user!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/install_cmd.py:80
 #, python-brace-format
-msgid "warning: libvirt log not found, skipping follow: {path}"
+msgid "    {step}: hardware-gated; not implemented in --no-hardware mode"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:602
-msgid "warning: no log sources available for --follow"
-msgstr ""
-
-#: host/src/crossdesk_host/cli/logs_cmd.py:629
-msgid "warning: guest log streaming is not yet implemented (P2 scope)"
+#: host/src/crossdesk_host/cli/install_cmd.py:85
+msgid "install complete"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:78
@@ -264,12 +380,4 @@ msgstr ""
 
 #: host/src/crossdesk_host/cli/metrics_cmd.py:167
 msgid "histograms"
-msgstr ""
-
-#: host/src/crossdesk_host/cli/main.py:73
-msgid "crossdesk launch: app={app!r} file={file!r}"
-msgstr ""
-
-#: host/src/crossdesk_host/cli/main.py:74
-msgid "(launch path is hardware-gated; run `crossdesk doctor` first)"
 msgstr ""

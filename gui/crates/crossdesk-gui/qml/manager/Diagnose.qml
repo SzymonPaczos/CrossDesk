@@ -16,7 +16,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -153,7 +153,7 @@ Item {
 
                                     // Status icon (colored circle with symbol)
                                     Rectangle {
-                                        width: 16; height: 16; radius: 8
+                                        Layout.preferredWidth: 16; Layout.preferredHeight: 16; radius: 8
                                         color: status === "ok"   ? "#4caf50"
                                              : status === "warn" ? "#ff9800"
                                              : status === "fail" ? "#f44336"
@@ -201,7 +201,7 @@ Item {
                     }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

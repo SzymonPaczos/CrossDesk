@@ -20,7 +20,7 @@ Item {
             // ── Pane header ───────────────────────────────────────
             Rectangle {
                 Layout.fillWidth: true
-                height: 52
+                Layout.preferredHeight: 52
                 color: palette.alternateBase
 
                 Rectangle {
@@ -365,7 +365,7 @@ Item {
                     Item { Layout.fillWidth: true }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

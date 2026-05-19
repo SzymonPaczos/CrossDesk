@@ -16,7 +16,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -99,7 +99,7 @@ Item {
                         RowLayout {
                             spacing: 10
                             Rectangle {
-                                width: 12; height: 12; radius: 6
+                                Layout.preferredWidth: 12; Layout.preferredHeight: 12; radius: 6
                                 color: "#4caf50"
                             }
                             Label {
@@ -112,7 +112,7 @@ Item {
                         // Separator
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 1
+                            Layout.preferredHeight: 1
                             color: palette.mid
                             opacity: 0.5
                         }
@@ -196,7 +196,7 @@ Item {
                         // FSM metrics
                         Rectangle {
                             Layout.fillWidth: true
-                            height: fsmMetrics.implicitHeight + 16
+                            Layout.preferredHeight: fsmMetrics.implicitHeight + 16
                             color: Qt.rgba(palette.mid.r, palette.mid.g, palette.mid.b, 0.3)
                             radius: 5
 
@@ -260,7 +260,7 @@ Item {
                     }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

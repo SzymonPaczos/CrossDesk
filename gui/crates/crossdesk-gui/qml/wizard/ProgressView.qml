@@ -70,7 +70,7 @@ Item {
                 // Progress bar track
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 4
+                    Layout.preferredHeight: 4
                     radius: 2
                     color: palette.mid
 
@@ -105,7 +105,7 @@ Item {
 
                     Rectangle {
                         visible: wizard.installing
-                        width: 14; height: 14; radius: 7
+                        Layout.preferredWidth: 14; Layout.preferredHeight: 14; radius: 7
                         color: "transparent"
                         border.color: palette.highlight
                         border.width: 2

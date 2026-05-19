@@ -89,7 +89,14 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
 - **RAIL window icon extraction** —
   `guest/crates/rail-bridge/src/events.rs` leaves `icon_png` empty.
   Phase 4: `ExtractIconExW` + PNG-encode for `KIND_CREATED` and
-  `KIND_ICON_CHANGED`.
+  `KIND_ICON_CHANGED`. **Status 2026-05-19:** the host side already
+  carries an `icon_png` field on `_windows[hwnd]` (seeded by CREATED,
+  updated on ICON_CHANGED) so the host data model is ready; the guest
+  side needs the WM_GETICON / GetIconInfo / GetDIBits / png-encode
+  unsafe Rust glue. Runtime correctness can only be verified on a
+  real Windows guest (the PNG bytes need a real HICON), so this stays
+  hardware-gated — adding a scaffold function in isolation would buy
+  nothing the next Phase 4 hardware sprint can't immediately surface.
 
 ## Tech debt
 
@@ -98,14 +105,13 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
   grpc-stubs bump narrows the parent signature again, the override may
   resurface; keep an eye on `crossdesk_host.proto.*_pb2_grpc.pyi` after
   every regeneration.
-- **[P2] 57 `Quick.LayoutsPositioning` warnings in QML.** Items inside
-  `Layouts.*` use raw `width:`/`height:` properties — undefined
-  behaviour per Qt docs; should use `implicitWidth` /
-  `Layout.preferredWidth` etc. Disabled in `gui/.qmllint.ini` so the
-  qmllint gate stays green on the rest of the tree. Files affected:
-  `gui/crates/crossdesk-gui/qml/manager/{Manager,Apps,Lifecycle,Storage,Diagnose,Settings,Logs,Dashboard,About}.qml`
-  and `gui/crates/crossdesk-gui/qml/wizard/{Step1Iso,ProgressView}.qml`.
-  Flip `Quick.LayoutsPositioning=warning` in the ini once cleaned up.
+- **[✅ DONE 2026-05-19] 51 `Quick.LayoutsPositioning` warnings in QML.**
+  Migrated every raw `width:`/`height:` on a Layout-managed item to
+  `Layout.preferredWidth` / `Layout.preferredHeight` across 11 QML
+  files (manager/* + wizard/{Step1Iso,ProgressView}). `gui/.qmllint.ini`
+  flipped `Quick.LayoutsPositioning=warning` (default level), so any
+  regression now fails the pre-push + CI gate. cargo check + test
+  (26 gui + 7 tray) green; qmllint -W 0 clean across the whole tree.
 
 ---
 

@@ -13,7 +13,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -70,8 +70,8 @@ Item {
                             spacing: 14
 
                             Rectangle {
-                                width: 56
-                                height: 56
+                                Layout.preferredWidth: 56
+                                Layout.preferredHeight: 56
                                 radius: 12
                                 color: Qt.rgba(palette.mid.r, palette.mid.g, palette.mid.b, 0.5)
 
@@ -117,7 +117,7 @@ Item {
                         // Separator
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 1
+                            Layout.preferredHeight: 1
                             color: palette.mid
                             opacity: 0.6
                         }
@@ -239,7 +239,7 @@ Item {
                     }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

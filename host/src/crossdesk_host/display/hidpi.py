@@ -70,6 +70,31 @@ class _RealProbeRunner(ProbeRunner):
         return result.stdout
 
 
+def _try_wlr_randr(runner: ProbeRunner) -> Optional[ProbeResult]:
+    """Read ``Scale:`` from the first output reported by ``wlr-randr``.
+
+    The output is one stanza per Wayland output, with indented
+    ``Scale: <float>`` lines. We take the first because mixed-scale
+    multi-output configurations are out of scope for MVP (FreeRDP
+    uses a single ``/scale:`` per RAIL window anyway). Per-monitor
+    scaling re-evaluation is queued in FOLLOWUPS.
+    """
+    out = runner.run(["wlr-randr"])
+    if out is None:
+        return None
+    for line in out.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("Scale:"):
+            try:
+                value = float(stripped.split(":", 1)[1].strip())
+            except ValueError:
+                return None
+            if value <= 0:
+                return None
+            return ProbeResult(source="wlr-randr", scaling_factor=value)
+    return None
+
+
 def _try_gsettings(runner: ProbeRunner) -> Optional[ProbeResult]:
     out = runner.run(
         ["gsettings", "get", "org.gnome.desktop.interface", "text-scaling-factor"]
@@ -140,9 +165,15 @@ def detect_scaling(
     runner: Optional[ProbeRunner] = None,
 ) -> ProbeResult:
     """Walk the detection ladder and return the first hit; falls
-    back to ``ProbeResult(source="default", scaling_factor=1.0)``."""
+    back to ``ProbeResult(source="default", scaling_factor=1.0)``.
+
+    Wayland direct (``wlr-randr``) is tried first because it reads
+    the compositor's authoritative per-output scale; GNOME/KDE
+    settings are user-configured and may diverge from the actual
+    output scale on multi-monitor rigs. ``xrdb`` is X11-only.
+    """
     runner = runner or _RealProbeRunner()
-    for probe in (_try_gsettings, _try_kde, _try_xrdb):
+    for probe in (_try_wlr_randr, _try_gsettings, _try_kde, _try_xrdb):
         result = probe(runner)
         if result is not None:
             return result
@@ -160,3 +191,15 @@ def bucketize(scaling_factor: float) -> int:
     candidates = (1.0, 1.4, 1.8)
     nearest = min(candidates, key=lambda c: abs(c - scaling_factor))
     return int(nearest * 100)
+
+
+def auto_scale(runner: Optional[ProbeRunner] = None) -> int:
+    """Convenience: detect → bucketize in one call.
+
+    Returns the FreeRDP-supported ``/scale:`` value (100/140/180)
+    that best matches the host's effective scaling. Use this at the
+    point where ``FreeRDPConnectionSpec`` is instantiated so the
+    spawn carries the right scale without callers having to manage
+    the two-step pipeline themselves.
+    """
+    return bucketize(detect_scaling(runner).scaling_factor)

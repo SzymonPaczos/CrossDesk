@@ -85,7 +85,7 @@ jobs:
         run: cargo clippy --workspace --target x86_64-pc-windows-gnu -- -D warnings
 
   rust-gui:
-    name: Rust GUI (cargo check)
+    name: Rust GUI (cargo check + qmllint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
       - name: Install Qt6
         run: |
           sudo apt-get update
-          sudo apt-get install -y qt6-base-dev qt6-declarative-dev cmake ninja-build
+          sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools cmake ninja-build
       - name: cargo check
         working-directory: gui
         # Verified locally on macOS Apple Silicon — `cargo check --workspace`
@@ -101,6 +101,15 @@ jobs:
         # Qt6 packages above; if dpkg names drift on a future Ubuntu image
         # we'll reintroduce continue-on-error and track in FOLLOWUPS.
         run: cargo check --workspace
+      - name: qmllint
+        working-directory: gui
+        # Reads gui/.qmllint.ini for the warning-level overrides
+        # (CXX-Qt-registered types are invisible to qmllint, and the
+        # Quick.LayoutsPositioning tech-debt is tracked in FOLLOWUPS).
+        # -W 0 turns every remaining enabled warning into a hard fail.
+        run: |
+          find crates/crossdesk-gui/qml -name '*.qml' -print0 \
+            | xargs -0 -n 1 /usr/lib/qt6/bin/qmllint -W 0
 
   proto:
     name: Proto lint + format

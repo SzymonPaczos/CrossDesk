@@ -87,6 +87,41 @@ for f in $CHANGED_FILES; do
     done < <(grep -n -E '^\s*print\(' "$f" 2>/dev/null || true)
 done
 
+# === 4b. qmllint on changed QML files (HARD FAIL when tool present) =======
+echo "🎨 qmllint (QML syntax) ..."
+QMLLINT_BIN=""
+if command -v qmllint >/dev/null 2>&1; then
+    QMLLINT_BIN="qmllint"
+elif [ -x /usr/lib/qt6/bin/qmllint ]; then
+    QMLLINT_BIN="/usr/lib/qt6/bin/qmllint"
+elif [ -x /opt/homebrew/opt/qt/bin/qmllint ]; then
+    QMLLINT_BIN="/opt/homebrew/opt/qt/bin/qmllint"
+fi
+if [ -n "$QMLLINT_BIN" ]; then
+    QML_HITS=""
+    for f in $CHANGED_FILES; do
+        case "$f" in
+            *.qml) ;;
+            *) continue ;;
+        esac
+        [ -f "$f" ] || continue
+        # Run from gui/ so the per-repo .qmllint.ini is picked up.
+        if ! ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" -W 0 "$REPO_ROOT/$f" >/dev/null 2>&1 ); then
+            QML_HITS="$QML_HITS $f"
+        fi
+    done
+    if [ -n "$QML_HITS" ]; then
+        echo "❌ qmllint found issues in:"
+        for f in $QML_HITS; do
+            echo "    $f"
+            ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" "$REPO_ROOT/$f" 2>&1 \
+                | grep -E "^(Warning|Error):" | head -5 | sed 's/^/      /' )
+        done
+        echo "   Fix the QML or adjust gui/.qmllint.ui to silence."
+        exit 1
+    fi
+fi
+
 # === 4. TODO/FIXME added in this push (INFO) ==============================
 echo "📝 TODO/FIXME added vs origin/$DEFAULT_BRANCH ..."
 git diff "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \

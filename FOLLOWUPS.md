@@ -98,6 +98,14 @@ ADRs (`docs/DECISIONS.md` `DEC-NNNN`), and source citations into
   grpc-stubs bump narrows the parent signature again, the override may
   resurface; keep an eye on `crossdesk_host.proto.*_pb2_grpc.pyi` after
   every regeneration.
+- **[P2] 57 `Quick.LayoutsPositioning` warnings in QML.** Items inside
+  `Layouts.*` use raw `width:`/`height:` properties — undefined
+  behaviour per Qt docs; should use `implicitWidth` /
+  `Layout.preferredWidth` etc. Disabled in `gui/.qmllint.ini` so the
+  qmllint gate stays green on the rest of the tree. Files affected:
+  `gui/crates/crossdesk-gui/qml/manager/{Manager,Apps,Lifecycle,Storage,Diagnose,Settings,Logs,Dashboard,About}.qml`
+  and `gui/crates/crossdesk-gui/qml/wizard/{Step1Iso,ProgressView}.qml`.
+  Flip `Quick.LayoutsPositioning=warning` in the ini once cleaned up.
 
 ---
 

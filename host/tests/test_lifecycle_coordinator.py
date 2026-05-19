@@ -74,3 +74,64 @@ def test_multiple_fsms_all_suspended_and_resumed() -> None:
     assert all(f.state == State.SUSPENDED for f in fsms)
     coordinator.on_resumed()
     assert all(f.state == State.PROBING for f in fsms)
+
+
+# ---------------------------------------------------------------------------
+# Error-notification wiring (FOLLOWUPS:1019)
+# ---------------------------------------------------------------------------
+
+
+def test_libvirt_suspend_failure_fires_notification_and_reraises() -> None:
+    from unittest.mock import MagicMock
+
+    from crossdesk_host.lifecycle.notifications import RecordingNotifier
+
+    libvirt = MagicMock()
+    libvirt.suspend.side_effect = RuntimeError("libvirt-side error")
+    notifier = RecordingNotifier()
+    coordinator = LifecycleCoordinator(libvirt, notifier=notifier)
+
+    try:
+        coordinator.on_prepare_for_sleep()
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("expected RuntimeError")
+    assert len(notifier.calls) == 1
+    assert "Sleep/resume" in notifier.calls[0].summary
+    assert "libvirt-side error" in notifier.calls[0].body
+
+
+def test_libvirt_resume_failure_fires_notification_and_reraises() -> None:
+    from unittest.mock import MagicMock
+
+    from crossdesk_host.lifecycle.notifications import RecordingNotifier
+
+    libvirt = MagicMock()
+    libvirt.resume.side_effect = RuntimeError("resume broke")
+    notifier = RecordingNotifier()
+    coordinator = LifecycleCoordinator(libvirt, notifier=notifier)
+    coordinator._suspended = True
+
+    try:
+        coordinator.on_resumed()
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("expected RuntimeError")
+    assert any("resume broke" in c.body for c in notifier.calls)
+
+
+def test_no_notifier_means_no_notification_on_failure() -> None:
+    from unittest.mock import MagicMock
+
+    libvirt = MagicMock()
+    libvirt.suspend.side_effect = RuntimeError("boom")
+    coordinator = LifecycleCoordinator(libvirt, notifier=None)
+
+    try:
+        coordinator.on_prepare_for_sleep()
+    except RuntimeError:
+        pass
+    # We do not blow up on the notifier=None branch.
+

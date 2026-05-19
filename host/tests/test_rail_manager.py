@@ -304,3 +304,43 @@ def test_destroy_clears_all_window_state_fields(mgr: RailManager) -> None:
     assert 0xC0DE not in mgr._windows
     assert 0xC0DE not in mgr._sessions
 
+
+
+# ---------------------------------------------------------------------------
+# Error-notification wiring (FOLLOWUPS:1019 follow-up)
+# ---------------------------------------------------------------------------
+
+
+def test_terminate_failure_during_destroy_fires_rdp_drop_notification() -> None:
+    """When FreeRDP terminate raises during DESTROY, we still clean up the
+    HWND but surface the failure as a desktop notification."""
+    from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
+    from crossdesk_host.lifecycle.notifications import RecordingNotifier
+
+    inv = MockFreeRDPInvocation()
+    notifier = RecordingNotifier()
+    mgr = RailManager(freerdp_inv=inv, notifier=notifier)
+    session = inv.spawn_rail(["/v:localhost"])
+    inv.hooks.fail_next_terminate = True
+    mgr.handle_rail_event(_event(0x1234, Kind.KIND_CREATED, title="Microsoft Word"))
+    mgr.register_session(0x1234, session)
+    mgr.handle_rail_event(_event(0x1234, Kind.KIND_DESTROYED))
+
+    assert 0x1234 not in mgr._windows
+    assert len(notifier.calls) == 1
+    assert "Microsoft Word" in notifier.calls[0].body
+
+
+def test_terminate_failure_without_notifier_does_not_explode() -> None:
+    from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
+
+    inv = MockFreeRDPInvocation()
+    mgr = RailManager(freerdp_inv=inv)  # notifier=None default
+    session = inv.spawn_rail(["/v:localhost"])
+    inv.hooks.fail_next_terminate = True
+    mgr.handle_rail_event(_event(0x1234, Kind.KIND_CREATED, title="App"))
+    mgr.register_session(0x1234, session)
+    mgr.handle_rail_event(_event(0x1234, Kind.KIND_DESTROYED))
+
+    assert 0x1234 not in mgr._windows
+

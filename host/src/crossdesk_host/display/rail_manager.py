@@ -36,6 +36,8 @@ import logging
 from typing import Any, Dict, Optional
 
 from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
+from crossdesk_host.lifecycle.error_notifications import notify_rdp_drop
+from crossdesk_host.lifecycle.notifications import Notifier
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
 
 # stdlib logger (not the structlog facade) so the pin tests' ``caplog``
@@ -46,10 +48,15 @@ logger = logging.getLogger(__name__)
 
 
 class RailManager:
-    def __init__(self, freerdp_inv: Optional[FreeRDPInvocation] = None) -> None:
+    def __init__(
+        self,
+        freerdp_inv: Optional[FreeRDPInvocation] = None,
+        notifier: Optional[Notifier] = None,
+    ) -> None:
         self._windows: Dict[int, Dict[str, Any]] = {}
         self._sessions: Dict[int, RailSession] = {}
         self._freerdp_inv = freerdp_inv
+        self._notifier = notifier
 
     def handle_rail_event(self, event: control_pb2.RailWindowEvent) -> None:
         hwnd = event.window_id
@@ -119,6 +126,12 @@ class RailManager:
                 self._freerdp_inv.terminate(self._sessions[hwnd])
             except Exception:
                 logger.exception("FreeRDP terminate failed for HWND 0x%x", hwnd)
+                if self._notifier is not None:
+                    win = self._windows.get(hwnd, {})
+                    notify_rdp_drop(
+                        self._notifier,
+                        app_name=str(win.get("title", "")),
+                    )
             del self._sessions[hwnd]
         del self._windows[hwnd]
 

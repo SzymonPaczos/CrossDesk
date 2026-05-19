@@ -27,6 +27,8 @@ from google.protobuf import duration_pb2
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
+from crossdesk_host.lifecycle.error_notifications import notify_forced_stop
+from crossdesk_host.lifecycle.notifications import Notifier
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2, heartbeat_pb2_grpc
 from crossdesk_host.watchdog import (
     FsmConfig,
@@ -76,6 +78,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         ping_interval_seconds: float = 1.0,
         pong_timeout_seconds: float = 2.0,
         boot_probe: Optional[BootProbe] = None,
+        notifier: Optional[Notifier] = None,
     ) -> None:
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
@@ -83,6 +86,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         self.ping_interval_seconds = ping_interval_seconds
         self.pong_timeout_seconds = pong_timeout_seconds
         self.boot_probe = boot_probe
+        self.notifier = notifier
 
     async def _run_boot_probe(self, probe: BootProbe) -> None:
         timeout_s = self.config.boot_probe_timeout_seconds
@@ -201,6 +205,12 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 elif out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
                     logger.critical("heartbeat_hard_destroy_dispatched")
                     self.libvirt_ctl.hard_destroy()
+                    if self.notifier is not None:
+                        notify_forced_stop(
+                            self.notifier,
+                            reason="Heartbeat watchdog exhausted soft "
+                            "recovery attempts (HARD_DESTROY).",
+                        )
                     break
 
                 seq += 1

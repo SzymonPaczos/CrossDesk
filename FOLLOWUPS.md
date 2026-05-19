@@ -1050,11 +1050,19 @@ document software rendering as the always-works fallback.
   to the existing `Notifier` Protocol so callers stay transport-agnostic
   (SubprocessNotifier today, DBusNotifier when wired). One first-class
   call site: `launch_cmd._launch` now fires `notify_vm_failed_to_start`
-  on the socket-missing branch. **Deferred:** wiring the remaining four
-  helpers from rail_manager (rdp_drop), heartbeat servicer (forced_stop),
-  vm_cmd (vm_failed_to_start at startup), lifecycle dbus_listener
-  (suspend_resume_failed) once those code paths have stable real-failure
-  entry points.
+  on the socket-missing branch. **Wired 2026-05-19:** the remaining
+  three helpers from real call sites — `HeartbeatServiceServicer`
+  fires `notify_forced_stop` right after `libvirt_ctl.hard_destroy()`
+  in the HARD_DESTROY branch; `LifecycleCoordinator` fires
+  `notify_suspend_resume_failed` when `libvirt.suspend()` or
+  `.resume()` raises (and re-raises so the daemon supervisor still
+  sees the error); `RailManager._handle_destroy` fires
+  `notify_rdp_drop` when `FreeRDPInvocation.terminate` raises during
+  cleanup. All three classes gained an optional `notifier: Notifier`
+  constructor argument so notifier=None retains the previous
+  behaviour and tests stay narrow. vm_cmd helper has no in-tree call
+  site beyond `launch_cmd` (vm_cmd.py is autostart-unit management,
+  not VM lifecycle); kept as a public API for future installer paths.
 - **[P2] Typed config for redirections.** Source: WinApps' `RDP_FLAGS`
   is a free-form string the user hand-edits
   (`third_party/winapps/README.md:457-463`). Replace with typed TOML

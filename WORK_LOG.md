@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 18:23] START · agent: claude-code · branch: refactor/filesystem-servicer-narrowing · task: filesystem-servicer-narrowing · note: Follow-up to task 13 (FilesystemController abstraction shipped 2026-05-19). Narrow FilesystemServiceServicer to consume `FilesystemController` instead of the wide `LibvirtController`. Touches: ipc/filesystem.py (swap `self.libvirt_ctl.attach_virtiofs/detach_virtiofs` for `self.filesystem_ctl.attach_share/detach_share`); daemon.py (wrap libvirt in LibvirtFilesystemController); 4 test files (FilesystemServiceServicer construction). Servicer surface narrows from VM lifecycle + virtiofs to just virtiofs — review surface for future virtiofs changes drops accordingly.
+
 ## Recent
 
 - [2026-05-19 18:17] END · agent: claude-code · branch: chore/qml-layout-positioning · task: qml-layout-positioning · note: result: success → merged. Tech-debt FOLLOWUPS entry ✅ DONE. 1 commit (15 files): 51 raw width:/height: assignments on Layout-managed items rewritten to Layout.preferredWidth / Layout.preferredHeight across 11 QML files (manager/* + wizard/{Step1Iso,ProgressView}). gui/.qmllint.ini flipped Quick.LayoutsPositioning=warning so any regression now fails the gate. Mechanical rewrite via /tmp/fix-layout-positioning.py (regex per file:line). cargo check + test 33/33 green; qmllint -W 0 clean.

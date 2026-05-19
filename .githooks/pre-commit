@@ -9,8 +9,11 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 # nvm/pyenv path safety — don't source full rc files (they break
-# `cd` / zoxide / direnv inside hooks).
-export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
+# `cd` / zoxide / direnv inside hooks). $HOME/.cargo/bin is rustup's
+# default install path on both Linux and macOS — without it the
+# cargo-check sections below print "cargo not on PATH" and silently
+# skip, which defeats the whole point of the hook.
+export PATH="$PATH:$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin"
 [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh" --no-use 2>/dev/null || true
 
 CHANGED="$(git diff --cached --name-only --diff-filter=ACM)"

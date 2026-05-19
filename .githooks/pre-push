@@ -8,6 +8,12 @@ set -e
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
+# $HOME/.cargo/bin is rustup's default install path on both Linux and
+# macOS. Without it the cargo-audit / cargo-deny / clippy checks below
+# print "command not found" and the hook silently no-ops, missing
+# real vulnerabilities.
+export PATH="$PATH:$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin"
+
 echo "🔍 pre-push: security review"
 echo "─────────────────────────────────────────────"
 

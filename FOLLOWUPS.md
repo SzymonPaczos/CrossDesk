@@ -193,6 +193,15 @@ DEC-0005 for the architectural commitment.
      releases. Replaced with the public `context.cancelled()`.
   Stretch flow (`Installer.run() → Launch(notepad) →
   RailWindowEvent(CREATED)`) deferred until Phase 4 RAIL lands.
+  **Status 2026-05-19:** the RAIL leg is already covered by
+  `host/tests/test_control_service.py::test_rail_event_in_ready_is_forwarded_to_rail_manager`
+  (in-process bidi stream, mocked transport, asserts on
+  RailManager._windows). The Installer leg is covered by the unit
+  tests under `host/tests/test_installer_*`. The remaining gap is
+  the full Launch → spawn-FreeRDP → receive RAIL CREATED loop,
+  which depends on the Phase 4 production spawn flow being wired
+  (currently `build_rail_argv` has no production call site — it's
+  hardware-gated).
 - **[✅ DONE 2026-05-08] CI matrix: macOS + Ubuntu.** `.github/workflows/ci.yml`
   has all the jobs spec'd here, all running strict locally:
   - `python-host` runs `mypy --strict src/` + `pytest -q` on Python

@@ -218,10 +218,18 @@ DEC-0005 for the architectural commitment.
   `cargo run --features mock` guest over `MockTransport`. Exercises
   `Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)`.
   Not blocking Week 1; the standalone unit-level mocks now exist.
-- **[P1] Filesystem service abstraction.** Same shape as libvirt
-  client. `MockFilesystem` tracks mount/unmount in-memory state.
-  Lives in `host/src/crossdesk_host/ipc/filesystem.py` neighborhood.
-  Phase 5 dependency.
+- **[✅ DONE 2026-05-19] Filesystem service abstraction.** Same shape
+  as libvirt client. `FilesystemController` Protocol in
+  `host/src/crossdesk_host/abstractions/filesystem.py` (attach_share /
+  detach_share / list_active_shares); `LibvirtFilesystemController`
+  delegates to the existing libvirt-ctl methods; `MockFilesystemController`
+  tracks state in-memory with attach/detach hooks + failure-injection.
+  13 contract tests pin idempotence (re-attach is no-op + returns False,
+  detach-unknown is no-op + returns False) and the libvirt-wrapper
+  bookkeeping (failed attach must not register the share locally).
+  Follow-up: refactor `FilesystemServiceServicer` to consume
+  FilesystemController instead of LibvirtController so the wide
+  abstraction landing yields a narrower servicer surface.
 - **[✅ DONE 2026-05-19] D-Bus signals abstraction.** Used for
   suspend/resume detection. `DBusSignalSource` Protocol +
   `MockDBusSignalSource` in

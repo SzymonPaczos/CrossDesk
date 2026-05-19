@@ -159,6 +159,10 @@ jobs:
     name: Microbench gate (N1.* perf regression check)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # PR-comment posting needs write access to the PR; reads stay default.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -188,6 +192,26 @@ jobs:
           python scripts/bench_check.py \
             --baseline .github/perf-baselines.json \
             --results host/bench-results.json
+      - name: Render bench report
+        # Always render (cheap) so the artefact is available for inspection
+        # even on push-to-main runs; the comment-posting step below is the
+        # one gated on event_name.
+        if: always()
+        run: |
+          python scripts/bench_report.py \
+            --baseline .github/perf-baselines.json \
+            --results host/bench-results.json \
+            --output bench-report.md
+      - name: Post bench report as PR comment
+        # PR-only: pushes to main have no PR to comment on. `always()` so
+        # we still post the report even when bench_check failed — that's
+        # exactly when reviewers most want to see the table.
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file bench-report.md
 
   i18n-extract:
     name: i18n string extraction check

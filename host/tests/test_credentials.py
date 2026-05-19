@@ -229,3 +229,98 @@ async def test_verify_with_guest_raises_on_missing_vm_toml(tmp_path: Path, monke
 
     with pytest.raises(FileNotFoundError):
         await verify_with_guest(_Coord())
+
+
+# ---------------------------------------------------------------------------
+# Schema versioning (FOLLOWUPS:571)
+# ---------------------------------------------------------------------------
+
+
+def test_save_writes_schema_version_first(tmp_path: Path) -> None:
+    from crossdesk_host.installer.credentials import (
+        SCHEMA_VERSION,
+        VmCredentials,
+        save,
+    )
+
+    path = tmp_path / "vm.toml"
+    save(VmCredentials(username="user", password="pw"), path=path)
+    contents = path.read_text(encoding="utf-8").splitlines()
+    assert contents[0] == f"schema_version = {SCHEMA_VERSION}"
+
+
+def test_load_accepts_file_with_schema_version(tmp_path: Path) -> None:
+    from crossdesk_host.installer.credentials import (
+        SCHEMA_VERSION,
+        VmCredentials,
+        load,
+    )
+
+    path = tmp_path / "vm.toml"
+    path.write_text(
+        f"schema_version = {SCHEMA_VERSION}\n"
+        'username = "u"\n'
+        'password = "p"\n',
+        encoding="utf-8",
+    )
+    creds = load(path=path)
+    assert creds == VmCredentials(username="u", password="p")
+
+
+def test_load_accepts_legacy_file_without_schema_version(tmp_path: Path) -> None:
+    """Pre-versioning vm.toml emitted by older builds: no
+    schema_version line. load() must accept it under the assumption
+    that the only fields ever emitted (username/password) match the
+    current v1 shape — defaulting to SCHEMA_VERSION is safe."""
+    from crossdesk_host.installer.credentials import VmCredentials, load
+
+    path = tmp_path / "vm.toml"
+    path.write_text(
+        'username = "legacy"\n'
+        'password = "pre-v1"\n',
+        encoding="utf-8",
+    )
+    creds = load(path=path)
+    assert creds == VmCredentials(username="legacy", password="pre-v1")
+
+
+def test_load_rejects_newer_schema_version(tmp_path: Path) -> None:
+    """A schema_version higher than this build supports must hard-fail
+    rather than silently dropping the unknown fields — downgrading is
+    not part of the migration contract."""
+    from crossdesk_host.installer.credentials import load
+
+    path = tmp_path / "vm.toml"
+    path.write_text(
+        "schema_version = 99\n"
+        'username = "u"\n'
+        'password = "p"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="newer than this build supports"):
+        load(path=path)
+
+
+def test_load_rejects_non_integer_schema_version(tmp_path: Path) -> None:
+    from crossdesk_host.installer.credentials import load
+
+    path = tmp_path / "vm.toml"
+    path.write_text(
+        'schema_version = "1"\n'
+        'username = "u"\n'
+        'password = "p"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="schema_version must be an integer"):
+        load(path=path)
+
+
+def test_save_then_load_roundtrip_preserves_credentials(tmp_path: Path) -> None:
+    from crossdesk_host.installer.credentials import VmCredentials, load, save
+
+    path = tmp_path / "vm.toml"
+    original = VmCredentials(username="round", password="trip-secret!@#")
+    save(original, path=path)
+    loaded = load(path=path)
+    assert loaded == original
+

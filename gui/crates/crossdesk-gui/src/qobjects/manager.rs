@@ -129,13 +129,25 @@ pub struct ManagerStateRust {
 /// meaning `crossdesk install` completed at least partially on this machine.
 /// Phase 7 daemon handshake is the authoritative check; this is the Phase 6 proxy.
 fn detect_has_vm() -> bool {
+    has_install_state_under(&state_dir_from_env())
+}
+
+/// Resolve the user's XDG state directory from the environment.
+/// Separated for unit testing — the bare ``detect_has_vm`` reads the
+/// real process environment, but tests inject ``state_dir`` directly.
+fn state_dir_from_env() -> std::path::PathBuf {
     use std::path::PathBuf;
-    let state_dir = std::env::var("XDG_STATE_HOME")
+    std::env::var("XDG_STATE_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
             let home = std::env::var("HOME").unwrap_or_else(|_| "/".to_owned());
             PathBuf::from(home).join(".local/state")
-        });
+        })
+}
+
+/// Pure-IO core of [`detect_has_vm`]. Takes the resolved state dir so
+/// tests can point it at a tempdir without touching the process env.
+fn has_install_state_under(state_dir: &std::path::Path) -> bool {
     state_dir.join("crossdesk/install.state.json").exists()
 }
 
@@ -235,12 +247,90 @@ fn qsl(items: &[String]) -> QStringList {
 
 #[cfg(test)]
 mod tests {
+    use super::{has_install_state_under, qsl};
     use crate::manager::format::fsm_severity;
+    use cxx_qt_lib::{QList, QString};
+    use std::fs;
 
     #[test]
     fn fsm_severity_round_trip() {
         assert_eq!(fsm_severity("HEALTHY"), "ok");
         assert_eq!(fsm_severity("DEGRADED"), "warn");
-        assert_eq!(fsm_severity("UNKNOWN"), "warn");
+        // "UNKNOWN" falls through the match arm in
+        // crate::manager::format::fsm_severity because it's not one of
+        // the recognised state names (it's the post-normalisation
+        // catch-all string itself). The QML side renders any non-
+        // recognised severity as the neutral "—" placeholder.
+        assert_eq!(fsm_severity("UNKNOWN"), "unknown");
+    }
+
+    #[test]
+    fn has_install_state_false_when_directory_empty() {
+        let tmp = tempdir();
+        assert!(!has_install_state_under(tmp.path()));
+    }
+
+    #[test]
+    fn has_install_state_true_when_marker_file_present() {
+        let tmp = tempdir();
+        let crossdesk_dir = tmp.path().join("crossdesk");
+        fs::create_dir_all(&crossdesk_dir).unwrap();
+        fs::write(crossdesk_dir.join("install.state.json"), "{}").unwrap();
+        assert!(has_install_state_under(tmp.path()));
+    }
+
+    #[test]
+    fn has_install_state_false_when_crossdesk_dir_exists_without_marker() {
+        let tmp = tempdir();
+        fs::create_dir_all(tmp.path().join("crossdesk")).unwrap();
+        assert!(!has_install_state_under(tmp.path()));
+    }
+
+    #[test]
+    fn has_install_state_false_when_state_dir_missing() {
+        let tmp = tempdir();
+        let missing = tmp.path().join("definitely-not-here");
+        assert!(!has_install_state_under(&missing));
+    }
+
+    #[test]
+    fn has_install_state_does_not_follow_wrong_filename() {
+        let tmp = tempdir();
+        let crossdesk_dir = tmp.path().join("crossdesk");
+        fs::create_dir_all(&crossdesk_dir).unwrap();
+        // Adjacent file with the wrong name: the probe must not be
+        // fooled by an unrelated artefact in the crossdesk/ tree.
+        fs::write(crossdesk_dir.join("install.state.bak"), "{}").unwrap();
+        assert!(!has_install_state_under(tmp.path()));
+    }
+
+    #[test]
+    fn qsl_empty_slice_returns_empty_list() {
+        let list = qsl(&[]);
+        let qlist: QList<QString> = (&list).into();
+        assert_eq!(qlist.len(), 0);
+    }
+
+    #[test]
+    fn qsl_preserves_order_and_content() {
+        let list = qsl(&["alpha".to_owned(), "beta".to_owned(), "gamma".to_owned()]);
+        let qlist: QList<QString> = (&list).into();
+        assert_eq!(qlist.len(), 3);
+        assert_eq!(qlist.get(0), Some(&QString::from("alpha")));
+        assert_eq!(qlist.get(1), Some(&QString::from("beta")));
+        assert_eq!(qlist.get(2), Some(&QString::from("gamma")));
+    }
+
+    #[test]
+    fn qsl_handles_non_ascii_text() {
+        let list = qsl(&["Łódź".to_owned(), "東京".to_owned(), "café".to_owned()]);
+        let qlist: QList<QString> = (&list).into();
+        assert_eq!(qlist.len(), 3);
+        assert_eq!(qlist.get(0), Some(&QString::from("Łódź")));
+        assert_eq!(qlist.get(2), Some(&QString::from("café")));
+    }
+
+    fn tempdir() -> tempfile::TempDir {
+        tempfile::tempdir().expect("create tempdir")
     }
 }

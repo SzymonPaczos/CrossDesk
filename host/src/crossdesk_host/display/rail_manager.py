@@ -65,9 +65,19 @@ class RailManager:
         elif kind == Kind.KIND_RESIZED:
             self._handle_moved(hwnd, event)  # same path; geometry-only update
         elif kind == Kind.KIND_FOCUS_GAINED:
-            self._handle_focus(hwnd)
+            self._handle_focus(hwnd, gained=True)
+        elif kind == Kind.KIND_FOCUS_LOST:
+            self._handle_focus(hwnd, gained=False)
         elif kind == Kind.KIND_TITLE_CHANGED:
             self._handle_title_change(hwnd, event)
+        elif kind == Kind.KIND_MINIMIZED:
+            self._handle_window_state(hwnd, minimized=True, maximized=False)
+        elif kind == Kind.KIND_MAXIMIZED:
+            self._handle_window_state(hwnd, minimized=False, maximized=True)
+        elif kind == Kind.KIND_RESTORED:
+            self._handle_window_state(hwnd, minimized=False, maximized=False)
+        elif kind == Kind.KIND_ICON_CHANGED:
+            self._handle_icon_change(hwnd, event)
         else:
             logger.debug("[%x] Unhandled event kind: %s", hwnd, int(kind))
 
@@ -84,6 +94,10 @@ class RailManager:
             "y": rect.y,
             "width": rect.width,
             "height": rect.height,
+            "focused": False,
+            "minimized": False,
+            "maximized": False,
+            "icon_png": bytes(event.icon_png) if event.icon_png else b"",
         }
         logger.info(
             "[RAIL] Creating native Wayland window for HWND 0x%x %r at (%d, %d) size %dx%d",
@@ -130,16 +144,70 @@ class RailManager:
             rect.height,
         )
 
-    def _handle_focus(self, hwnd: int) -> None:
-        if hwnd in self._windows:
-            logger.debug("[RAIL] Setting Wayland focus to HWND 0x%x", hwnd)
+    def _handle_focus(self, hwnd: int, *, gained: bool) -> None:
+        if hwnd not in self._windows:
+            # FOCUS for unknown HWND races with CREATE; treat as a hint
+            # rather than a hard error so a slow CREATE doesn't lose
+            # the first focus event.
+            logger.debug(
+                "[RAIL] Focus %s for unknown HWND 0x%x — dropping",
+                "gained" if gained else "lost",
+                hwnd,
+            )
+            return
+        self._windows[hwnd]["focused"] = gained
+        logger.debug(
+            "[RAIL] Focus %s for HWND 0x%x", "gained" if gained else "lost", hwnd
+        )
 
     def _handle_title_change(
         self, hwnd: int, event: control_pb2.RailWindowEvent
     ) -> None:
-        if hwnd in self._windows:
-            self._windows[hwnd]["title"] = event.title
-            logger.debug("[RAIL] Title changed for HWND 0x%x: %s", hwnd, event.title)
+        if hwnd not in self._windows:
+            logger.debug(
+                "[RAIL] TITLE_CHANGED for unknown HWND 0x%x — dropping", hwnd
+            )
+            return
+        self._windows[hwnd]["title"] = event.title
+        logger.debug("[RAIL] Title changed for HWND 0x%x: %s", hwnd, event.title)
+
+    def _handle_window_state(
+        self, hwnd: int, *, minimized: bool, maximized: bool
+    ) -> None:
+        """Common path for MINIMIZED / MAXIMIZED / RESTORED. The two
+        flags are mutually exclusive (RESTORED clears both) and the
+        guest never advertises a "minimized AND maximized" state, so
+        the caller passes the materialised pair directly."""
+        if hwnd not in self._windows:
+            logger.debug(
+                "[RAIL] State change for unknown HWND 0x%x — dropping", hwnd
+            )
+            return
+        win = self._windows[hwnd]
+        win["minimized"] = minimized
+        win["maximized"] = maximized
+        logger.debug(
+            "[RAIL] State change HWND 0x%x → min=%s max=%s",
+            hwnd,
+            minimized,
+            maximized,
+        )
+
+    def _handle_icon_change(
+        self, hwnd: int, event: control_pb2.RailWindowEvent
+    ) -> None:
+        if hwnd not in self._windows:
+            logger.debug(
+                "[RAIL] ICON_CHANGED for unknown HWND 0x%x — dropping", hwnd
+            )
+            return
+        # Empty icon_png is valid: it signals "guest cleared the icon".
+        self._windows[hwnd]["icon_png"] = bytes(event.icon_png)
+        logger.debug(
+            "[RAIL] Icon updated for HWND 0x%x (%d bytes)",
+            hwnd,
+            len(event.icon_png),
+        )
 
     def register_session(self, hwnd: int, session: RailSession) -> None:
         """Associate a FreeRDP RAIL session with the HWND the guest

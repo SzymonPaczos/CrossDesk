@@ -229,12 +229,14 @@ during verification:
 2. Cross-rs only mounts the cargo workspace directory (`guest/`)
    into the build container, so `proto/build.rs`'s relative paths
    `../../../proto/crossdesk/v1/*.proto` land **outside** the
-   container mount and fail. The proto IDL lives at the repo root
-   because the Python host also consumes it; resolving this needs
-   either a `Cross.toml` volume mount, an upgrade to a workspace
-   root at `CrossDesk/`, or a path-vendoring step. Tracked under
-   "Cross-compile pipeline working from macOS" in `FOLLOWUPS.md`
-   (now P1 since native MinGW is verified working).
+   container mount. **Resolved 2026-05-19** via the path-vendoring
+   step: `scripts/cross-build-agent.sh` rsyncs `proto/` into
+   `guest/proto-vendored/` before invoking `cross build`, and
+   `build.rs` prefers (a) `$CROSSDESK_PROTO_DIR`, (b)
+   `guest/proto-vendored/`, then (c) the repo-relative path. The
+   vendored copy is gitignored — it regenerates on every cross
+   build. Native MinGW path (Mac dev, CI `cargo check`) keeps using
+   the repo-relative form via the (c) fallback.
 
 [pbv]: https://crates.io/crates/protoc-bin-vendored
 

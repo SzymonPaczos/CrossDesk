@@ -135,3 +135,156 @@ def test_no_notifier_means_no_notification_on_failure() -> None:
         pass
     # We do not blow up on the notifier=None branch.
 
+
+# ---------------------------------------------------------------------------
+# Hibernation detection (FOLLOWUPS:696)
+#
+# These tests script ``time.time`` and ``time.monotonic`` through a shared
+# ``FakeClock`` so the suspend/resume cycle takes microseconds of wall time
+# regardless of the wall delta we want to model.
+# ---------------------------------------------------------------------------
+
+
+import time
+from typing import List, Tuple
+
+import pytest
+
+
+class _FakeClock:
+    def __init__(self, wall: float = 1_000_000.0, monotonic: float = 100.0) -> None:
+        self.wall = wall
+        self.monotonic = monotonic
+
+    def advance(self, *, wall: float, monotonic: float) -> None:
+        self.wall += wall
+        self.monotonic += monotonic
+
+
+@pytest.fixture
+def patched_clock(monkeypatch: pytest.MonkeyPatch) -> _FakeClock:
+    clock = _FakeClock()
+    # Patch the symbols the coordinator imported (``time.time``,
+    # ``time.monotonic``) by replacing the underlying ``time`` module
+    # functions — the coordinator does ``import time`` at module load,
+    # so it resolves attributes against the live module each call.
+    monkeypatch.setattr(time, "time", lambda: clock.wall)
+    monkeypatch.setattr(time, "monotonic", lambda: clock.monotonic)
+    return clock
+
+
+def test_short_sleep_does_not_trigger_hibernation(
+    patched_clock: _FakeClock,
+) -> None:
+    libvirt, coordinator, _ = _make()
+    events: List[Tuple[float, float]] = []
+    coordinator.register_hibernation_hook(lambda w, m: events.append((w, m)))
+
+    coordinator.on_prepare_for_sleep()
+    # Five-minute nap: well below the one-hour floor.
+    patched_clock.advance(wall=300.0, monotonic=300.0)
+    coordinator.on_resumed()
+
+    assert events == []
+
+
+def test_long_hibernation_fires_event_and_hooks(
+    patched_clock: _FakeClock,
+) -> None:
+    libvirt, coordinator, _ = _make()
+    events: List[Tuple[float, float]] = []
+    coordinator.register_hibernation_hook(lambda w, m: events.append((w, m)))
+
+    coordinator.on_prepare_for_sleep()
+    # Two-hour suspend with wall + monotonic in lockstep — the
+    # canonical hibernation profile.
+    patched_clock.advance(wall=7200.0, monotonic=7200.0)
+    coordinator.on_resumed()
+
+    assert len(events) == 1
+    wall_delta, mono_delta = events[0]
+    assert wall_delta == pytest.approx(7200.0)
+    assert mono_delta == pytest.approx(7200.0)
+
+
+def test_forward_ntp_jump_without_monotonic_match_is_ignored(
+    patched_clock: _FakeClock,
+) -> None:
+    libvirt, coordinator, _ = _make()
+    events: List[Tuple[float, float]] = []
+    coordinator.register_hibernation_hook(lambda w, m: events.append((w, m)))
+
+    coordinator.on_prepare_for_sleep()
+    # Wall jumped two hours forward (NTP stepped the system clock
+    # after a long time offline) but monotonic moved a few seconds —
+    # the host did NOT sleep that long.
+    patched_clock.advance(wall=7200.0, monotonic=5.0)
+    coordinator.on_resumed()
+
+    assert events == []
+
+
+def test_backward_wall_jump_is_ignored(patched_clock: _FakeClock) -> None:
+    libvirt, coordinator, _ = _make()
+    events: List[Tuple[float, float]] = []
+    coordinator.register_hibernation_hook(lambda w, m: events.append((w, m)))
+
+    coordinator.on_prepare_for_sleep()
+    # DST fall-back or a backwards NTP step inside the sleep window:
+    # wall ran backwards, monotonic ticked forward a few minutes.
+    patched_clock.advance(wall=-3600.0, monotonic=180.0)
+    coordinator.on_resumed()
+
+    assert events == []
+
+
+def test_hooks_fire_in_registration_order(patched_clock: _FakeClock) -> None:
+    libvirt, coordinator, _ = _make()
+    order: List[str] = []
+    coordinator.register_hibernation_hook(lambda _w, _m: order.append("first"))
+    coordinator.register_hibernation_hook(lambda _w, _m: order.append("second"))
+    coordinator.register_hibernation_hook(lambda _w, _m: order.append("third"))
+
+    coordinator.on_prepare_for_sleep()
+    patched_clock.advance(wall=4000.0, monotonic=4000.0)
+    coordinator.on_resumed()
+
+    assert order == ["first", "second", "third"]
+
+
+def test_misbehaving_hook_does_not_block_later_hooks(
+    patched_clock: _FakeClock,
+) -> None:
+    libvirt, coordinator, _ = _make()
+    survivors: List[str] = []
+
+    def explode(_w: float, _m: float) -> None:
+        raise RuntimeError("hook boom")
+
+    coordinator.register_hibernation_hook(explode)
+    coordinator.register_hibernation_hook(
+        lambda _w, _m: survivors.append("ran-anyway")
+    )
+
+    coordinator.on_prepare_for_sleep()
+    patched_clock.advance(wall=4000.0, monotonic=4000.0)
+    coordinator.on_resumed()
+
+    assert survivors == ["ran-anyway"]
+
+
+def test_resume_without_prior_suspend_does_not_consult_clock(
+    patched_clock: _FakeClock,
+) -> None:
+    libvirt, coordinator, _ = _make()
+    events: List[Tuple[float, float]] = []
+    coordinator.register_hibernation_hook(lambda w, m: events.append((w, m)))
+
+    # No on_prepare_for_sleep first → resume short-circuits before the
+    # hibernation block.
+    patched_clock.advance(wall=10_000.0, monotonic=10_000.0)
+    coordinator.on_resumed()
+
+    assert events == []
+    assert libvirt.hooks.resume_count == 0
+

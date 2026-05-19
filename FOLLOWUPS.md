@@ -693,9 +693,23 @@ clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
   check_dbus_listener_subscription` at warning level. Pure
   observability — no FSM transition impact. 3 new tests pin the
   happy / no-recovery-armed / hard-destroy branches.
-- **[P2] Hibernation-aware handling.** Detect "resumed after
-  long absence" (e.g., wall-clock jump >1 hour); force more
-  aggressive AuthContext resync.
+- **[~PARTIAL 2026-05-19] Hibernation-aware handling.**
+  `LifecycleCoordinator` now stamps `time.time()` + `time.monotonic()`
+  at `on_prepare_for_sleep` and, on resume, fires
+  `lifecycle_hibernation_detected wall_delta_s=… monotonic_delta_s=…`
+  at warning level when the wall delta exceeds 3600s **and** the
+  monotonic delta matches it within 10s. Forward NTP jumps (wall
+  moves, monotonic doesn't) log `lifecycle_clock_jump_ignored`
+  instead; backward wall jumps (DST fall-back) are silently skipped.
+  New `register_hibernation_hook(callback)` lets downstream
+  components (heartbeat FSM, AuthValidator, RailManager) subscribe;
+  exceptions in hooks are logged but don't break the resume.
+  Coordinator-side only — actual AuthContext / nonce / sequence
+  resync wiring deferred until hardware is available (touching
+  `AuthValidator` crosses the security-model boundary in AGENTS.md).
+  Tests: 7 new cases in `test_lifecycle_coordinator.py` covering
+  short sleep, true hibernation, NTP-only forward jump, backward
+  jump, hook order, hook-exception isolation, resume-without-suspend.
 - **[P2] Power profile docs.** User-facing docs covering laptop
   battery-saver / lid-close-suspend policy interactions, with
   recommended `crossdesk` configuration per scenario.

@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 18:55] START · agent: claude-code · branch: feat/missed-prepare-for-sleep-heuristic · task: missed-prepare-for-sleep-heuristic · note: FOLLOWUPS:677 P1 "Missed PrepareForSleep heuristic detector". Pattern: heartbeat goes HEALTHY → 10 misses (triggering SOFT_RECOVERY arm) → returns to HEALTHY in <30s total wall-clock. That's the suspend/resume profile when the system suspended without the host receiving a PrepareForSleep D-Bus signal, so the FSM mis-classified the silence as a guest failure. Add tracker in `HeartbeatServiceServicer.Channel` that times the HEALTHY → not-HEALTHY → HEALTHY round-trip and warns `heartbeat_possible_missed_prepare_for_sleep outage_s=N` when (a) recovery was armed during the outage and (b) the round-trip was shorter than ~30s. Pure observability — no FSM transition impact, no AuthValidator changes.
+
 ## Recent
 
 - [2026-05-19 18:52] END · agent: claude-code · branch: chore/mock-import-gate · task: mock-import-gate · note: result: success → merged. FOLLOWUPS:269 ✅ DONE. 1 commit: ci.yml `python-host` job gains grep gate that fails on `from crossdesk_host.*.mock import` outside a 3-entry whitelist; pyproject.toml `[mock]=[]` extra gets a docstring with the policy; .claude/rules/general.md adds the Absolute-prohibition entry. Local smoke clean. Tests + mypy untouched.

@@ -5,6 +5,13 @@ Binary fallback chain matches docs/EXECUTION_PLAN.md Week 8:
 ``xfreerdp`` → ``xfreerdp3`` → ``sdl-freerdp3`` → ``sdl3-freerdp``
 → ``flatpak run com.freerdp.FreeRDP``.
 
+Override the auto-detect by setting ``CROSSDESK_FREERDP_BIN`` to a
+binary name on PATH (e.g. ``xfreerdp3``) or an absolute path. When
+set, the env value takes precedence over the candidate chain and
+spawning raises ``FileNotFoundError`` if the pinned binary is
+absent — no silent fall-back. Useful for CI pinning, debug runs,
+and dev boxes with multiple FreeRDP installs.
+
 Linux-only at runtime; importable on Mac/Windows for type checking
 but spawning will fail (no FreeRDP binary on PATH).
 """
@@ -12,6 +19,7 @@ but spawning will fail (no FreeRDP binary on PATH).
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import signal
 import subprocess
@@ -20,6 +28,8 @@ from typing import Sequence
 from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
 
 logger = logging.getLogger(__name__)
+
+_ENV_PIN = "CROSSDESK_FREERDP_BIN"
 
 # Order matters — use the first binary that exists on PATH. xfreerdp
 # (unversioned) takes precedence so distros that ship 2.x are still
@@ -39,6 +49,16 @@ _TERMINATE_GRACE_SECONDS = 3.0
 def _resolve_freerdp_binary() -> list[str]:
     """Return the argv prefix that invokes a working FreeRDP. Raises
     ``FileNotFoundError`` if nothing matches."""
+    pinned = os.environ.get(_ENV_PIN)
+    if pinned:
+        # An explicit pin must not silently fall back — the operator
+        # asked for this binary specifically (typically CI/test).
+        path = shutil.which(pinned) if "/" not in pinned else (pinned if os.access(pinned, os.X_OK) else None)
+        if path is not None:
+            return [path]
+        raise FileNotFoundError(
+            f"{_ENV_PIN}={pinned!r} not executable or not on PATH"
+        )
     for binary in _BINARY_CANDIDATES:
         path = shutil.which(binary)
         if path is not None:

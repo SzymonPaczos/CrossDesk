@@ -918,11 +918,15 @@ document software rendering as the always-works fallback.
   `host/src/crossdesk_host/display/path_translation.py` — `PathTranslator`
   dataclass, `translate()`, and `winapps_compat()` factory. Phase 5 JIT
   mount path integration is a follow-up (Phase 5 not yet started).
-- **[P1] FreeRDP version fallback chain.** Source:
-  `third_party/winapps/setup.sh:413-454`. Try in order: `xfreerdp` →
+- **[✅ DONE 2026-05-19] FreeRDP version fallback chain.** Source:
+  `third_party/winapps/setup.sh:413-454`. Order: `xfreerdp` →
   `xfreerdp3` → `sdl-freerdp3` → `sdl3-freerdp` → flatpak
-  `com.freerdp.FreeRDP`. Distros pack FreeRDP under many binary names.
-  Helper in `host/src/crossdesk_host/display/`.
+  `com.freerdp.FreeRDP`. Helper at `host/src/crossdesk_host/freerdp/real.py`
+  (`_resolve_freerdp_binary`); doctor probe mirrors the chain at
+  `host/src/crossdesk_host/doctor/checks.py` (`check_freerdp_available`).
+  `CROSSDESK_FREERDP_BIN` env var pins a specific binary (name on PATH
+  or absolute path) for CI / multi-version dev boxes; raises rather
+  than falling back when the pinned binary is absent.
 - **[P2] HiDPI auto-detect — beat winapps here.** Source: their model is
   `RDP_SCALE` config knob with three discrete values
   (`third_party/winapps/setup.sh:504-534`). We can read Wayland

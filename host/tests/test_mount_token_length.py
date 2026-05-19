@@ -19,13 +19,13 @@ from crossdesk_host.ipc.filesystem import (
     MOUNT_TOKEN_LEN,
     FilesystemServiceServicer,
 )
-from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
+from crossdesk_host.filesystem_ctl.mock import MockFilesystemController
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2
 
 
 @pytest.fixture
 def servicer() -> FilesystemServiceServicer:
-    return FilesystemServiceServicer(AuthValidator(), LibvirtControllerMock())
+    return FilesystemServiceServicer(AuthValidator(), MockFilesystemController())
 
 
 def _frame_for(kind: str, token: bytes) -> filesystem_pb2.ShareGuestFrame:
@@ -69,19 +69,21 @@ def test_wrong_length_token_is_dropped(
     mount_result, and by detach_virtiofs not being called on
     release_ack."""
     token = b"\x00" * length
-    pre_attached = set(servicer.libvirt_ctl.hooks.attached_shares)
-    pre_detach_calls = servicer.libvirt_ctl.hooks.detach_virtiofs_count
+    pre_attached = set(servicer.filesystem_ctl.list_active_shares())
+    pre_detach_calls = len(servicer.filesystem_ctl.hooks.detached_ids)
 
     servicer._process_guest_frame(_frame_for(kind, token))
 
     # mount_result side-effect would set active_shares — confirm it didn't.
     if kind == "mount_result":
         assert "share-mt" not in servicer.active_shares
-    # release_ack would call detach_virtiofs — confirm it didn't.
+    # release_ack would call detach_share — confirm it didn't.
     if kind == "release_ack":
-        assert servicer.libvirt_ctl.hooks.detach_virtiofs_count == pre_detach_calls
-    # No frame should alter the libvirt mock's attached set on a length reject.
-    assert servicer.libvirt_ctl.hooks.attached_shares == pre_attached
+        assert (
+            len(servicer.filesystem_ctl.hooks.detached_ids) == pre_detach_calls
+        )
+    # No frame should alter the filesystem mock's attached set on a length reject.
+    assert set(servicer.filesystem_ctl.list_active_shares()) == pre_attached
 
 
 def test_exact_32_byte_mount_result_records_share(

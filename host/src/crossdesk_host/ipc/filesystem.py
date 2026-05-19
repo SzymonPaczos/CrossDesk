@@ -7,7 +7,7 @@ from typing import AsyncIterator, Dict
 import grpc
 from google.protobuf.duration_pb2 import Duration
 
-from crossdesk_host.abstractions.libvirt import LibvirtController
+from crossdesk_host.abstractions.filesystem import FilesystemController
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2, filesystem_pb2_grpc
 
@@ -19,9 +19,13 @@ MOUNT_TOKEN_LEN = 32
 
 
 class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
-    def __init__(self, auth_validator: AuthValidator, libvirt_ctl: LibvirtController):
+    def __init__(
+        self,
+        auth_validator: AuthValidator,
+        filesystem_ctl: FilesystemController,
+    ):
         self.auth_validator = auth_validator
-        self.libvirt_ctl = libvirt_ctl
+        self.filesystem_ctl = filesystem_ctl
         self.command_queue: asyncio.Queue[filesystem_pb2.ShareHostFrame] = (
             asyncio.Queue()
         )
@@ -103,7 +107,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             logger.info(
                 f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching..."
             )
-            self.libvirt_ctl.detach_virtiofs(ack.share_id)
+            self.filesystem_ctl.detach_share(ack.share_id)
 
             if ack.share_id in self.active_shares:
                 del self.active_shares[ack.share_id]
@@ -156,7 +160,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             share_id,
         )
 
-        self.libvirt_ctl.attach_virtiofs(share_id, str(validated.canonical))
+        self.filesystem_ctl.attach_share(share_id, str(validated.canonical))
         self.active_shares[share_id] = "ATTACHED"
 
         # 32-byte random token bound to this share. Real deployments rotate

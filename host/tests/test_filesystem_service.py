@@ -18,13 +18,13 @@ from crossdesk_host.proto.crossdesk.v1 import common_pb2, filesystem_pb2
 
 
 @pytest.fixture
-def libvirt() -> MagicMock:
+def fs_ctl() -> MagicMock:
     return MagicMock()
 
 
 @pytest.fixture
-def servicer(libvirt: MagicMock) -> FilesystemServiceServicer:
-    return FilesystemServiceServicer(MagicMock(), libvirt)
+def servicer(fs_ctl: MagicMock) -> FilesystemServiceServicer:
+    return FilesystemServiceServicer(MagicMock(), fs_ctl)
 
 
 # 32-byte placeholder; the wire contract enforces exactly this length so
@@ -86,7 +86,7 @@ def test_mount_result_failure_does_not_register_share(
 
 
 def test_release_ack_triggers_detach_and_removes_share(
-    servicer: FilesystemServiceServicer, libvirt: MagicMock
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     """ROADMAP Phase 5 happy path: ReleaseAck → libvirt detach + state cleanup."""
     servicer.active_shares["s1"] = "MOUNTED"
@@ -97,12 +97,12 @@ def test_release_ack_triggers_detach_and_removes_share(
     )
     servicer._process_guest_frame(ack)
 
-    libvirt.detach_virtiofs.assert_called_once_with("s1")
+    fs_ctl.detach_share.assert_called_once_with("s1")
     assert "s1" not in servicer.active_shares
 
 
 def test_release_ack_for_unknown_share_still_detaches(
-    servicer: FilesystemServiceServicer, libvirt: MagicMock
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     """Defense-in-depth: if Guest reports release for a share we don't track,
     still call detach (libvirt is idempotent for missing devices) — the
@@ -113,7 +113,7 @@ def test_release_ack_for_unknown_share_still_detaches(
     )
     servicer._process_guest_frame(ack)
 
-    libvirt.detach_virtiofs.assert_called_once_with("ghost")
+    fs_ctl.detach_share.assert_called_once_with("ghost")
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ def test_release_ack_for_unknown_share_still_detaches(
 
 
 def test_lock_report_does_not_mutate_state(
-    servicer: FilesystemServiceServicer, libvirt: MagicMock
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     servicer.active_shares["s1"] = "MOUNTED"
 
@@ -138,7 +138,7 @@ def test_lock_report_does_not_mutate_state(
     servicer._process_guest_frame(rep)
 
     assert servicer.active_shares == {"s1": "MOUNTED"}
-    libvirt.detach_virtiofs.assert_not_called()
+    fs_ctl.detach_share.assert_not_called()
 
 
 def test_incident_logs_at_error_level(
@@ -169,7 +169,7 @@ def test_incident_logs_at_error_level(
 
 async def test_trigger_mount_attaches_libvirt_and_queues_request(
     servicer: FilesystemServiceServicer,
-    libvirt: MagicMock,
+    fs_ctl: MagicMock,
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -179,8 +179,8 @@ async def test_trigger_mount_attaches_libvirt_and_queues_request(
     await servicer.trigger_mount(str(work_dir), "report.docx")
 
     # 1. libvirt was hot-plugged
-    libvirt.attach_virtiofs.assert_called_once()
-    args, _ = libvirt.attach_virtiofs.call_args
+    fs_ctl.attach_share.assert_called_once()
+    args, _ = fs_ctl.attach_share.call_args
     share_id, host_path = args
     assert host_path == str(work_dir.resolve())
     assert servicer.active_shares[share_id] == "ATTACHED"
@@ -232,7 +232,7 @@ async def test_trigger_mount_rejects_traversal(
 
 @pytest.mark.parametrize("bad_token", [b"", b"\x00" * 31, b"\x00" * 33, b"\x00" * 4096])
 def test_release_ack_rejected_when_mount_token_length_invalid(
-    servicer: FilesystemServiceServicer, libvirt: MagicMock, bad_token: bytes
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock, bad_token: bytes
 ) -> None:
     """A malicious or buggy Guest could otherwise stamp every frame with a
     multi-MB token to balloon host memory; we drop the frame on length mismatch."""
@@ -244,5 +244,5 @@ def test_release_ack_rejected_when_mount_token_length_invalid(
     )
     servicer._process_guest_frame(ack)
 
-    libvirt.detach_virtiofs.assert_not_called()
+    fs_ctl.detach_share.assert_not_called()
     assert servicer.active_shares == {"s1": "MOUNTED"}

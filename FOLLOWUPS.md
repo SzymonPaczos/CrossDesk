@@ -242,9 +242,10 @@ DEC-0005 for the architectural commitment.
   13 contract tests pin idempotence (re-attach is no-op + returns False,
   detach-unknown is no-op + returns False) and the libvirt-wrapper
   bookkeeping (failed attach must not register the share locally).
-  Follow-up: refactor `FilesystemServiceServicer` to consume
-  FilesystemController instead of LibvirtController so the wide
-  abstraction landing yields a narrower servicer surface.
+  Follow-up landed 2026-05-19: `FilesystemServiceServicer` now
+  consumes `FilesystemController`; production daemon wraps libvirt
+  in `LibvirtFilesystemController` at construction; smoke harness
+  does the same; per-frame tests use `MockFilesystemController`.
 - **[✅ DONE 2026-05-19] D-Bus signals abstraction.** Used for
   suspend/resume detection. `DBusSignalSource` Protocol +
   `MockDBusSignalSource` in

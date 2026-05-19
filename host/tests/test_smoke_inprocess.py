@@ -50,6 +50,7 @@ from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator
+from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
@@ -181,7 +182,7 @@ async def host_with_port_and_logs(verify_coordinator: VerifyCoordinator):
         HeartbeatServiceServicer(auth, libvirt), server
     )
     filesystem_pb2_grpc.add_FilesystemServiceServicer_to_server(
-        FilesystemServiceServicer(auth, libvirt), server
+        FilesystemServiceServicer(auth, LibvirtFilesystemController(libvirt)), server
     )
 
     port = server.add_secure_port("127.0.0.1:0", creds)

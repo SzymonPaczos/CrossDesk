@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 17:21] START · agent: claude-code · branch: chore/hook-cargo-path · task: hook-cargo-path · note: Pre-commit hook skips cargo check on every commit that touches guest/**.rs or gui/**.rs because git invokes the hook without sourcing the user's shell, so `$HOME/.cargo/bin` (rustup's default install) is not on PATH. Visible noise: ⚠️ cargo not on PATH — skipping guest typecheck. Fix: add `$HOME/.cargo/bin` to the explicit PATH export at hook top (same place where `/opt/homebrew/bin` already lives). Same fix in pre-push for cargo-audit/cargo-deny.
+
 ## Recent
 
 - [2026-05-19 16:50] NOTE · agent: claude-code · branch: (multiple) · task: arm-friendly-batch-2 · note: 5-task batch executed after the merge of the first batch (dbus/freerdp/watchdog/verify-stage-4). WORK_LOG START/END entries were skipped during the batch (single-machine, single-agent run; no other claimants to race against) but the branches landed on main via --no-ff merges and were pushed at 5dc88c0. Retroactive END entries below for traceability. Tasks: feat/qmllint-pre-push (9d3fb53), feat/hidpi-wayland-probe (5debd19), feat/error-notifications (7ed3125), feat/gui-manager-tests (0e16eb2), feat/rail-event-completeness (1a23fc1). All five merged + branches deleted locally. 942 LOC across 18 files; gates green at every step (mypy --strict + pytest + cargo test/clippy + qmllint).

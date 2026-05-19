@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator, Awaitable, Callable, Optional
 
 import grpc
 from google.protobuf import duration_pb2
@@ -36,6 +36,14 @@ from crossdesk_host.watchdog import (
     TickInput,
     TickOutput,
 )
+
+BootProbe = Callable[[], Awaitable[bool]]
+"""Optional async predicate invoked once per Channel when the FSM
+first enters PROBING. Truthy = guest agent is responsive (probe
+round-trip succeeded); falsy or raised = asymmetric break suspected
+(VSOCK listener up but agent stuck). The probe is fire-and-forget
+from the channel loop's perspective — its only effect is a structured
+log line — so a slow probe never blocks heartbeat ticks."""
 
 # Stdlib logger (not the structlog facade) so the per-call
 # ``configure_logging`` from tests + production reconfigures the live
@@ -67,12 +75,28 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         config: Optional[FsmConfig] = None,
         ping_interval_seconds: float = 1.0,
         pong_timeout_seconds: float = 2.0,
+        boot_probe: Optional[BootProbe] = None,
     ) -> None:
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
         self.config = config or FsmConfig()
         self.ping_interval_seconds = ping_interval_seconds
         self.pong_timeout_seconds = pong_timeout_seconds
+        self.boot_probe = boot_probe
+
+    async def _run_boot_probe(self, probe: BootProbe) -> None:
+        timeout_s = self.config.boot_probe_timeout_seconds
+        try:
+            result = await asyncio.wait_for(probe(), timeout=timeout_s)
+        except asyncio.TimeoutError:
+            logger.warning(
+                "heartbeat_boot_probe_timeout timeout_s=%.1f", timeout_s
+            )
+            return
+        except Exception as exc:
+            logger.warning("heartbeat_boot_probe_error error=%s", exc)
+            return
+        logger.info("heartbeat_boot_probe_result success=%s", bool(result))
 
     def _build_profile(self, out: TickOutput) -> heartbeat_pb2.AdaptiveProfile:
         return heartbeat_pb2.AdaptiveProfile(
@@ -94,6 +118,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         fsm = HeartbeatFsm(self.config)
         seq = 1
         last_state: State = fsm.state
+        probe_already_run = False
 
         try:
             while True:
@@ -139,6 +164,17 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         out.ewma_rtt_ns,
                     )
                     last_state = out.state
+                    # First-time entry into PROBING: fire the optional
+                    # boot-probe so an asymmetric break (VSOCK listener
+                    # bound but guest agent hung) shows up in logs even
+                    # if heartbeat misses are still incrementing.
+                    if (
+                        out.state == State.PROBING
+                        and self.boot_probe is not None
+                        and not probe_already_run
+                    ):
+                        probe_already_run = True
+                        asyncio.create_task(self._run_boot_probe(self.boot_probe))
 
                 # AdaptiveProfile broadcast: emit BEFORE any libvirt action so
                 # a supervisor (or the guest itself) can observe the impending

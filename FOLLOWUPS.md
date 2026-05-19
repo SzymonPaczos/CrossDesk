@@ -896,16 +896,19 @@ document software rendering as the always-works fallback.
   carrying the impending `RecoveryAction` and exponential-backoff hint
   BEFORE calling libvirt. Lives in
   `host/src/crossdesk_host/ipc/heartbeat.py::HeartbeatServiceServicer.Channel`.
-- **[P1] Two-layer health check before declaring the VM ready.** Source:
-  `third_party/winapps/setup.sh:1040-1195`. They probe TCP port + run a
-  marker-file round-trip via FreeRDP before considering RDP usable. Our
-  equivalent: extend the existing FSM `PROBING` state to (a) confirm
-  VSOCK listener is bound (already done), (b) round-trip a real
-  `HeartbeatService.Channel` ping with a synthetic `AuthContext` and
-  observe the response within `BOOT_TIMEOUT`. Today an asymmetric break
-  (vsock up but agent stuck) would not be caught here. Touches
-  `host/src/crossdesk_host/watchdog/` (FSM) and
-  `host/src/crossdesk_host/ipc/heartbeat.py`.
+- **[~PARTIAL 2026-05-19] Two-layer health check before declaring the VM ready.**
+  Source: `third_party/winapps/setup.sh:1040-1195`. Equivalent: extend FSM `PROBING`
+  to (a) confirm VSOCK listener is bound (already done — `transport/real.py`
+  raises on bind failure), (b) round-trip a real `HeartbeatService.Channel` ping
+  with a synthetic `AuthContext` and observe response within `BOOT_TIMEOUT`.
+  **Shipped:** observability MVP. `HeartbeatServiceServicer.boot_probe`
+  Optional[Callable] hook (default None); on first PROBING entry the servicer
+  spawns a fire-and-forget probe task bounded by
+  `FsmConfig.boot_probe_timeout_seconds` (default 5.0s); result emitted as
+  structured log `heartbeat_boot_probe_{result,timeout,error}`. Pure logging,
+  no FSM-transition impact, no AuthValidator changes. **Deferred:** synthetic
+  AuthContext bypass + probe-driven SOFT_RECOVERY short-circuit — both touch the
+  security model and require an ADR per AGENTS.md "File boundaries".
 
 ## Phase 4 follow-ups (RAIL Display Integration)
 

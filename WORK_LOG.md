@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 19:55] START · agent: claude-code · branch: chore/ci-restore · task: ci-restore · note: GitHub CI + Security audit have been red on every push to main for a while (user's inbox flooded with failure notifications). Audit identified 6 root causes, all unrelated to product code: (1) `pip-audit --strict` fails because our editable `crossdesk-host` is not on PyPI (drop `--strict`); (2) `qmllint -W 0` rejected on Ubuntu 24.04's Qt 6.4.2 (drop `-W 0` until runner pulls Qt 6.5+); (3) Python 3.9 matrix entry can't install mypy 2.1+ — dropped from CI matrix (runtime `requires-python = ">=3.9"` left alone, that's a user-decision public API change); (4) i18n .pot drift from non-deterministic `find` order — pipe through `LC_ALL=C sort -z` for byte-stable output; (5) ruff 0.15 catches I001 in daemon.py imports — auto-fixed; (6) buf format wants alphabetical imports in filesystem.proto + heartbeat.proto (pure reformat, no wire change). No proto wire-format edits, no THREAT_MODEL touches.
+
 ## Recent
 
 - [2026-05-19 19:50] END · agent: claude-code · branch: feat/vm-toml-schema-version · task: vm-toml-schema-version · note: result: success → merged. FOLLOWUPS:571 P1→~PARTIAL. 1 commit (45051cc): credentials.py emits `schema_version` first in to_toml(); load() defaults legacy files to v1 (safe — pre-versioning shape was only username+password) and rejects schema_version > SCHEMA_VERSION with an actionable ValueError so a downgrade can't silently drop unknown fields. 5 new tests (write/read/legacy/newer-reject/non-int-reject). `crossdesk config migrate` CLI subcommand deferred to keep this PR scope-clean. mypy --strict 114 clean; pytest 22/22 credentials tests.

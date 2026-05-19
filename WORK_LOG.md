@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 17:25] START · agent: claude-code · branch: feat/cross-rs-proto-vendored · task: cross-rs-proto-vendored · note: FOLLOWUPS:136 P1 cross-rs end-to-end build. Root cause documented in docs/CROSS_PLATFORM_DEV.md:217-238 — `cross` mounts only the cargo workspace (guest/), but proto/build.rs reads `../../../proto/crossdesk/v1/*.proto` which escapes the mount. Approach: vendored-copy pattern. (1) build.rs reads CROSSDESK_PROTO_DIR env var if set; (2) falls through to `guest/proto-vendored/` if present; (3) finally falls back to the repo-relative `../../../proto`. (4) scripts/cross-build-agent.sh helper rsyncs proto/ into guest/proto-vendored/ then invokes `cross build`. (5) .gitignore excludes the vendored copy so it never lands in git history. Native MinGW happy path untouched (env var absent + no vendored dir → uses repo-relative path).
+
 ## Recent
 
 - [2026-05-19 17:21] START · agent: claude-code · branch: chore/hook-cargo-path · task: hook-cargo-path · note: Pre-commit hook skips cargo check on every commit that touches guest/**.rs or gui/**.rs because git invokes the hook without sourcing the user's shell, so `$HOME/.cargo/bin` (rustup's default install) is not on PATH. Visible noise: ⚠️ cargo not on PATH — skipping guest typecheck. Fix: add `$HOME/.cargo/bin` to the explicit PATH export at hook top (same place where `/opt/homebrew/bin` already lives). Same fix in pre-push for cargo-audit/cargo-deny.

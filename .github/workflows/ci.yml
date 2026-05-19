@@ -45,6 +45,26 @@ jobs:
         # Verified locally on macOS Python 3.12: 0 issues across 32 source
         # files (commit 58dad5f). Enforced rather than tolerated.
         run: mypy --strict src/
+      - name: enforce production code does not import mocks
+        # Per FOLLOWUPS:269 — production paths cannot reach into
+        # *.mock modules. Whitelist below documents the three
+        # legitimate sites (library-API re-exports + the Phase 3
+        # dev-default in daemon.py); any new bad import fails CI.
+        run: |
+          bad=$(grep -rE "from crossdesk_host\\.[^[:space:]]+\\.mock import" src/ \
+                | grep -v "src/crossdesk_host/integrations/keyring/__init__\\.py:" \
+                | grep -v "src/crossdesk_host/filesystem_ctl/__init__\\.py:" \
+                | grep -v "src/crossdesk_host/daemon\\.py:" \
+                || true)
+          if [ -n "$bad" ]; then
+            echo "❌ production code imports a mock module outside the whitelist:"
+            echo "$bad"
+            echo
+            echo "Either: route through the real impl, expose via an"
+            echo "abstraction Protocol, or extend the whitelist with a"
+            echo "matching FOLLOWUPS line explaining why."
+            exit 1
+          fi
       - name: pytest
         run: pytest -q
 

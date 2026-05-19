@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 15:04] START · agent: claude-code · branch: feat/freerdp-binary-env-override · task: freerdp-binary-env-override · note: FOLLOWUPS:921-925 P1 "FreeRDP version fallback chain" — chain itself already exists in freerdp/real.py:28-56 + doctor/checks.py:63-84. Documentation drift: FOLLOWUPS not marked DONE. Adds `CROSSDESK_FREERDP_BIN` env override (highest precedence over candidates; raises FileNotFoundError if pinned binary not on PATH; doctor reports "pinned via env" or fail). Useful for CI pinning, multi-version dev boxes, and debug. Refresh FOLLOWUPS:921 entry to ✅ DONE with file:line refs.
+
 ## Recent
 
 - [2026-05-19 14:59] START · agent: claude-code · branch: fix/dbus-next-attr-defined · task: dbus-next-attr-defined · note: Linux+Python 3.14+mypy 2.1+dbus-next 0.2.3 surfaces 2 [attr-defined] errors on `from dbus_next import BusType` / `from dbus_next.aio import MessageBus` (dbus_listener.py:36-37). Existing `# type: ignore[import]` doesn't cover attr-defined category. Fix: extend to `[import,attr-defined]` on both lines. pyproject.toml override (warn_unused_ignores=false for dbus_listener+notifications modules) handles cross-platform asymmetry. 2-line code change + WORK_LOG.

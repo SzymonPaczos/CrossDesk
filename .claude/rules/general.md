@@ -26,6 +26,16 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   explicitly says so. Hooks fail for a reason — fix the reason.
 - **No `git push --force` to `main`.** Force-pushing to feature
   branches you own is fine; rewriting shared history is not.
+- **No `*.mock` imports from production code.** Modules under
+  `host/src/crossdesk_host/**/mock.py` and `guest/crates/**/src/**`
+  feature-gated to `mock` are test-only. Production code must
+  reach the abstraction Protocol (e.g.
+  `crossdesk_host.abstractions.libvirt.LibvirtController`) and
+  let the call site decide which implementation to instantiate.
+  Enforced by a CI grep gate in `python-host` (whitelist:
+  subpackage `__init__.py` re-exports +
+  `daemon.py`'s Phase 3 dev-default). Adding a new bad import
+  needs a matching FOLLOWUPS entry explaining why.
 
 ## Communication & work
 

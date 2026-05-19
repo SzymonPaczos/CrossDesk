@@ -41,6 +41,14 @@ linux = [
 # Mock-driven testing per DEC-0005. Mocks are pure Python; this extra
 # exists as a placeholder for future mock-only test deps and so that
 # `pip install -e .[mock]` is the canonical Mac dev install.
+#
+# Feature-gate policy (FOLLOWUPS:269 + .claude/rules/general.md):
+# production code under host/src/crossdesk_host/ may NOT import a
+# `*.mock` module directly. The CI `python-host` job greps for
+# `from crossdesk_host.*.mock import` and fails on hits outside a
+# small documented whitelist (library-API re-exports +
+# daemon.py's Phase 3 dev-default). Tests under host/tests/ and
+# subpackage `__init__.py` re-exports are fine.
 mock = []
 dev = [
     "mypy>=2.1",

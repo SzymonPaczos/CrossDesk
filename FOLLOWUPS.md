@@ -266,10 +266,14 @@ DEC-0005 for the architectural commitment.
   `windows-rs` calls in `guest/crates/agent-svc/`. Mock provides
   builder API for canned registry trees. Used by the future app
   discovery service.
-- **[P1] Pyproject + Cargo features for mock toggling.** Document
-  in `pyproject.toml` and `Cargo.toml` the `mock`, `linux`, and
-  `windows-real` feature gates. Enforce that production paths
-  cannot import mock modules — add a CI check.
+- **[✅ DONE 2026-05-19] Pyproject + Cargo features for mock toggling.**
+  Documented `pyproject.toml` extras block + the guest Cargo
+  `mock = ["ipc-vsock/mock"]` feature gate. CI `python-host` job
+  greps `from crossdesk_host.*.mock import` and fails on hits
+  outside a documented whitelist (subpackage `__init__.py`
+  re-exports + `daemon.py`'s Phase 3 dev-default). Policy is also
+  written into `.claude/rules/general.md` so agents picking it up
+  cold see it without grepping ci.yml.
 - **[P2] `cargo deny` rule** preventing direct imports of
   `libvirt-python`, `socket.socket(AF_VSOCK)`, `tokio::net::VsockStream`
   outside the abstraction layer.

@@ -265,11 +265,20 @@ decision.
   drag-between-monitors with different scale, re-issue
   `/scale-desktop:N`. WinApps explicitly warns this is broken on
   their stack — clear win for us if we land it cleanly.
-- **[P1] HiDPI auto-detect.** Read user's effective scale (Wayland
-  `wl_output.scale`, X11 RANDR, GNOME `org.gnome.desktop.interface
+- **[~PARTIAL 2026-05-19] HiDPI auto-detect.** Read user's effective
+  scale (Wayland `wl_output.scale`, X11 RANDR, GNOME `org.gnome.desktop.interface
   scaling-factor`, KDE `kreadconfig5`). Map to nearest FreeRDP-
   supported scale (100/140/180 in 3.x; finer if 4.x). Re-evaluate
   on monitor change events.
+  **Shipped:** `host/src/crossdesk_host/display/hidpi.py` detection
+  ladder (wlr-randr → gsettings → kreadconfig5 → xrdb → env →
+  default), `bucketize()` snap to 100/140/180, `auto_scale()`
+  convenience composing both. `FreeRDPConnectionSpec.scale` already
+  validates the bucket; once `build_rail_argv` gets a production
+  call site, the one-liner is `FreeRDPConnectionSpec(scale=auto_scale(), ...)`.
+  **Deferred:** per-monitor scale (multimonitor.py is geometry-only;
+  needs RANDR/wl_output per-output enumeration) and re-evaluation on
+  monitor change events — both Phase 2.
 - **[P1] RAIL window lifecycle event idempotence.** The
   `RailWindowEvent` consumer in `rail_manager.py` must handle:
   out-of-order CREATED/FOCUS arrivals, repeated DESTROYED, MOVED

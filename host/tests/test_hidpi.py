@@ -8,6 +8,7 @@ import pytest
 
 from crossdesk_host.display.hidpi import (
     ProbeRunner,
+    auto_scale,
     bucketize,
     detect_scaling,
 )
@@ -63,6 +64,52 @@ def test_bucketize_rejects_negative() -> None:
 # ---------------------------------------------------------------------------
 
 
+_WLR_RANDR_SAMPLE = """\
+DP-1 "Some Display Co LTD A123 (DP-1)"
+  Make: Some Display Co LTD
+  Model: A123
+  Serial: 0xCAFE
+  Physical size: 600x340 mm
+  Enabled: yes
+  Modes:
+    3840x2160 px, 60.000000 Hz (preferred, current)
+  Position: 0,0
+  Transform: normal
+  Scale: 1.500000
+"""
+
+
+def test_wlr_randr_takes_first_output_scale() -> None:
+    runner = _ScriptedRunner({"wlr-randr": _WLR_RANDR_SAMPLE})
+    result = detect_scaling(runner)
+    assert result.source == "wlr-randr"
+    assert result.scaling_factor == pytest.approx(1.5)
+
+
+def test_wlr_randr_takes_precedence_over_gnome() -> None:
+    runner = _ScriptedRunner(
+        {"wlr-randr": _WLR_RANDR_SAMPLE, "gsettings": "1.0\n"}
+    )
+    result = detect_scaling(runner)
+    assert result.source == "wlr-randr"
+
+
+def test_wlr_randr_invalid_scale_falls_through() -> None:
+    bad = _WLR_RANDR_SAMPLE.replace("1.500000", "not-a-number")
+    runner = _ScriptedRunner({"wlr-randr": bad, "gsettings": "1.4\n"})
+    result = detect_scaling(runner)
+    assert result.source == "gnome"
+
+
+def test_wlr_randr_no_scale_line_falls_through() -> None:
+    no_scale = "\n".join(
+        line for line in _WLR_RANDR_SAMPLE.splitlines() if "Scale:" not in line
+    )
+    runner = _ScriptedRunner({"wlr-randr": no_scale, "gsettings": "1.4\n"})
+    result = detect_scaling(runner)
+    assert result.source == "gnome"
+
+
 def test_gnome_text_scaling_factor_returned_first() -> None:
     runner = _ScriptedRunner({"gsettings": "1.5\n"})
     result = detect_scaling(runner)
@@ -112,3 +159,23 @@ def test_invalid_xrdb_dpi_returns_none() -> None:
     runner = _ScriptedRunner({"xrdb": "Xft.dpi: garbage\n"})
     result = detect_scaling(runner)
     assert result.source == "default"
+
+
+# ---------------------------------------------------------------------------
+# auto_scale (detect + bucketize convenience)
+# ---------------------------------------------------------------------------
+
+
+def test_auto_scale_wayland_15_buckets_to_140() -> None:
+    runner = _ScriptedRunner({"wlr-randr": _WLR_RANDR_SAMPLE})
+    assert auto_scale(runner) == 140
+
+
+def test_auto_scale_default_returns_100(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CROSSDESK_SCALE", raising=False)
+    assert auto_scale(_ScriptedRunner({})) == 100
+
+
+def test_auto_scale_4k_2x_buckets_to_180() -> None:
+    runner = _ScriptedRunner({"xrdb": "Xft.dpi: 192\n"})
+    assert auto_scale(runner) == 180

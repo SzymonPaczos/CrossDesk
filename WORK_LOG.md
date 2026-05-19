@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 20:10] START · agent: claude-code · branch: feat/bench-report-pr-comment · task: bench-report-pr-comment · note: FOLLOWUPS:518-522 P1. Adds `scripts/bench_report.py` aggregating `host/bench-results.json` (pytest-benchmark output) against `.github/perf-baselines.json` into a Markdown table (metric / current / baseline / delta %) with regression (>+threshold) and improvement (<-threshold) highlights. CLI mirrors `scripts/bench_check.py` (`--results PATH`, `--baseline PATH`). Wires into `.github/workflows/ci.yml` microbench job as a PR-only step (`if: github.event_name == 'pull_request'`) that posts the report via `gh pr comment` (adds `pull-requests: write` permission). Tests in `host/tests/test_bench_report.py` mirror `test_bench_check.py` patterns: no regressions, one regression, one improvement, missing baseline entry (informational), missing result entry (skip), malformed input (error).
+
 ## Recent
 
 - [2026-05-19 20:05] END · agent: claude-code · branch: chore/ci-restore · task: ci-restore · note: result: success → merged. 1 commit (440e7af, 9 files): `pip-audit --strict` → `pip-audit` (our editable install isn't on PyPI); drop Python 3.9 from CI matrix (mypy 2.1+ needs 3.10+, runtime requires-python untouched); drop `qmllint -W 0` (Qt 6.4.2 on Ubuntu 24.04 rejects -W); `find | LC_ALL=C sort -z` in scripts/i18n.sh + regenerated .pot for byte-stable extraction; ruff I001 fix on daemon.py imports; alphabetize imports in filesystem.proto + heartbeat.proto (pure reformat). Lokalnie ruff/mypy/pytest 695 passed. Watching CI on next push.

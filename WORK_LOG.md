@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 19:10] START · agent: claude-code · branch: feat/vm-toml-schema-version · task: vm-toml-schema-version · note: FOLLOWUPS:571 P1 Config schema versioning + migration. Adds `schema_version` field to vm.toml (writes new files at SCHEMA_VERSION=1; reads legacy files without the field by defaulting to 1; rejects newer-than-supported with an actionable error so a downgrade doesn't silently corrupt credentials). MVP: load/save awareness + tests; `crossdesk config migrate` CLI subcommand deferred to a follow-up so this PR stays narrow (CLI surface needs argparse plumbing in cli/main.py, scope-creep against the schema-only goal here).
+
 ## Recent
 
 - [2026-05-19 19:07] END · agent: claude-code · branch: docs/contributing-translator-section · task: contributing-translator-section · note: result: success → merged. FOLLOWUPS:764 ✅ DONE. 1 commit: new CONTRIBUTING.md (156 lines) — Quick-start + Coding rules (link to AGENTS.md) + PR conventions + Translator workflow with 5-step add-a-language flow + current language coverage table.

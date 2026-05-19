@@ -222,9 +222,17 @@ DEC-0005 for the architectural commitment.
   client. `MockFilesystem` tracks mount/unmount in-memory state.
   Lives in `host/src/crossdesk_host/ipc/filesystem.py` neighborhood.
   Phase 5 dependency.
-- **[P1] D-Bus signals abstraction.** Used for suspend/resume
-  detection. Mock emits scripted `org.freedesktop.login1.PrepareForSleep`
-  events. Tied to lifecycle work.
+- **[✅ DONE 2026-05-19] D-Bus signals abstraction.** Used for
+  suspend/resume detection. `DBusSignalSource` Protocol +
+  `MockDBusSignalSource` in
+  `host/src/crossdesk_host/lifecycle/dbus_signals.py`; tests script
+  suspend/resume cycles via `emit_prepare_for_sleep(starting=…)` and
+  assert against `LifecycleCoordinator.suspended` + libvirt
+  suspend/resume call counts. Real listener path
+  (`dbus_listener.start_listener`) untouched; the abstraction sits
+  alongside it so the daemon can pick the source at construction
+  time (Linux production → systemd-logind subscription; Mac dev /
+  tests → mock).
 - **[P1] Windows registry abstraction (guest side).** Behind
   `windows-rs` calls in `guest/crates/agent-svc/`. Mock provides
   builder API for canned registry trees. Used by the future app

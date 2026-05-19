@@ -78,6 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
+## Recent
+
+- [2026-05-19 18:52] END · agent: claude-code · branch: chore/mock-import-gate · task: mock-import-gate · note: result: success → merged. FOLLOWUPS:269 ✅ DONE. 1 commit: ci.yml `python-host` job gains grep gate that fails on `from crossdesk_host.*.mock import` outside a 3-entry whitelist; pyproject.toml `[mock]=[]` extra gets a docstring with the policy; .claude/rules/general.md adds the Absolute-prohibition entry. Local smoke clean. Tests + mypy untouched.
+
 - [2026-05-19 18:48] START · agent: claude-code · branch: chore/mock-import-gate · task: mock-import-gate · note: FOLLOWUPS:269 P1 "Pyproject + Cargo features for mock toggling — document the feature gates + enforce that production paths cannot import mock modules". Audit: 3 sites currently import a `.mock` module from outside tests — (a) `crossdesk_host/integrations/keyring/__init__.py` re-exports MockKeyring (library API surface, intentional); (b) `crossdesk_host/filesystem_ctl/__init__.py` re-exports MockFilesystemController (same pattern, landed today); (c) `crossdesk_host/daemon.py` hardcodes LibvirtControllerMock as the dev-default until Phase 3 wires the real libvirt controller (hardware-gated). Adds a CI grep gate in ci.yml `python-host` job that fails on any new direct `from crossdesk_host.*.mock import` outside that whitelist; widens pyproject.toml + guest/Cargo.toml feature-gate docstrings; appends rationale to .claude/rules/general.md so the policy is visible without grepping ci.yml.
 
 ## Recent

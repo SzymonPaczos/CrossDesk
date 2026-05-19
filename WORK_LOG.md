@@ -78,6 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
+## Recent
+
+- [2026-05-19 19:00] END · agent: claude-code · branch: feat/missed-prepare-for-sleep-heuristic · task: missed-prepare-for-sleep-heuristic · note: result: success → merged. FOLLOWUPS:677 ✅ DONE. 1 commit: HeartbeatServiceServicer.Channel tracker — stamp wall-clock on HEALTHY exit, flag on SOFT_RECOVERY / HARD_DESTROY arm, warn on HEALTHY return if both conditions hold and outage_s < 30s. 3 new tests pin happy / DEGRADED-only / HARD_DESTROY-no-return branches. mypy 114 clean; pytest 12/12 heartbeat tests.
+
 - [2026-05-19 18:55] START · agent: claude-code · branch: feat/missed-prepare-for-sleep-heuristic · task: missed-prepare-for-sleep-heuristic · note: FOLLOWUPS:677 P1 "Missed PrepareForSleep heuristic detector". Pattern: heartbeat goes HEALTHY → 10 misses (triggering SOFT_RECOVERY arm) → returns to HEALTHY in <30s total wall-clock. That's the suspend/resume profile when the system suspended without the host receiving a PrepareForSleep D-Bus signal, so the FSM mis-classified the silence as a guest failure. Add tracker in `HeartbeatServiceServicer.Channel` that times the HEALTHY → not-HEALTHY → HEALTHY round-trip and warns `heartbeat_possible_missed_prepare_for_sleep outage_s=N` when (a) recovery was armed during the outage and (b) the round-trip was shorter than ~30s. Pure observability — no FSM transition impact, no AuthValidator changes.
 
 ## Recent

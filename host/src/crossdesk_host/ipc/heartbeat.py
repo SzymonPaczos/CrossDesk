@@ -123,6 +123,16 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         seq = 1
         last_state: State = fsm.state
         probe_already_run = False
+        # Missed-PrepareForSleep heuristic state (FOLLOWUPS:677):
+        # remembers wall-clock-equivalent monotonic when we last left
+        # HEALTHY and whether the FSM armed a recovery action during
+        # the outage. A fast HEALTHY → recovery-armed → HEALTHY round
+        # trip means the host very likely suspended without firing a
+        # PrepareForSleep D-Bus signal — the FSM did the right thing
+        # but the warning lets operators fix the missing subscription.
+        healthy_left_at_ns: Optional[int] = None
+        recovery_armed_during_outage = False
+        missed_sleep_threshold_seconds = 30.0
 
         try:
             while True:
@@ -167,6 +177,36 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         out.consecutive_miss_count,
                         out.ewma_rtt_ns,
                     )
+                    # Missed-PrepareForSleep tracker: stamp wall-clock
+                    # on HEALTHY exit; clear it (and warn) on return
+                    # to HEALTHY if recovery was armed during the
+                    # outage AND the round trip was fast.
+                    if last_state == State.HEALTHY and out.state != State.HEALTHY:
+                        healthy_left_at_ns = time.monotonic_ns()
+                        recovery_armed_during_outage = False
+                    if out.state in (
+                        State.SOFT_RECOVERY,
+                        State.HARD_DESTROY,
+                    ):
+                        recovery_armed_during_outage = True
+                    if (
+                        out.state == State.HEALTHY
+                        and healthy_left_at_ns is not None
+                    ):
+                        outage_s = (
+                            time.monotonic_ns() - healthy_left_at_ns
+                        ) / 1_000_000_000
+                        if (
+                            recovery_armed_during_outage
+                            and outage_s < missed_sleep_threshold_seconds
+                        ):
+                            logger.warning(
+                                "heartbeat_possible_missed_prepare_for_sleep "
+                                "outage_s=%.1f hint=check_dbus_listener_subscription",
+                                outage_s,
+                            )
+                        healthy_left_at_ns = None
+                        recovery_armed_during_outage = False
                     last_state = out.state
                     # First-time entry into PROBING: fire the optional
                     # boot-probe so an asymmetric break (VSOCK listener

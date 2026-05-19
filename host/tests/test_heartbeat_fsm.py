@@ -13,6 +13,7 @@ milliseconds and we can script which pings get a pong vs. time out.
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import AsyncIterator, List
 from unittest.mock import AsyncMock, MagicMock  # noqa: F401
 
@@ -337,4 +338,65 @@ async def test_soft_recovery_does_not_fire_forced_stop_notification(
     assert libvirt.graceful_shutdown.call_count >= 1
     assert libvirt.hard_destroy.call_count == 0
     assert notifier.calls == []
+
+
+
+# ---------------------------------------------------------------------------
+# Missed PrepareForSleep heuristic (FOLLOWUPS:677)
+# ---------------------------------------------------------------------------
+
+
+async def test_missed_prepare_for_sleep_warning_fires(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """6 misses arms SOFT_RECOVERY, then 3 consecutive pongs return
+    the FSM to HEALTHY. Because fake_sleep is a no-op the wall clock
+    barely moves between the HEALTHY exit and the HEALTHY return, so
+    the heuristic should warn."""
+    libvirt = MagicMock()
+    caplog.set_level(logging.WARNING, logger="crossdesk_host.ipc.heartbeat")
+    await _drive(
+        [_pong(1)]
+        + [asyncio.TimeoutError] * 6
+        + [_pong(2), _pong(3), _pong(4)]
+        + [StopAsyncIteration],
+        libvirt,
+        monkeypatch,
+    )
+    assert any(
+        "missed_prepare_for_sleep" in rec.message for rec in caplog.records
+    )
+
+
+async def test_no_warning_when_only_degraded_during_outage(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """DEGRADED is below the SOFT_RECOVERY threshold — no recovery
+    action was armed, so even a fast HEALTHY → DEGRADED → HEALTHY
+    cycle is just normal heartbeat noise, not a missed-PrepareForSleep
+    signature."""
+    libvirt = MagicMock()
+    caplog.set_level(logging.WARNING, logger="crossdesk_host.ipc.heartbeat")
+    await _drive(
+        [_pong(1), asyncio.TimeoutError, _pong(2), _pong(3), _pong(4), StopAsyncIteration],
+        libvirt,
+        monkeypatch,
+    )
+    assert not any(
+        "missed_prepare_for_sleep" in rec.message for rec in caplog.records
+    )
+
+
+async def test_no_warning_when_hard_destroy_fires(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """If the FSM walks all the way to HARD_DESTROY it never returns
+    to HEALTHY, so the heuristic stays silent — no false claim that
+    the host suspended."""
+    libvirt = MagicMock()
+    caplog.set_level(logging.WARNING, logger="crossdesk_host.ipc.heartbeat")
+    await _drive([asyncio.TimeoutError] * 11, libvirt, monkeypatch)
+    assert not any(
+        "missed_prepare_for_sleep" in rec.message for rec in caplog.records
+    )
 

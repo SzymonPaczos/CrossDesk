@@ -674,10 +674,16 @@ clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
 - **[P1] VM autostart on login (opt-in).** `crossdesk install
   --autostart` and `crossdesk vm autostart enable|disable`.
   Default off. When enabled: host starts VM at session start.
-- **[P1] "Missed PrepareForSleep" heuristic detector.** If
-  heartbeat goes healthy → 10 misses → healthy in <30 s,
-  downgrade SOFT_RECOVERY trigger to a warning. Catches
-  configurations where D-Bus signal isn't emitted.
+- **[✅ DONE 2026-05-19] "Missed PrepareForSleep" heuristic detector.**
+  HeartbeatServiceServicer.Channel now stamps `time.monotonic_ns()`
+  on every HEALTHY→non-HEALTHY transition, sets a flag when the FSM
+  arms SOFT_RECOVERY or HARD_DESTROY during the outage, and on the
+  HEALTHY return computes the round-trip duration. If recovery was
+  armed AND the outage is shorter than 30s, logs
+  `heartbeat_possible_missed_prepare_for_sleep outage_s=… hint=
+  check_dbus_listener_subscription` at warning level. Pure
+  observability — no FSM transition impact. 3 new tests pin the
+  happy / no-recovery-armed / hard-destroy branches.
 - **[P2] Hibernation-aware handling.** Detect "resumed after
   long absence" (e.g., wall-clock jump >1 hour); force more
   aggressive AuthContext resync.

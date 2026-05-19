@@ -90,6 +90,14 @@ class FsmConfig:
     backoff_max_seconds: float = 60.0
     """Cap on the exponential backoff between retries."""
 
+    boot_probe_timeout_seconds: float = 5.0
+    """Deadline for the optional boot-probe round-trip the servicer runs
+    on the first PROBING entry — see HeartbeatServiceServicer.__init__
+    `boot_probe` parameter. Independent of pong_timeout because the
+    probe verifies the guest agent is actually responsive (not just
+    that the VSOCK listener bound), and a slightly longer window
+    avoids flapping during late-boot races."""
+
 
 @dataclass(frozen=True)
 class TickInput:

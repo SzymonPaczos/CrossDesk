@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 17:35] START · agent: claude-code · branch: feat/dbus-signals-abstraction · task: dbus-signals-abstraction · note: FOLLOWUPS:225 P1 D-Bus signals abstraction. Today lifecycle/dbus_listener.start_listener directly subscribes to org.freedesktop.login1.PrepareForSleep via dbus-next; no way to script suspend/resume in unit tests without a session bus. Adds `DBusSignalSource` Protocol + `MockDBusSignalSource` (scripted emit_prepare_for_sleep) in lifecycle/dbus_signals.py. Refactors start_listener to honour an injected source (default = real systemd listener). New tests script suspend → resume → re-suspend sequences and assert coordinator.suspended state + libvirt_ctl.suspend/resume call counts via mocks. No proto / THREAT_MODEL touches.
+
 ## Recent
 
 - [2026-05-19 17:25] START · agent: claude-code · branch: feat/cross-rs-proto-vendored · task: cross-rs-proto-vendored · note: FOLLOWUPS:136 P1 cross-rs end-to-end build. Root cause documented in docs/CROSS_PLATFORM_DEV.md:217-238 — `cross` mounts only the cargo workspace (guest/), but proto/build.rs reads `../../../proto/crossdesk/v1/*.proto` which escapes the mount. Approach: vendored-copy pattern. (1) build.rs reads CROSSDESK_PROTO_DIR env var if set; (2) falls through to `guest/proto-vendored/` if present; (3) finally falls back to the repo-relative `../../../proto`. (4) scripts/cross-build-agent.sh helper rsyncs proto/ into guest/proto-vendored/ then invokes `cross build`. (5) .gitignore excludes the vendored copy so it never lands in git history. Native MinGW happy path untouched (env var absent + no vendored dir → uses repo-relative path).

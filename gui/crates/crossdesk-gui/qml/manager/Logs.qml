@@ -16,7 +16,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -42,7 +42,7 @@ Item {
         // ── Toolbar ───────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 46
+            Layout.preferredHeight: 46
             color: palette.window
 
             Rectangle {

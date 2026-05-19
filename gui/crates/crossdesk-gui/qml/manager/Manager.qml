@@ -38,7 +38,7 @@ Item {
                 // Brand header
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 52
+                    Layout.preferredHeight: 52
                     color: "transparent"
 
                     Rectangle {
@@ -57,8 +57,8 @@ Item {
 
                         // Crossdesk logo mark
                         Rectangle {
-                            width: 24
-                            height: 24
+                            Layout.preferredWidth: 24
+                            Layout.preferredHeight: 24
                             radius: 6
                             color: palette.highlight
 
@@ -98,7 +98,7 @@ Item {
                 // "MANAGE" section label
                 Item {
                     Layout.fillWidth: true
-                    height: 30
+                    Layout.preferredHeight: 30
                     Label {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 4
@@ -164,8 +164,8 @@ Item {
 
                             Image {
                                 source: modelData.icon
-                                width: 18
-                                height: 18
+                                Layout.preferredWidth: 18
+                                Layout.preferredHeight: 18
                                 sourceSize: Qt.size(18, 18)
                                 // Tint active icon with highlight, inactive with muted text
                                 // (SVGs use currentColor but QML Image doesn't support that
@@ -195,7 +195,7 @@ Item {
                 // "SYSTEM" section label
                 Item {
                     Layout.fillWidth: true
-                    height: 30
+                    Layout.preferredHeight: 30
                     Label {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 4
@@ -258,8 +258,8 @@ Item {
 
                             Image {
                                 source: modelData.icon
-                                width: 18
-                                height: 18
+                                Layout.preferredWidth: 18
+                                Layout.preferredHeight: 18
                                 sourceSize: Qt.size(18, 18)
                                 opacity: parent.parent.parent.isActive ? 1.0 : 0.55
                             }
@@ -313,7 +313,7 @@ Item {
                     // Warning icon placeholder
                     Rectangle {
                         Layout.alignment: Qt.AlignHCenter
-                        width: 56; height: 56; radius: 14
+                        Layout.preferredWidth: 56; Layout.preferredHeight: 56; radius: 14
                         color: Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.12)
                         border.color: palette.mid
                         border.width: 1
@@ -366,7 +366,7 @@ Item {
                         }
                     }
 
-                    Item { height: 4 }
+                    Item { Layout.preferredHeight: 4 }
 
                     RowLayout {
                         Layout.alignment: Qt.AlignHCenter
@@ -396,7 +396,7 @@ Item {
 
                     Rectangle {
                         Layout.alignment: Qt.AlignHCenter
-                        width: 56; height: 56; radius: 14
+                        Layout.preferredWidth: 56; Layout.preferredHeight: 56; radius: 14
                         color: palette.highlight
 
                         Rectangle {

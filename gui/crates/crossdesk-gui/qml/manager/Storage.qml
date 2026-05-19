@@ -16,7 +16,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -92,8 +92,8 @@ Item {
                             // Live indicator
                             Rectangle {
                                 visible: mgr.active_mounts.length > 0
-                                width: liveBadge.implicitWidth + 18
-                                height: 20
+                                Layout.preferredWidth: liveBadge.implicitWidth + 18
+                                Layout.preferredHeight: 20
                                 radius: 10
                                 color: Qt.rgba(0.18, 0.76, 0.49, 0.15)
 
@@ -103,7 +103,7 @@ Item {
                                     spacing: 5
 
                                     Rectangle {
-                                        width: 6; height: 6; radius: 3
+                                        Layout.preferredWidth: 6; Layout.preferredHeight: 6; radius: 3
                                         color: "#4caf50"
                                     }
                                     Label {
@@ -236,7 +236,7 @@ Item {
                     }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

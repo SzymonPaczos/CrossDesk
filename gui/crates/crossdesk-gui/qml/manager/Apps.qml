@@ -16,7 +16,7 @@ Item {
         // ── Pane header ───────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {
@@ -42,7 +42,7 @@ Item {
         // ── Toolbar ───────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 46
+            Layout.preferredHeight: 46
             color: palette.window
 
             Rectangle {
@@ -131,8 +131,8 @@ Item {
                             }
                             Item { Layout.fillWidth: true }
                             Rectangle {
-                                width: badgeLabel.implicitWidth + 14
-                                height: 20
+                                Layout.preferredWidth: badgeLabel.implicitWidth + 14
+                                Layout.preferredHeight: 20
                                 radius: 10
                                 color: palette.mid
 
@@ -183,8 +183,8 @@ Item {
                                     // App icon placeholder — colored rectangle with initial
                                     Rectangle {
                                         Layout.alignment: Qt.AlignHCenter
-                                        width: 44
-                                        height: 44
+                                        Layout.preferredWidth: 44
+                                        Layout.preferredHeight: 44
                                         radius: 10
                                         color: Qt.hsla(Math.abs(appName.charCodeAt(0) * 37) % 360 / 360.0,
                                                         0.65, 0.45, 1.0)
@@ -252,7 +252,7 @@ Item {
                     }
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
     }

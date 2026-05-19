@@ -59,7 +59,7 @@ Item {
                 width: step.width
                 spacing: 20
 
-                Item { height: 4 }
+                Item { Layout.preferredHeight: 4 }
 
                 ColumnLayout {
                     Layout.leftMargin: 32
@@ -91,7 +91,7 @@ Item {
                     // Download card
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 72
+                        Layout.preferredHeight: 72
                         radius: 6
                         color: isDownloadMode
                                ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.08)
@@ -133,7 +133,7 @@ Item {
                     // Browse card
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 72
+                        Layout.preferredHeight: 72
                         radius: 6
                         color: !isDownloadMode
                                ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.08)
@@ -226,7 +226,7 @@ Item {
                     // Drop zone
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 110
+                        Layout.preferredHeight: 110
                         radius: 8
                         color: wizard.iso_path.length > 0
                                ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.06)
@@ -368,14 +368,14 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                Item { height: 8 }
+                Item { Layout.preferredHeight: 8 }
             }
         }
 
         // ── Sticky footer ─────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            Layout.preferredHeight: 52
             color: palette.alternateBase
 
             Rectangle {

@@ -30,6 +30,7 @@ try:
 except ImportError:
     systemd_daemon = None
 
+from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
 from crossdesk_host.ipc.auth import AuthValidator  # noqa: E402
 from crossdesk_host.ipc.control import ControlServiceServicer  # noqa: E402
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer  # noqa: E402
@@ -39,7 +40,6 @@ from crossdesk_host.ipc.management import (  # noqa: E402
     MgmtState,
     mgmt_socket_path,
 )
-from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402

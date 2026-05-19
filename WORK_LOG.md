@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 18:48] START · agent: claude-code · branch: chore/mock-import-gate · task: mock-import-gate · note: FOLLOWUPS:269 P1 "Pyproject + Cargo features for mock toggling — document the feature gates + enforce that production paths cannot import mock modules". Audit: 3 sites currently import a `.mock` module from outside tests — (a) `crossdesk_host/integrations/keyring/__init__.py` re-exports MockKeyring (library API surface, intentional); (b) `crossdesk_host/filesystem_ctl/__init__.py` re-exports MockFilesystemController (same pattern, landed today); (c) `crossdesk_host/daemon.py` hardcodes LibvirtControllerMock as the dev-default until Phase 3 wires the real libvirt controller (hardware-gated). Adds a CI grep gate in ci.yml `python-host` job that fails on any new direct `from crossdesk_host.*.mock import` outside that whitelist; widens pyproject.toml + guest/Cargo.toml feature-gate docstrings; appends rationale to .claude/rules/general.md so the policy is visible without grepping ci.yml.
+
 ## Recent
 
 - [2026-05-19 18:28] END · agent: claude-code · branch: refactor/filesystem-servicer-narrowing · task: filesystem-servicer-narrowing · note: result: success → merged. Follow-up to task 13 closed. 1 commit (9 files): ipc/filesystem.py swaps libvirt_ctl→filesystem_ctl + attach_virtiofs→attach_share + detach_virtiofs→detach_share; daemon.py + smoke_inprocess.py wrap libvirt in LibvirtFilesystemController at construction; test_mount_token_length / test_filesystem_service / test_auth_rejection_paths now use MockFilesystemController with `.hooks.detached_ids` + `.list_active_shares()`. mypy --strict 114 clean; pytest 697 passed + 12 skipped (full suite).

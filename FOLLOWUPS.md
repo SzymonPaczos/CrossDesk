@@ -220,14 +220,19 @@ DEC-0005 for the architectural commitment.
     time.
   - `rust-gui` runs `cargo check --workspace` strict.
   - `proto` runs `buf lint` and `buf format --diff --exit-code`,
-    both tolerated (`|| true`) until `proto/buf.yaml` rules are
-    finalised — see follow-up below.
+    both strict-enforced (`|| true` removed 2026-05-10 — see follow-up
+    below for the lint policy in proto/buf.yaml).
   - `linux-kvm-smoke` is wired but no-op (placeholder for the
     self-hosted runner that arrives with hardware).
-- **[P1] `proto/buf.yaml` lint + format rules.** Currently
-  default-permissive — `buf lint` passes trivially. Decide on a
-  rule set (BREAKING, DEFAULT, or MINIMAL) and remove `|| true`
-  from the proto CI job once codified.
+- **[✅ DONE 2026-05-10] `proto/buf.yaml` lint + format rules.**
+  Codified in `proto/buf.yaml`: lint uses `STANDARD` minus the
+  COMMENT_* family (block headers on services/messages but not
+  per-field — deliberate) plus carve-outs for the bidi
+  framed-message design (`RPC_REQUEST_STANDARD_NAME` etc.) and
+  Empty-reuse + `ACCESS_` enum prefix in filesystem.proto.
+  `breaking: FILE` (stricter than the requested WIRE_JSON floor).
+  CI proto job (`.github/workflows/ci.yml:121-130`) runs `buf lint`
+  + `buf format --diff --exit-code` without any `|| true`.
 - **[P1] In-process Python↔Rust integration test harness.** Spec'd
   for `host/tests/test_smoke_inprocess.py` driving the host with a
   `cargo run --features mock` guest over `MockTransport`. Exercises

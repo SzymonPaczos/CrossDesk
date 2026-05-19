@@ -276,12 +276,22 @@ decision.
   Wayland-native by default on Wayland sessions, fall back to X11
   on unknown compositors. Beats winapps' XWayland-via-`GDK_BACKEND`
   baseline.
-- **[P1] Multi-monitor RAIL window placement.** Enumerate monitors
-  via `xdg_output_manager` (Wayland) or RANDR (X11). Place each
-  RAIL window via `_NET_WM_DESKTOP` / Wayland output hints. On
-  drag-between-monitors with different scale, re-issue
+- **[~PARTIAL 2026-05-19] Multi-monitor RAIL window placement.**
+  Enumerate monitors via `xdg_output_manager` (Wayland) or RANDR (X11).
+  Place each RAIL window via `_NET_WM_DESKTOP` / Wayland output hints.
+  On drag-between-monitors with different scale, re-issue
   `/scale-desktop:N`. WinApps explicitly warns this is broken on
   their stack — clear win for us if we land it cleanly.
+  **Shipped:** `enumerate_monitors(runner=None)` in
+  `host/src/crossdesk_host/display/multimonitor.py` — probes
+  `wlr-randr` first (Wayland-native) then `xrandr --query` (X11),
+  parses Position + current mode, returns `list[Monitor]`. Combined
+  with the existing `choose_monitor()` picker the host now has the
+  data + algorithm to pick the right output per RAIL CREATE event.
+  **Deferred:** wiring into `rail_manager._handle_create` (depends on
+  Phase 4 spawn flow being wired) + WM-hint forwarding via
+  `_NET_WM_DESKTOP` / xdg_output_manager + per-monitor scale
+  re-evaluation on drag-between-monitors.
 - **[~PARTIAL 2026-05-19] HiDPI auto-detect.** Read user's effective
   scale (Wayland `wl_output.scale`, X11 RANDR, GNOME `org.gnome.desktop.interface
   scaling-factor`, KDE `kreadconfig5`). Map to nearest FreeRDP-

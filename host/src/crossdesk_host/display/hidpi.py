@@ -55,7 +55,7 @@ class ProbeRunner(Protocol):
         ...
 
 
-class _RealProbeRunner(ProbeRunner):
+class RealProbeRunner:
     def run(self, argv: list[str]) -> Optional[str]:
         if not argv or shutil.which(argv[0]) is None:
             return None
@@ -172,7 +172,7 @@ def detect_scaling(
     settings are user-configured and may diverge from the actual
     output scale on multi-monitor rigs. ``xrdb`` is X11-only.
     """
-    runner = runner or _RealProbeRunner()
+    runner = runner or RealProbeRunner()
     for probe in (_try_wlr_randr, _try_gsettings, _try_kde, _try_xrdb):
         result = probe(runner)
         if result is not None:

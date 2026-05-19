@@ -14,6 +14,7 @@ and reported as ``warn`` when /dev/kvm is missing on a non-Linux host).
 from __future__ import annotations
 
 import enum
+import os
 import platform
 import re
 import shutil
@@ -61,6 +62,24 @@ def check_kvm_device() -> CheckResult:
 
 
 def check_freerdp_available() -> CheckResult:
+    pinned = os.environ.get("CROSSDESK_FREERDP_BIN")
+    if pinned:
+        if "/" in pinned:
+            ok = os.access(pinned, os.X_OK)
+            path = pinned if ok else None
+        else:
+            path = shutil.which(pinned)
+        if path is not None:
+            return CheckResult(
+                "freerdp",
+                Status.OK,
+                f"pinned via CROSSDESK_FREERDP_BIN → {path}",
+            )
+        return CheckResult(
+            "freerdp",
+            Status.FAIL,
+            f"CROSSDESK_FREERDP_BIN={pinned!r} not executable or not on PATH",
+        )
     candidates = ("xfreerdp", "xfreerdp3", "sdl-freerdp3", "sdl3-freerdp")
     for binary in candidates:
         if shutil.which(binary) is not None:

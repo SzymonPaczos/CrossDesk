@@ -44,6 +44,17 @@ if TYPE_CHECKING:
 
 _DEFAULT_USERNAME = "crossdesk"
 
+# vm.toml schema version. Bumped on any wire-incompatible change:
+# adding a field is non-breaking (load() returns the unmodified
+# VmCredentials and save() writes the new field) and stays at the
+# current version; renaming, removing, or changing the meaning of a
+# field is breaking and bumps the version. Files written before this
+# field existed are read as version 1 (the cur schema), which works
+# because the only fields we have today (username/password) were
+# always there. A future v2 (e.g. when `domain` is hoisted out of
+# the protocol layer) will read v1 files and migrate in memory.
+SCHEMA_VERSION = 1
+
 
 def _default_path() -> Path:
     # Resolve at call time so tests monkey-patching ``HOME`` are honoured.
@@ -62,8 +73,11 @@ class VmCredentials:
     def to_toml(self) -> str:
         # Tiny manual emit avoids pulling another runtime dep just to
         # write two strings. Both fields are run through repr() to
-        # quote/escape correctly.
+        # quote/escape correctly. schema_version goes first so a
+        # future migration that reads partial files (e.g. truncated
+        # mid-write) still has the version cue immediately.
         return (
+            f"schema_version = {SCHEMA_VERSION}\n"
             f'username = "{self._escape(self.username)}"\n'
             f'password = "{self._escape(self.password)}"\n'
         )
@@ -108,6 +122,24 @@ def load(path: Optional[Path] = None) -> Optional[VmCredentials]:
         return None
     with path.open("rb") as f:
         data = _tomllib.load(f)
+    # Schema-version awareness. Legacy files without the field were
+    # always emitted under the v1 shape, so we default to v1 and let
+    # the field-level validation below catch any malformation.
+    schema_version = data.get("schema_version", SCHEMA_VERSION)
+    if not isinstance(schema_version, int):
+        raise ValueError(
+            f"vm.toml at {path}: schema_version must be an integer, "
+            f"got {type(schema_version).__name__}"
+        )
+    if schema_version > SCHEMA_VERSION:
+        raise ValueError(
+            f"vm.toml at {path}: schema_version={schema_version} is newer "
+            f"than this build supports (max={SCHEMA_VERSION}). Upgrade "
+            "crossdesk-host or back up the file and run `crossdesk vm "
+            "credentials repair` to regenerate."
+        )
+    # Future migrations land here, e.g.:
+    #     if schema_version == 1: data = _migrate_v1_to_v2(data)
     username = data.get("username")
     password = data.get("password")
     if not isinstance(username, str) or not isinstance(password, str):

@@ -568,11 +568,20 @@ version anything — we are above that bar.
   (`<area>.<version>`, `exp:` prefix for experimental), retirement
   procedure, and code references for each side's advertise/negotiate
   point.
-- **[P1] Config schema versioning + migration.** `vm.toml` and
-  others get a `schema_version` field. Host reads older versions,
-  migrates in-memory; `crossdesk config migrate` writes the
-  migration to disk. Adding a field is MINOR (no migration);
-  removing/renaming is MAJOR.
+- **[~PARTIAL 2026-05-19] Config schema versioning + migration.**
+  `vm.toml` now writes/reads `schema_version` (constant
+  `SCHEMA_VERSION = 1` in `installer/credentials.py`). Load accepts
+  legacy files without the field (defaults to v1, safe because the
+  pre-versioning shape was username+password) and rejects newer
+  versions with `ValueError("schema_version ... newer than this
+  build supports")` so a downgrade cannot silently corrupt
+  credentials. Adding a field is MINOR (no migration);
+  removing/renaming is MAJOR. **Deferred:** `crossdesk config
+  migrate` CLI subcommand — needs argparse plumbing in
+  `cli/main.py` and a migration registry; scope-creep against
+  the schema-only goal of the first PR. Same `schema_version`
+  pattern still needs applying to other config files (host
+  daemon config, app catalog) as they grow.
 - **[P1] N-1 agent CI matrix.** GitHub Actions job that builds
   the previous minor version's agent and runs handshake tests
   against current host. Catches accidentally-breaking proto

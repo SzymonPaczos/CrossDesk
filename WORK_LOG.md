@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 18:13] START · agent: claude-code · branch: chore/qml-layout-positioning · task: qml-layout-positioning · note: Tech-debt logged in FOLLOWUPS:Tech-debt section. 57 instances of raw `width:`/`height:` on items inside Layouts (ColumnLayout/RowLayout/GridLayout) across 12 QML files — undefined behaviour per Qt docs, currently silenced via Quick.LayoutsPositioning=disable in gui/.qmllint.ini. Replace with Layout.preferredWidth / Layout.preferredHeight (explicit layout sizing), flip the .qmllint.ini knob back to `warning`, regenerate the gate. Pure UI refactor; no behaviour change at the binding level — Layouts just get the size hint they're supposed to consume.
+
 ## Recent
 
 - [2026-05-19 18:08] NOTE · agent: claude-code · branch: (n/a) · task: integration-test-harness-stretch · note: FOLLOWUPS:194 audit. The stretch flow "Installer.run() → Launch(notepad) → RailWindowEvent(CREATED)" was previously marked "deferred until Phase 4 RAIL lands". Verified current coverage: the RAIL receive leg is already pinned by test_control_service.py::test_rail_event_in_ready_is_forwarded_to_rail_manager (synthetic Hello + RailWindowEvent through the bidi stream + assertion on RailManager._windows); the Installer leg has its own unit tests. The only missing piece is the end-to-end Launch→spawn→CREATED loop, which depends on the Phase 4 production spawn flow (`build_rail_argv` has no production call site yet — that work is hardware-gated). FOLLOWUPS entry updated with the explicit status. No code change.

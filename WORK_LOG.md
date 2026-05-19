@@ -78,6 +78,10 @@ branch names and the user merges by hand later.
 
 ## Active
 
+## Recent
+
+- [2026-05-19 19:07] END · agent: claude-code · branch: docs/contributing-translator-section · task: contributing-translator-section · note: result: success → merged. FOLLOWUPS:764 ✅ DONE. 1 commit: new CONTRIBUTING.md (156 lines) — Quick-start + Coding rules (link to AGENTS.md) + PR conventions + Translator workflow with 5-step add-a-language flow + current language coverage table.
+
 - [2026-05-19 19:04] START · agent: claude-code · branch: docs/contributing-translator-section · task: contributing-translator-section · note: FOLLOWUPS:764 P1 — adds top-level CONTRIBUTING.md with a Translator workflow section that walks "add a new language: copy template, edit, submit PR" + lists current language coverage. Cross-references docs/I18N.md (strategy), i18n/README.md (Python/Qt mechanics), and scripts/i18n.sh (extract/compile wrapper). Also adds Quick-start, Coding-rules, and PR-conventions sections all linking back to AGENTS.md so CONTRIBUTING stays a navigator rather than duplicate doc.
 
 ## Recent

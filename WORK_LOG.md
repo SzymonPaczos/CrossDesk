@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 15:17] START · agent: claude-code · branch: feat/watchdog-boot-probe-hook · task: watchdog-boot-probe-hook · note: FOLLOWUPS:899-908 P1 "Two-layer health check before declaring the VM ready" — MVP scope: add a `boot_probe` Optional[Callable[[], Awaitable[bool]]] hook to HeartbeatServiceServicer. On PROBING-state entry (asymmetric-break detection: vsock listener up but agent stuck), spawn a non-blocking asyncio task that awaits probe() under `boot_probe_timeout_seconds` (default 5.0), then logs structured event (`heartbeat_boot_probe_result` / `_timeout` / `_error`). Pure observability — does NOT modify FSM transitions or AuthValidator (those would touch security model boundaries per AGENTS.md). FOLLOWUPS:899 marked PARTIAL with explicit note on what's deferred to future ADR. Stacked on feat/freerdp-binary-env-override (which sits on fix/dbus-next-attr-defined) so mypy gates pass.
+
 ## Recent
 
 - [2026-05-19 15:04] START · agent: claude-code · branch: feat/freerdp-binary-env-override · task: freerdp-binary-env-override · note: FOLLOWUPS:921-925 P1 "FreeRDP version fallback chain" — chain itself already exists in freerdp/real.py:28-56 + doctor/checks.py:63-84. Documentation drift: FOLLOWUPS not marked DONE. Adds `CROSSDESK_FREERDP_BIN` env override (highest precedence over candidates; raises FileNotFoundError if pinned binary not on PATH; doctor reports "pinned via env" or fail). Useful for CI pinning, multi-version dev boxes, and debug. Refresh FOLLOWUPS:921 entry to ✅ DONE with file:line refs.

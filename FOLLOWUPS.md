@@ -279,11 +279,17 @@ decision.
   **Deferred:** per-monitor scale (multimonitor.py is geometry-only;
   needs RANDR/wl_output per-output enumeration) and re-evaluation on
   monitor change events — both Phase 2.
-- **[P1] RAIL window lifecycle event idempotence.** The
-  `RailWindowEvent` consumer in `rail_manager.py` must handle:
-  out-of-order CREATED/FOCUS arrivals, repeated DESTROYED, MOVED
-  for an unknown window_id (race with CREATED). Phase 4 SPOF —
-  see `ROADMAP.md`.
+- **[✅ DONE 2026-05-19] RAIL window lifecycle event idempotence.** The
+  `RailWindowEvent` consumer in `rail_manager.py` handles:
+  out-of-order CREATED/FOCUS arrivals (FOCUS-before-CREATE drops
+  silently), repeated DESTROYED (silent no-op), MOVED for an unknown
+  window_id (warns, never resurrects), and the same rules for
+  TITLE/ICON/MIN/MAX/RESTORED. All 12 KIND_ values now have explicit
+  handlers (CREATED, DESTROYED, MOVED, RESIZED, FOCUS_GAINED, FOCUS_LOST,
+  MINIMIZED, MAXIMIZED, RESTORED, TITLE_CHANGED, ICON_CHANGED); window
+  state carries `focused`/`minimized`/`maximized`/`icon_png` fields.
+  Test coverage: 26 tests including MOVE → DESTROY → MOVE-same-HWND
+  audit and full-state-clear-on-destroy.
 - **[P2] Per-frame display latency benchmark.** Add to the
   microbench harness (Perf budgets work) a measurement of "RAIL
   CREATED event → first frame drawn" on a known-good test app.

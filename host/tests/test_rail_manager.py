@@ -205,3 +205,102 @@ def test_destroy_swallows_terminate_exception() -> None:
     mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_DESTROYED))
     assert 0xDEAD not in mgr._windows
     assert 0xDEAD not in mgr._sessions
+
+# ---------------------------------------------------------------------------
+# FOCUS_LOST + window state (MIN/MAX/RESTORED) + ICON_CHANGED
+# ---------------------------------------------------------------------------
+
+
+def test_focus_gained_then_lost_toggles_focused_flag(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xFEED, Kind.KIND_CREATED, title="App"))
+    mgr.handle_rail_event(_event(0xFEED, Kind.KIND_FOCUS_GAINED))
+    assert mgr._windows[0xFEED]["focused"] is True
+    mgr.handle_rail_event(_event(0xFEED, Kind.KIND_FOCUS_LOST))
+    assert mgr._windows[0xFEED]["focused"] is False
+
+
+def test_focus_for_unknown_hwnd_is_silent_noop(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_FOCUS_GAINED))
+    mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_FOCUS_LOST))
+    assert 0xDEAD not in mgr._windows
+
+
+def test_minimized_sets_state_and_clears_maximized(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_CREATED, title="App"))
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_MAXIMIZED))
+    assert mgr._windows[0xC0DE]["maximized"] is True
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_MINIMIZED))
+    assert mgr._windows[0xC0DE]["minimized"] is True
+    assert mgr._windows[0xC0DE]["maximized"] is False
+
+
+def test_restored_clears_both_minimized_and_maximized(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xBEEF, Kind.KIND_CREATED, title="App"))
+    mgr.handle_rail_event(_event(0xBEEF, Kind.KIND_MAXIMIZED))
+    mgr.handle_rail_event(_event(0xBEEF, Kind.KIND_RESTORED))
+    win = mgr._windows[0xBEEF]
+    assert win["minimized"] is False
+    assert win["maximized"] is False
+
+
+def test_state_change_for_unknown_hwnd_is_dropped(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_MINIMIZED))
+    mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_MAXIMIZED))
+    mgr.handle_rail_event(_event(0xDEAD, Kind.KIND_RESTORED))
+    assert 0xDEAD not in mgr._windows
+
+
+def test_icon_changed_updates_payload(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xCAFE, Kind.KIND_CREATED, title="App"))
+    icon = b"\x89PNG\r\n\x1a\n" + b"X" * 32
+    evt = control_pb2.RailWindowEvent(
+        window_id=0xCAFE, kind=Kind.KIND_ICON_CHANGED, icon_png=icon
+    )
+    mgr.handle_rail_event(evt)
+    assert mgr._windows[0xCAFE]["icon_png"] == icon
+
+
+def test_icon_changed_for_unknown_hwnd_is_dropped(mgr: RailManager) -> None:
+    evt = control_pb2.RailWindowEvent(
+        window_id=0xDEAD, kind=Kind.KIND_ICON_CHANGED, icon_png=b"data"
+    )
+    mgr.handle_rail_event(evt)
+    assert 0xDEAD not in mgr._windows
+
+
+def test_create_seeds_icon_when_provided(mgr: RailManager) -> None:
+    icon = b"\x89PNG-bytes"
+    evt = control_pb2.RailWindowEvent(
+        window_id=0xC0DE, kind=Kind.KIND_CREATED, title="App", icon_png=icon
+    )
+    mgr.handle_rail_event(evt)
+    assert mgr._windows[0xC0DE]["icon_png"] == icon
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle audit — no state leaks across recreate
+# ---------------------------------------------------------------------------
+
+
+def test_move_destroy_move_does_not_resurrect_window(
+    mgr: RailManager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """MOVE → DESTROY → MOVE with the same HWND must warn on the second
+    MOVE and not silently re-register the window."""
+    mgr.handle_rail_event(_event(0x1001, Kind.KIND_CREATED, title="App", w=100, h=100))
+    mgr.handle_rail_event(_event(0x1001, Kind.KIND_MOVED, x=10, y=10, w=100, h=100))
+    mgr.handle_rail_event(_event(0x1001, Kind.KIND_DESTROYED))
+    caplog.set_level(logging.WARNING, logger="crossdesk_host.display.rail_manager")
+    mgr.handle_rail_event(_event(0x1001, Kind.KIND_MOVED, x=20, y=20, w=100, h=100))
+    assert 0x1001 not in mgr._windows
+    assert any("MOVE for unknown HWND" in rec.message for rec in caplog.records)
+
+
+def test_destroy_clears_all_window_state_fields(mgr: RailManager) -> None:
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_CREATED, title="App"))
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_FOCUS_GAINED))
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_MAXIMIZED))
+    mgr.handle_rail_event(_event(0xC0DE, Kind.KIND_DESTROYED))
+    assert 0xC0DE not in mgr._windows
+    assert 0xC0DE not in mgr._sessions
+

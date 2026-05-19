@@ -76,29 +76,35 @@ def test_launch_notification_uses_title_case_for_unknown_app(tmp_path: Path) -> 
 def test_launch_daemon_not_running_exits_1(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """When the management socket does not exist, the command exits 1
-    and prints an actionable error message to stderr."""
+    """When the management socket does not exist, the command exits 1,
+    prints an actionable error message to stderr, AND fires a critical
+    desktop notification (FOLLOWUPS Week 11 — error surfacing)."""
     missing_sock = str(tmp_path / "crossdesk-host.sock")
     notifier = RecordingNotifier()
 
     rc = _launch("notepad", notifier=notifier, _socket_path_override=missing_sock)  # type: ignore[arg-type]
 
     assert rc == 1
-    # No notification should be sent when the daemon is absent.
-    assert notifier.calls == []
     captured = capsys.readouterr()
     assert "crossdesk vm start" in captured.err
+    assert len(notifier.calls) == 1
+    assert "VM failed to start" in notifier.calls[0].summary
 
 
-def test_launch_daemon_not_running_no_notification(tmp_path: Path) -> None:
-    """Absence of the socket suppresses the notification entirely."""
+def test_launch_daemon_not_running_emits_error_notification(tmp_path: Path) -> None:
+    """The notification surfaced when the socket is absent must be the
+    error helper (critical urgency + dialog-error icon), not the
+    "Starting <app>…" toast that fires on the happy path."""
     notifier = RecordingNotifier()
     _launch(
         "excel",
         notifier=notifier,  # type: ignore[arg-type]
         _socket_path_override=str(tmp_path / "missing.sock"),
     )
-    assert notifier.calls == []
+    assert len(notifier.calls) == 1
+    call = notifier.calls[0]
+    assert call.urgency.value == "critical"
+    assert call.icon == "dialog-error"
 
 
 # ---------------------------------------------------------------------------

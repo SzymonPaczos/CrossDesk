@@ -1016,11 +1016,22 @@ document software rendering as the always-works fallback.
   Yad). Extend our existing Qt6/QML installer wizard (`gui/`) into a
   permanent applet — VM start/stop/pause/reboot, app picker. Bigger
   scope, much nicer UX than Yad.
-- **[P1] Desktop notifications via `org.freedesktop.Notifications`.**
+- **[~PARTIAL 2026-05-19] Desktop notifications via `org.freedesktop.Notifications`.**
   Source: `notify-send` calls scattered throughout
   `third_party/winapps/setup.sh`. Wire host-side errors (VM won't
   start, forced stop, RDP drop) to D-Bus notifications. Cheap polish;
   we already have D-Bus access.
+  **Shipped:** `host/src/crossdesk_host/lifecycle/error_notifications.py`
+  with five high-level helpers (vm_failed_to_start, forced_stop,
+  rdp_drop, credentials_repair_needed, suspend_resume_failed) bound
+  to the existing `Notifier` Protocol so callers stay transport-agnostic
+  (SubprocessNotifier today, DBusNotifier when wired). One first-class
+  call site: `launch_cmd._launch` now fires `notify_vm_failed_to_start`
+  on the socket-missing branch. **Deferred:** wiring the remaining four
+  helpers from rail_manager (rdp_drop), heartbeat servicer (forced_stop),
+  vm_cmd (vm_failed_to_start at startup), lifecycle dbus_listener
+  (suspend_resume_failed) once those code paths have stable real-failure
+  entry points.
 - **[P2] Typed config for redirections.** Source: WinApps' `RDP_FLAGS`
   is a free-form string the user hand-edits
   (`third_party/winapps/README.md:457-463`). Replace with typed TOML

@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-05-19 17:41] START · agent: claude-code · branch: feat/filesystem-controller-abstraction · task: filesystem-controller-abstraction · note: FOLLOWUPS:221 P1 Filesystem service abstraction. Today FilesystemServiceServicer calls libvirt_ctl.attach_virtiofs / detach_virtiofs directly, mixing FS lifecycle with VM lifecycle concerns. Adds `FilesystemController` Protocol (attach_share / detach_share / list_active_shares) in abstractions/ + MockFilesystemController (in-memory state + idempotence + failure-injection hooks) in filesystem_ctl/mock.py + thin LibvirtFilesystemController that wraps libvirt_ctl for production. Does NOT refactor FilesystemServiceServicer yet — call-site switch is a separate diff so the abstraction lands isolated and reviewable. Phase 5 prep.
+
 ## Recent
 
 - [2026-05-19 17:35] START · agent: claude-code · branch: feat/dbus-signals-abstraction · task: dbus-signals-abstraction · note: FOLLOWUPS:225 P1 D-Bus signals abstraction. Today lifecycle/dbus_listener.start_listener directly subscribes to org.freedesktop.login1.PrepareForSleep via dbus-next; no way to script suspend/resume in unit tests without a session bus. Adds `DBusSignalSource` Protocol + `MockDBusSignalSource` (scripted emit_prepare_for_sleep) in lifecycle/dbus_signals.py. Refactors start_listener to honour an injected source (default = real systemd listener). New tests script suspend → resume → re-suspend sequences and assert coordinator.suspended state + libvirt_ctl.suspend/resume call counts via mocks. No proto / THREAT_MODEL touches.

@@ -173,16 +173,16 @@ msgstr ""
 msgid "install complete"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/launch_cmd.py:134
+#: host/src/crossdesk_host/cli/launch_cmd.py:183
 msgid "VM not running. Start it with: crossdesk vm start"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/launch_cmd.py:143
+#: host/src/crossdesk_host/cli/launch_cmd.py:199
 #, python-brace-format
 msgid "Starting {name}…"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/launch_cmd.py:154
+#: host/src/crossdesk_host/cli/launch_cmd.py:210
 #, python-brace-format
 msgid "Launching {name}… (VM must be running)"
 msgstr ""

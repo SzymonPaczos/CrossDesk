@@ -53,7 +53,10 @@ class EwmaRtt:
             if self._samples_seen == self.warmup:
                 self._baseline_ns = self._value_ns
         else:
-            assert self._value_ns is not None
+            # _value_ns is None only during warmup; the `else` branch
+            # is unreachable until the first warmup sample lands.
+            # The assert narrows the type for mypy --strict.
+            assert self._value_ns is not None  # nosec B101 — type narrowing
             self._value_ns = (1 - self.alpha) * self._value_ns + self.alpha * rtt_ns
         return int(self._value_ns)
 

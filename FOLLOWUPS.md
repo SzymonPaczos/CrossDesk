@@ -675,11 +675,24 @@ clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
 - **[P1] Shutdown handler.** `virsh shutdown` (ACPI graceful)
   with N-second timeout, fallback to `virsh destroy`. Persist
   install state. Release inhibitor. Default timeout 30 s.
-- **[P1] Autopause × balloon × heartbeat coordination.** Single
-  supervisor in `lifecycle/` owns FSM state across all three
-  mechanisms. Autopause uses the same `SUSPENDED` state path as
-  D-Bus suspend. Balloon adjustments are tolerated by the FSM
-  (brief RTT spikes don't trigger PROBING).
+- **[~PARTIAL 2026-05-19] Autopause × balloon × heartbeat coordination.**
+  MVP shipped: `AutopauseController` injects `heartbeat_suspend` /
+  `heartbeat_resume` callables + `BalloonHook` Protocol (default
+  `NoopBalloonHook`); pause flow is heartbeat → balloon → libvirt
+  (FSMs SUSPENDED before the pong silence so missed heartbeats
+  don't trip false-positive HARD_DESTROY); resume flow is
+  libvirt → heartbeat → balloon. `HeartbeatServiceServicer.suspend()`
+  / `.resume()` proxy to every active `Channel`'s FSM and late-
+  attaching Channels inherit the suspended state on entry.
+  10 new tests in `test_autopause_coordination.py` pin the order +
+  HARD_DESTROY suppression + balloon hook. Still deferred (Phase 7):
+  real virtio-balloon driver implementation (the seam lands here,
+  the driver doesn't); single `lifecycle/` supervisor owning the
+  state machine across all three mechanisms (autopause +
+  `LifecycleCoordinator` currently duplicate the order — fine while
+  the system is small, worth merging when a third caller arrives);
+  RTT-spike tolerance during balloon adjustments (the FSM today
+  doesn't know a balloon target change is in flight).
 - **[P1] VM autostart on login (opt-in).** `crossdesk install
   --autostart` and `crossdesk vm autostart enable|disable`.
   Default off. When enabled: host starts VM at session start.

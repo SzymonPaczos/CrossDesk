@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import AsyncIterator, Awaitable, Callable, Optional
+from typing import AsyncIterator, Awaitable, Callable, List, Optional
 
 import grpc
 from google.protobuf import duration_pb2
@@ -87,6 +87,56 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         self.pong_timeout_seconds = pong_timeout_seconds
         self.boot_probe = boot_probe
         self.notifier = notifier
+        # Active per-Channel FSMs. AutopauseController / LifecycleCoordinator
+        # call :meth:`suspend` / :meth:`resume` here to propagate to every
+        # in-flight channel — a freshly-paused VM stops sending heartbeats,
+        # so the FSM must already be in SUSPENDED before the pause lands or
+        # missed pongs will escalate to false-positive HARD_DESTROY.
+        self._active_fsms: List[HeartbeatFsm] = []
+        self._suspended: bool = False
+
+    @property
+    def suspended(self) -> bool:
+        """``True`` between :meth:`suspend` and :meth:`resume`. Newly-opened
+        Channels inherit this state so a freshly-attached guest doesn't
+        immediately tick its FSM toward DEGRADED while the VM is still
+        paused."""
+        return self._suspended
+
+    def suspend(self) -> None:
+        """Move every active FSM into SUSPENDED. Idempotent.
+
+        Called from AutopauseController (idle-timeout pause) or
+        LifecycleCoordinator (host suspend via D-Bus). Must precede the
+        ``libvirt_ctl.suspend()`` call at the call site — see
+        :mod:`crossdesk_host.lifecycle.coordinator` for the ordering.
+        """
+        if self._suspended:
+            return
+        self._suspended = True
+        for fsm in self._active_fsms:
+            fsm.suspend()
+        logger.info(
+            "heartbeat_suspend_propagated active_channels=%d",
+            len(self._active_fsms),
+        )
+
+    def resume(self) -> None:
+        """Move every active FSM out of SUSPENDED back into PROBING.
+
+        FSMs re-enter through PROBING (not HEALTHY) so the next pongs
+        have to demonstrate liveness — defends against the resume-and-
+        immediately-launch race. Idempotent.
+        """
+        if not self._suspended:
+            return
+        self._suspended = False
+        for fsm in self._active_fsms:
+            fsm.resume()
+        logger.info(
+            "heartbeat_resume_propagated active_channels=%d",
+            len(self._active_fsms),
+        )
 
     async def _run_boot_probe(self, probe: BootProbe) -> None:
         timeout_s = self.config.boot_probe_timeout_seconds
@@ -120,6 +170,13 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         logger.info("heartbeat_channel_opened")
 
         fsm = HeartbeatFsm(self.config)
+        # If the servicer is currently in suspended mode (autopause /
+        # lifecycle decided so before this Channel attached), inherit the
+        # state immediately — otherwise this fresh FSM would start
+        # incrementing miss counts the moment the first ping times out.
+        if self._suspended:
+            fsm.suspend()
+        self._active_fsms.append(fsm)
         seq = 1
         last_state: State = fsm.state
         probe_already_run = False
@@ -258,3 +315,9 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
 
         except grpc.RpcError as e:
             logger.error("heartbeat_rpc_error error=%s", e)
+        finally:
+            # Identity removal: HeartbeatFsm is a dataclass so equality
+            # alone could match a sibling channel's freshly-built FSM.
+            self._active_fsms = [
+                existing for existing in self._active_fsms if existing is not fsm
+            ]

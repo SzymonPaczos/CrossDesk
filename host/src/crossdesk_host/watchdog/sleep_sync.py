@@ -1,5 +1,12 @@
 """Sleep/wake host-to-guest time sync — Phase 7 stub.
 
+**STATUS: Phase 7 placeholder.** Both module functions log only. The
+real implementation lands when Phase 7 wires the systemd inhibitor
+lock to push a clock-resync RPC to the guest. Tracked in
+``.claude/ignorefiles.md`` under "Partially broken / deprecated" so
+automated audits (vulture, complexipy, manual reviews) don't keep
+re-flagging the absence of real logic.
+
 When the host suspends (laptop lid close, ``systemctl suspend``, etc.) and
 resumes, the guest clock drifts. Windows has a built-in time sync service
 (W32tm) but it can take minutes to correct; in the meantime timestamps on

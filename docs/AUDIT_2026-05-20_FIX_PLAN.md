@@ -1,6 +1,6 @@
 # Plan naprawy: CrossDesk Slop Score 27 → 0 + lokalne CI
 
-**Powiązany audyt**: [`docs/AUDIT_2026-05-20.md`](docs/AUDIT_2026-05-20.md).
+**Powiązany audyt**: [`docs/AUDIT_2026-05-20.md`](AUDIT_2026-05-20.md).
 Slop Score 27/100 z 14 hot issues + niesprawne GitHub CI.
 
 Ten plan ma dwie części:
@@ -276,7 +276,7 @@ Branch: `docs/audit-fix-broken-links`
 | # | Issue | Plik | Zmiana |
 |--:|-------|------|--------|
 | 1 | Broken links w `universals.md` | repo root `universals.md:?` | Dodaj komentarz na górze: `<!-- Template reference file. Some links point to sub-files not present in CrossDesk (frontend.md/security.md/status.md), kept for traceability. -->` ALBO usuń linie nieistniejących linków |
-| 2 | Broken "zobacz [link](link)" | `docs/PARALLELS_INSTALLER_REFERENCE.md` | Otwórz, znajdź placeholder, albo wypełnij prawdziwym linkiem albo usuń wzmiankę |
+| 2 | Broken "zobacz `(link)`" | `docs/PARALLELS_INSTALLER_REFERENCE.md` | Otwórz, znajdź placeholder, albo wypełnij prawdziwym linkiem albo usuń wzmiankę |
 | 3 | Phase markers w kodzie konsystencja | `host/src/crossdesk_host/cli/launch_cmd.py:14,150`, `watchdog/sleep_sync.py:28,40`, `display/path_translation.py:17` | Dodaj nagłówek pliku z explicit Phase status (3 linie max) — żeby audyt automatyczny wiedział co to stub a co prod |
 
 #### 1G.2 — User-only per AGENTS.md "File boundaries"
@@ -472,7 +472,7 @@ używają Node.js 20, deprecated od czerwca 2026.
 
 ### Stan obecny pre-push hook
 
-[`.githooks/pre-push`](.githooks/pre-push) sprawdza:
+[`.githooks/pre-push`](../.githooks/pre-push) sprawdza:
 - ✅ Hardcoded secrets (HARD FAIL)
 - ⚠️ console.log/print() (WARN only — info)
 - ✅ qmllint (HARD FAIL when tool present)

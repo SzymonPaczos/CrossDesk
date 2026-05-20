@@ -1,5 +1,13 @@
 # universals.md — Architektura Agentów Claude Code (Stack-Agnostic)
 
+> **Template / reference file.** Some internal links below point at
+> sibling files (`.claude/rules/frontend.md`, `.claude/rules/security.md`,
+> `.claude/rules/status.md`, `.claude/active-work.md`) that ship in the
+> OpenState template but are NOT present in CrossDesk's `.claude/`
+> directory — we kept only what was load-bearing here (`general.md`,
+> `backend.md`). Broken-link reports against this file are expected;
+> the template is preserved verbatim for traceability.
+
 > **Co to jest:** samowystarczalny pojedynczy plik, który pozwala odtworzyć w dowolnym nowym repozytorium architekturę agentów wypracowaną w projekcie **OpenState**. Wkleja się tu wszystkie templates plików (`CLAUDE.md`, `.claude/*`, `.githooks/*`) jako fenced code blocks gotowe do skopiowania.
 >
 > **Jak używać:** masz dwie ścieżki — sekcja [0](#0-meta-prompt-dla-agenta-inicjującego) (oddaj robotę agentowi) lub sekcja [2](#2-quickstart-5-minut-człowiek) (zrób ręcznie w 5 min).

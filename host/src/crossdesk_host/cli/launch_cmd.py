@@ -1,5 +1,11 @@
 """``crossdesk launch <app-id>`` — start a registered Windows app as a RAIL window.
 
+**STATUS: Phase 4 partial.** Daemon reachability check + GUI spawn on
+"VM down" path are wired (commit ca49271). The RAIL session launch
+itself is still a Phase 4 stub (see ``_launch()`` toward the bottom).
+Tracked in ``.claude/ignorefiles.md`` so audits don't keep re-flagging
+the absence of a real spawn.
+
 Checks whether the CrossDesk daemon is reachable (via its management
 Unix socket), sends a desktop notification, and logs a Phase 4 stub
 message where the actual RAIL session launch will land.

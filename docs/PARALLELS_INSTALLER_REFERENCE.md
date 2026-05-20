@@ -227,7 +227,7 @@ screens and clicks ~12 times.
 - **Header:** "Download and Install Windows 11" (English, untranslated
   — small localization gap).
 - **Body:** *"Instalacja rozpocznie się automatycznie. Tymczasem
-  [zobacz](link), jakie możliwości oferuje Parallels Desktop for Mac"*
+  *zobacz* (link), jakie możliwości oferuje Parallels Desktop for Mac"*
   / "Installation will start automatically. In the meantime, [see]
   what Parallels Desktop offers."
 - **Progress bar** with live counter: observed values `71.8 MB / 3.9 GB
@@ -269,7 +269,7 @@ screens and clicks ~12 times.
   underneath. **This is a UX wart** — see §5.
 - **Persistent toast:** throughout this phase, an in-window toast at
   the bottom reads *"Instalowanie Windows 11. Proces ten zajmuje
-  zazwyczaj 5–15 minut. Nie przerywaj go. Tymczasem [zobacz](link),
+  zazwyczaj 5–15 minut. Nie przerywaj go. Tymczasem *zobacz* (link),
   jakie możliwości oferuje Parallels Desktop"* with a `×` close button.
 
 ### 2.12 OOBE + post-install glue

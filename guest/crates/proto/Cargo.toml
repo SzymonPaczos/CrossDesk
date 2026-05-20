@@ -5,6 +5,13 @@ edition = "2021"
 
 license.workspace = true
 repository.workspace = true
+
+# prost + prost-types are consumed by the *generated* code that
+# tonic-build emits into $OUT_DIR; cargo-machete can't see those files
+# so it reports the deps as unused. Whitelist for honest audits.
+[package.metadata.cargo-machete]
+ignored = ["prost", "prost-types"]
+
 [dependencies]
 tonic = { workspace = true }
 prost = { workspace = true }

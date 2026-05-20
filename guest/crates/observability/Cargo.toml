@@ -10,7 +10,9 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 tonic = { workspace = true }
 rand = "0.8"
-serde = { version = "1", features = ["derive"] }
+# serde removed 2026-05-20 audit cleanup: only `serde_json::Value` was
+# touched, which pulls serde transitively. Re-add the direct dep when
+# we start deriving Serialize/Deserialize on observability types.
 serde_json = "1"
 # Per DEC-0006 §2 + §6: `tracing-opentelemetry` bridges our `tracing`
 # spans to OpenTelemetry. The OTLP exporter itself is opt-in: it

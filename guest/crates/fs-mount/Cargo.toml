@@ -5,6 +5,15 @@ edition = "2021"
 
 license.workspace = true
 repository.workspace = true
+
+# Phase 5 placeholder declarations. The crate's modules are mock-only
+# (mount::mock_handle_mount_request, flush::mock_generate_*) and don't
+# yet reach for windows-rs or anyhow. The deps stay declared so the
+# real implementation can land without touching Cargo.toml — but we
+# tell cargo-machete to stop flagging them every audit run.
+[package.metadata.cargo-machete]
+ignored = ["windows", "anyhow"]
+
 [dependencies]
 windows = { workspace = true, features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
 anyhow  = { workspace = true }

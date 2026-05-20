@@ -27,6 +27,10 @@ permissions:
   security-events: write
   pull-requests: read
 
+# Force Node 24 for JS actions — see same comment in ci.yml.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   secrets:
     name: Secrets scan (gitleaks)

@@ -45,6 +45,10 @@ on:
 permissions:
   contents: write   # publish-release needs to create the GH release
 
+# Force Node 24 for JS actions — see same comment in ci.yml.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-agent:
     name: Cross-compile CrossDeskAgent.exe (MinGW)

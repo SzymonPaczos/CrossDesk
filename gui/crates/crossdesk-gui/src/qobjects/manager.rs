@@ -151,6 +151,37 @@ fn has_install_state_under(state_dir: &std::path::Path) -> bool {
     state_dir.join("crossdesk/install.state.json").exists()
 }
 
+/// Returns true when the host daemon's management Unix socket is
+/// present, meaning the daemon is up and the mgmt plane is bound.
+///
+/// Mirrors `crossdesk_host.ipc.management.mgmt_socket_path()` from
+/// the Python host: honour ``$XDG_RUNTIME_DIR`` per the freedesktop
+/// spec; fall back to ``~/.local/run/`` for environments that don't
+/// set it (Mac dev, minimal containers).
+///
+/// Phase 7 Week 27 will replace this with a real gRPC Status
+/// subscription; today's check is a fast existence probe so the GUI
+/// can render the "daemon offline" panel within the first paint
+/// cycle without blocking on a gRPC connect.
+fn detect_daemon_running() -> bool {
+    has_mgmt_socket_under(&runtime_dir_from_env())
+}
+
+fn runtime_dir_from_env() -> std::path::PathBuf {
+    use std::path::PathBuf;
+    if let Ok(dir) = std::env::var("XDG_RUNTIME_DIR") {
+        return PathBuf::from(dir);
+    }
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/".to_owned());
+    PathBuf::from(home).join(".local/run")
+}
+
+/// Pure-IO core of [`detect_daemon_running`]. Takes the resolved
+/// runtime dir so tests can point it at a tempdir.
+fn has_mgmt_socket_under(runtime_dir: &std::path::Path) -> bool {
+    runtime_dir.join("crossdesk-host.sock").exists()
+}
+
 impl cxx_qt::Initialize for qobject::ManagerState {
     fn initialize(self: core::pin::Pin<&mut Self>) {
         // Phase 7 Week 27 will subscribe to mgmt::Status and fill these from
@@ -191,15 +222,26 @@ impl cxx_qt::Initialize for qobject::ManagerState {
             _ => detect_has_vm(),
         };
         this.as_mut().set_has_vm(has_vm);
-        // Phase 7: set to true when the mgmt socket handshake succeeds.
-        this.as_mut().set_daemon_connected(false);
+        // Detection mirrors crossdesk_host.ipc.management.mgmt_socket_path:
+        // the mgmt-plane Unix socket exists iff the daemon is currently
+        // running. Phase 7 Week 27 will replace this with a real gRPC
+        // Status handshake; today's fast existence probe means the
+        // GUI renders the right state (Dashboard vs "daemon offline")
+        // on first paint without blocking on a connect.
+        this.as_mut().set_daemon_connected(detect_daemon_running());
     }
 }
 
 impl qobject::ManagerState {
     fn refresh(self: core::pin::Pin<&mut Self>) {
-        // Phase 7 Week 27: re-emit a Status request through the
-        // mgmt-socket client. Phase 6 stub: no-op.
+        // Phase 7 Week 27 will re-emit a Status request through the
+        // mgmt-socket client. Today, the only thing that can change
+        // between two paints without a daemon push is the daemon
+        // process going up/down — re-check socket existence so the
+        // QML "Retry connection" button on the daemon-offline panel
+        // does the right thing.
+        let mut this = self;
+        this.as_mut().set_daemon_connected(detect_daemon_running());
     }
 
     fn launch_app(self: core::pin::Pin<&mut Self>, _app_id: QString) {
@@ -247,7 +289,7 @@ fn qsl(items: &[String]) -> QStringList {
 
 #[cfg(test)]
 mod tests {
-    use super::{has_install_state_under, qsl};
+    use super::{has_install_state_under, has_mgmt_socket_under, qsl};
     use crate::manager::format::fsm_severity;
     use cxx_qt_lib::{QList, QString};
     use std::fs;
@@ -328,6 +370,37 @@ mod tests {
         assert_eq!(qlist.len(), 3);
         assert_eq!(qlist.get(0), Some(&QString::from("Łódź")));
         assert_eq!(qlist.get(2), Some(&QString::from("café")));
+    }
+
+    #[test]
+    fn has_mgmt_socket_false_when_runtime_dir_empty() {
+        let tmp = tempdir();
+        assert!(!has_mgmt_socket_under(tmp.path()));
+    }
+
+    #[test]
+    fn has_mgmt_socket_true_when_socket_present() {
+        let tmp = tempdir();
+        // We don't need a real Unix socket; the GUI's startup probe only
+        // checks `Path::exists()`, which returns true for any
+        // file/socket/dir entry.
+        fs::write(tmp.path().join("crossdesk-host.sock"), "").unwrap();
+        assert!(has_mgmt_socket_under(tmp.path()));
+    }
+
+    #[test]
+    fn has_mgmt_socket_false_when_runtime_dir_missing() {
+        let tmp = tempdir();
+        let missing = tmp.path().join("definitely-not-here");
+        assert!(!has_mgmt_socket_under(&missing));
+    }
+
+    #[test]
+    fn has_mgmt_socket_does_not_follow_wrong_name() {
+        let tmp = tempdir();
+        fs::write(tmp.path().join("crossdesk-host.sock.bak"), "").unwrap();
+        fs::write(tmp.path().join("other.sock"), "").unwrap();
+        assert!(!has_mgmt_socket_under(tmp.path()));
     }
 
     fn tempdir() -> tempfile::TempDir {

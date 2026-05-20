@@ -19,13 +19,15 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import pathlib
+import shutil
+import subprocess
 import sys
 from typing import Optional
 
 from crossdesk_host.i18n import _
 from crossdesk_host.ipc.management import mgmt_socket_path
-from crossdesk_host.lifecycle.error_notifications import notify_vm_failed_to_start
 from crossdesk_host.lifecycle.notifications import SubprocessNotifier
 
 logger = logging.getLogger(__name__)
@@ -56,6 +58,53 @@ _KNOWN_NAMES: dict[str, str] = {
     "wordpad": "WordPad",
     "winword": "Microsoft Word",
 }
+
+
+def _gui_is_running() -> bool:
+    """Best-effort check whether ``crossdesk-gui`` is already running.
+
+    Used by the daemon-offline branch in :func:`_launch` so repeated
+    invocations (Dolphin's "Open in Windows app", an ms-word:// URL
+    handler, etc.) don't pile up a desktop-notification storm or a
+    stack of duplicate GUI windows.
+
+    Returns ``True`` if pgrep finds a matching process for the current
+    user. Returns ``False`` on any error — better to spawn a (possibly
+    second) GUI than to suppress feedback entirely.
+    """
+    pgrep = shutil.which("pgrep")
+    if pgrep is None:
+        return False
+    try:
+        result = subprocess.run(
+            [pgrep, "-u", str(os.getuid()), "-x", "crossdesk-gui"],
+            capture_output=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
+def _spawn_gui() -> bool:
+    """Spawn ``crossdesk-gui`` detached from the current process.
+
+    Returns ``True`` if the spawn was attempted (binary exists on PATH).
+    Returns ``False`` if the binary is missing — the caller should fall
+    back to the stderr message so the user has some signal.
+    """
+    if shutil.which("crossdesk-gui") is None:
+        return False
+    try:
+        subprocess.Popen(
+            ["crossdesk-gui"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError:
+        return False
+    return True
 
 
 def _resolve_display_name(app_id: str) -> str:
@@ -133,7 +182,14 @@ def _launch(
     if not pathlib.Path(sock).exists():
         msg = _("VM not running. Start it with: crossdesk vm start")
         print(msg, file=sys.stderr)
-        notify_vm_failed_to_start(notifier, reason=msg)
+        # Previously this fired notify_vm_failed_to_start(), which spammed
+        # the desktop notification tray every time Dolphin's
+        # "Open in Windows app" or an ms-word:// URL handler invoked us
+        # while the daemon was down. Instead: open the GUI so the user
+        # has one window to start the VM from, and skip spawning if a
+        # GUI is already up.
+        if not _gui_is_running():
+            _spawn_gui()
         return 1
 
     # Notify the user before kicking off the (eventually async) launch

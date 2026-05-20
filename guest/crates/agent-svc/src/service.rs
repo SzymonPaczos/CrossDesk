@@ -72,6 +72,9 @@ pub fn run_service() -> anyhow::Result<()> {
     // Win32 message loop. expect() is the right escape hatch here: if Tokio
     // can't initialize, the agent has no way to recover and the SCM will
     // restart us.
+    // Safety: Runtime::new() only fails on catastrophic OS-level resource
+    // exhaustion (out of FDs / threads); the agent is unusable in that
+    // state, so panicking is the SCM's signal to restart us. See above.
     let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
 
     rt.spawn(async {

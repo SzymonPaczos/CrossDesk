@@ -5,6 +5,8 @@ use std::process::Command;
 fn main() {
     // Compile .ts translation sources to .qm binaries before the Qt resource
     // compiler embeds them.  lrelease must be on PATH (it ships with Qt tools).
+    // Safety: CARGO_MANIFEST_DIR is always set by cargo when invoking build
+    // scripts (documented in The Cargo Book §Build Scripts).
     let manifest = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     for lang in &["pl", "en"] {
         let ts = format!("{}/i18n/crossdesk_{}.ts", manifest, lang);

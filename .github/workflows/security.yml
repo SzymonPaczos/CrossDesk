@@ -16,6 +16,12 @@ on:
     - cron: "0 6 * * 1"   # Mondays 06:00 UTC
   workflow_dispatch:
 
+# Same coalescing pattern as ci.yml. The weekly scheduled run gets
+# its own ref (`schedule`) so it isn't cancelled by push-driven runs.
+concurrency:
+  group: sec-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   security-events: write

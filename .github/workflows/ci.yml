@@ -7,6 +7,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Coalesce per-ref. A burst of pushes (e.g. WORK_LOG START → feature
+# work → WORK_LOG END → merge, all within minutes) used to queue a
+# fresh CI run for each push — with the macos-latest matrix entries
+# (10× billing multiplier) the queue grew to hours of wall-clock
+# wait time and flooded the user's inbox with deferred runs. Now
+# only the latest commit on a ref gets a green/red verdict; in-flight
+# earlier runs are cancelled.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-host:
     name: Python host (mypy + pytest)

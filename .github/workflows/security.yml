@@ -1,19 +1,16 @@
 name: Security audit
 
-# Hard gate on every push and PR. Findings flow to the GitHub
-# Security tab via SARIF upload so reviewers see them inline on PRs
-# without having to dig through job logs.
+# 2026-05-20: automatic triggers REMOVED to stop GitHub Actions
+# billing. Local replacement: scripts/local-security.sh runs the
+# same gitleaks / pip-audit / bandit / cargo-audit / cargo-deny
+# checks against the developer's machine. semgrep + CodeQL are
+# GitHub-hosted-only — for those, trigger this workflow manually
+# via the Actions UI when preparing a release.
 #
-# Schedule runs once a week so an advisory landing on a dep we
-# already use re-fires the alarm even when nobody pushes.
+# SARIF findings still upload to the GitHub Security tab on the
+# manual runs, so the security-events history isn't lost.
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
   workflow_dispatch:
 
 # Same coalescing pattern as ci.yml. The weekly scheduled run gets

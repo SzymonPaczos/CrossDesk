@@ -15,8 +15,11 @@ name: Compatibility matrix (N-1 agent)
 # window). Documented in docs/VERSIONING.md "Compatibility matrix".
 
 on:
-  pull_request:
-    branches: [main]
+  # 2026-05-20: pull_request trigger REMOVED to stop GitHub Actions
+  # billing. This workflow is heavy (full cross-compile of the prior
+  # tag's agent) and runs on every PR — kept as manual-only until
+  # we have a self-hosted runner. Trigger via Actions UI before
+  # cutting a release to verify N-1 compatibility.
   workflow_dispatch:
 
 # Force Node 24 for JS actions — see same comment in ci.yml.

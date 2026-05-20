@@ -78,3 +78,8 @@ infra/code-signing/pki/*
 
 # Extracted video frames (local analysis artefacts)
 frames/
+
+# gettext-compiled message catalogs — produced by `msgfmt` from
+# i18n/<lang>/LC_MESSAGES/*.po at install time (distro packaging) or
+# lazily for runtime testing. .po sources are tracked.
+i18n/**/*.mo

@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from dataclasses import dataclass
 from typing import AsyncIterator, Awaitable, Callable, List, Optional
 
 import grpc
@@ -38,6 +39,22 @@ from crossdesk_host.watchdog import (
     TickInput,
     TickOutput,
 )
+
+
+@dataclass
+class _MissedSleepTracker:
+    """Per-channel state for the missed-PrepareForSleep heuristic
+    (FOLLOWUPS:677).
+
+    Remembers when the FSM last left HEALTHY and whether a recovery
+    action was armed during that outage. A fast HEALTHY → armed →
+    HEALTHY round-trip (under ~30s) means the host very likely
+    suspended without firing a PrepareForSleep D-Bus signal.
+    """
+
+    healthy_left_at_ns: Optional[int] = None
+    recovery_armed_during_outage: bool = False
+    threshold_seconds: float = 30.0
 
 BootProbe = Callable[[], Awaitable[bool]]
 """Optional async predicate invoked once per Channel when the FSM
@@ -162,6 +179,108 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
             next_action_after=_seconds_to_duration(out.next_action_after_seconds),
         )
 
+    async def _await_pong_or_timeout(
+        self,
+        request_iterator: AsyncIterator[heartbeat_pb2.GuestFrame],
+        context: grpc.aio.ServicerContext,
+        start_ns: int,
+    ) -> Optional[TickInput]:
+        """Wait for a guest frame; return TickInput for the FSM.
+
+        Returns ``None`` to signal the channel should break out (client
+        closed cleanly). Timeout → TickInput(pong_received=False).
+        Unexpected payload → False with a structured log.
+        """
+        try:
+            guest_frame = await asyncio.wait_for(
+                request_iterator.__anext__(),
+                timeout=self.pong_timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            return TickInput(pong_received=False)
+        except StopAsyncIteration:
+            logger.info("heartbeat_client_closed")
+            return None
+
+        await self.auth_validator.verify_auth_context(context, guest_frame.auth)
+        if guest_frame.WhichOneof("payload") == "pong":
+            return TickInput(
+                pong_received=True,
+                rtt_ns=time.monotonic_ns() - start_ns,
+            )
+        logger.info(
+            "heartbeat_unexpected_payload kind=%s",
+            guest_frame.WhichOneof("payload"),
+        )
+        return TickInput(pong_received=False)
+
+    def _track_state_transition(
+        self,
+        last_state: State,
+        out: TickOutput,
+        tracker: _MissedSleepTracker,
+    ) -> None:
+        """Log the transition and update the missed-PrepareForSleep
+        heuristic tracker in place. No-op when ``out.state == last_state``.
+        """
+        if out.state == last_state:
+            return
+        logger.info(
+            "heartbeat_state_transition from=%s to=%s miss=%d ewma_rtt_ns=%s",
+            last_state.value,
+            out.state.value,
+            out.consecutive_miss_count,
+            out.ewma_rtt_ns,
+        )
+        if last_state == State.HEALTHY and out.state != State.HEALTHY:
+            tracker.healthy_left_at_ns = time.monotonic_ns()
+            tracker.recovery_armed_during_outage = False
+        if out.state in (State.SOFT_RECOVERY, State.HARD_DESTROY):
+            tracker.recovery_armed_during_outage = True
+        if out.state == State.HEALTHY and tracker.healthy_left_at_ns is not None:
+            outage_s = (
+                time.monotonic_ns() - tracker.healthy_left_at_ns
+            ) / 1_000_000_000
+            if (
+                tracker.recovery_armed_during_outage
+                and outage_s < tracker.threshold_seconds
+            ):
+                logger.warning(
+                    "heartbeat_possible_missed_prepare_for_sleep "
+                    "outage_s=%.1f hint=check_dbus_listener_subscription",
+                    outage_s,
+                )
+            tracker.healthy_left_at_ns = None
+            tracker.recovery_armed_during_outage = False
+
+    def _dispatch_recovery_action(self, out: TickOutput) -> bool:
+        """Execute the FSM's prescribed recovery action.
+
+        Returns ``True`` when the caller should break out of the channel
+        loop (HARD_DESTROY recycles the domain; the current Channel
+        terminates and the agent will reconnect when the new domain
+        boots).
+        """
+        if out.recovery_action == RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN:
+            logger.warning(
+                "heartbeat_graceful_shutdown_dispatched attempt=%d backoff_s=%s",
+                out.soft_attempts,
+                out.next_action_after_seconds,
+            )
+            self.libvirt_ctl.graceful_shutdown()
+            return False
+        if out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
+            logger.critical("heartbeat_hard_destroy_dispatched")
+            self.libvirt_ctl.hard_destroy()
+            if self.notifier is not None:
+                notify_forced_stop(
+                    self.notifier,
+                    reason="Heartbeat watchdog exhausted soft "
+                    "recovery attempts (HARD_DESTROY).",
+                )
+            return True
+        return False
+
     async def Channel(
         self,
         request_iterator: AsyncIterator[heartbeat_pb2.GuestFrame],
@@ -180,16 +299,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         seq = 1
         last_state: State = fsm.state
         probe_already_run = False
-        # Missed-PrepareForSleep heuristic state (FOLLOWUPS:677):
-        # remembers wall-clock-equivalent monotonic when we last left
-        # HEALTHY and whether the FSM armed a recovery action during
-        # the outage. A fast HEALTHY → recovery-armed → HEALTHY round
-        # trip means the host very likely suspended without firing a
-        # PrepareForSleep D-Bus signal — the FSM did the right thing
-        # but the warning lets operators fix the missing subscription.
-        healthy_left_at_ns: Optional[int] = None
-        recovery_armed_during_outage = False
-        missed_sleep_threshold_seconds = 30.0
+        tracker = _MissedSleepTracker()
 
         try:
             while True:
@@ -201,81 +311,29 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                     )
                 )
 
-                try:
-                    guest_frame = await asyncio.wait_for(
-                        request_iterator.__anext__(),
-                        timeout=self.pong_timeout_seconds,
-                    )
-                except asyncio.TimeoutError:
-                    out = fsm.tick(TickInput(pong_received=False))
-                except StopAsyncIteration:
-                    logger.info("heartbeat_client_closed")
+                tick_in = await self._await_pong_or_timeout(
+                    request_iterator, context, start_ns
+                )
+                if tick_in is None:
                     break
-                else:
-                    await self.auth_validator.verify_auth_context(
-                        context, guest_frame.auth
-                    )
-                    if guest_frame.WhichOneof("payload") == "pong":
-                        rtt_ns = time.monotonic_ns() - start_ns
-                        out = fsm.tick(TickInput(pong_received=True, rtt_ns=rtt_ns))
-                    else:
-                        logger.info(
-                            "heartbeat_unexpected_payload kind=%s",
-                            guest_frame.WhichOneof("payload"),
-                        )
-                        out = fsm.tick(TickInput(pong_received=False))
+                out = fsm.tick(tick_in)
 
                 state_changed = out.state != last_state
-                if state_changed:
-                    logger.info(
-                        "heartbeat_state_transition from=%s to=%s miss=%d ewma_rtt_ns=%s",
-                        last_state.value,
-                        out.state.value,
-                        out.consecutive_miss_count,
-                        out.ewma_rtt_ns,
-                    )
-                    # Missed-PrepareForSleep tracker: stamp wall-clock
-                    # on HEALTHY exit; clear it (and warn) on return
-                    # to HEALTHY if recovery was armed during the
-                    # outage AND the round trip was fast.
-                    if last_state == State.HEALTHY and out.state != State.HEALTHY:
-                        healthy_left_at_ns = time.monotonic_ns()
-                        recovery_armed_during_outage = False
-                    if out.state in (
-                        State.SOFT_RECOVERY,
-                        State.HARD_DESTROY,
-                    ):
-                        recovery_armed_during_outage = True
-                    if (
-                        out.state == State.HEALTHY
-                        and healthy_left_at_ns is not None
-                    ):
-                        outage_s = (
-                            time.monotonic_ns() - healthy_left_at_ns
-                        ) / 1_000_000_000
-                        if (
-                            recovery_armed_during_outage
-                            and outage_s < missed_sleep_threshold_seconds
-                        ):
-                            logger.warning(
-                                "heartbeat_possible_missed_prepare_for_sleep "
-                                "outage_s=%.1f hint=check_dbus_listener_subscription",
-                                outage_s,
-                            )
-                        healthy_left_at_ns = None
-                        recovery_armed_during_outage = False
-                    last_state = out.state
-                    # First-time entry into PROBING: fire the optional
-                    # boot-probe so an asymmetric break (VSOCK listener
-                    # bound but guest agent hung) shows up in logs even
-                    # if heartbeat misses are still incrementing.
-                    if (
-                        out.state == State.PROBING
-                        and self.boot_probe is not None
-                        and not probe_already_run
-                    ):
-                        probe_already_run = True
-                        asyncio.create_task(self._run_boot_probe(self.boot_probe))
+                self._track_state_transition(last_state, out, tracker)
+                last_state = out.state
+
+                # First-time entry into PROBING: fire the optional
+                # boot-probe so an asymmetric break (VSOCK listener
+                # bound but guest agent hung) shows up in logs even
+                # if heartbeat misses are still incrementing.
+                if (
+                    state_changed
+                    and out.state == State.PROBING
+                    and self.boot_probe is not None
+                    and not probe_already_run
+                ):
+                    probe_already_run = True
+                    asyncio.create_task(self._run_boot_probe(self.boot_probe))
 
                 # AdaptiveProfile broadcast: emit BEFORE any libvirt action so
                 # a supervisor (or the guest itself) can observe the impending
@@ -289,25 +347,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         profile_update=self._build_profile(out)
                     )
 
-                if (
-                    out.recovery_action
-                    == RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN
-                ):
-                    logger.warning(
-                        "heartbeat_graceful_shutdown_dispatched attempt=%d backoff_s=%s",
-                        out.soft_attempts,
-                        out.next_action_after_seconds,
-                    )
-                    self.libvirt_ctl.graceful_shutdown()
-                elif out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
-                    logger.critical("heartbeat_hard_destroy_dispatched")
-                    self.libvirt_ctl.hard_destroy()
-                    if self.notifier is not None:
-                        notify_forced_stop(
-                            self.notifier,
-                            reason="Heartbeat watchdog exhausted soft "
-                            "recovery attempts (HARD_DESTROY).",
-                        )
+                if self._dispatch_recovery_action(out):
                     break
 
                 seq += 1

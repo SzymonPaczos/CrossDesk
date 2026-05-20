@@ -6,6 +6,10 @@ build-backend = "hatchling.build"
 name = "crossdesk-host"
 version = "0.1.0"
 requires-python = ">=3.9"
+# SPDX-style identifier consumed by PyPI, AUR, deb/rpm packaging, and
+# `pip-licenses`. The LICENSE file at repo root holds the canonical
+# GPL-3.0 text; hatchling's default sdist already includes it.
+license = "GPL-3.0-or-later"
 
 # Cross-platform-installable core dependencies. Linux-only packages
 # (libvirt-python, systemd-python, dbus-next) live under
@@ -73,11 +77,14 @@ packages = ["src/crossdesk_host"]
 
 [tool.mypy]
 strict = true
-# mypy 2.1+ requires python_version>=3.10 even though runtime requires-python
-# stays at 3.9 (`requires-python = ">=3.9"` above). The 3.10 type system is a
-# strict superset of 3.9; we don't use PEP 604 (`X | Y`) or other 3.10-only
-# syntax in source, so this only changes type checking, not runtime support.
-python_version = "3.10"
+# Pinned to 3.12 to match the CI runner exactly (.github/workflows/ci.yml
+# matrix.python-version). mypy 2.1+ minimum is 3.10; 3.12 is the version
+# actually exercised in CI, so matching here eliminates the local-vs-CI
+# divergence on tomli-fallback branches (under 3.11+ the `else: import tomli`
+# block is unreachable; under 3.10 it is reachable and `# type: ignore` is
+# needed). Runtime `requires-python = ">=3.9"` is unchanged — this only
+# affects type-checking.
+python_version = "3.12"
 
 # dbus_next is unavailable on macOS dev hosts and installable on Linux. The
 # `# type: ignore[import]` super-category in dbus_listener.py + notifications.py
@@ -162,3 +169,28 @@ markers = [
     "integration: in-process host+guest mock harness",
     "benchmark: performance microbenchmark, may be skipped in fast CI",
 ]
+
+[tool.bandit]
+# Audit 2026-05-20 enumerated 36 Low/High-confidence findings, *all*
+# subprocess-related (B603/B607/B404). The daemon is a thin
+# orchestrator over libvirt / FreeRDP / journalctl / xrandr / wlr-randr
+# CLI binaries — subprocess is the legitimate IPC mechanism, not a
+# vulnerability. Skipping the noise here means a CI bandit run flags
+# genuine issues (B105 hardcoded secret, B324 weak hash, etc.) without
+# being buried under 30+ expected hits.
+#
+# B404: subprocess module import (informational, by definition).
+# B603: subprocess call without shell=True. We *want* shell=False —
+#       it's the safe form. Bandit flags it anyway because the argv
+#       could in principle be user-controlled; in practice every
+#       call site passes a list of hardcoded strings.
+# B607: start_process_with_partial_path. We deliberately want the
+#       binary picked up from $PATH so distros can substitute their
+#       preferred build (e.g. xfreerdp3 vs xfreerdp). The risk
+#       (PATH-injection by a privileged-process spoofer) is not a
+#       threat in our user-session daemon model.
+# Per-line `# nosec` markers handle the remaining legitimate cases
+# (B101 assert as type-hint, B110 try/except/pass in best-effort
+# cleanup paths).
+skips = ["B404", "B603", "B607"]
+exclude_dirs = ["src/crossdesk_host/proto", "tests", "benches"]

@@ -12,13 +12,12 @@ credentials stay stable.
 
 from __future__ import annotations
 
-import contextlib
-import os
 import sys
-import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from crossdesk_host.utils import atomic_write
 
 if sys.version_info >= (3, 11):
     import tomllib as _tomllib  # type: ignore[import-not-found,unused-ignore]
@@ -54,23 +53,6 @@ class Settings:
     max_soft_attempts: int = 3
 
 
-def _atomic_write(path: Path, payload: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(
-        dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(payload)
-            f.flush()
-            os.fsync(f.fileno())
-        os.rename(tmp, path)
-    except Exception:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp)
-        raise
-
-
 def _to_toml(s: Settings) -> str:
     lines = []
     for key, value in asdict(s).items():
@@ -87,7 +69,7 @@ def _to_toml(s: Settings) -> str:
 def save(settings: Settings, path: Optional[Path] = None) -> None:
     if path is None:
         path = _default_path()
-    _atomic_write(path, _to_toml(settings))
+    atomic_write(path, _to_toml(settings))
 
 
 def load(path: Optional[Path] = None) -> Settings:

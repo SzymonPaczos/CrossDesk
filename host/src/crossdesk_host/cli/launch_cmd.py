@@ -75,7 +75,7 @@ def _resolve_display_name(app_id: str) -> str:
     except Exception:
         # Catalog load is best-effort; a missing file or parse error
         # must not abort a launch request.
-        pass
+        pass  # nosec B110 — intentional best-effort, see comment above
 
     return _KNOWN_NAMES.get(app_id, app_id.title())
 

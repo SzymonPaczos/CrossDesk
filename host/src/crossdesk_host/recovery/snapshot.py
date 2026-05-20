@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
-import os
-import tempfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+
+from crossdesk_host.utils import atomic_write
 
 
 @dataclass(frozen=True)
@@ -67,28 +66,12 @@ def capture_snapshot(
         final_miss_count=final_miss_count,
     )
     payload = json.dumps(asdict(snapshot), indent=2)
-    _atomic_write(target_dir / "snapshot.json", payload)
+    atomic_write(target_dir / "snapshot.json", payload)
 
     if log_tail:
-        _atomic_write(target_dir / "log_tail.txt", "\n".join(log_tail[-1000:]))
+        atomic_write(target_dir / "log_tail.txt", "\n".join(log_tail[-1000:]))
 
     return target_dir
-
-
-def _atomic_write(path: Path, content: str) -> None:
-    fd, tmp = tempfile.mkstemp(
-        dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(content)
-            f.flush()
-            os.fsync(f.fileno())
-        os.rename(tmp, path)
-    except Exception:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp)
-        raise
 
 
 def suggest_cause(

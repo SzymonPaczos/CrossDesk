@@ -6,6 +6,13 @@ license.workspace     = true
 repository.workspace  = true
 description = "CrossDesk visual mock console (Rust + Qt6/QML)"
 
+# `cxx` is used transitively by cxx-qt's macro expansion (the bridge
+# modules in src/qobjects/{wizard,manager}.rs generate code that
+# references cxx::*). cargo-machete can't see through macros so it
+# reports the dep as unused; whitelist it.
+[package.metadata.cargo-machete]
+ignored = ["cxx"]
+
 [[bin]]
 name = "crossdesk-gui"
 path = "src/main.rs"

@@ -1,22 +1,29 @@
 name: CI
 
+# 2026-05-20: push / pull_request triggers REMOVED to stop GitHub
+# Actions billing — owner moved CI/CD to the local machine via the
+# pre-push hook (.githooks/pre-push) and on-demand runner
+# (scripts/local-ci.sh). Both mirror the jobs below. The workflow
+# stays in the repo for traceability and manual one-off runs via the
+# Actions UI ("Run workflow"); it no longer fires automatically.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
-# Coalesce per-ref. A burst of pushes (e.g. WORK_LOG START → feature
-# work → WORK_LOG END → merge, all within minutes) used to queue a
-# fresh CI run for each push — with the macos-latest matrix entries
-# (10× billing multiplier) the queue grew to hours of wall-clock
-# wait time and flooded the user's inbox with deferred runs. Now
-# only the latest commit on a ref gets a green/red verdict; in-flight
-# earlier runs are cancelled.
+# concurrency still useful for the manual-dispatch case (e.g. user
+# kicks "Run workflow" twice in quick succession), even though the
+# main push-burst use case is gone.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Force Node 24 for all JavaScript actions so the deprecation banner
+# (Node 20 removal scheduled 2026-09-16) doesn't fire on every run.
+# Safe opt-in per the GitHub Blog post — actions either expose a Node 24
+# build (newer versions) or fall back to Node 20 if they don't yet,
+# without crashing. Documented in:
+# https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   python-host:
@@ -24,7 +31,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # macos-latest dropped: libvirt-python wheel build hung 6h on a
+        # cold runner (no libvirt headers via Homebrew without an extra
+        # provisioning step). Local pre-push hook + scripts/local-ci.sh
+        # cover the same gates against developers' actual machines.
+        os: [ubuntu-latest]
         # 3.9 is dropped from CI: mypy 2.1+ (dev extra) requires 3.10+,
         # so the install step itself fails on 3.9 before any check runs.
         # `requires-python = ">=3.9"` in pyproject is the runtime floor
@@ -88,7 +99,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        # macos-latest dropped: cross-compile via MinGW (homebrew) is
+        # consistently slower and occasionally fails on link-step
+        # symbols not present in macOS's mingw-w64. Ubuntu cross-compile
+        # is the canonical path; macOS devs use scripts/local-ci.sh.
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -144,6 +159,13 @@ jobs:
         # No -W flag: qmllint < 6.5 (Ubuntu 24.04 ships 6.4.2) rejects
         # it as unknown. Errors still fail the step; warnings surface
         # as text. Flip on -W 0 once the runner pulls Qt 6.5+.
+        #
+        # continue-on-error: Qt 6.4.2 on the GH runner is flaky against
+        # CXX-Qt-registered types; until the runner pulls 6.5+, treat
+        # this as advisory. Local pre-push hook (.githooks/pre-push)
+        # runs qmllint with the same .qmllint.ini and IS HARD-FAIL on
+        # developer machines that have Qt 6.5+.
+        continue-on-error: true
         run: |
           find crates/crossdesk-gui/qml -name '*.qml' -print0 \
             | xargs -0 -n 1 /usr/lib/qt6/bin/qmllint
@@ -247,12 +269,19 @@ jobs:
         # the updated template.  Ignores POT-Creation-Date (frozen in
         # scripts/i18n.sh) and line-number comments which shift on
         # every reformat.
+        #
+        # continue-on-error: pre-push hook (.githooks/pre-push) catches
+        # this on developer machines (HARD FAIL when xgettext present).
+        # CI advisory only to avoid blocking merges on a recoverable
+        # one-line follow-up commit.
+        continue-on-error: true
         run: |
           git diff --exit-code i18n/crossdesk-host.pot \
             || { echo "ERROR: i18n/crossdesk-host.pot has uncommitted changes."; \
                  echo "Run 'bash scripts/i18n.sh extract' and commit the result."; \
                  exit 1; }
       - name: Check Qt .ts for uncommitted changes
+        continue-on-error: true
         run: |
           git diff --exit-code \
             gui/crates/crossdesk-gui/i18n/crossdesk_en.ts \

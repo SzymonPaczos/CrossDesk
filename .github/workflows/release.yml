@@ -32,6 +32,12 @@ name: Release
 # convention as ci.yml + security.yml).
 
 on:
+  # release.yml is the ONE workflow that still auto-fires (on a semver
+  # tag push) after the 2026-05-20 GH Actions billing freeze. Tags are
+  # intentional and rare; the run produces signed binaries + a draft
+  # release that only ships when the owner clicks Publish. If even
+  # that becomes too expensive, switch this to workflow_dispatch-only
+  # and cut releases by hand on the dev machine.
   push:
     tags:
       - 'v*.*.*'
@@ -44,6 +50,10 @@ on:
 
 permissions:
   contents: write   # publish-release needs to create the GH release
+
+# Force Node 24 for JS actions — see same comment in ci.yml.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-agent:

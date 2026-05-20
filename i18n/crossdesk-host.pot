@@ -223,16 +223,16 @@ msgstr ""
 msgid "warning: could not read FreeRDP log {path}: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:591
+#: host/src/crossdesk_host/cli/logs_cmd.py:594
 #, python-brace-format
 msgid "warning: libvirt log not found, skipping follow: {path}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:602
+#: host/src/crossdesk_host/cli/logs_cmd.py:605
 msgid "warning: no log sources available for --follow"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:629
+#: host/src/crossdesk_host/cli/logs_cmd.py:632
 msgid "warning: guest log streaming is not yet implemented (P2 scope)"
 msgstr ""
 
@@ -295,49 +295,95 @@ msgstr ""
 msgid "not connected"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:64
+#: host/src/crossdesk_host/cli/vm_cmd.py:77
 msgid "unknown autostart action: {action!r}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:72
+#: host/src/crossdesk_host/cli/vm_cmd.py:85
 msgid "systemd not available — autostart is Linux-only; no unit file written"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:81
+#: host/src/crossdesk_host/cli/vm_cmd.py:94
 #, python-brace-format
 msgid "unit file written to {path}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:94
+#: host/src/crossdesk_host/cli/vm_cmd.py:107
 msgid "crossdesk.service enabled — will start on next login"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:97
+#: host/src/crossdesk_host/cli/vm_cmd.py:110
 #, python-brace-format
 msgid "systemctl failed (exit {code}): {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:110
+#: host/src/crossdesk_host/cli/vm_cmd.py:123
 msgid "systemd not available — autostart is Linux-only; nothing to disable"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:122
+#: host/src/crossdesk_host/cli/vm_cmd.py:135
 msgid "crossdesk.service disabled"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:126
+#: host/src/crossdesk_host/cli/vm_cmd.py:139
 #, python-brace-format
 msgid "systemctl disable exited {code} — removing unit file anyway"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:134
+#: host/src/crossdesk_host/cli/vm_cmd.py:147
 #, python-brace-format
 msgid "unit file removed from {path}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/vm_cmd.py:136
+#: host/src/crossdesk_host/cli/vm_cmd.py:149
 #, python-brace-format
 msgid "unit file not present at {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:209
+#, python-brace-format
+msgid "--timeout must be a positive integer, got {value}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:228
+#, python-brace-format
+msgid "libvirt is not available on this host: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:249
+#, python-brace-format
+msgid "--force: skipping ACPI and destroying {domain}…"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:255
+#: host/src/crossdesk_host/cli/vm_cmd.py:295
+#, python-brace-format
+msgid "hard destroy failed: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:260
+#, python-brace-format
+msgid "sending ACPI shutdown to {domain} (timeout {sec}s)…"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:267
+#, python-brace-format
+msgid "graceful shutdown failed: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:275
+#, python-brace-format
+msgid "status probe failed: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:278
+#, python-brace-format
+msgid "{domain} stopped cleanly"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/vm_cmd.py:289
+#, python-brace-format
+msgid "{domain} did not stop within {sec}s — falling back to hard destroy"
 msgstr ""
 
 #: host/src/crossdesk_host/lifecycle/error_notifications.py:33

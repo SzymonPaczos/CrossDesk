@@ -42,6 +42,24 @@ class IsoSpec:
 
 
 class ScrapeBackend(Protocol):
+    """Phase 5 placeholder.
+
+    No production HttpScrapeBackend exists yet; the wizard's ISO-download
+    step lands when the installer wires this up. The Protocol + fetch()
+    orchestrator are committed now so:
+
+    1. Cache layout + sha256 verification are unit-tested today
+       (host/tests/test_iso_downloader_edges.py uses a ``_ScriptedBackend``
+       that satisfies the Protocol structurally).
+    2. The real backend, when added, can be dropped in without
+       redesigning the call signature.
+
+    Audit signal: vulture / cargo-machete-style "0 production callers"
+    is expected here until Phase 5 wires this in. See
+    .claude/ignorefiles.md "Partially broken / deprecated" — this entry
+    keeps automated audits from re-flagging the abstraction every run.
+    """
+
     def resolve_download_url(self, spec: IsoSpec) -> str:
         """Return the time-limited ``aka.ms``-style URL for the ISO.
 

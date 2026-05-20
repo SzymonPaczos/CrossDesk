@@ -295,6 +295,104 @@ def _classify_gpu(gpu: GpuInfo) -> int:
     return 3
 
 
+def _acquire_lspci_output(
+    provided: Optional[str],
+) -> tuple[Optional[str], Optional[CheckResult]]:
+    """Return ``(output, early_check_result)``.
+
+    When the second element is non-None the caller should return it
+    immediately — lspci isn't available so the whole check degrades
+    to WARN.
+    """
+    if provided is not None:
+        return provided, None
+    if shutil.which("lspci") is None:
+        return None, CheckResult(
+            "gpu_passthrough",
+            Status.WARN,
+            "lspci not on PATH (install pciutils); GPU tier detection skipped",
+        )
+    try:
+        proc = subprocess.run(
+            ["lspci", "-nn"],
+            capture_output=True, text=True, timeout=10.0,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        return None, CheckResult(
+            "gpu_passthrough", Status.WARN, f"lspci failed: {exc}"
+        )
+    return proc.stdout, None
+
+
+def _evaluate_gpu_candidate(
+    gpu: GpuInfo,
+    sys_root: Path,
+    result: GpuPassthroughResult,
+) -> None:
+    """Classify one GPU and append warnings / candidates into ``result``."""
+    tier = _classify_gpu(gpu)
+    group = _iommu_group_for(gpu.pci_id, sys_root)
+    gpu_info = GpuInfo(
+        pci_id=gpu.pci_id,
+        vendor_id=gpu.vendor_id,
+        device_id=gpu.device_id,
+        name=gpu.name,
+        iommu_group=group,
+        kernel_driver=gpu.kernel_driver,
+    )
+    if tier == 3:
+        result.warnings.append(
+            f"{gpu.name} ({gpu.pci_id}): Tier 3 (Intel Arc / single-GPU) — "
+            "passthrough not supported for CrossDesk; use software rendering."
+        )
+        return
+    result.passthrough_candidates.append(gpu_info)
+    if tier == 2:
+        result.warnings.append(
+            f"{gpu.name} ({gpu.pci_id}): Tier 2 — requires vendor-reset "
+            "or hide-the-VM workaround; see docs/GPU_PASSTHROUGH.md."
+        )
+    if group is not None:
+        siblings = _iommu_group_devices(group, sys_root)
+        non_audio = [s for s in siblings if not s.endswith(".1")]
+        if len(non_audio) > 1:
+            result.warnings.append(
+                f"{gpu.name}: IOMMU group {group} contains other devices "
+                f"({', '.join(non_audio)}) — ACS patch may be required."
+            )
+
+
+def _finalize_gpu_result(result: GpuPassthroughResult) -> CheckResult:
+    """Map the populated GpuPassthroughResult to the final CheckResult."""
+    if not result.passthrough_candidates:
+        result.tier = 3
+        detail = "; ".join(result.warnings) if result.warnings else "Tier 3 (Intel / single-GPU)"
+        return CheckResult(
+            "gpu_passthrough",
+            Status.WARN,
+            f"no passthrough-capable GPU found ({detail})",
+        )
+    result.tier = min(_classify_gpu(g) for g in result.passthrough_candidates)
+    if result.blockers:
+        return CheckResult("gpu_passthrough", Status.FAIL, "; ".join(result.blockers))
+
+    candidates_str = ", ".join(
+        f"{g.name} ({g.pci_id})" for g in result.passthrough_candidates
+    )
+    if result.warnings:
+        return CheckResult(
+            "gpu_passthrough",
+            Status.WARN,
+            f"Tier {result.tier} GPU candidate(s): {candidates_str}. "
+            + "; ".join(result.warnings),
+        )
+    return CheckResult(
+        "gpu_passthrough",
+        Status.OK,
+        f"Tier {result.tier} passthrough-ready: {candidates_str}",
+    )
+
+
 def check_gpu_passthrough(
     *,
     sys_root: Path = Path("/sys"),
@@ -316,21 +414,11 @@ def check_gpu_passthrough(
             "non-Linux host — GPU passthrough check skipped",
         )
 
-    if lspci_output is None:
-        if shutil.which("lspci") is None:
-            return CheckResult(
-                "gpu_passthrough",
-                Status.WARN,
-                "lspci not on PATH (install pciutils); GPU tier detection skipped",
-            )
-        try:
-            proc = subprocess.run(
-                ["lspci", "-nn"],
-                capture_output=True, text=True, timeout=10.0,
-            )
-            lspci_output = proc.stdout
-        except (subprocess.SubprocessError, OSError) as exc:
-            return CheckResult("gpu_passthrough", Status.WARN, f"lspci failed: {exc}")
+    lspci_output, early_result = _acquire_lspci_output(lspci_output)
+    if early_result is not None:
+        return early_result
+    # When early_result is None, lspci_output is guaranteed str.
+    assert lspci_output is not None  # nosec B101 — type narrowing
 
     gpus = _parse_lspci_output(lspci_output)
     if not gpus:
@@ -340,83 +428,18 @@ def check_gpu_passthrough(
             "no VGA-class devices found by lspci — GPU detection inconclusive",
         )
 
-    iommu_ok = _iommu_enabled(sys_root)
-    result = GpuPassthroughResult(iommu_enabled=iommu_ok, host_gpus=list(gpus))
-
-    if not iommu_ok:
+    result = GpuPassthroughResult(
+        iommu_enabled=_iommu_enabled(sys_root),
+        host_gpus=list(gpus),
+    )
+    if not result.iommu_enabled:
         result.blockers.append(
             "IOMMU not enabled. Add intel_iommu=on (Intel) or amd_iommu=on (AMD) "
             "to kernel cmdline and reboot."
         )
-
     for gpu in gpus:
-        tier = _classify_gpu(gpu)
-        group = _iommu_group_for(gpu.pci_id, sys_root)
-        gpu_info = GpuInfo(
-            pci_id=gpu.pci_id,
-            vendor_id=gpu.vendor_id,
-            device_id=gpu.device_id,
-            name=gpu.name,
-            iommu_group=group,
-            kernel_driver=gpu.kernel_driver,
-        )
-        if tier == 3:
-            result.warnings.append(
-                f"{gpu.name} ({gpu.pci_id}): Tier 3 (Intel Arc / single-GPU) — "
-                "passthrough not supported for CrossDesk; use software rendering."
-            )
-            continue
-        if tier == 1:
-            result.passthrough_candidates.append(gpu_info)
-        else:
-            result.passthrough_candidates.append(gpu_info)
-            result.warnings.append(
-                f"{gpu.name} ({gpu.pci_id}): Tier 2 — requires vendor-reset "
-                "or hide-the-VM workaround; see docs/GPU_PASSTHROUGH.md."
-            )
-        if group is not None:
-            siblings = _iommu_group_devices(group, sys_root)
-            non_audio = [s for s in siblings if not s.endswith(".1")]
-            if len(non_audio) > 1:
-                result.warnings.append(
-                    f"{gpu.name}: IOMMU group {group} contains other devices "
-                    f"({', '.join(non_audio)}) — ACS patch may be required."
-                )
-
-    if not result.passthrough_candidates:
-        result.tier = 3
-        tier_str = "Tier 3 (Intel / single-GPU)"
-        detail = "; ".join(result.warnings) if result.warnings else tier_str
-        return CheckResult(
-            "gpu_passthrough",
-            Status.WARN,
-            f"no passthrough-capable GPU found ({detail})",
-        )
-
-    result.tier = min(_classify_gpu(g) for g in result.passthrough_candidates)
-
-    if result.blockers:
-        return CheckResult(
-            "gpu_passthrough",
-            Status.FAIL,
-            "; ".join(result.blockers),
-        )
-
-    if result.warnings:
-        candidates_str = ", ".join(f"{g.name} ({g.pci_id})" for g in result.passthrough_candidates)
-        return CheckResult(
-            "gpu_passthrough",
-            Status.WARN,
-            f"Tier {result.tier} GPU candidate(s): {candidates_str}. "
-            + "; ".join(result.warnings),
-        )
-
-    candidates_str = ", ".join(f"{g.name} ({g.pci_id})" for g in result.passthrough_candidates)
-    return CheckResult(
-        "gpu_passthrough",
-        Status.OK,
-        f"Tier {result.tier} passthrough-ready: {candidates_str}",
-    )
+        _evaluate_gpu_candidate(gpu, sys_root, result)
+    return _finalize_gpu_result(result)
 
 
 DEFAULT_CHECKS: List[CheckFn] = [

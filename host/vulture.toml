@@ -1,0 +1,87 @@
+# vulture configuration consumed by `vulture --config host/vulture.toml`.
+#
+# Audits run vulture at `--min-confidence 60` against `host/src`. The
+# baseline before this config landed reported 150+ hits; most were
+# framework false positives (Pydantic v2 model_config / @field_validator)
+# or Phase 4+ scaffolding that is intentionally present today without
+# a production caller yet.
+#
+# When adding a new entry, prefer fixing the underlying cause (delete
+# the surface, or wire a real caller) over allow-listing here. The
+# audit's whole point is to keep the dead-code signal honest.
+
+[tool.vulture]
+paths = ["src"]
+min_confidence = 60
+sort_by_size = true
+
+# Pydantic v2 patterns vulture's static analysis can't follow:
+#   - ``model_config = ConfigDict(...)`` is read by Pydantic's metaclass.
+#   - ``@field_validator`` / ``@model_validator`` decorated methods are
+#     stored in ``__pydantic_validators__`` at class-creation time.
+#   - ``model_post_init`` is a v2 lifecycle hook.
+# Without these ignores vulture flags every field + validator on every
+# Pydantic model in host/src/crossdesk_host/config/.
+ignore_names = [
+  "model_config",
+  "model_post_init",
+  # CrossdeskConfig schema field names — referenced via Pydantic
+  # attribute access in daemon startup, not by literal name lookup.
+  "data_dir",
+  "vm_credentials_file",
+  "settings_file",
+  "install_state_file",
+  "connect_timeout_seconds",
+  "rpc_timeout_seconds",
+  "drag_and_drop_enabled",
+  "camera_enabled",
+  "heartbeat",
+  "peripherals",
+  # PeripheralsConfig method outputs — wired into FreeRDP argv + libvirt
+  # domain XML through conditional config-loaded paths.
+  "to_freerdp_flags",
+  "to_libvirt_xml_fragments",
+  # Pydantic @field_validator-decorated names. These run during model
+  # construction; vulture can't see the decorator's binding.
+  "_port_in_range",
+  "_positive_timeout",
+  "_positive_seconds",
+  "_alpha_in_unit_interval",
+  "_positive_int",
+  "_multiplier_above_one",
+  "_audio_known",
+  "_clipboard_known",
+  "_printer_known",
+  "_features_sorted_unique",
+  "_usb_entries_valid",
+  # AppCatalog dataclass fields — consumed by the GUI's ListView via
+  # ManagementService.ListApps proto, not by another Python module.
+  "executable",
+  "known_issues",
+  "localized_name",
+  "notes",
+  # Catalog facade re-exports from crossdesk_host.catalog package.
+  # cli/apps_cmd.py imports them through __init__.py; vulture's
+  # import graph misses re-exports.
+  "load_ratings",
+  "average_rating",
+  "save_user_app",
+  "load_user_apps",
+]
+
+ignore_decorators = [
+  "@field_validator",
+  "@model_validator",
+  "@property",
+]
+
+# What we DON'T allow-list: Phase 4+ display-pipeline scaffolding
+# (build_rail_argv, spawn_rail_with_auth_check, choose_monitor,
+# enumerate_monitors, auto_scale, path_translation.translate,
+# winapps_compat, is_alive, set_memory, get_memory_stats,
+# list_active_shares). These are documented Phase 4-7 placeholders
+# in `.claude/ignorefiles.md` "Partially broken / deprecated" — vulture
+# will keep flagging them every run, which is the right behavior:
+# when the production caller finally lands, the flag disappears
+# automatically; until then the flag reminds future agents that the
+# code is unfinished.

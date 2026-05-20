@@ -155,10 +155,13 @@ class PeripheralsConfig(BaseModel):
                 )
         return v
 
-    def model_post_init(self, __context: object) -> None:
-        # Cross-field validation: printer_name must be non-empty when mode is
-        # "named".  Cannot use @field_validator for this because both fields
-        # must be resolved before the check is meaningful.
+    def model_post_init(self, _context: object) -> None:
+        # Single underscore (not dunder) so vulture's "unused variable"
+        # detector accepts the intentional ignore. Pydantic's introspection
+        # binds to position, not name, so the rename is safe.
+        # Cross-field validation: printer_name must be non-empty when mode
+        # is "named".  Cannot use @field_validator for this because both
+        # fields must be resolved before the check is meaningful.
         if self.printer_mode == "named" and not self.printer_name.strip():
             raise ValueError(
                 'printer_name must be non-empty when printer_mode = "named"'

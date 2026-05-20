@@ -1,6 +1,6 @@
 # Dead Code / Generated / Reference Manifest
 
-**Last Updated:** 2026-05-20 18:54:17
+**Last Updated:** 2026-05-20 19:00:03
 
 > Files agents should **not** read or analyze unless the task is
 > explicitly to clean them up or modify the generator. The

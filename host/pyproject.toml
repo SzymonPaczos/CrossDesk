@@ -169,3 +169,28 @@ markers = [
     "integration: in-process host+guest mock harness",
     "benchmark: performance microbenchmark, may be skipped in fast CI",
 ]
+
+[tool.bandit]
+# Audit 2026-05-20 enumerated 36 Low/High-confidence findings, *all*
+# subprocess-related (B603/B607/B404). The daemon is a thin
+# orchestrator over libvirt / FreeRDP / journalctl / xrandr / wlr-randr
+# CLI binaries — subprocess is the legitimate IPC mechanism, not a
+# vulnerability. Skipping the noise here means a CI bandit run flags
+# genuine issues (B105 hardcoded secret, B324 weak hash, etc.) without
+# being buried under 30+ expected hits.
+#
+# B404: subprocess module import (informational, by definition).
+# B603: subprocess call without shell=True. We *want* shell=False —
+#       it's the safe form. Bandit flags it anyway because the argv
+#       could in principle be user-controlled; in practice every
+#       call site passes a list of hardcoded strings.
+# B607: start_process_with_partial_path. We deliberately want the
+#       binary picked up from $PATH so distros can substitute their
+#       preferred build (e.g. xfreerdp3 vs xfreerdp). The risk
+#       (PATH-injection by a privileged-process spoofer) is not a
+#       threat in our user-session daemon model.
+# Per-line `# nosec` markers handle the remaining legitimate cases
+# (B101 assert as type-hint, B110 try/except/pass in best-effort
+# cleanup paths).
+skips = ["B404", "B603", "B607"]
+exclude_dirs = ["src/crossdesk_host/proto", "tests", "benches"]

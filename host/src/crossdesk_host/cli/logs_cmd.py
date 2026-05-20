@@ -527,7 +527,10 @@ async def _tail_journalctl(source: str) -> AsyncIterator[_LogRecord]:
     except FileNotFoundError:
         return
 
-    assert proc.stdout is not None
+    # mypy narrows proc.stdout from Optional[StreamReader] to
+    # StreamReader; create_subprocess_exec returns Optional. The
+    # `subprocess.PIPE` request guarantees stdout is set in practice.
+    assert proc.stdout is not None  # nosec B101 — type narrowing
     while True:
         raw = await proc.stdout.readline()
         if not raw:

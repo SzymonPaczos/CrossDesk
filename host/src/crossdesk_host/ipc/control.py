@@ -51,6 +51,229 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         # import the management module.
         self.on_agent_version = on_agent_version
 
+    async def _handle_hello(
+        self,
+        hello: control_pb2.ClientHello,
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+        context: grpc.aio.ServicerContext,
+    ) -> bool:
+        """Validate ClientHello and emit ServerAccept or reject.
+
+        Returns True when the handshake was accepted (caller transitions
+        to READY). Returns False after pushing an AuthFailure frame and
+        calling ``context.abort()`` — the caller's stream will terminate.
+        """
+        # Wire-protocol major version first. A major mismatch means the
+        # frame layout itself may be incompatible; reject before semver.
+        if hello.protocol_version and hello.protocol_version[0] != CROSSDESK_PROTOCOL_VERSION[0]:
+            reason = (
+                f"protocol major mismatch: agent sent {hello.protocol_version!r}, "
+                f"host speaks {CROSSDESK_PROTOCOL_VERSION!r}"
+            )
+            await self._reject_hello(outbound, context, reason)
+            return False
+
+        compat = is_compatible(hello.host_version, self.host_version)
+        if not compat.accepted:
+            logger.warning(
+                "ControlService Hello rejected: %s (client_says=%s, host_actual=%s)",
+                compat.reason,
+                hello.host_version,
+                self.host_version,
+            )
+            await self._reject_hello(outbound, context, compat.reason)
+            return False
+
+        negotiated = negotiate_features(
+            self.supported_features, hello.supported_features
+        )
+        logger.info(
+            "ControlService Hello accepted: client_says=%s host=%s "
+            "protocol_version=%s features=%s",
+            hello.host_version,
+            self.host_version,
+            hello.protocol_version or "(not sent)",
+            negotiated,
+        )
+        if self.on_agent_version is not None:
+            self.on_agent_version(hello.host_version)
+        await outbound.put(
+            control_pb2.ServerFrame(
+                accept=control_pb2.ServerAccept(
+                    guest_version=self.host_version,
+                    negotiated_features=negotiated,
+                    guest_smbios_uuid=hello.host_domain_uuid,
+                    protocol_version=CROSSDESK_PROTOCOL_VERSION,
+                )
+            )
+        )
+        return True
+
+    async def _reject_hello(
+        self,
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+        context: grpc.aio.ServicerContext,
+        reason: str,
+    ) -> None:
+        """Common rejection path: emit AuthFailure frame + abort context."""
+        logger.warning("ControlService Hello rejected: %s", reason)
+        await outbound.put(
+            control_pb2.ServerFrame(
+                auth_failure=control_pb2.AuthFailure(
+                    code=control_pb2.AuthFailure.Code.CODE_FEATURE_NEGOTIATION_FAILED,
+                    detail=reason,
+                )
+            )
+        )
+        await context.abort(
+            grpc.StatusCode.FAILED_PRECONDITION,
+            f"version incompatible: {reason}",
+        )
+
+    async def _handle_launch(
+        self,
+        launch: control_pb2.AppLaunchRequest,
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+    ) -> None:
+        """Acknowledge an AppLaunchRequest with a stub AppLaunched frame.
+
+        Real PID allocation lands when Phase 4 wires the RAIL session to
+        a real FreeRDP spawn — until then 9999 is a placeholder that
+        keeps the proto contract honest.
+        """
+        logger.info(f"AppLaunchRequest: {launch.executable_guest_path}")
+        await outbound.put(
+            control_pb2.ServerFrame(
+                launched=control_pb2.AppLaunched(
+                    request_id=launch.request_id,
+                    process_id=9999,
+                )
+            )
+        )
+
+    def _handle_verify_credentials_result(
+        self,
+        result: control_pb2.VerifyCredentialsResult,
+    ) -> None:
+        """Route the agent's verify-credentials response to the coordinator.
+
+        Logs a warning when no coordinator is wired so the result isn't
+        silently dropped — that would manifest as a stuck rail-launch
+        gate downstream.
+        """
+        if self.verify_coordinator is not None:
+            self.verify_coordinator.deliver(result)
+        else:
+            logger.warning(
+                "Got verify_credentials_result with no coordinator wired; "
+                "request_id=%s",
+                result.request_id,
+            )
+
+    async def _handle_terminate(
+        self,
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+    ) -> None:
+        """Acknowledge a SessionTerminate by emitting SessionClosed."""
+        logger.info("SessionTerminate requested by Guest.")
+        await outbound.put(
+            control_pb2.ServerFrame(
+                closed=control_pb2.SessionClosed(
+                    reason=control_pb2.SessionTerminate.Reason.REASON_USER_QUIT,
+                    detail="Acknowledged",
+                )
+            )
+        )
+
+    async def _dispatch_frame(
+        self,
+        client_frame: control_pb2.ClientFrame,
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+        context: grpc.aio.ServicerContext,
+        state: str,
+    ) -> str:
+        """Route a single ClientFrame to the right handler based on state.
+
+        Returns the new state. Raises via ``context.abort()`` only on
+        protocol violations (HANDSHAKE expected ClientHello, got X).
+        Terminates the loop by setting state to ``"DRAINING"``.
+        """
+        payload_type = client_frame.WhichOneof("payload")
+
+        if state == "HANDSHAKE":
+            if payload_type != "hello":
+                await context.abort(
+                    grpc.StatusCode.FAILED_PRECONDITION,
+                    f"Expected ClientHello, got {payload_type}",
+                )
+            if await self._handle_hello(client_frame.hello, outbound, context):
+                logger.info("Session state: READY")
+                if self.verify_coordinator is not None:
+                    self.verify_coordinator.register_session(outbound)
+                return "READY"
+            return state
+
+        if payload_type == "launch":
+            await self._handle_launch(client_frame.launch, outbound)
+            return "APP_RUNNING"
+        if payload_type == "rail_event":
+            self.rail_manager.handle_rail_event(client_frame.rail_event)
+            return state
+        if payload_type == "verify_credentials_result":
+            self._handle_verify_credentials_result(
+                client_frame.verify_credentials_result
+            )
+            return state
+        if payload_type == "terminate":
+            await self._handle_terminate(outbound)
+            return "DRAINING"
+
+        logger.warning(f"Unhandled payload in {state}: {payload_type}")
+        return state
+
+    async def _consume_session(
+        self,
+        request_iterator: AsyncIterator[control_pb2.ClientFrame],
+        outbound: "asyncio.Queue[Optional[control_pb2.ServerFrame]]",
+        context: grpc.aio.ServicerContext,
+    ) -> None:
+        """Drain ClientFrames from the agent and dispatch them.
+
+        Outermost loop over the request iterator. Each frame's
+        AuthContext is verified, then dispatched via _dispatch_frame.
+        The finally block guarantees cleanup of stream nonce + verify
+        coordinator registration, and signals the outbound generator
+        to exit via the ``None`` sentinel.
+        """
+        state = "HANDSHAKE"
+        stream_nonce: Optional[bytes] = None
+        registered_outbound = False
+        try:
+            async for client_frame in request_iterator:
+                await self.auth_validator.verify_auth_context(
+                    context, client_frame.auth
+                )
+                if stream_nonce is None:
+                    stream_nonce = client_frame.auth.stream_nonce
+
+                previous_state = state
+                state = await self._dispatch_frame(
+                    client_frame, outbound, context, state
+                )
+                if previous_state == "HANDSHAKE" and state == "READY":
+                    registered_outbound = self.verify_coordinator is not None
+                if state == "DRAINING":
+                    return
+        except grpc.RpcError as e:
+            logger.error(f"RPC Error in OpenSession consume: {e}")
+        finally:
+            if stream_nonce is not None:
+                self.auth_validator.remove_stream(stream_nonce)
+            if registered_outbound and self.verify_coordinator is not None:
+                self.verify_coordinator.unregister_session(outbound)
+            # Wake up the main loop so it exits cleanly.
+            await outbound.put(None)
+
     async def OpenSession(
         self,
         request_iterator: AsyncIterator[control_pb2.ClientFrame],
@@ -65,162 +288,9 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         # sentinel — both the consume task's finally block and the
         # terminate handler push it so the generator exits cleanly.
         outbound: asyncio.Queue[Optional[control_pb2.ServerFrame]] = asyncio.Queue()
-        registered = False
-
-        async def consume() -> None:
-            nonlocal registered
-            state = "HANDSHAKE"
-            stream_nonce: Optional[bytes] = None
-            try:
-                async for client_frame in request_iterator:
-                    await self.auth_validator.verify_auth_context(
-                        context, client_frame.auth
-                    )
-                    if stream_nonce is None:
-                        stream_nonce = client_frame.auth.stream_nonce
-
-                    payload_type = client_frame.WhichOneof("payload")
-
-                    if state == "HANDSHAKE":
-                        if payload_type == "hello":
-                            hello = client_frame.hello
-                            # Check wire-protocol major version first — a
-                            # major mismatch means the frame layout itself
-                            # may be incompatible; reject before trying
-                            # semver compatibility.
-                            if hello.protocol_version and hello.protocol_version[0] != CROSSDESK_PROTOCOL_VERSION[0]:
-                                reason = (
-                                    f"protocol major mismatch: agent sent "
-                                    f"{hello.protocol_version!r}, host speaks "
-                                    f"{CROSSDESK_PROTOCOL_VERSION!r}"
-                                )
-                                logger.warning(
-                                    "ControlService Hello rejected: %s",
-                                    reason,
-                                )
-                                await outbound.put(
-                                    control_pb2.ServerFrame(
-                                        auth_failure=control_pb2.AuthFailure(
-                                            code=control_pb2.AuthFailure.Code.CODE_FEATURE_NEGOTIATION_FAILED,
-                                            detail=reason,
-                                        )
-                                    )
-                                )
-                                await context.abort(
-                                    grpc.StatusCode.FAILED_PRECONDITION,
-                                    f"version incompatible: {reason}",
-                                )
-                            compat = is_compatible(hello.host_version, self.host_version)
-                            if not compat.accepted:
-                                logger.warning(
-                                    "ControlService Hello rejected: %s "
-                                    "(client_says=%s, host_actual=%s)",
-                                    compat.reason,
-                                    hello.host_version,
-                                    self.host_version,
-                                )
-                                await outbound.put(
-                                    control_pb2.ServerFrame(
-                                        auth_failure=control_pb2.AuthFailure(
-                                            code=control_pb2.AuthFailure.Code.CODE_FEATURE_NEGOTIATION_FAILED,
-                                            detail=compat.reason,
-                                        )
-                                    )
-                                )
-                                await context.abort(
-                                    grpc.StatusCode.FAILED_PRECONDITION,
-                                    f"version incompatible: {compat.reason}",
-                                )
-                            negotiated = negotiate_features(
-                                self.supported_features, hello.supported_features
-                            )
-                            logger.info(
-                                "ControlService Hello accepted: client_says=%s "
-                                "host=%s protocol_version=%s features=%s",
-                                hello.host_version,
-                                self.host_version,
-                                hello.protocol_version or "(not sent)",
-                                negotiated,
-                            )
-                            if self.on_agent_version is not None:
-                                self.on_agent_version(hello.host_version)
-                            await outbound.put(
-                                control_pb2.ServerFrame(
-                                    accept=control_pb2.ServerAccept(
-                                        guest_version=self.host_version,
-                                        negotiated_features=negotiated,
-                                        guest_smbios_uuid=hello.host_domain_uuid,
-                                        protocol_version=CROSSDESK_PROTOCOL_VERSION,
-                                    )
-                                )
-                            )
-                            state = "READY"
-                            logger.info("Session state: READY")
-                            if self.verify_coordinator is not None:
-                                self.verify_coordinator.register_session(outbound)
-                                registered = True
-                        else:
-                            await context.abort(
-                                grpc.StatusCode.FAILED_PRECONDITION,
-                                f"Expected ClientHello, got {payload_type}",
-                            )
-
-                    elif state == "READY" or state == "APP_RUNNING":
-                        if payload_type == "launch":
-                            logger.info(
-                                f"AppLaunchRequest: {client_frame.launch.executable_guest_path}"
-                            )
-                            await outbound.put(
-                                control_pb2.ServerFrame(
-                                    launched=control_pb2.AppLaunched(
-                                        request_id=client_frame.launch.request_id,
-                                        process_id=9999,
-                                    )
-                                )
-                            )
-                            state = "APP_RUNNING"
-
-                        elif payload_type == "rail_event":
-                            self.rail_manager.handle_rail_event(client_frame.rail_event)
-
-                        elif payload_type == "verify_credentials_result":
-                            if self.verify_coordinator is not None:
-                                self.verify_coordinator.deliver(
-                                    client_frame.verify_credentials_result
-                                )
-                            else:
-                                logger.warning(
-                                    "Got verify_credentials_result with no coordinator wired; "
-                                    "request_id=%s",
-                                    client_frame.verify_credentials_result.request_id,
-                                )
-
-                        elif payload_type == "terminate":
-                            logger.info("SessionTerminate requested by Guest.")
-                            state = "DRAINING"
-                            await outbound.put(
-                                control_pb2.ServerFrame(
-                                    closed=control_pb2.SessionClosed(
-                                        reason=control_pb2.SessionTerminate.Reason.REASON_USER_QUIT,
-                                        detail="Acknowledged",
-                                    )
-                                )
-                            )
-                            return
-
-                        else:
-                            logger.warning(f"Unhandled payload in {state}: {payload_type}")
-            except grpc.RpcError as e:
-                logger.error(f"RPC Error in OpenSession consume: {e}")
-            finally:
-                if stream_nonce is not None:
-                    self.auth_validator.remove_stream(stream_nonce)
-                if registered and self.verify_coordinator is not None:
-                    self.verify_coordinator.unregister_session(outbound)
-                # Wake up the main loop so it exits cleanly.
-                await outbound.put(None)
-
-        consume_task = asyncio.create_task(consume())
+        consume_task = asyncio.create_task(
+            self._consume_session(request_iterator, outbound, context)
+        )
         try:
             while True:
                 frame = await outbound.get()

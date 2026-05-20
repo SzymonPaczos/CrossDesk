@@ -40,7 +40,7 @@ class PathTranslationError(ValueError):
 @dataclass(frozen=True)
 class PathTranslator:
     mount_root: str
-    """Host filesystem root visible inside the share, e.g. ``/home``
+    r"""Host filesystem root visible inside the share, e.g. ``/home``
     for the WinApps-style ``\\tsclient\home`` mapping or the share
     point Phase 5 mounts on demand."""
 

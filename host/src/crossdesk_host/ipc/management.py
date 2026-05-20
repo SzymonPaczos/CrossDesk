@@ -222,8 +222,12 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # yet" message.
         with child_span_scope():
             logger.info("rpc_start", method="ListDiscoveredApps")
-            if False:  # pragma: no cover
-                yield mgmt_pb2.AppEntry()
+            # The `for _ in ()` keeps this a real async generator (the
+            # function signature is AsyncIterator[...]) while emitting
+            # zero items. Replaces an older `if False: yield` which
+            # vulture flagged as an unsatisfiable branch.
+            for _ in ():
+                yield mgmt_pb2.AppEntry()  # pragma: no cover
             logger.info("rpc_end", method="ListDiscoveredApps")
 
     def _curated_apps(self) -> List[mgmt_pb2.AppEntry]:

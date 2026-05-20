@@ -5,6 +5,14 @@ edition = "2021"
 
 license.workspace = true
 repository.workspace = true
+
+# anyhow + tonic are Phase 4+ placeholders. The Win32 message-loop
+# bridge will surface errors via anyhow::Result and stream window
+# events via tonic; both deps stay declared so the impl can drop in
+# without Cargo.toml churn. Whitelist for cargo-machete.
+[package.metadata.cargo-machete]
+ignored = ["anyhow", "tonic"]
+
 [dependencies]
 windows = { workspace = true, features = ["Win32_UI_WindowsAndMessaging", "Win32_UI_Accessibility", "Win32_Foundation", "Win32_System_Threading"] }
 tonic   = { workspace = true }

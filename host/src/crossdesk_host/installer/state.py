@@ -18,13 +18,12 @@ schema.
 
 from __future__ import annotations
 
-import contextlib
 import json
-import os
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
+
+from crossdesk_host.utils import atomic_write
 
 _SCHEMA_VERSION = 1
 
@@ -70,23 +69,6 @@ class InstallState:
         return list(self.steps.keys())
 
 
-def _atomic_write(path: Path, payload: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(path.parent), prefix=path.name + ".", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(payload)
-            f.flush()
-            os.fsync(f.fileno())
-        os.rename(tmp_path, path)
-    except Exception:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp_path)
-        raise
-
-
 def save(state: InstallState, path: Optional[Path] = None) -> None:
     if path is None:
         path = _default_state_file()
@@ -99,7 +81,7 @@ def save(state: InstallState, path: Optional[Path] = None) -> None:
         indent=2,
         sort_keys=False,
     )
-    _atomic_write(path, payload)
+    atomic_write(path, payload)
 
 
 def load(path: Optional[Path] = None) -> InstallState:

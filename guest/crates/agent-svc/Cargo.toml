@@ -22,7 +22,9 @@ mock = ["ipc-vsock/mock"]
 [dependencies]
 anyhow  = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+# tracing-subscriber removed 2026-05-20 audit cleanup: agent-svc only
+# calls `observability::init()` which configures the subscriber inside
+# the observability crate. The dep was direct-listed redundantly.
 tokio   = { workspace = true }
 tonic   = { workspace = true }
 tokio-stream = "0.1"

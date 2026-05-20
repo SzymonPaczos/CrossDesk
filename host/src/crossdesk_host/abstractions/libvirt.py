@@ -36,6 +36,19 @@ class LibvirtController(Protocol):
         """Polite shutdown: ``virsh shutdown`` (ACPI signal)."""
         ...
 
+    def is_running(self) -> bool:
+        """Return ``True`` if the domain is currently in a running state.
+
+        Used by the shutdown CLI to poll for ACPI completion: after
+        ``graceful_shutdown()`` the guest takes seconds to finish its
+        shutdown sequence, and ``is_running()`` returning ``False`` is
+        the signal the CLI uses to declare the shutdown clean.
+
+        Real impl wraps ``virDomain.isActive()`` (1 == running, 0 ==
+        defined-but-off). Raises ``RuntimeError`` on libvirt errors.
+        """
+        ...
+
     def suspend(self) -> None:
         """Pause the running domain (``virsh suspend``). Heartbeat traffic
         will stop; the lifecycle layer must move the FSM into

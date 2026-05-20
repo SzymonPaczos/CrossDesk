@@ -672,9 +672,18 @@ clocks; we coordinate the entire FSM. See `docs/LIFECYCLE.md`.
   `PartOf=graphical-session.target`, `Wants=dbus.socket`,
   `Type=notify`, `Restart=on-failure`. Enabled per-user via
   `systemctl --user enable crossdesk-host`.
-- **[P1] Shutdown handler.** `virsh shutdown` (ACPI graceful)
-  with N-second timeout, fallback to `virsh destroy`. Persist
-  install state. Release inhibitor. Default timeout 30 s.
+- **[~PARTIAL 2026-05-19] Shutdown handler.** `crossdesk vm shutdown`
+  shipped: ACPI graceful shutdown via `libvirt_ctl.graceful_shutdown()`
+  with `--timeout` (default 60s — bumped from 30s to absorb Windows
+  Update post-shutdown work), 1-second `asyncio.sleep` poll of new
+  `LibvirtController.is_running()` Protocol method, fallback to
+  `hard_destroy()` on timeout (exit 2), `--force` skips ACPI (exit 2),
+  libvirt errors → exit 1. `host/src/crossdesk_host/cli/vm_cmd.py`
+  (run_shutdown / _shutdown), wired in `cli/main.py`. Real
+  `is_running` impl wraps `virDomain.isActive()`. Install-state
+  persistence + D-Bus inhibitor release deferred — they belong to the
+  daemon-shutdown path (`lifecycle/coordinator.py`), not this CLI
+  subcommand which is a user-initiated power-down.
 - **[~PARTIAL 2026-05-19] Autopause × balloon × heartbeat coordination.**
   MVP shipped: `AutopauseController` injects `heartbeat_suspend` /
   `heartbeat_resume` callables + `BalloonHook` Protocol (default

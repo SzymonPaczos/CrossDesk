@@ -6,6 +6,7 @@ Subcommands:
 - ``launch <app>``  — launch a Windows app as a RAIL window
 - ``vm credentials`` — show / rotate / set / repair VM password
 - ``vm autostart``   — enable/disable systemd user unit for autostart
+- ``vm shutdown``    — ACPI shutdown with hard-destroy fallback
 - ``doctor``        — pre-flight checks
 - ``metrics``       — print daemon metrics snapshot
 - ``logs``          — aggregate and display log streams
@@ -52,6 +53,7 @@ def _build_parser() -> argparse.ArgumentParser:
     vm_sub = vm.add_subparsers(dest="vm_command", required=True)
     credentials_cmd.add_subparser(vm_sub)
     vm_cmd.add_autostart_subparser(vm_sub)
+    vm_cmd.add_shutdown_subparser(vm_sub)
 
     doctor_cmd.add_subparser(sub)
     logs_cmd.add_subparser(sub)
@@ -77,6 +79,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             return credentials_cmd.run(args)
         if args.vm_command == "autostart":
             return vm_cmd.run_autostart(args)
+        if args.vm_command == "shutdown":
+            return vm_cmd.run_shutdown(args)
     if args.command == "doctor":
         return doctor_cmd.run(args)
     if args.command == "logs":

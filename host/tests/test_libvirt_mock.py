@@ -96,3 +96,44 @@ def test_get_memory_stats_returns_dict_with_actual() -> None:
     stats = ctl.get_memory_stats()
     assert "actual" in stats
     assert isinstance(stats["actual"], int)
+
+
+def test_is_running_default_true_after_construction() -> None:
+    ctl = LibvirtControllerMock()
+    assert ctl.is_running() is True
+    assert ctl.hooks.is_running_count == 1
+
+
+def test_graceful_shutdown_with_poll_countdown_flips_running() -> None:
+    ctl = LibvirtControllerMock()
+    ctl.hooks.shutdown_polls_remaining = 2
+
+    ctl.graceful_shutdown()
+    # First poll: still running, countdown decrements 2 → 1.
+    assert ctl.is_running() is True
+    # Second poll: still running, countdown decrements 1 → 0 (and
+    # flips ``running`` to False atomically on this poll).
+    assert ctl.is_running() is True
+    # Third poll: countdown is 0 and ``running`` is False.
+    assert ctl.is_running() is False
+
+
+def test_hard_destroy_revives_running_flag() -> None:
+    ctl = LibvirtControllerMock()
+    ctl.hooks.running = False  # pretend the VM was off
+
+    ctl.hard_destroy()
+    assert ctl.hooks.running is True
+    assert ctl.is_running() is True
+
+
+def test_fail_next_is_running_raises_then_clears() -> None:
+    ctl = LibvirtControllerMock()
+    ctl.hooks.fail_next_is_running = True
+
+    with pytest.raises(RuntimeError, match="mock-injected is_running failure"):
+        ctl.is_running()
+
+    assert ctl.hooks.fail_next_is_running is False
+    # Subsequent call succeeds.
+    assert ctl.is_running() is True

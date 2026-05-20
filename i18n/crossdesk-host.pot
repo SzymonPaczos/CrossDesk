@@ -223,16 +223,16 @@ msgstr ""
 msgid "warning: could not read FreeRDP log {path}: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:591
+#: host/src/crossdesk_host/cli/logs_cmd.py:594
 #, python-brace-format
 msgid "warning: libvirt log not found, skipping follow: {path}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:602
+#: host/src/crossdesk_host/cli/logs_cmd.py:605
 msgid "warning: no log sources available for --follow"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/logs_cmd.py:629
+#: host/src/crossdesk_host/cli/logs_cmd.py:632
 msgid "warning: guest log streaming is not yet implemented (P2 scope)"
 msgstr ""
 

@@ -36,6 +36,122 @@ is_excluded() {
     return 1
 }
 
+# === 0. Code-quality gates mirroring .github/workflows/ci.yml ============
+# These cover what GitHub Actions checks on every push to main. Running
+# them here means the GH job is just a redundant confirmation, not the
+# source-of-truth — so push spam from CI flakes drops to zero. Skipped
+# selectively based on which paths actually changed.
+
+# --- 0A. Python host: ruff + mypy --strict + mock-import gate + pytest ---
+if echo "$CHANGED_FILES" | grep -qE "^host/"; then
+    if [ -x "$REPO_ROOT/host/.venv/bin/ruff" ]; then
+        echo "🐍 ruff check src/ ..."
+        ( cd "$REPO_ROOT/host" && .venv/bin/ruff check src/ ) || {
+            echo "❌ ruff found issues. Fix locally before pushing."
+            exit 1
+        }
+    fi
+    if [ -x "$REPO_ROOT/host/.venv/bin/mypy" ]; then
+        echo "🐍 mypy --strict src/ ..."
+        # --python-version=3.12: lock to CI target so dev-box pythons
+        # newer than 3.12 (e.g. 3.14) don't spuriously flag the tomli
+        # fallback import in catalog/curated.py et al. as "unused-ignore".
+        ( cd "$REPO_ROOT/host" && .venv/bin/mypy --strict --python-version=3.12 src/ ) || {
+            echo "❌ mypy --strict failed. Fix locally before pushing."
+            exit 1
+        }
+    fi
+    # Mock-import whitelist gate (mirrors ci.yml python-host job).
+    bad="$(cd "$REPO_ROOT/host" && grep -rE 'from crossdesk_host\.[^[:space:]]+\.mock import' src/ \
+            | grep -v 'src/crossdesk_host/integrations/keyring/__init__\.py:' \
+            | grep -v 'src/crossdesk_host/filesystem_ctl/__init__\.py:' \
+            | grep -v 'src/crossdesk_host/daemon\.py:' \
+            || true)"
+    if [ -n "$bad" ]; then
+        echo "❌ production code imports a mock module outside the whitelist:"
+        echo "$bad"
+        exit 1
+    fi
+    if [ -x "$REPO_ROOT/host/.venv/bin/pytest" ]; then
+        echo "🐍 pytest -q (excluding benches/) ..."
+        ( cd "$REPO_ROOT/host" && .venv/bin/pytest -x -q --no-header \
+            --ignore=benches/ -p no:cacheprovider tests/ ) || {
+            echo "❌ pytest failed. Fix locally before pushing."
+            exit 1
+        }
+    fi
+fi
+
+# --- 0B. Rust guest: cargo check + test + clippy (native host arch) ------
+if echo "$CHANGED_FILES" | grep -qE "^guest/|^proto/"; then
+    if command -v cargo >/dev/null 2>&1; then
+        echo "🦀 cargo check (guest, native) ..."
+        ( cd "$REPO_ROOT/guest" && cargo check --workspace --quiet ) || {
+            echo "❌ cargo check failed in guest workspace."
+            exit 1
+        }
+        echo "🦀 cargo test (guest, --features ipc-vsock/mock) ..."
+        ( cd "$REPO_ROOT/guest" && cargo test --workspace --features ipc-vsock/mock \
+            --quiet ) || {
+            echo "❌ cargo test failed in guest workspace."
+            exit 1
+        }
+        echo "🦀 cargo clippy (guest, -D warnings) ..."
+        ( cd "$REPO_ROOT/guest" && cargo clippy --workspace --quiet -- -D warnings ) || {
+            echo "❌ cargo clippy found issues in guest workspace."
+            exit 1
+        }
+    fi
+fi
+
+# --- 0C. Rust GUI: cargo check + test ------------------------------------
+if echo "$CHANGED_FILES" | grep -qE "^gui/|^proto/"; then
+    if command -v cargo >/dev/null 2>&1; then
+        echo "🦀 cargo check (gui) ..."
+        ( cd "$REPO_ROOT/gui" && cargo check --workspace --quiet ) || {
+            echo "❌ cargo check failed in gui workspace."
+            exit 1
+        }
+        echo "🦀 cargo test (gui) ..."
+        ( cd "$REPO_ROOT/gui" && cargo test --workspace --quiet ) || {
+            echo "❌ cargo test failed in gui workspace."
+            exit 1
+        }
+    fi
+fi
+
+# --- 0D. Proto: buf lint + buf format --diff --exit-code -----------------
+if echo "$CHANGED_FILES" | grep -q "^proto/"; then
+    if command -v buf >/dev/null 2>&1; then
+        echo "📦 buf lint ..."
+        ( cd "$REPO_ROOT/proto" && buf lint ) || {
+            echo "❌ buf lint failed."
+            exit 1
+        }
+        echo "📦 buf format --diff --exit-code ..."
+        ( cd "$REPO_ROOT/proto" && buf format --diff --exit-code ) || {
+            echo "❌ buf format: run 'cd proto && buf format -w' to normalize."
+            exit 1
+        }
+    fi
+fi
+
+# --- 0E. i18n .pot synchronization (HARD FAIL when xgettext available) ---
+if echo "$CHANGED_FILES" | grep -qE "^host/src/crossdesk_host/cli/|^gui/.*\.qml$|^gui/.*\.rs$"; then
+    if command -v xgettext >/dev/null 2>&1 && [ -x "$REPO_ROOT/scripts/i18n.sh" ]; then
+        echo "🌍 i18n .pot extraction check ..."
+        bash "$REPO_ROOT/scripts/i18n.sh" extract >/dev/null 2>&1 || true
+        if ! git -C "$REPO_ROOT" diff --exit-code -- \
+                i18n/crossdesk-host.pot \
+                gui/crates/crossdesk-gui/i18n/crossdesk_en.ts \
+                gui/crates/crossdesk-gui/i18n/crossdesk_pl.ts >/dev/null 2>&1; then
+            echo "❌ i18n translation files have uncommitted changes."
+            echo "   Run 'bash scripts/i18n.sh extract' and commit the result."
+            exit 1
+        fi
+    fi
+fi
+
 # === 1. Hardcoded secrets (HARD FAIL) =====================================
 echo "🔐 hardcoded secrets ..."
 SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'

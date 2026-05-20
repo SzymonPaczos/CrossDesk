@@ -19,6 +19,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Force Node 24 for JS actions — see same comment in ci.yml.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   n-minus-1-handshake:
     name: Build prior-minor agent + handshake against current host

@@ -14,11 +14,24 @@ load.
   conventions, branch-per-agent rule, coordination protocol.
 - @.claude/rules/backend.md — Python (host) + Rust (guest)
   path-specific rules.
+- @.claude/rules/audit.md — weekly audit procedure (statyczna +
+  głęboka warstwa; P0/P1/P2 definitions).
+- @.claude/rules/decisions.md — META-decyzje (proces / workflow /
+  layout); ADR `DEC-NNNN` żyją w `docs/DECISIONS.md`.
 - @.claude/architecture.md — stack snapshot (timestamp bumped by
   pre-commit hook so it lands in the commit, not as drift).
 - @.claude/ignorefiles.md — dead code / generated artifacts manifest.
+- @.claude/backlog.md — jedyne źródło otwartej pracy (P0/P1/P2 +
+  pending decisions + blocked).
+- @.claude/status.md — bieżące breakages / partial implementations.
 - @WORK_LOG.md — live "who's working on what" ledger; START/END
   protocol is in AGENTS.md "Agent workflow".
+
+## Audit reminder
+
+Sprawdź `.claude/audit-log.md` przy starcie sesji — jeśli ostatni wpis
+`## Audyt YYYY-MM-DD` jest >7 dni, zaproponuj cotygodniowy audyt
+(skill `weekly-audit`, procedura `.claude/rules/audit.md`).
 
 ## One-time setup per clone
 

@@ -2,7 +2,7 @@
 
 What the system must do (functional, F\*) and how well it must do it
 (non-functional, N\*). Each requirement is uniquely numbered; phases
-in `ROADMAP.md` and items in `FOLLOWUPS.md` reference these IDs.
+in `ROADMAP.md` and items in `.claude/backlog.md` reference these IDs.
 
 **MVP scope:** v0.1.0 = Phases 1–5 (full pipeline including JIT
 VirtioFS) plus supporting cross-cutting work. See `docs/MVP_SCOPE.md`
@@ -141,7 +141,8 @@ Notes on rationale:
 - **N1.5:** Microsoft's "4 GB minimum to install Windows 11" is the
   install-time minimum, not the steady-state idle. Measured idle
   footprints: Win11 Pro fresh install ~2-2.5 GB, Lean profile ~1.2-
-  1.5 GB, Tiny11 (community, rejected per `FOLLOWUPS.md`)
+  1.5 GB, Tiny11 (community, rejected per `.claude/rules/decisions.md`
+  DEC-META-005)
   ~600-800 MB. Our budget reflects what our Lean profile actually
   achieves, not what Tiny11 achieves.
 - **N1.6:** A full destroy/start cycle includes Windows boot which

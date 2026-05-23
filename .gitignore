@@ -45,9 +45,10 @@ gui/target/
 *.qm
 
 # Local mTLS material — never commit private keys.
-# (Note: infra/certs/{ca,host,guest}.{key,crt} are already in git history from
-#  the initial scaffolding; rotate them and run `git filter-repo` if going
-#  public.)
+# Verified 2026-05-23: only `infra/certs/generate_mtls.sh` has ever been
+# tracked under `infra/certs/`; the *.key + *.crt leaves under pki/
+# have always been local-only. Regenerate via the script after every
+# fresh clone.
 infra/certs/pki/
 *.key
 *.csr

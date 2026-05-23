@@ -28,7 +28,7 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 | What does the architecture look like? | `docs/GOALS.md` (vision) + `docs/TECH_STACK.md` (components) |
 | How does distribution + updates look? | `docs/DISTRIBUTION.md` (visual) → `docs/PACKAGING.md` (deep-dive) |
 | What's the security model? | `docs/THREAT_MODEL.md` |
-| What's the roadmap? | `ROADMAP.md` (phases) + `docs/EXECUTION_PLAN.md` (sequenced) + `FOLLOWUPS.md` (action items) |
+| What's the roadmap? | `ROADMAP.md` (phases) + `docs/EXECUTION_PLAN.md` (sequenced) + `.claude/backlog.md` (action items) |
 | Why X over Y? | `docs/DECISIONS.md` (ADRs `DEC-NNNN`) |
 | What does the competition look like? | `docs/COMPETITION.md` + `docs/COMPARISON_WINAPPS.md` |
 | Coding rules? | The "Coding rules" section below |
@@ -60,7 +60,8 @@ The git hooks under `.githooks/` are activated per-clone; see the
 The pre-push hook auto-detects optional security scanners
 (`cargo-audit`, `cargo-deny`, `gitleaks`) and runs them when
 present — installs documented in
-[docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) "How to re-run".
+[.claude/history/2026-05-09-audit-manual.md](.claude/history/2026-05-09-audit-manual.md)
+"How to re-run".
 Set `CROSSDESK_FULL_AUDIT=1` to additionally run pip-audit + bandit
 on every push (adds ~5s). The full sweep — gitleaks history scan,
 semgrep + SARIF, CodeQL, bandit, pip-audit, cargo audit, cargo deny
@@ -73,7 +74,6 @@ push, every PR, and weekly on Mondays.
 crossdesk/
 ├── README.md                 # pitch + quick start
 ├── ROADMAP.md                # 5 phases, terse
-├── FOLLOWUPS.md              # action-item tracking, prioritized by area
 ├── AGENTS.md                 # this file — navigation + coding rules
 │
 ├── docs/
@@ -110,7 +110,7 @@ crossdesk/
 ├── guest/                    # Rust NT service workspace
 │   └── crates/
 │       ├── agent-svc/        # NT service entry point + windows-rs
-│       ├── ipc-vsock/        # AF_VSOCK transport (still TCP-loopback in dev — see FOLLOWUPS)
+│       ├── ipc-vsock/        # AF_VSOCK transport (still TCP-loopback in dev — see .claude/backlog.md)
 │       ├── proto/            # tonic-generated proto types
 │       ├── rail-bridge/      # RAIL window event forwarding
 │       └── fs-mount/         # JIT VirtioFS mount/flush handlers
@@ -198,9 +198,11 @@ When the user asks an agent to "work on the next task":
    today's date to the week ranges).
 4. **Pick the highest-priority unfinished item** in that week's
    "Items" list. P0 before P1 before P2.
-5. **Cross-reference `FOLLOWUPS.md`** for additional context on the
-   item (specific files to touch, dependencies, acceptance
-   criteria).
+5. **Cross-reference `.claude/backlog.md`** for additional context on
+   the item (specific files to touch, dependencies, acceptance
+   criteria). Historical `FOLLOWUPS:NNN` line refs in source code
+   resolve against `.claude/history/2026-05-23-followups-archive.md`
+   (see [DEC-META-004](.claude/rules/decisions.md)).
 6. **Append a START entry to `WORK_LOG.md`** "Active" section, then
    commit + push that one file directly to `main`. This is the only
    exception to the no-direct-main-push rule — see `WORK_LOG.md`
@@ -212,8 +214,9 @@ When the user asks an agent to "work on the next task":
 8. **Implement** the item against its acceptance criteria. Stay
    scoped — don't bundle unrelated refactors.
 9. **Commit** on the feature branch with Conventional Commits.
-   Reference the FOLLOWUPS section keyword in the commit message
-   body so the linkage is searchable.
+   Reference the `.claude/backlog.md` section keyword (e.g.,
+   `backlog: peripherals P1 audio`) in the commit message body so the
+   linkage is searchable.
 10. **Wait for the user to explicitly tell you to merge** before
     merging to `main`. Do not push the feature branch to origin or
     open PRs unless instructed.
@@ -223,7 +226,9 @@ When the user asks an agent to "work on the next task":
     (`git branch -d`) after merge.
 12. **Update `docs/EXECUTION_PLAN.md`**: mark the item ✅ in this
     week's items list. If you discovered new work, add a one-line
-    entry to `FOLLOWUPS.md` under the appropriate section.
+    entry to `.claude/backlog.md` under the appropriate P-section.
+    Closed items move to `.claude/history/completed-work.md` (append-
+    only summary; granular trace stays in `WORK_LOG.md` "Recent").
 13. **Move your `WORK_LOG.md` START entry to "Recent" and append a
     matching END entry**. Commit + push directly to main (same
     exception as step 6).
@@ -232,9 +237,10 @@ The user's preference is **local merges only for code**, no GitHub
 PRs, no GitHub Issues. The exception is `WORK_LOG.md` — its START/END
 entries are pushed directly so parallel agents see them in real
 time. The only sources of truth for "what to do" are
-`docs/EXECUTION_PLAN.md` (this week's work) and `FOLLOWUPS.md`
+`docs/EXECUTION_PLAN.md` (this week's work) and `.claude/backlog.md`
 (everything queued); the source of truth for "what's happening right
-now" is `WORK_LOG.md`.
+now" is `WORK_LOG.md`; the source of truth for bieżące breakages /
+partial implementations is `.claude/status.md`.
 
 ## File boundaries
 
@@ -245,8 +251,14 @@ Agents may freely modify:
 - Tests: anywhere under `host/tests/`, `guest/**/tests/`, etc.
 - Build configs: `host/pyproject.toml`, `guest/Cargo.toml`,
   `gui/Cargo.toml`, lockfiles.
-- `FOLLOWUPS.md` — for marking items complete or adding discovered
-  work. Don't restructure the file without instruction.
+- `.claude/backlog.md` — for marking items complete or adding
+  discovered work. Don't restructure the file without instruction.
+- `.claude/status.md` — for refreshing known-issues / partial
+  implementations as they're shipped or change state.
+- `.claude/history/completed-work.md` — append-only; add a summary
+  line when closing a phase / larger block of work.
+- `.claude/audit-log.md` — `.claude/audit.sh` prepends sections;
+  agents append narrative review during weekly audit.
 - `docs/EXECUTION_PLAN.md` — for marking items ✅ as completed and
   for schedule updates after the user reviews.
 - `WORK_LOG.md` — START / END entries per the protocol in step 6
@@ -300,7 +312,10 @@ the rule files under `.claude/rules/` for you. Read this file
 5. `docs/EXECUTION_PLAN.md` — the week-by-week sequence.
 6. `docs/TECH_STACK.md` — components and stack rationale.
 7. `docs/THREAT_MODEL.md` — what we're defending against.
-8. `FOLLOWUPS.md` — what's queued, prioritized.
+8. `.claude/backlog.md` — what's queued, prioritized (folded from
+   the old FOLLOWUPS.md; archive at
+   `.claude/history/2026-05-23-followups-archive.md`).
+9. `.claude/status.md` — bieżące breakages / partial implementations.
 
 For any specific question, the navigation table at the top of this
 file should point you at the right doc.
@@ -315,7 +330,7 @@ The docs are the source of truth in roughly this order of authority:
 4. `docs/TECH_STACK.md` for component-level design.
 5. `docs/GOALS.md` for vision and scope.
 6. `ROADMAP.md` for phase ordering.
-7. `FOLLOWUPS.md` for queued work.
+7. `.claude/backlog.md` for queued work.
 
 If two documents disagree, the higher-authority one wins. File a fix
 on the lower one in the same PR — never silently work around it.

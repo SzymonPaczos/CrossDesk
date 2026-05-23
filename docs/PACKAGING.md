@@ -219,7 +219,7 @@ binary asset inside whatever Linux package format. It lives at:
 `crossdesk install` reads from `/usr/share/crossdesk/` and copies to
 the secondary OEM disk attached to the Windows VM during install.
 
-Code signing (also in FOLLOWUPS): we plan Sigstore for `agent.exe`
+Code signing (also in `.claude/backlog.md`): we plan Sigstore for `agent.exe`
 initially. EV cert if/when funding/scale warrants. This is a
 security-formalization item; documented here because the package
 must ship the signature artifact alongside the binary.

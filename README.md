@@ -125,7 +125,7 @@ and [flake.nix](flake.nix); deb / rpm hosting is post-MVP per
 | [docs/I18N.md](docs/I18N.md) | Internationalization (English + Polish initial) |
 | [docs/MVP_SCOPE.md](docs/MVP_SCOPE.md) | What ships in v0.1.0 (Phases 1–5 full) |
 | [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) | Week-by-week sequence to MVP |
-| [FOLLOWUPS.md](FOLLOWUPS.md) | Action items, prioritized by area |
+| [.claude/backlog.md](.claude/backlog.md) | Action items, prioritized by area (P0/P1/P2) |
 | [AGENTS.md](AGENTS.md) | Project map + agent workflow + file boundaries |
 
 ## Contributing

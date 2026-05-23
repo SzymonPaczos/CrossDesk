@@ -4,8 +4,8 @@ Status: **Decision accepted — 2026-05-07** (Phase 4.5 / post-MVP P0).
 See `docs/DECISIONS.md` DEC-0009.
 Owner: Phase 4.5 work after MVP demo ships.
 Related: `docs/THREAT_MODEL.md` §C4 (extended on implementation),
-`ROADMAP.md` Phase 4.5 entry, `FOLLOWUPS.md` "GPU passthrough —
-Phase 4.5".
+`ROADMAP.md` Phase 4.5 entry, `.claude/backlog.md` P0 "GPU passthrough
+(Phase 4.5 / post-MVP)".
 
 ## Accepted plan summary
 
@@ -26,13 +26,13 @@ Phase 4.5".
    follow-up**, not part of the GPU passthrough Phase 4.5 work
    itself. LG is what unblocks single-GPU users (with
    compositor-restart hot-switch caveat) and gives Desktop-mode
-   alternative for power users. See `FOLLOWUPS.md` "Looking Glass
-   integration — post-Phase 4.5".
+   alternative for power users. See `.claude/backlog.md` P0 "Looking
+   Glass (post-Phase 4.5)".
 6. **Software-rendered fallback documentation** — the path that
    always works, on every hardware, for productivity apps. Not
    suitable for Photoshop/Premiere but suitable for Word/Outlook/
    Visual Studio. Documented as the universal fallback. See
-   `FOLLOWUPS.md` "Software rendering fallback documentation".
+   `.claude/backlog.md` P1 "Software rendering fallback".
 7. **TA7 (malicious GPU firmware)** added to
    `docs/THREAT_MODEL.md` when GPU passthrough implementation
    lands. Placeholder documented now.

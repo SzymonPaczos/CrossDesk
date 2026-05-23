@@ -15,9 +15,10 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   implement the surface or render an empty state explaining the
   current limitation.
 - **No "✅ done" for mocks.** In `ROADMAP.md`,
-  `docs/EXECUTION_PLAN.md`, and `FOLLOWUPS.md`, "✅ done" means
+  `docs/EXECUTION_PLAN.md`, and `.claude/backlog.md`, "✅ done" means
   *runs against real inputs end-to-end*. A mock or dead-code stub is
-  not done — mark it explicitly (e.g., `🚧 mock`).
+  not done — mark it explicitly (e.g., `🚧 mock` or `[~PARTIAL]` in
+  the backlog).
 - **No client-side AI/LLM features without owner approval.** Cost,
   latency, and prompt-injection surface area make this a
   cross-cutting decision, not an implementation detail. Raise it
@@ -35,7 +36,7 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   Enforced by a CI grep gate in `python-host` (whitelist:
   subpackage `__init__.py` re-exports +
   `daemon.py`'s Phase 3 dev-default). Adding a new bad import
-  needs a matching FOLLOWUPS entry explaining why.
+  needs a matching `.claude/backlog.md` entry explaining why.
 
 ## Communication & work
 
@@ -46,7 +47,7 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   summaries when the user already sees the diff.
 - **Stage long tasks.** Break a multi-hour task into 3–5 stages,
   `/clear` between stages, persist intermediate state to
-  `WORK_LOG.md` notes or `FOLLOWUPS.md` items.
+  `WORK_LOG.md` notes or `.claude/backlog.md` items.
 - **Language: English.** Code, comments, commit messages, and
   in-repo docs are English. UI strings ship as English plus Polish
   via `docs/I18N.md` (gettext + Qt `tr`).

@@ -107,7 +107,7 @@ The agent is too old to talk to this host. Run:
 to update the in-VM agent without reinstalling Windows.
 ```
 
-## `crossdesk upgrade` (already in FOLLOWUPS)
+## `crossdesk upgrade` (already in `.claude/backlog.md`)
 
 The upgrade command:
 
@@ -204,8 +204,8 @@ hit majors.
 - ✅ Versioning policy documented (this file).
 
 ### P1
-- `crossdesk upgrade` agent hot-swap path (already in Operations
-  FOLLOWUPS — extend with handshake-aware sequencing).
+- `crossdesk upgrade` agent hot-swap path (already in `.claude/backlog.md`
+  Operations — extend with handshake-aware sequencing).
 - Capabilities flag system, with documented flag inventory.
 - `crossdesk config migrate` for config-schema bumps.
 

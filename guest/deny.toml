@@ -11,7 +11,7 @@
 #
 # The pre-push hook runs `cargo deny check --hide-inclusion-graph`
 # automatically when cargo-deny is on PATH (see .githooks/pre-push and
-# docs/AUDIT_REPORT.md "How to re-run"). The same check runs on every
+# .claude/history/2026-05-09-audit-manual.md "How to re-run"). The same check runs on every
 # push and PR via .github/workflows/security.yml.
 
 # -----------------------------------------------------------------------
@@ -68,7 +68,7 @@ exceptions = []
 #
 # multiple-versions starts as "warn" so we can see the duplicate graph
 # without blocking pushes; tightening to "deny" is queued in
-# FOLLOWUPS once the windows-sys / wit-bindgen duplicates are resolved
+# the backlog once the windows-sys / wit-bindgen duplicates are resolved
 # upstream (currently dragged in by tonic-build → prost-build).
 #
 # wildcards = "allow" because our internal crates use `path = "../foo"`

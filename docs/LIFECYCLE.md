@@ -110,7 +110,7 @@ Three orthogonal mechanisms that can interact badly:
 
 **Autopause**: after N seconds of no active RAIL session, the host
 suspends the VM (`virsh suspend`). RAM stays allocated; CPU goes
-to zero. Wake on next `crossdesk launch`. Already in FOLLOWUPS.
+to zero. Wake on next `crossdesk launch`. Already in `.claude/backlog.md`.
 
 **virtio-balloon**: the guest can release RAM back to the host
 when it's not using all the allocated memory. The host can request

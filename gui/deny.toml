@@ -15,7 +15,7 @@
 #
 # The pre-push hook runs `cargo deny check --hide-inclusion-graph`
 # automatically when cargo-deny is on PATH (see .githooks/pre-push and
-# docs/AUDIT_REPORT.md "How to re-run"). The same check runs on every
+# .claude/history/2026-05-09-audit-manual.md "How to re-run"). The same check runs on every
 # push and PR via .github/workflows/security.yml.
 
 # -----------------------------------------------------------------------

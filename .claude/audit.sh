@@ -140,9 +140,11 @@ TODO_FILES="$(grep -rEl 'TODO|FIXME|HACK|XXX' \
   host/src guest gui 2>/dev/null | count_lines)"
 add "- files with TODO/FIXME/HACK/XXX (src only): ${TODO_FILES:-0}"
 TEST_FILES_PY="$(find host -name 'test_*.py' 2>/dev/null | count_lines)"
-TEST_FILES_RS="$(find guest gui -path '*/tests/*.rs' -o -name '*_test.rs' 2>/dev/null | count_lines)"
+# Rust: count #[test] / #[tokio::test] occurrences (unit tests live
+# inside src/ mod tests blocks, not under tests/ dirs).
+TEST_ANNOTS_RS="$(grep -rEh '^\s*#\[(test|tokio::test)' --include='*.rs' guest gui 2>/dev/null | count_lines)"
 add "- test files (python): ${TEST_FILES_PY:-0}"
-add "- test files (rust): ${TEST_FILES_RS:-0}"
+add "- #[test] annotations (rust): ${TEST_ANNOTS_RS:-0}"
 add ""
 
 # ----- Drift ---------------------------------------------------------
@@ -156,11 +158,13 @@ if [ -f .claude/architecture.md ]; then
   fi
 fi
 if [ -f .claude/rules/decisions.md ]; then
-  DEC_META="$(grep -cE '^- \*\*DEC-META-[0-9]+' .claude/rules/decisions.md || echo 0)"
+  # grep -c always prints the count on stdout AND exits non-zero when
+  # the count is 0 — `|| echo 0` doubles up the "0\n0"; use `|| true`.
+  DEC_META="$(grep -cE '^## DEC-META-[0-9]+' .claude/rules/decisions.md 2>/dev/null || true)"
   add "- META decisions (status: aktywna): ${DEC_META:-0}"
 fi
 if [ -f docs/DECISIONS.md ]; then
-  DEC_NNNN="$(grep -cE '^## DEC-[0-9]+' docs/DECISIONS.md || echo 0)"
+  DEC_NNNN="$(grep -cE '^## DEC-[0-9]+' docs/DECISIONS.md 2>/dev/null || true)"
   add "- ADR DEC-NNNN total: ${DEC_NNNN:-0}"
 fi
 add ""
@@ -169,7 +173,7 @@ add ""
 add "**Security**"
 add ""
 if has gitleaks; then
-  LEAKS="$(gitleaks detect --no-banner --no-git --source . 2>&1 | grep -cE 'Finding:' || true)"
+  LEAKS="$(gitleaks detect --no-banner --no-git --source . 2>&1 | grep -cE 'Finding:' 2>/dev/null || true)"
   add "- gitleaks worktree findings: ${LEAKS:-0}"
 else
   add "- gitleaks: n/a (use \`CROSSDESK_FULL_AUDIT=1 git push\` for history scan)"

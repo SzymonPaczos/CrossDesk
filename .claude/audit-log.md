@@ -4,6 +4,64 @@ Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na g
 
 ## Audyt 2026-05-23
 
+**Git:** `f2ff03c` on `chore/adopt-claude-toolkit`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 117 files)
+- pytest collected: 783
+- bandit medium/high: 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 26
+- gui cargo-deny issues: 15
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf lint findings: 0
+- buf format diff lines: 0
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint warnings: 0
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 1
+- test files (python): 207
+- #[test] annotations (rust): 79
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-05-20 (3d ago)
+- META decisions (status: aktywna): 5
+- ADR DEC-NNNN total: 15
+
+**Security**
+
+- gitleaks worktree findings: 0
+
+**Cadence**
+
+- previous audit: 2026-05-23 (0d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+---
+
+## Audyt 2026-05-23
+
 **Git:** `ba357af` on `chore/adopt-claude-toolkit`
 
 ### Warstwa statyczna (automat)

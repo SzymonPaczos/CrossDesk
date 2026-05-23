@@ -5,12 +5,17 @@ from __future__ import annotations
 import argparse
 
 from crossdesk_host.doctor import has_failures, run_all
-from crossdesk_host.doctor.checks import Status
+from crossdesk_host.doctor.checks import DEFAULT_CHECKS, GPU_CHECKS, Status
 from crossdesk_host.i18n import _
 
 
 def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
-    sub.add_parser("doctor", help="Run pre-flight environment checks")
+    p = sub.add_parser("doctor", help="Run pre-flight environment checks")
+    p.add_argument(
+        "--gpu",
+        action="store_true",
+        help="Also run GPU passthrough checks (IOMMU, VFIO tier detection)",
+    )
 
 
 # Glyphs are not translated — they are a visual status indicator and
@@ -18,8 +23,11 @@ def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") ->
 _GLYPH = {Status.OK: "✓", Status.WARN: "!", Status.FAIL: "✗"}
 
 
-def run(_args: argparse.Namespace) -> int:
-    results = run_all()
+def run(args: argparse.Namespace) -> int:
+    checks = list(DEFAULT_CHECKS)
+    if args.gpu:
+        checks.extend(GPU_CHECKS)
+    results = run_all(checks)
     for r in results:
         glyph = _GLYPH[r.status]
         # r.name is a check identifier (e.g. "libvirt", "kvm") and stays

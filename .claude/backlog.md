@@ -114,10 +114,10 @@ Strategia: [`docs/VERSIONING.md`](../docs/VERSIONING.md). ADR DEC-0007.
 - **CLI semver commitment v1.x — snapshot test.** Snapshot `--help`
   output, fail on unexpected change. Strategia w `VERSIONING.md`;
   brakuje test'u. `[~PARTIAL]`
-- **`crossdesk config migrate` CLI subcommand.** `vm.toml` `schema_version`
-  shipped; brakuje argparse plumbing w `cli/main.py` + migration registry.
-  Sam `schema_version` pattern też pending: host daemon config + app
-  catalog. `[~PARTIAL]`
+- **`crossdesk config migrate` CLI subcommand.** Shipped 2026-05-23:
+  argparse plumbing + migration logic in `cli/config_cmd.py`; 6 tests.
+  Remaining: migration registry for v2+ schema (host daemon config +
+  app catalog). `[~PARTIAL]`
 
 ### Distribution & packaging
 Strategia: [`docs/PACKAGING.md`](../docs/PACKAGING.md). ADR DEC-0008.
@@ -220,18 +220,17 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 - **GUI launcher / taskbar applet.** Extend Qt6/QML installer wizard
   (`gui/`) → permanent applet: VM start/stop/pause/reboot + app picker.
   WinApps' Yad-based launcher to porównanie.
-- **Desktop notifications via D-Bus.** `SubprocessNotifier` (notify-send
-  wrapper) shipped wired do 3 call sites; `DBusNotifier` brakuje (direct
-  D-Bus, no fork). `[~PARTIAL]`
+- **Desktop notifications via D-Bus.** ✅ `DBusNotifier` shipped
+  2026-05-23 (`integrations/notifications.py`): real dbus-next aio call,
+  sync/async context detection via `asyncio.get_running_loop()`. Wired
+  to 3 call sites via `SubprocessNotifier` interface compatibility.
 
 ### Operations & lifecycle (post-MVP)
-- **`crossdesk doctor` — pre-flight diagnostic.** Wider check list:
-  libvirt service running + `virsh list` succeeds, KVM kernel module,
-  CPU virt extensions, qemu version ≥ minimum, FreeRDP v3+ binary,
-  VSOCK kernel module, free disk ≥30GB, `~/.config/crossdesk/` writable,
-  GPU acceleration (warning, not failure). Wired jako standalone +
-  pre-step `crossdesk install`. (Dziś częściowy doctor istnieje —
-  rozszerz pokrycie.) `[~PARTIAL]`
+- **`crossdesk doctor` — pre-flight diagnostic.** Expanded 2026-05-23:
+  added `check_cpu_virt_extensions`, `check_vsock_module`,
+  `check_qemu_version`, `check_config_dir_writable`; `--gpu` flag wired
+  to GPU_CHECKS. Remaining: wiring as pre-step for `crossdesk install`
+  + free disk check. `[~PARTIAL]`
 - **`crossdesk uninstall` — clean removal.** `virsh destroy` +
   `virsh undefine --remove-all-storage`, każdy `crossdesk-*.desktop`,
   cached ISO, install state. `--keep-config` preserves `vm.toml`;
@@ -246,16 +245,11 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   Notepad jako smoke test (`--launch-test`). Don't open browsers.
 
 ### Cross-platform foundation
-- **Windows registry abstraction (guest side).** Behind `windows-rs`
-  calls w `guest/crates/agent-svc/`. Mock provides builder API dla
-  canned registry trees. Used by future app discovery service. Wymagany
-  jako prerequisite dla "App discovery service" P0.
 
 ### Internationalization
-- **CLI translations wave 2.** `cli/install_cmd.py`, `cli/main.py`,
-  `installer/` package — pozostały English-literal. Wrap `_()` po
-  user testing surfaces strings. Dziś GUI 133 strings + 3 CLI commands
-  przetłumaczone. `[~PARTIAL]`
+- **CLI translations wave 2.** `apps_cmd.py` column headers wrapped
+  2026-05-23; `cli/install_cmd.py`, `installer/` package — still
+  English-literal. `[~PARTIAL]`
 
 ---
 

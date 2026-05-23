@@ -31,6 +31,25 @@ Per-task plik raportu sesji — `.claude/history/YYYY-MM-DD-temat.md`.
   bidi streams shipped; AF_HYPERV vsock dial poza dev nieuruchomione.
   Granularny trace w `WORK_LOG.md` 2026-05-09 → ongoing.
 
+## P1 batch — 2026-05-23
+
+- **DBusNotifier real implementation** — `integrations/notifications.py`
+  replaced Phase 7 no-op stub with real dbus-next aio call; sync/async
+  context detection; `ignorefiles.md` stub entry removed.
+- **`crossdesk config migrate` CLI** — new `cli/config_cmd.py` +
+  argparse wiring in `main.py`; handles missing file, legacy v1, future
+  version error, non-integer version; 6 tests in `test_config_cmd.py`.
+- **Doctor checks expansion** — added `check_cpu_virt_extensions`,
+  `check_vsock_module`, `check_qemu_version`, `check_config_dir_writable`
+  to `doctor/checks.py`; `--gpu` flag in `doctor_cmd.py` wired to
+  `GPU_CHECKS`; 13 tests in `test_doctor_checks.py`.
+- **CLI i18n wave 2** — `apps_cmd.py` column headers wrapped in `_()`.
+- **Windows registry real implementation** — replaced Phase 8 stub in
+  `guest/crates/registry-scan/src/windows_impl.rs` with full
+  `RegEnumKeyExW` + `RegGetValueW` walker covering App Paths +
+  Uninstall HKLM 64/32 + Uninstall HKCU; `registry-scan` added as dep
+  in `agent-svc/Cargo.toml`.
+
 ## Migracja FOLLOWUPS → backlog
 
 - **2026-05-23** — Fold FOLLOWUPS.md (1260 linii) w `.claude/backlog.md`.

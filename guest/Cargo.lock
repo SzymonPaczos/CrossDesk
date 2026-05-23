@@ -12,6 +12,7 @@ dependencies = [
  "observability",
  "proto",
  "rail-bridge",
+ "registry-scan",
  "tokio",
  "tokio-stream",
  "tonic",

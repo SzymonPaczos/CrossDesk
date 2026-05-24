@@ -92,8 +92,8 @@ class DBusNotifier(Notifier):
         icon: str,
         category: str,
     ) -> None:
-        from dbus_next.aio import MessageBus  # type: ignore[import,attr-defined]
         from dbus_next import Variant  # type: ignore[import,attr-defined]
+        from dbus_next.aio import MessageBus  # type: ignore[import,attr-defined]
 
         hints: dict[str, Any] = {
             "urgency": Variant("y", _URGENCY_LEVEL[urgency])

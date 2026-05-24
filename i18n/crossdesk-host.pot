@@ -20,15 +20,73 @@ msgstr ""
 msgid "No apps in catalog."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/apps_cmd.py:71
+#: host/src/crossdesk_host/cli/apps_cmd.py:59
+msgid "ID"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:60
+msgid "Name"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:61
+msgid "Executable"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/apps_cmd.py:74
 msgid ""
 "app {app_id!r} not found in catalog; run 'crossdesk apps list' to see "
 "available apps."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/apps_cmd.py:86
+#: host/src/crossdesk_host/cli/apps_cmd.py:89
 #, python-brace-format
 msgid "installed {name} → {path}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:37
+msgid "unknown config command: {cmd!r}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:52
+#, python-brace-format
+msgid "no vm.toml at {path} — run `crossdesk install` first"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:74
+msgid "vm.toml at {path}: schema_version is not an integer ({val!r})"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:82
+#, python-brace-format
+msgid ""
+"vm.toml is at schema version {file} which is newer than this build supports "
+"(max={current}). Upgrade crossdesk-host or back up the file and run "
+"`crossdesk vm credentials repair` to regenerate."
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:92
+#, python-brace-format
+msgid "vm.toml is already at schema version {v} — nothing to do"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:102
+#, python-brace-format
+msgid "cannot load vm.toml: {err}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:106
+#, python-brace-format
+msgid "vm.toml at {path} is empty or missing credentials"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:110
+#, python-brace-format
+msgid "migrating vm.toml from schema {old} → {new}"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/config_cmd.py:115
+#, python-brace-format
+msgid "done — vm.toml is now at schema version {v}"
 msgstr ""
 
 #: host/src/crossdesk_host/cli/credentials_cmd.py:51

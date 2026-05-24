@@ -13,9 +13,16 @@ isn't on PATH. Net effect on Mac: silent.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Optional
 
 from crossdesk_host.lifecycle.notifications import Notifier, Urgency
+
+_URGENCY_LEVEL = {Urgency.LOW: 0, Urgency.NORMAL: 1, Urgency.CRITICAL: 2}
+
+_NOTIF_BUS = "org.freedesktop.Notifications"
+_NOTIF_PATH = "/org/freedesktop/Notifications"
+_NOTIF_IFACE = "org.freedesktop.Notifications"
 
 
 class DBusNotifier(Notifier):
@@ -52,9 +59,7 @@ class DBusNotifier(Notifier):
     ) -> None:
         if not self.is_available():
             return
-        # End-to-end D-Bus call lands when running on Linux+GNOME/Plasma.
-        # On Mac the import succeeds but bus_init() may fail; we swallow
-        # silently — a failed notification mustn't take down the daemon.
+        # Best-effort: a failed notification must not take down the daemon.
         try:
             self._send_sync(summary, body, urgency, icon, category)
         except Exception:
@@ -68,9 +73,48 @@ class DBusNotifier(Notifier):
         icon: str,
         category: str,
     ) -> None:
-        # Phase 7 stub. Wiring the actual asyncio loop + dbus-next call
-        # requires a running asyncio context (the daemon has one). For
-        # now we shape the API; daemon integration lands when the
-        # mgmt-socket client subscribes to recovery events from the
-        # Status stream and dispatches into :class:`DBusNotifier`.
-        _ = (summary, body, urgency, icon, category)
+        try:
+            loop = asyncio.get_running_loop()
+            # Inside a running event loop (daemon context): schedule
+            # fire-and-forget so the caller is not blocked.
+            loop.create_task(
+                self._send_async(summary, body, urgency, icon, category)
+            )
+        except RuntimeError:
+            # No running event loop (CLI or test context).
+            asyncio.run(self._send_async(summary, body, urgency, icon, category))
+
+    async def _send_async(
+        self,
+        summary: str,
+        body: str,
+        urgency: Urgency,
+        icon: str,
+        category: str,
+    ) -> None:
+        from dbus_next.aio import MessageBus  # type: ignore[import,attr-defined]
+        from dbus_next import Variant  # type: ignore[import,attr-defined]
+
+        hints: dict[str, Any] = {
+            "urgency": Variant("y", _URGENCY_LEVEL[urgency])
+        }
+        if category:
+            hints["category"] = Variant("s", category)
+
+        bus = await MessageBus().connect()
+        try:
+            introspection = await bus.introspect(_NOTIF_BUS, _NOTIF_PATH)
+            obj = bus.get_proxy_object(_NOTIF_BUS, _NOTIF_PATH, introspection)
+            iface = obj.get_interface(_NOTIF_IFACE)
+            await iface.call_notify(  # type: ignore[attr-defined]
+                self.app_name,
+                0,       # replaces_id: 0 = new notification each call
+                icon,
+                summary,
+                body,
+                [],      # actions
+                hints,
+                5000,    # expire_timeout_ms
+            )
+        finally:
+            bus.disconnect()  # type: ignore[no-untyped-call]

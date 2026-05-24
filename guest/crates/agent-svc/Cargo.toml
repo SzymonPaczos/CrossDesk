@@ -33,6 +33,7 @@ proto   = { path = "../proto" }
 ipc-vsock = { path = "../ipc-vsock" }
 rail-bridge = { path = "../rail-bridge" }
 fs-mount = { path = "../fs-mount" }
+registry-scan = { path = "../registry-scan" }
 
 # windows-service and the windows crate are Windows-only; conditionally declared
 # so the crate still resolves on Linux toolchains used for cross-compilation checks.

@@ -56,7 +56,10 @@ def _run_list() -> int:
 
     id_w = max(len(a.app_id) for a in apps)
     name_w = max(len(a.name) for a in apps)
-    header = f"{'ID':<{id_w}}  {'Name':<{name_w}}  Executable"
+    col_id = _("ID")
+    col_name = _("Name")
+    col_exe = _("Executable")
+    header = f"{col_id:<{id_w}}  {col_name:<{name_w}}  {col_exe}"
     print(header)
     print("-" * len(header))
     for a in apps:

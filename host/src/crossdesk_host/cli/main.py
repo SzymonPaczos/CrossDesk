@@ -26,6 +26,7 @@ from typing import List, Optional
 
 from crossdesk_host.cli import (
     apps_cmd,
+    config_cmd,
     credentials_cmd,
     doctor_cmd,
     install_cmd,
@@ -48,6 +49,7 @@ def _build_parser() -> argparse.ArgumentParser:
     install_cmd.add_subparser(sub)
     apps_cmd.add_subparser(sub)
     launch_cmd.add_subparser(sub)
+    config_cmd.add_subparser(sub)
 
     vm = sub.add_parser("vm", help="VM lifecycle commands")
     vm_sub = vm.add_subparsers(dest="vm_command", required=True)
@@ -74,6 +76,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return apps_cmd.run(args)
     if args.command == "launch":
         return launch_cmd.run(args)
+    if args.command == "config":
+        return config_cmd.run(args)
     if args.command == "vm":
         if args.vm_command == "credentials":
             return credentials_cmd.run(args)

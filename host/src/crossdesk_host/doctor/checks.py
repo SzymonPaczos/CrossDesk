@@ -442,11 +442,153 @@ def check_gpu_passthrough(
     return _finalize_gpu_result(result)
 
 
+def check_cpu_virt_extensions() -> CheckResult:
+    """Confirm VMX (Intel) or SVM (AMD) CPU flags are exposed to the OS.
+
+    On non-Linux hosts we skip — ``/proc/cpuinfo`` doesn't exist there.
+    """
+    if not _is_linux():
+        return CheckResult(
+            "cpu_virt",
+            Status.WARN,
+            "non-Linux host — CPU virtualisation check skipped",
+        )
+    try:
+        cpuinfo = Path("/proc/cpuinfo").read_text(encoding="utf-8")
+    except OSError as exc:
+        return CheckResult("cpu_virt", Status.WARN, f"cannot read /proc/cpuinfo: {exc}")
+    flags_line = next(
+        (line for line in cpuinfo.splitlines() if line.startswith("flags")), ""
+    )
+    if "vmx" in flags_line or "svm" in flags_line:
+        flag = "vmx" if "vmx" in flags_line else "svm"
+        return CheckResult("cpu_virt", Status.OK, f"{flag} flag present")
+    return CheckResult(
+        "cpu_virt",
+        Status.FAIL,
+        "neither vmx (Intel VT-x) nor svm (AMD-V) found in /proc/cpuinfo. "
+        "Enable CPU virtualisation in BIOS/UEFI.",
+    )
+
+
+def check_vsock_module() -> CheckResult:
+    """Check that the AF_VSOCK kernel module is loaded.
+
+    CrossDesk uses VSOCK for host↔guest gRPC transport. Without the
+    module the guest agent can't connect.
+    """
+    if not _is_linux():
+        return CheckResult(
+            "vsock",
+            Status.WARN,
+            "non-Linux host — VSOCK module check skipped",
+        )
+    vsock_dev = Path("/dev/vsock")
+    if vsock_dev.exists():
+        return CheckResult("vsock", Status.OK, "/dev/vsock present")
+    # Fall back to checking lsmod — the device may not be created until
+    # a VM is started.
+    if shutil.which("lsmod") is not None:
+        try:
+            result = subprocess.run(
+                ["lsmod"],
+                capture_output=True,
+                text=True,
+                timeout=5.0,
+            )
+            if "vsock" in result.stdout or "vhost_vsock" in result.stdout:
+                return CheckResult(
+                    "vsock", Status.OK, "vsock module loaded (no /dev/vsock yet)"
+                )
+        except (subprocess.SubprocessError, OSError):
+            pass
+    return CheckResult(
+        "vsock",
+        Status.FAIL,
+        "/dev/vsock missing and vsock not in lsmod. "
+        "Load with: modprobe vsock vhost_vsock (add to /etc/modules for persistence).",
+    )
+
+
+def check_qemu_version(min_version: tuple[int, int] = (7, 0)) -> CheckResult:
+    """Verify qemu-system-x86_64 meets the minimum version requirement.
+
+    QEMU 7.0+ is required for reliable VSOCK + virtiofs support.
+    """
+    binary = shutil.which("qemu-system-x86_64")
+    if binary is None:
+        if not _is_linux():
+            return CheckResult(
+                "qemu",
+                Status.WARN,
+                "non-Linux host — QEMU check skipped",
+            )
+        return CheckResult(
+            "qemu",
+            Status.FAIL,
+            "qemu-system-x86_64 not found. Install qemu-system-x86 (deb) / "
+            "qemu-kvm (rpm) / qemu (Arch).",
+        )
+    try:
+        result = subprocess.run(
+            [binary, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        return CheckResult("qemu", Status.WARN, f"qemu --version failed: {exc}")
+    # "QEMU emulator version 8.2.3" or "QEMU emulator version 7.0.0 (Debian ...)"
+    m = re.search(r"version\s+(\d+)\.(\d+)", result.stdout)
+    if not m:
+        return CheckResult(
+            "qemu", Status.WARN, f"could not parse qemu version from: {result.stdout[:80]!r}"
+        )
+    major, minor = int(m.group(1)), int(m.group(2))
+    found = (major, minor)
+    if found < min_version:
+        return CheckResult(
+            "qemu",
+            Status.FAIL,
+            f"found QEMU {major}.{minor}; need >= {min_version[0]}.{min_version[1]}. "
+            "Upgrade your QEMU package.",
+        )
+    return CheckResult("qemu", Status.OK, f"QEMU {major}.{minor}")
+
+
+def check_config_dir_writable() -> CheckResult:
+    """Verify ``~/.config/crossdesk/`` is writable.
+
+    vm.toml, settings.toml, and app catalog live there; if it's not
+    writable ``crossdesk install`` will fail immediately.
+    """
+    config_dir = Path.home() / ".config" / "crossdesk"
+    try:
+        config_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return CheckResult(
+            "config_dir",
+            Status.FAIL,
+            f"cannot create ~/.config/crossdesk: {exc}",
+        )
+    if os.access(config_dir, os.W_OK):
+        return CheckResult("config_dir", Status.OK, str(config_dir))
+    return CheckResult(
+        "config_dir",
+        Status.FAIL,
+        f"{config_dir} exists but is not writable by the current user.",
+    )
+
+
 DEFAULT_CHECKS: List[CheckFn] = [
+    check_cpu_virt_extensions,
     check_kvm_device,
+    check_vsock_module,
+    check_qemu_version,
     check_freerdp_available,
     check_libvirt_session,
     check_disk_space,
+    check_config_dir_writable,
     check_vm_credentials,
 ]
 

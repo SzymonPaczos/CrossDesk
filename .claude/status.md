@@ -72,8 +72,8 @@ prac — `history/completed-work.md`.
   daemon-shutdown path (`lifecycle/coordinator.py`).
 - **Desktop notifications** — `error_notifications.py` z 5 helperami +
   wired do HeartbeatServiceServicer / LifecycleCoordinator / RailManager;
-  `DBusNotifier` jeszcze nie ma (dziś `SubprocessNotifier` jako
-  `notify-send` wrapper).
+  `DBusNotifier` shipped 2026-05-23 (dbus-next aio path); runtime
+  verification gated on Linux session bus.
 
 ## Ostatnio zamknięte (krótka pamięć, pełne dane w `history/completed-work.md`)
 

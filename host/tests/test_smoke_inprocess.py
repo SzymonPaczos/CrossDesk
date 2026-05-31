@@ -41,16 +41,22 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import grpc
 import pytest
 
+from crossdesk_host.catalog.schema import AppEntry
+from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController
+from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
+from crossdesk_host.installer.credentials import VmCredentials
+from crossdesk_host.ipc import management
 from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.ipc.control import ControlServiceServicer
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
+from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator
-from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.observability import configure_logging
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor
@@ -59,7 +65,9 @@ from crossdesk_host.proto.crossdesk.v1 import (
     control_pb2_grpc,
     filesystem_pb2_grpc,
     heartbeat_pb2_grpc,
+    mgmt_pb2,
 )
+from crossdesk_host.watchdog import HeartbeatFsm
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKI = _REPO_ROOT / "infra" / "certs" / "pki"
@@ -669,6 +677,105 @@ async def test_verify_credentials_roundtrip_through_real_agent(
         assert bad.status == (
             control_pb2.VerifyCredentialsResult.Status.STATUS_FAIL_BAD_CREDENTIALS
         ), f"expected FAIL_BAD_CREDENTIALS, got {bad}"
+    finally:
+        if proc.returncode is None:
+            proc.terminate()
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+        drain_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await drain_task
+
+
+async def test_launch_spawns_freerdp_through_real_agent(
+    host_with_port_and_logs: "tuple[int, io.StringIO]",
+    verify_coordinator: VerifyCoordinator,
+    cargo_built_agent: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """End-to-end RAIL launch (host-side, mock FreeRDP): the management
+    Launch RPC resolves the app, runs the credential gate over the live
+    Rust agent's OpenSession stream (VerifyCoordinator → ServerFrame →
+    agent mock → ClientFrame result), and on OK spawns via the injected
+    FreeRDPInvocation. Proves the whole launch chain is wired; only the
+    FreeRDP process itself is a mock (real spawn needs a guest RDP server).
+
+    Credentials use the agent mock's ``__inject_ok__`` username so the gate
+    passes without real LogonUserW (Stage 4 / post-hardware).
+    """
+    port, _ = host_with_port_and_logs
+    pki = _stage_agent_pki(tmp_path)
+
+    env = {
+        **os.environ,
+        "CROSSDESK_PKI_DIR": str(pki),
+        "CROSSDESK_HOST_ENDPOINT": f"https://127.0.0.1:{port}",
+        "CROSSDESK_DOMAIN_UUID": "launch-rpc-test",
+        "RUST_LOG": "info",
+    }
+
+    proc = await asyncio.create_subprocess_exec(
+        str(cargo_built_agent),
+        env=env,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stderr_sink: list[bytes] = []
+    drain_task = asyncio.create_task(_drain_subprocess_logs(proc, stderr_sink))
+
+    # The management servicer shares the SAME verify_coordinator the control
+    # servicer registers the live agent session with; FreeRDP is mocked so
+    # no real xfreerdp spawns.
+    mock_freerdp = MockFreeRDPInvocation()
+    servicer = ManagementServiceServicer(
+        MgmtState(fsm=HeartbeatFsm()),
+        LibvirtControllerMock(),
+        freerdp=mock_freerdp,
+        verify_coordinator=verify_coordinator,
+    )
+    monkeypatch.setattr(
+        management,
+        "find_app",
+        lambda app_id, path=None: AppEntry(
+            app_id="notepad", name="Notepad", win_executable="C:\\Windows\\notepad.exe"
+        ),
+    )
+    # __inject_ok__ username → the agent mock returns STATUS_OK.
+    monkeypatch.setattr(
+        management.credentials,
+        "load",
+        lambda path=None: VmCredentials(username="__inject_ok__", password="ignored"),
+    )
+
+    try:
+        deadline = asyncio.get_event_loop().time() + 30.0
+        while asyncio.get_event_loop().time() < deadline:
+            if verify_coordinator.session_count() > 0:
+                break
+            await asyncio.sleep(0.1)
+        else:
+            agent_stderr = b"".join(stderr_sink).decode("utf-8", errors="replace")
+            pytest.fail(
+                "session never registered with VerifyCoordinator within 30s; "
+                f"agent stderr:\n{agent_stderr}"
+            )
+
+        ctx = MagicMock()
+        ctx.cancelled.return_value = False
+        response = await servicer.Launch(mgmt_pb2.LaunchRequest(app_id="notepad"), ctx)
+
+        assert response.ok, f"launch failed: {response.error!r}"
+        # The credential gate round-tripped through the real agent and then
+        # FreeRDP was spawned exactly once with the resolved notepad argv.
+        assert len(mock_freerdp.hooks.spawned_argvs) == 1
+        argv = mock_freerdp.hooks.spawned_argvs[0]
+        assert any("notepad.exe" in part for part in argv)
+        assert "/wm-class:notepad" in argv
+        assert response.request_id.startswith("rail-")
     finally:
         if proc.returncode is None:
             proc.terminate()

@@ -1,0 +1,121 @@
+"""Tests for the ``crossdesk install`` step pipeline (cli/install_cmd.py).
+
+The handler table is exercised with the doctor probe and disk-writing steps
+monkeypatched, so the dispatch / state-persistence / gating logic runs on any
+platform without a real VM, libvirt, or ~/.config writes.
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import pytest
+
+from crossdesk_host.cli import install_cmd
+from crossdesk_host.doctor.checks import CheckResult, Status
+from crossdesk_host.installer import credentials, state, tools_iso
+
+
+def _args(*, iso_path: Path | None = None, dry_run: bool = False) -> argparse.Namespace:
+    return argparse.Namespace(iso_path=iso_path, lean=False, dry_run=dry_run)
+
+
+@pytest.fixture(autouse=True)
+def _state_in_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    sf = tmp_path / "install.state.json"
+    monkeypatch.setattr(state, "default_state_file", lambda: sf)
+    return sf
+
+
+def _ok_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.OK)])
+    monkeypatch.setattr(install_cmd, "has_failures", lambda results: False)
+
+
+def test_dry_run_marks_every_step_done(_state_in_tmp: Path) -> None:
+    rc = install_cmd.run(_args(dry_run=True))
+    assert rc == 0
+    s = state.load(_state_in_tmp)
+    assert all(s.is_done(step) for step in install_cmd._STEPS)
+
+
+def test_doctor_failure_stops_pipeline(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:
+    monkeypatch.setattr(
+        install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.FAIL, "no /dev/kvm")]
+    )
+    monkeypatch.setattr(install_cmd, "has_failures", lambda results: True)
+
+    rc = install_cmd.run(_args())
+
+    assert rc == 1
+    s = state.load(_state_in_tmp)
+    assert not s.is_done("doctor")
+    assert not s.is_done("generate_credentials")
+
+
+def test_host_side_steps_run_then_gate_at_libvirt(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, _state_in_tmp: Path
+) -> None:
+    _ok_doctor(monkeypatch)
+    iso = tmp_path / "Win11.iso"
+    iso.write_bytes(b"fake-iso")
+    monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
+    # Point the tools-ISO inputs at fixtures so resolution is deterministic
+    # regardless of whether agent.exe has been built on this box.
+    for env, name in (
+        ("CROSSDESK_AGENT_EXE", "agent.exe"),
+        ("CROSSDESK_PUBLISHER_CA", "ca.crt"),
+        ("CROSSDESK_AUTOUNATTEND", "autounattend.xml"),
+    ):
+        f = tmp_path / name
+        f.write_bytes(b"x")
+        monkeypatch.setenv(env, str(f))
+    built: dict[str, Path] = {}
+
+    def fake_build(**kw: Path) -> Path:
+        kw["output_iso"].write_bytes(b"ISO")
+        built["out"] = kw["output_iso"]
+        return kw["output_iso"]
+
+    monkeypatch.setattr(tools_iso, "build_tools_iso", fake_build)
+
+    rc = install_cmd.run(_args(iso_path=iso))
+
+    assert rc == 1  # gated at create_libvirt_domain
+    s = state.load(_state_in_tmp)
+    assert s.is_done("doctor")
+    assert s.is_done("download_iso")
+    assert s.is_done("generate_credentials")
+    assert s.is_done("build_tools_iso")
+    assert not s.is_done("create_libvirt_domain")
+    # The tools ISO landed beside the install state.
+    assert built["out"] == _state_in_tmp.parent / "tools.iso"
+    assert built["out"].is_file()
+
+
+def test_download_iso_requires_iso_path(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:
+    _ok_doctor(monkeypatch)
+    rc = install_cmd.run(_args(iso_path=None))  # no --iso-path → Fido not wired
+    assert rc == 1
+    s = state.load(_state_in_tmp)
+    assert s.is_done("doctor")
+    assert not s.is_done("download_iso")
+
+
+def test_build_tools_iso_fails_when_agent_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, _state_in_tmp: Path
+) -> None:
+    _ok_doctor(monkeypatch)
+    iso = tmp_path / "Win11.iso"
+    iso.write_bytes(b"fake-iso")
+    monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
+    # Force the agent.exe input to a path that does not exist.
+    monkeypatch.setenv("CROSSDESK_AGENT_EXE", str(tmp_path / "nope" / "agent.exe"))
+
+    rc = install_cmd.run(_args(iso_path=iso))
+
+    assert rc == 1
+    s = state.load(_state_in_tmp)
+    assert s.is_done("generate_credentials")
+    assert not s.is_done("build_tools_iso")

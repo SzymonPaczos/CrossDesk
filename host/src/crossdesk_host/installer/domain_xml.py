@@ -37,6 +37,11 @@ class DomainSpec:
     vcpus: int = 4
     vsock_cid: int = _DEFAULT_GUEST_CID
     emulator: str = "/usr/bin/qemu-system-x86_64"
+    vsock_enabled: bool = True
+    """Include the AF_VSOCK device. Disabled when ``/dev/vhost-vsock`` is
+    not accessible to the qemu:///session process (a udev-rule / permission
+    fix is required) — Windows installs fine without it; vsock only carries
+    the post-install agent connection (DEC-0017)."""
 
 
 def build_domain_xml(spec: DomainSpec) -> str:
@@ -94,9 +99,11 @@ def build_domain_xml(spec: DomainSpec) -> str:
     tpm = ET.SubElement(devices, "tpm", {"model": "tpm-crb"})
     ET.SubElement(tpm, "backend", {"type": "emulator", "version": "2.0"})
 
-    # AF_VSOCK control channel back to the host (guest CID fixed).
-    vsock = ET.SubElement(devices, "vsock", {"model": "virtio"})
-    ET.SubElement(vsock, "cid", {"auto": "no", "address": str(spec.vsock_cid)})
+    # AF_VSOCK control channel back to the host (guest CID fixed). Omitted
+    # when /dev/vhost-vsock is not accessible — see DomainSpec.vsock_enabled.
+    if spec.vsock_enabled:
+        vsock = ET.SubElement(devices, "vsock", {"model": "virtio"})
+        ET.SubElement(vsock, "cid", {"auto": "no", "address": str(spec.vsock_cid)})
 
     ET.SubElement(devices, "memballoon", {"model": "virtio"})
 

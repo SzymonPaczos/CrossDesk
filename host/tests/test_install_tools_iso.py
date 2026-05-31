@@ -35,10 +35,33 @@ def test_missing_agent_raises(tmp_path: Path) -> None:
         build_tools_iso(**ins, output_iso=tmp_path / "tools.iso", xorriso="xorriso")
 
 
-def test_xorriso_missing_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_falls_back_to_pycdlib_when_no_xorriso(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # No xorriso on PATH → the pure-Python pycdlib writer builds the ISO.
     ins = _stub_inputs(tmp_path)
     monkeypatch.setattr(tools_iso.shutil, "which", lambda _name: None)
-    with pytest.raises(ToolsIsoError, match="xorriso not found"):
+    out = tmp_path / "tools.iso"
+
+    result = build_tools_iso(**ins, output_iso=out)
+
+    assert result == out
+    data = out.read_bytes()
+    assert len(data) > 0
+    assert b"CROSSDESK" in data  # volume id landed → right image
+    # The Joliet long names autounattend.xml copies from D:\ are present.
+    assert "CrossDeskAgent.exe".encode("utf-16-be") in data
+    assert "publisher-root-ca.crt".encode("utf-16-be") in data
+
+
+def test_no_iso_backend_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Neither xorriso nor pycdlib available → a clear, actionable error.
+    import sys
+
+    ins = _stub_inputs(tmp_path)
+    monkeypatch.setattr(tools_iso.shutil, "which", lambda _name: None)
+    monkeypatch.setitem(sys.modules, "pycdlib", None)
+    with pytest.raises(ToolsIsoError, match="no ISO builder available"):
         build_tools_iso(**ins, output_iso=tmp_path / "tools.iso")
 
 

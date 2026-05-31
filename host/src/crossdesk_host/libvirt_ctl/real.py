@@ -63,6 +63,22 @@ class RealLibvirtController(LibvirtController):
 
         conn = self._connect()
         logger.info("define_and_start: defineXML + create for %s", self.domain_name)
+        # A prior definition (or a failed earlier attempt) would collide:
+        # defineXML mints a fresh UUID each call, so libvirt rejects it as
+        # "already exists with uuid <old>". Clear any existing domain of this
+        # name first — UNDEFINE_NVRAM also drops the per-domain UEFI nvram so
+        # a clean redefine works.
+        try:
+            existing = conn.lookupByName(self.domain_name)
+        except libvirt.libvirtError:
+            existing = None
+        if existing is not None:
+            try:
+                if existing.isActive():
+                    existing.destroy()
+                existing.undefineFlags(libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
+            except libvirt.libvirtError as exc:
+                raise RuntimeError(f"undefine existing domain failed: {exc}") from exc
         try:
             dom = conn.defineXML(domain_xml)
         except libvirt.libvirtError as exc:

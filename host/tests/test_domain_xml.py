@@ -62,6 +62,23 @@ def test_vsock_tpm_balloon_present() -> None:
     assert root.find("clock").get("offset") == "localtime"  # type: ignore[union-attr]
 
 
+def test_vsock_omitted_when_disabled() -> None:
+    # When /dev/vhost-vsock is inaccessible the install drops the device so
+    # the VM still boots (DEC-0017); the XML must then carry no <vsock>.
+    spec = DomainSpec(
+        name="windows-guest",
+        disk_path=Path("/d.qcow2"),
+        windows_iso=Path("/w.iso"),
+        tools_iso=Path("/t.iso"),
+        vsock_enabled=False,
+    )
+    root = ET.fromstring(build_domain_xml(spec))
+    assert root.find("devices/vsock") is None
+    # The rest of the device set is intact.
+    assert root.find("devices/tpm") is not None
+    assert len(root.findall("devices/disk")) == 3
+
+
 def test_paths_with_special_chars_are_escaped() -> None:
     # A path containing & must not break the XML (ElementTree escapes it).
     root = _xml(disk="/data/A & B/win.qcow2")

@@ -399,6 +399,20 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   servicers ominęto przez `AsyncIterator`. Jeśli grpc-stubs bump narrows
   parent signature, override może resurface; eyes on
   `crossdesk_host.proto.*_pb2_grpc.pyi` after every regeneration.
+- **Feature-gate Phase-5 fs-mount mocks.** `mock_generate_release_ack()`
+  ([`guest/crates/fs-mount/src/flush.rs:31`](../guest/crates/fs-mount/src/flush.rs))
+  zwraca hardcoded `total_bytes_written: 1024`; wołane bezwarunkowo z
+  `agent-svc/src/filesystem.rs:98` (bez `#[cfg(feature)]`). Phase-5 stub
+  (zob. `status.md`), ale brak cfg-gate = placeholder trafia do
+  prod-builda. Schować za `mock` feature jak reszta. (audyt 2026-05-31)
+- **mTLS failure-mode testy.** `AuthValidator` pokrywa rejection paths,
+  ale brak dedykowanych testów cert-pinning / hostname-validation failure.
+  `test_smoke_inprocess.py` to happy-path + trace. (audyt 2026-05-31,
+  rekomendacja krytyka)
+- **AGENTS.md „Repository layout" drift.** Sekcja listuje 5 podkatalogów
+  `host/src/crossdesk_host/`, faktycznie 23 (m.in. `cli/`, `doctor/`,
+  `abstractions/`, `lifecycle/`, `filesystem_ctl/`…). AGENTS.md =
+  boundary file → edycja wymaga zgody właściciela. (audyt 2026-05-31)
 
 ---
 

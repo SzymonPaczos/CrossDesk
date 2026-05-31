@@ -2,6 +2,108 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-05-31
+
+**Git:** `73c6141` on `main`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 118 files)
+- pytest collected: 804
+- bandit: n/a
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 1
+- gui cargo check warnings: 2
+- gui clippy errors (-D warnings): 1
+- cargo-deny: n/a
+- cargo-audit: n/a
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+0
+- test files (python): 214
+- #[test] annotations (rust): 79
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-05-24 (20604d ago)
+- META decisions (status: aktywna): 5
+- ADR DEC-NNNN total: 15
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-05-23 (20604d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Warstwa głęboka (agent — workflow, 17 agentów, fan-out + adwersarialna weryfikacja)
+
+Pierwszy audyt na świeżym Linux+KVM boxie (po pełnym bootstrapie dev-env + runtime).
+
+**Sprostowania warstwy statycznej (artefakty świeżego boxa, nie defekty kodu):**
+- `guest clippy errors: 1` — błędne. `cargo clippy --workspace -- -D warnings` exit 0; guest **czysty**. Liczba w automacie to przeciek z gui / cold-build.
+- `gui cargo check warnings: 2` + `gui clippy errors: 1` — to **porażka builda `cxx-qt 0.7.3`**, bo brak Qt6-dev + szybkiego linkera (mold/lld/gold) na tym boxie. Luka dev-env (do bootstrapu: `qt6-base-dev qt6-declarative-dev mold`), nie kod.
+- `architecture.md … 20604d ago` + `previous audit … 20604d ago` — **bug `audit.sh`**: `date -j -f` (BSD/macOS) nie parsuje na Linuksie → epoch 0. Realnie poprzedni audyt 2026-05-23 (8 dni temu).
+- bandit / cargo-deny / cargo-audit / buf / qmllint / gitleaks = `n/a` (niezainstalowane lokalnie) → pokrycie audytu zawężone (CI je pokrywa).
+- Stray `0` po linii TODO/FIXME (l.38-39) — drobny double-print w `count_lines` na pustym wejściu.
+
+**Fan-out:** 8 surowych znalezisk → **4 confirmed, 4 dropped** + 1 od krytyka kompletności.
+
+**Confirmed:**
+- **[P1] Polling** `host/src/crossdesk_host/cli/logs_cmd.py:492` (`_tail_file`) — `while True: … await asyncio.sleep(0.25)`. Łamie regułę „No polling" (AGENTS.md „Coding rules"). Docstring uzasadnia (unika zależności inotify/kqueue), ale **brak zatwierdzonego wyjątku** w `decisions.md` / `docs/DECISIONS.md`. → decyzja właściciela: zatwierdzić wyjątek i udokumentować, ALBO przepisać na inotify (`asyncio.add_reader` na fd inotify).
+- **[P2] Hardcoded `1024`** `guest/crates/fs-mount/src/flush.rs:31` — `total_bytes_written: 1024` w `mock_generate_release_ack()`, wołane bezwarunkowo z `agent-svc/src/filesystem.rs:98` (bez cfg-gate). Znany Phase-5 stub (`status.md` „Mock virtiofs handlers"); nowy kąt = **feature-gate** by nie trafiał do prod-builda.
+- **[P2] Empty `icon_png`** `guest/crates/rail-bridge/src/events.rs:71` — `icon_png: vec![]` (Phase 4 placeholder), osiągalne z `windows.rs:117`. Ikony okien zawsze puste do Phase 4.
+- **[P2] Drift `AGENTS.md:102-108`** — „Repository layout" listuje 5 podkatalogów `crossdesk_host/`, faktycznie 23 (m.in. `cli/`, `doctor/`, `abstractions/`, `lifecycle/`, `filesystem_ctl/`…). **AGENTS.md = boundary file** → zmiana wymaga zgody właściciela.
+- **[P2] Brak `// Safety:`** (krytyk) `guest/crates/registry-scan/src/windows_impl.rs:266` — `display_name.unwrap()` bez komentarza, mimo że ten sam plik używa `// Safety:` poprawnie (l.246/260). Infallible (None → early-return l.245), ale łamie regułę backendu „unwrap/expect wymaga komentarza".
+
+**Dropped (poprawnie — false positives wychwycone przez weryfikację):**
+- Phase-5 mocki wołane bezwarunkowo — udokumentowane (`status.md`, `EXECUTION_PLAN.md` Week 18).
+- `[mock]` marker w MountResult detail — intencjonalny.
+- test-credsy `crossdesk`/`test123` — za `#[cfg(test)]` / `--features mock`, nieobecne w prod-buildzie.
+- `TraceContext::is_valid()` „dead" w Rust — realnie używane po stronie hosta (`observability/trace_ctx.py:167`), świadoma symetria API host↔guest.
+
+**Luki / rekomendacje procesowe (krytyk kompletności):**
+- Brak automatycznego grep-gate na `import libvirt` poza `*real.py` — dziś tylko dyscyplina reviewera. Kandydat na ratchet (analogicznie do mock-import-gate, FOLLOWUPS:269).
+- Brak testów failure-mode mTLS (cert-pinning / hostname-validation); `AuthValidator` pokrywa rejection paths, ale nie scenariusze mTLS-specific.
+- `DEFAULT_HOST_ENDPOINT 127.0.0.1:50051` (`agent-svc/src/planes.rs`) — dev-default czytany z env w runtime; brak checklisty pre-prod.
+
+### Lista P0/P1/P2 (do decyzji właściciela)
+
+- **P0:** brak.
+- **P1:** Polling `logs_cmd.py:492` — wymaga rozstrzygnięcia (zatwierdzić wyjątek vs przepisać na inotify).
+- **P2:**
+  1. feature-gate Phase-5 mocków `fs-mount` (`flush.rs:31` hardcoded 1024).
+  2. `rail-bridge/events.rs:71` empty `icon_png` (Phase 4 — już na liście followups RAIL).
+  3. `AGENTS.md:102-108` layout drift (boundary — zgoda właściciela na edycję).
+  4. `// Safety:` na `windows_impl.rs:266`.
+  5. `audit.sh` `date -j` → port na GNU `date -d` (tooling).
+  6. grep-gate `import libvirt` poza `*real.py` (ratchet).
+  7. testy failure-mode mTLS.
+
+**Werdykt:** kod produktowy zdrowy — 0 P0, 1 P1 (polling, wymaga tylko decyzji), reszta to świadomie odroczone stuby i porządki. Adwersarialna weryfikacja odrzuciła 4/8 surowych znalezisk jako false-positives.
+
+---
+
 ## Audyt 2026-05-23
 
 **Git:** `f2ff03c` on `chore/adopt-claude-toolkit`

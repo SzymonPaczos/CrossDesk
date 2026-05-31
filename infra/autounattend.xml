@@ -90,7 +90,15 @@
       </ImageInstall>
 
       <UserData>
-        <!-- No product key: VM runs in evaluation mode or picks up KMS from network. -->
+        <!-- Generic (KMS client) Windows 10 Pro key: it does NOT activate,
+             it only tells unattended Setup which edition to install so it
+             doesn't stop on "cannot read ProductKey from the answer file"
+             (a multi-edition consumer ISO needs this even with /IMAGE/INDEX).
+             Activation is a separate, later, user concern. -->
+        <ProductKey>
+          <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+          <WillShowUI>OnError</WillShowUI>
+        </ProductKey>
         <AcceptEula>true</AcceptEula>
         <FullName>CrossDesk</FullName>
         <Organization>CrossDesk</Organization>

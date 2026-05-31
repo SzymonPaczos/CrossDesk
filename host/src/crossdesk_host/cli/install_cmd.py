@@ -28,6 +28,11 @@ from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
 # domain `crossdesk install` defines is the one the daemon manages.
 _DOMAIN_NAME = "windows-guest"
 _DISK_GB = 64
+# infra/autounattend.xml is authored in this locale; --locale substitutes it
+# so the windowsPE language settings match a non-English ISO. A mismatch
+# leaves Windows Setup stalled on the interactive language-selection screen
+# (verified: an en-US answer file on a Polish ISO does not auto-skip it).
+_DEFAULT_LOCALE = "en-US"
 
 # Tests set this to a mock LibvirtController; production resolves the real
 # one lazily (deferred libvirt import keeps the CLI importable on dev hosts).
@@ -136,16 +141,35 @@ def _resolve_tools_inputs() -> tuple[Path, Path, Path]:
     return agent, ca, autounattend
 
 
+def _localized_autounattend(src: Path, locale: str, dest_dir: Path) -> Path:
+    """Return an autounattend path with the windowsPE locale set to *locale*.
+
+    The bundled file is authored in ``_DEFAULT_LOCALE`` (en-US); for any
+    other locale we substitute it (the only en-US strings in the file are
+    the five windowsPE language settings) and write the result beside the
+    install state. Returns *src* unchanged for the default locale.
+    """
+    if locale == _DEFAULT_LOCALE:
+        return src
+    text = src.read_text(encoding="utf-8").replace(_DEFAULT_LOCALE, locale)
+    out = dest_dir / f"autounattend.{locale}.xml"
+    out.write_text(text, encoding="utf-8")
+    return out
+
+
 def _step_build_tools_iso(args: argparse.Namespace) -> None:
     agent, ca, autounattend = _resolve_tools_inputs()
-    output = state.default_state_file().parent / "tools.iso"
+    state_dir = state.default_state_file().parent
+    locale = getattr(args, "locale", _DEFAULT_LOCALE)
+    autounattend = _localized_autounattend(autounattend, locale, state_dir)
+    output = state_dir / "tools.iso"
     try:
         tools_iso.build_tools_iso(
             agent_exe=agent, ca_cert=ca, autounattend=autounattend, output_iso=output
         )
     except tools_iso.ToolsIsoError as exc:
         raise _StepFailed(str(exc)) from exc
-    print(_("    built tools ISO at {path}").format(path=output))
+    print(_("    built tools ISO at {path} (locale {loc})").format(path=output, loc=locale))
 
 
 def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
@@ -253,6 +277,14 @@ _HANDLERS: Dict[str, Callable[[argparse.Namespace], None]] = {
 def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
     p = sub.add_parser("install", help="Install CrossDesk (Windows VM + agent)")
     p.add_argument("--iso-path", type=Path, help="Skip Fido download; use this ISO")
+    p.add_argument(
+        "--locale",
+        default=_DEFAULT_LOCALE,
+        help=(
+            "Install locale matching the ISO's language (e.g. en-US, pl-PL). "
+            "Must match or Windows Setup stalls on the language screen."
+        ),
+    )
     p.add_argument("--lean", action="store_true", help="Slim Windows image")
     p.add_argument(
         "--dry-run",

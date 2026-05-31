@@ -106,6 +106,19 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     assert (_state_in_tmp.parent / "tools.iso").is_file()
 
 
+def test_localized_autounattend_substitutes_locale(tmp_path: Path) -> None:
+    src = tmp_path / "autounattend.xml"
+    src.write_text("<x><InputLocale>en-US</InputLocale><UILanguage>en-US</UILanguage></x>")
+    # Default locale → original file, untouched.
+    assert install_cmd._localized_autounattend(src, "en-US", tmp_path) == src
+    # Other locale → a sibling copy with every en-US swapped.
+    out = install_cmd._localized_autounattend(src, "pl-PL", tmp_path)
+    assert out != src
+    text = out.read_text()
+    assert "en-US" not in text
+    assert text.count("pl-PL") == 2
+
+
 def test_download_iso_requires_iso_path(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:
     _ok_doctor(monkeypatch)
     rc = install_cmd.run(_args(iso_path=None))  # no --iso-path → Fido not wired

@@ -5,10 +5,11 @@ Pure-Python install orchestration. Subpackages:
 - :mod:`state`  — atomic per-step persistence under ``~/.local/state``.
 - :mod:`credentials` — vm.toml read/write + 0600 permissions.
 - :mod:`iso_downloader` — Fido-style ISO fetch with SHA-256 gate.
+- :mod:`tools_iso` — build the guest tools ISO (agent + CA + autounattend).
 
 The CLI wiring lives in :mod:`crossdesk_host.cli`.
 """
 
-from crossdesk_host.installer import credentials, iso_downloader, state
+from crossdesk_host.installer import credentials, iso_downloader, state, tools_iso
 
-__all__ = ["credentials", "iso_downloader", "state"]
+__all__ = ["credentials", "iso_downloader", "state", "tools_iso"]

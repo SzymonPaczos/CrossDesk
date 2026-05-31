@@ -107,3 +107,27 @@ feature requests** bez decyzji właściciela. Pełne uzasadnienia w
 
 **Jak stosować:** Jeśli ktoś zaproponuje którąkolwiek z tych ścieżek,
 przekieruj do tej listy + COMPARISON_WINAPPS §7.
+
+## DEC-META-006 — Wyjątek od „No polling" dla CLI file-tail
+
+**Data:** 2026-05-31 · **Status:** aktywna
+
+Reguła „No polling" (`AGENTS.md` „Coding rules" + `.claude/rules/general.md`)
+celuje w **control-plane host↔guest** — tam obowiązują async gRPC streams
+w obie strony, żaden `while True: sleep`. Zatwierdzony wyjątek:
+`crossdesk logs --follow`
+([`host/src/crossdesk_host/cli/logs_cmd.py`](../../host/src/crossdesk_host/cli/logs_cmd.py)
+`::_tail_file`) używa pętli `while True: readline(); await asyncio.sleep(0.25)`
+do tailowania pliku logu w trybie interaktywnym.
+
+**Powód:** alternatywa (inotify/kqueue przez `asyncio.add_reader` na fd
+inotify) dokłada zależność platformową i złożoność dla wygodowego
+polecenia ops; interwał 0.25 s jest poniżej progu percepcji w trybie
+interaktywnym. Polling lokalnego pliku nie dotyczy ścieżki krytycznej
+ani transportu — nie ma związku z motywacją reguły (brak busy-waitu na
+zdarzeniach RPC). Zatwierdzone przez właściciela 2026-05-31 (audyt
+deep-layer, P1).
+
+**Jak stosować:** Audyt (`.claude/rules/audit.md` §3/§7) **nie raportuje**
+`_tail_file` jako naruszenia. Każdy NOWY `while True: sleep` poza tym
+jednym call-site nadal jest naruszeniem wymagającym uzasadnienia.

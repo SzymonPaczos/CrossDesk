@@ -263,6 +263,8 @@ fn scan_uninstall(parent: HKEY, source: Source) -> Vec<DiscoveredEntry> {
         out.push(DiscoveredEntry {
             source,
             canonical_id: subkey_name,
+            // Infallible because: the is_none() guard above returned early
+            // when display_name was None, so it is Some here.
             display_name: display_name.unwrap(),
             executable,
             version,

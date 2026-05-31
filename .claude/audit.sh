@@ -27,7 +27,12 @@ SECTION=""
 
 add() { SECTION+="$1"$'\n'; }
 has() { command -v "$1" >/dev/null 2>&1; }
-count_lines() { grep -cE '^' 2>/dev/null || echo 0; }
+# grep -c already prints "0" on empty input (and exits 1); swallow the exit
+# rather than echo a second "0" (which produced a stray line on Linux).
+count_lines() { grep -cE '^' 2>/dev/null || true; }
+# Parse YYYY-MM-DD → epoch seconds, portable across GNU (Linux, `date -d`)
+# and BSD (macOS, `date -j -f`). Falls back to 0 if neither parses.
+to_epoch() { date -d "$1" +%s 2>/dev/null || date -j -f '%Y-%m-%d' "$1" +%s 2>/dev/null || echo 0; }
 
 # ----- Header --------------------------------------------------------
 add "## Audyt $DATE"
@@ -153,7 +158,7 @@ add ""
 if [ -f .claude/architecture.md ]; then
   ARCH_TS="$(grep -oE '\*\*Last Updated:\*\* [0-9-]+' .claude/architecture.md | grep -oE '[0-9-]+' | head -1 || true)"
   if [ -n "${ARCH_TS:-}" ]; then
-    ARCH_AGE_DAYS="$(( ($(date +%s) - $(date -j -f '%Y-%m-%d' "$ARCH_TS" +%s 2>/dev/null || echo 0)) / 86400 ))"
+    ARCH_AGE_DAYS="$(( ($(date +%s) - $(to_epoch "$ARCH_TS")) / 86400 ))"
     add "- architecture.md Last Updated: $ARCH_TS (${ARCH_AGE_DAYS}d ago)"
   fi
 fi
@@ -186,7 +191,7 @@ add ""
 if [ -f "$LOG" ]; then
   LAST_AUDIT="$(grep -oE '^## Audyt [0-9-]+' "$LOG" | head -2 | tail -1 | grep -oE '[0-9-]+' || true)"
   if [ -n "${LAST_AUDIT:-}" ]; then
-    LAST_AGE_DAYS="$(( ($(date +%s) - $(date -j -f '%Y-%m-%d' "$LAST_AUDIT" +%s 2>/dev/null || echo 0)) / 86400 ))"
+    LAST_AGE_DAYS="$(( ($(date +%s) - $(to_epoch "$LAST_AUDIT")) / 86400 ))"
     add "- previous audit: $LAST_AUDIT (${LAST_AGE_DAYS}d ago)"
   else
     add "- previous audit: none yet"

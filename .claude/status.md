@@ -9,6 +9,31 @@ prac — `history/completed-work.md`.
 
 ---
 
+## Live install — pierwszy realny boot Windows (2026-06-01, Linux+KVM box)
+
+`crossdesk install --iso-path Win10_22H2_Polish.iso` realnie bootuje VM
+end-to-end: doctor → ISO → creds → tools.iso (pycdlib) → qemu-img 64G →
+define+start domeny libvirt → **Windows Setup uruchamia się** (OVMF → CD →
+WinPE → wybór edycji „Windows 10 Pro" via autounattend `/IMAGE/INDEX=6`).
+Naprawione w trakcie: per-device boot order, generic Pro ProductKey,
+`--locale` (autounattend en-US musi pasować do języka ISO).
+
+**Co jeszcze NIE domknięte (autounattend tuning + sprzęt):**
+- **Pełna auto-instalacja**: nawet z pasującym locale Setup pokazuje
+  ekran wyboru edycji (autounattend nie tłumi w 100% UI windowsPE) —
+  potrzebny audyt kompletności answer-file / nudge. Dysk nie urósł =
+  Setup w fazie „Zbieranie informacji", przed kopiowaniem plików.
+- **`/dev/vhost-vsock` Permission denied** — `qemu:///session` nie otwiera
+  urządzenia (root-only). Vsock pomijany przy instalacji (Windows i tak
+  się instaluje); link agenta wymaga reguły udev. Patrz backlog.
+- **Guest AF_VSOCK connector** — niezaimplementowany (DEC-0017): retarget
+  + parsing gotowe, socket FFI hardware-gated. Bez tego agent po
+  instalacji nie połączy się z hostem (Faza 5).
+- **`--locale` domyślnie en-US** — dla polskiego ISO użyj
+  `crossdesk install --iso-path … --locale pl-PL`.
+
+---
+
 ## Hardware-gated (czeka na Linux+KVM box)
 
 - **`agent.exe` real Windows verification** — `LogonUserW`,

@@ -185,6 +185,18 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   redirect Photoshop/Premiere → Wine/CrossOver/cloud GPU.
 
 ### Phase 1 follow-ups (przed Phase 4)
+- **Live-install follow-ups (2026-06-01).** Pierwszy realny boot ujawnił
+  (`status.md` "Live install"): (a) **autounattend windowsPE UI nie tłumi
+  ekranu wyboru edycji** mimo `/IMAGE/INDEX=6` — audyt kompletności
+  answer-file; (b) **`/dev/vhost-vsock` udev rule** dla `qemu:///session`
+  (dziś vsock pomijany przy instalacji → agent się nie połączy) —
+  reguła `KERNEL=="vhost-vsock", MODE="0660", GROUP="kvm"` lub doc; (c)
+  **autounattend locale auto-detect z ISO** (mamy `--locale`, ręczne) —
+  czytać język z `install.wim`/ISO; (d) **virtio-win driver ISO** by
+  przełączyć dysk boot z SATA na virtio-blk (perf, DEC-0016 reconsider).
+- **GUI ISO auto-download (Fido backend).** Wizard (`gui/`) ma krok
+  `Step1Iso`, ale `iso_downloader` to Phase-5 stub bez `HttpScrapeBackend`
+  — UI jest, pobierania nie ma. Implementuj Fido-style download MS ISO.
 - **CrossDesk Lean Windows profile (opt-in).** PowerShell
   `infra/lean_profile.ps1` z `<FirstLogonCommands>`. Removes Edge/
   Cortana/OneDrive/Tips/Games/Skype/Teams personal/Xbox; **keeps**

@@ -24,9 +24,14 @@ prac — `history/completed-work.md`.
 
 ## Świadome zaślepki (`🚧 mock` / Phase deferred)
 
-- **`host/src/crossdesk_host/cli/launch_cmd.py`** — Phase 4 RAIL spawn
-  stub: wysyła desktop notification + log "RAIL session launch stub";
-  realny spawn ląduje gdy hardware dostępny. (`.claude/ignorefiles.md`)
+- **RAIL launch ścieżka host-side** — `cli/launch_cmd.py` woła mgmt
+  `Launch` RPC; handler (`ipc/management.py`) resolve app → gate creds →
+  `spawn_rail_with_auth_check` → `RealFreeRDPInvocation.spawn_rail`
+  (wszystko zaimplementowane, daemon wpina współdzielony freerdp +
+  VerifyCoordinator + RailManager). Realny render okna jest HW-gated
+  (wymaga guesta z serwerem RDP); ścieżka host-side przetestowana
+  e2e na `MockFreeRDPInvocation`. file_path→JIT-mount + adopcja sesji
+  po HWND w RailManager — Phase 4 follow-up.
 - **`host/src/crossdesk_host/watchdog/sleep_sync.py`** — Phase 7 stub:
   logi only; systemd-sync wire-up po pełnym suspend/resume protocole.
 - **`host/src/crossdesk_host/installer/iso_downloader.py::ScrapeBackend`**

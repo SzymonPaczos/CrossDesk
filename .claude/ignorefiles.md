@@ -1,6 +1,6 @@
 # Dead Code / Generated / Reference Manifest
 
-**Last Updated:** 2026-05-31 22:10:10
+**Last Updated:** 2026-06-01 00:42:44
 
 > Files agents should **not** read or analyze unless the task is
 > explicitly to clean them up or modify the generator. The
@@ -50,5 +50,4 @@ backend is wired.)
 |------|--------|-------|
 | `host/src/crossdesk_host/installer/iso_downloader.py` (`ScrapeBackend` Protocol) | Phase 5 placeholder. Protocol + `fetch()` orchestrator committed for cache + sha256 unit tests, but no `HttpScrapeBackend` exists yet. Vulture / "0 production callers" audits should ignore this until Phase 5 wires the wizard's download step. | 2026-05-20 |
 | `host/src/crossdesk_host/watchdog/sleep_sync.py` | Phase 7 stub — logs only; real systemd-sync wiring deferred until lifecycle FSM lands its full suspend/resume protocol. | 2026-05-20 |
-| `host/src/crossdesk_host/cli/launch_cmd.py` (Phase 4 RAIL stub) | Sends desktop notification + logs "RAIL session launch stub" event because the real RAIL spawn lands in Phase 4. The CLI path is wired end-to-end; only the spawn is stubbed. | 2026-05-20 |
 | `host/src/crossdesk_host/integrations/notifications.py::DBusNotifier._send_sync` | Phase 7 stub — body is literal `_ = (...)` no-op. `DBusNotifier.notify` exists as the shaped API; the actual `dbus-next` call lands when daemon integration subscribes to recovery events from the Status stream. SubprocessNotifier is the production path today. | 2026-05-23 |

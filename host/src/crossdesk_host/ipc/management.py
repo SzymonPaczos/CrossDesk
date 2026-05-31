@@ -31,10 +31,22 @@ from typing import AsyncIterator, List, Optional
 import grpc
 from google.protobuf import duration_pb2, timestamp_pb2
 
+from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
 from crossdesk_host.abstractions.libvirt import LibvirtController
+from crossdesk_host.catalog.loader import find_app
+from crossdesk_host.display.rail_command import (
+    AppLaunchSpec,
+    FreeRDPConnectionSpec,
+    build_rail_argv,
+)
+from crossdesk_host.display.session_starter import (
+    AuthHealthCheckFailed,
+    spawn_rail_with_auth_check,
+)
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
+from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.observability import child_span_scope
 from crossdesk_host.observability.log import get_logger
@@ -128,11 +140,23 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         coordinator: Optional[LifecycleCoordinator] = None,
         push_interval_seconds: float = 1.0,
         metrics_registry: Optional[Registry] = None,
+        freerdp: Optional[FreeRDPInvocation] = None,
+        verify_coordinator: Optional[VerifyCoordinator] = None,
     ) -> None:
         self.state = state
         self.libvirt_ctl = libvirt_ctl
         self.coordinator = coordinator
         self.push_interval_seconds = push_interval_seconds
+        # Launch backend: the FreeRDP spawner + the credential-verify
+        # coordinator (shared with the control servicer, which registers
+        # the live guest session). Both None ⇒ Launch reports the backend
+        # is unavailable rather than pretending success.
+        self._freerdp = freerdp
+        self._verify_coordinator = verify_coordinator
+        # RAIL sessions spawned via Launch, kept so they aren't lost
+        # (terminate-on-window-close adoption by RailManager is a Phase-4
+        # follow-up; for now this keeps the handle reachable).
+        self._sessions: List[RailSession] = []
         # Tests inject a fresh Registry to avoid cross-test pollution;
         # production wires the module-level singleton so every metric
         # instrumented anywhere in the host shows up here.
@@ -290,11 +314,6 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         request: mgmt_pb2.LaunchRequest,
         context: grpc.aio.ServicerContext,
     ) -> mgmt_pb2.LaunchResponse:
-        # Phase 6 stub: record the request, surface success. Actual
-        # FreeRDP RAIL spawning runs through the existing
-        # rail_manager / FreeRDPInvocation machinery; integration into
-        # mgmt lands when the daemon's main entry point holds shared
-        # references (Phase 7).
         with child_span_scope():
             logger.info("rpc_start", method="Launch")
             logger.info(
@@ -302,15 +321,69 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 app_id=request.app_id,
                 file_path=request.file_path,
             )
-            self.state.append_activity(
-                mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
-                f"Launch requested: {request.app_id}",
+            try:
+                return await self._launch(request)
+            finally:
+                logger.info("rpc_end", method="Launch")
+
+    async def _launch(self, request: mgmt_pb2.LaunchRequest) -> mgmt_pb2.LaunchResponse:
+        """Resolve the app, gate on the guest credential check, and spawn
+        a FreeRDP RAIL session. Every failure mode maps to
+        ``LaunchResponse(ok=False, error=...)`` so the CLI/GUI can print an
+        actionable message instead of an opaque RPC error. (file_path-driven
+        JIT mount is a Phase-5 follow-up — not wired here.)"""
+        app_id = request.app_id
+        if self._freerdp is None or self._verify_coordinator is None:
+            return mgmt_pb2.LaunchResponse(
+                ok=False, error="launch backend not available in this daemon"
             )
-            response = mgmt_pb2.LaunchResponse(
-                ok=True, request_id=f"mgmt-{int(time.time() * 1000)}"
+        app = find_app(app_id)
+        if app is None:
+            return mgmt_pb2.LaunchResponse(
+                ok=False, error=f"unknown app_id: {app_id!r}"
             )
-            logger.info("rpc_end", method="Launch")
-            return response
+        creds = credentials.load()
+        if creds is None:
+            return mgmt_pb2.LaunchResponse(
+                ok=False, error="no VM credentials — run `crossdesk install`"
+            )
+
+        spec = AppLaunchSpec(
+            app_id=app.app_id,
+            executable_guest_path=app.win_executable,
+            display_name=app.name,
+        )
+        conn = FreeRDPConnectionSpec(username=creds.username, password=creds.password)
+        argv = build_rail_argv(spec, conn)
+
+        try:
+            session = await spawn_rail_with_auth_check(
+                self._freerdp, self._verify_coordinator, argv, creds=creds
+            )
+        except AuthHealthCheckFailed as exc:
+            hint = exc.result.repair_hint or exc.result.detail
+            logger.warning("launch_auth_failed", app_id=app_id, detail=hint)
+            return mgmt_pb2.LaunchResponse(ok=False, error=hint)
+        except NoActiveSession:
+            return mgmt_pb2.LaunchResponse(
+                ok=False, error="no guest session connected — is the VM running?"
+            )
+        except asyncio.TimeoutError:
+            return mgmt_pb2.LaunchResponse(
+                ok=False, error="guest did not respond to the credential check"
+            )
+        except FileNotFoundError as exc:
+            return mgmt_pb2.LaunchResponse(ok=False, error=str(exc))
+        except Exception as exc:  # boundary: convert to RPC error, never crash the daemon
+            logger.exception("launch_failed", app_id=app_id)
+            return mgmt_pb2.LaunchResponse(ok=False, error=f"launch failed: {exc}")
+
+        self._sessions.append(session)
+        self.state.append_activity(
+            mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
+            f"Launched {app.name} (pid {session.pid})",
+        )
+        return mgmt_pb2.LaunchResponse(ok=True, request_id=f"rail-{session.pid}")
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

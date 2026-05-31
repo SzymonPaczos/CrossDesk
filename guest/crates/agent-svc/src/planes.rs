@@ -15,7 +15,7 @@ use proto::crossdesk::v1::heartbeat_service_client::HeartbeatServiceClient;
 
 const DEFAULT_AGENT_DIR: &str = r"C:\CrossDesk";
 const DEFAULT_PKI_SUBDIR: &str = "pki";
-/// Production target is `vsock://2:50051` once the AF_HYPERV connector lands;
+/// Production target is `vsock://2:50051` once the AF_VSOCK connector lands (DEC-0017);
 /// the TCP form is what `qemu -net user` portfwd exposes during development
 /// and what the in-process integration harness drives over MockTransport.
 /// The `https` scheme is mandatory: tonic's `tls_config` runs only when

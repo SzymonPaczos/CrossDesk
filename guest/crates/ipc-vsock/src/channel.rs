@@ -18,8 +18,8 @@ use crate::transport::real::RealTransport;
 ///   - `http://127.0.0.1:50051` (dev fallback over TCP)
 ///   - `http://[::1]:50051`     (loopback v6)
 ///
-/// Once the AF_HYPERV connector lands, the URL will switch to a vsock
-/// scheme and `RealTransport::call` interprets it.
+/// Once the AF_VSOCK connector lands (DEC-0017), the URL will switch to a
+/// `vsock://CID:port` scheme and `RealTransport::call` interprets it.
 pub async fn connect(
     ca_cert_pem: &[u8],
     guest_cert_pem: &[u8],

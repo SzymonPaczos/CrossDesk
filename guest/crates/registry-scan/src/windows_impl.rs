@@ -133,12 +133,14 @@ fn enum_subkeys(parent: HKEY, mut visit: impl FnMut(String)) {
 
 /// Reads a REG_SZ value from `hkey`. Returns None if absent, empty, or on error.
 fn read_sz(hkey: HKEY, name: PCWSTR) -> Option<String> {
-    // First call: get the required buffer size in bytes.
+    // First call: get the required buffer size in bytes. The return code is
+    // intentionally ignored — we read the size out-param below and treat a
+    // too-small size as "value absent" regardless of the status.
     let mut size: u32 = 0;
     // Safety: hkey is open; name is a static null-terminated wide string.
-    unsafe {
-        RegGetValueW(hkey, PCWSTR::null(), name, RRF_RT_REG_SZ, None, None, Some(&mut size));
-    }
+    let _ = unsafe {
+        RegGetValueW(hkey, PCWSTR::null(), name, RRF_RT_REG_SZ, None, None, Some(&mut size))
+    };
     if size < 2 {
         return None; // value absent or zero-length (2 bytes = just null terminator)
     }

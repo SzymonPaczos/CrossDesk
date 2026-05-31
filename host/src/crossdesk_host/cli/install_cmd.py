@@ -175,7 +175,27 @@ def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
             ) from exc
         print(_("    created {gb} GB disk at {p}").format(gb=_DISK_GB, p=disk))
 
-    spec = DomainSpec(name=_DOMAIN_NAME, disk_path=disk, windows_iso=iso, tools_iso=tools)
+    # /dev/vhost-vsock must be openable by the qemu:///session process for
+    # the AF_VSOCK device; if it isn't (default perms are root-only), drop
+    # the device so the install still boots — vsock only carries the
+    # post-install agent connection (DEC-0017). Fix later with a udev rule.
+    vsock_ok = os.access("/dev/vhost-vsock", os.R_OK | os.W_OK)
+    if not vsock_ok:
+        print(
+            _("    note: /dev/vhost-vsock not accessible — omitting vsock device")
+        )
+        print(
+            _("    (Windows installs fine; the agent's vsock link needs a udev")
+        )
+        print(_("    rule granting access — see DEC-0017. Install proceeds.)"))
+
+    spec = DomainSpec(
+        name=_DOMAIN_NAME,
+        disk_path=disk,
+        windows_iso=iso,
+        tools_iso=tools,
+        vsock_enabled=vsock_ok,
+    )
     try:
         _resolve_libvirt_ctl().define_and_start(build_domain_xml(spec))
     except RuntimeError as exc:

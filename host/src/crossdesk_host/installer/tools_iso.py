@@ -83,6 +83,46 @@ def _run_xorriso(xorriso: str, staging: Path, out_tmp: Path) -> None:
         )
 
 
+def _iso9660_name(name: str) -> str:
+    """Derive a Level-3 ISO9660 identifier (uppercase, ``A-Z0-9_`` + one
+    dot) from a canonical name. Windows reads the Joliet long name, so this
+    legacy identifier only has to be valid, not pretty."""
+    base, dot, ext = name.rpartition(".")
+    if not dot:
+        base, ext = name, ""
+
+    def clean(s: str) -> str:
+        return "".join(c if c.isalnum() else "_" for c in s.upper())
+
+    return f"{clean(base)}.{clean(ext)}" if ext else clean(base)
+
+
+def _build_with_pycdlib(inputs: "dict[str, Path]", out_tmp: Path) -> None:
+    """Fallback ISO writer when ``xorriso`` is absent. Adds each input at
+    the root under its canonical Joliet name (the legacy ISO9660 name is
+    mangled but unused by Windows)."""
+    try:
+        import pycdlib
+    except ImportError as exc:  # neither backend available
+        raise ToolsIsoError(
+            "no ISO builder available — install xorriso "
+            "(`sudo apt-get install -y xorriso`) or pycdlib (`pip install pycdlib`)"
+        ) from exc
+
+    iso = pycdlib.PyCdlib()
+    iso.new(interchange_level=3, joliet=3, vol_ident=_VOLUME_ID)
+    try:
+        for iso_name, src in inputs.items():
+            iso.add_file(
+                str(src),
+                iso_path=f"/{_iso9660_name(iso_name)};1",
+                joliet_path=f"/{iso_name}",
+            )
+        iso.write(str(out_tmp))
+    finally:
+        iso.close()
+
+
 def build_tools_iso(
     *,
     agent_exe: Path,
@@ -93,12 +133,14 @@ def build_tools_iso(
 ) -> Path:
     """Build the tools ISO at *output_iso* and return its path.
 
-    The three inputs are staged under their canonical ISO-root names
-    (``CrossDeskAgent.exe`` / ``publisher-root-ca.crt`` / ``autounattend.xml``)
-    before packing, so the caller's on-disk filenames don't matter.
+    The three inputs are placed at the ISO root under their canonical names
+    (``CrossDeskAgent.exe`` / ``publisher-root-ca.crt`` / ``autounattend.xml``),
+    so the caller's on-disk filenames don't matter. Uses ``xorriso`` when
+    present (override the binary with *xorriso*) and otherwise falls back to
+    the pure-Python ``pycdlib`` writer.
 
-    Raises :class:`ToolsIsoError` if any input is missing, if ``xorriso`` is
-    not on ``PATH`` (override with *xorriso*), or if the pack fails.
+    Raises :class:`ToolsIsoError` if any input is missing, if neither ISO
+    backend is available, or if the pack fails.
     """
     inputs = {
         _AGENT_ISO_NAME: agent_exe,
@@ -110,34 +152,30 @@ def build_tools_iso(
             raise ToolsIsoError(f"input for {iso_name} is not a file: {src}")
 
     resolved = xorriso or shutil.which("xorriso")
-    if resolved is None:
-        raise ToolsIsoError(
-            "xorriso not found on PATH — install it "
-            "(e.g. `sudo apt-get install -y xorriso`)"
-        )
-
     output_iso.parent.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.TemporaryDirectory(
-        dir=str(output_iso.parent), prefix="tools-iso-stage."
-    ) as staging_str:
-        staging = Path(staging_str)
-        for iso_name, src in inputs.items():
-            shutil.copyfile(src, staging / iso_name)
-
-        # Pack into a sibling temp file, then atomically publish it. A
-        # rename within the same directory stays on one filesystem.
-        fd, tmp_str = tempfile.mkstemp(
-            dir=str(output_iso.parent), prefix=output_iso.name + ".", suffix=".tmp"
-        )
-        os.close(fd)
-        out_tmp = Path(tmp_str)
-        try:
-            _run_xorriso(resolved, staging, out_tmp)
-            os.replace(out_tmp, output_iso)
-        except BaseException:
-            with contextlib.suppress(OSError):
-                out_tmp.unlink()
-            raise
+    # Pack into a sibling temp file, then atomically publish it. A rename
+    # within the same directory stays on one filesystem.
+    fd, tmp_str = tempfile.mkstemp(
+        dir=str(output_iso.parent), prefix=output_iso.name + ".", suffix=".tmp"
+    )
+    os.close(fd)
+    out_tmp = Path(tmp_str)
+    try:
+        if resolved is not None:
+            with tempfile.TemporaryDirectory(
+                dir=str(output_iso.parent), prefix="tools-iso-stage."
+            ) as staging_str:
+                staging = Path(staging_str)
+                for iso_name, src in inputs.items():
+                    shutil.copyfile(src, staging / iso_name)
+                _run_xorriso(resolved, staging, out_tmp)
+        else:
+            _build_with_pycdlib(inputs, out_tmp)
+        os.replace(out_tmp, output_iso)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            out_tmp.unlink()
+        raise
 
     return output_iso

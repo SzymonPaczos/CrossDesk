@@ -7,9 +7,9 @@ by wiring a :class:`RecordingNotifier` directly into ``_launch()``.
 
 from __future__ import annotations
 
-import logging
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, List
 
 import pytest
@@ -66,11 +66,29 @@ def test_launch_unknown_app_fallbacks_to_title_case() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_launch_sends_notification(tmp_path: Path) -> None:
+def _patch_launch_rpc(
+    monkeypatch: pytest.MonkeyPatch, *, ok: bool = True, error: str = ""
+) -> List[tuple[str, str, str | None]]:
+    """Replace the gRPC ``Launch`` call so tests don't need a live daemon.
+
+    Returns a list recording (sock, app_id, file_path) of each call.
+    """
+    calls: List[tuple[str, str, str | None]] = []
+
+    def fake_send(sock: str, app_id: str, file_path: str | None, *, timeout: float = 10.0) -> Any:
+        calls.append((sock, app_id, file_path))
+        return SimpleNamespace(ok=ok, error=error, request_id="rail-1")
+
+    monkeypatch.setattr(launch_cmd, "_send_launch", fake_send)
+    return calls
+
+
+def test_launch_sends_notification(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A desktop notification is sent with the correct body before the
-    RAIL stub log when the daemon socket exists."""
+    daemon Launch RPC when the daemon socket exists."""
     sock = tmp_path / "crossdesk-host.sock"
     sock.touch()  # simulate running daemon
+    _patch_launch_rpc(monkeypatch, ok=True)
 
     notifier = RecordingNotifier()
     rc = _launch("word", notifier=notifier, _socket_path_override=str(sock))  # type: ignore[arg-type]
@@ -83,10 +101,13 @@ def test_launch_sends_notification(tmp_path: Path) -> None:
     assert "Starting" in call.body
 
 
-def test_launch_notification_uses_title_case_for_unknown_app(tmp_path: Path) -> None:
+def test_launch_notification_uses_title_case_for_unknown_app(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Unknown app IDs fall back to title-case in the notification body."""
     sock = tmp_path / "crossdesk-host.sock"
     sock.touch()
+    _patch_launch_rpc(monkeypatch, ok=True)
 
     notifier = RecordingNotifier()
     rc = _launch("mycoolapp", notifier=notifier, _socket_path_override=str(sock))  # type: ignore[arg-type]
@@ -94,6 +115,57 @@ def test_launch_notification_uses_title_case_for_unknown_app(tmp_path: Path) -> 
     assert rc == 0
     assert len(notifier.calls) == 1
     assert "Mycoolapp" in notifier.calls[0].body
+
+
+def test_launch_calls_daemon_with_app_and_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The Launch RPC receives the app_id and optional file path."""
+    sock = tmp_path / "crossdesk-host.sock"
+    sock.touch()
+    calls = _patch_launch_rpc(monkeypatch, ok=True)
+
+    rc = _launch(
+        "word",
+        file_path="/home/u/report.docx",
+        notifier=RecordingNotifier(),
+        _socket_path_override=str(sock),
+    )  # type: ignore[arg-type]
+
+    assert rc == 0
+    assert calls == [(str(sock), "word", "/home/u/report.docx")]
+
+
+def test_launch_daemon_returns_error_exits_1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A LaunchResponse with ok=False prints the daemon's error to stderr."""
+    sock = tmp_path / "crossdesk-host.sock"
+    sock.touch()
+    _patch_launch_rpc(monkeypatch, ok=False, error="no guest session connected — is the VM running?")
+
+    rc = _launch("notepad", notifier=RecordingNotifier(), _socket_path_override=str(sock))  # type: ignore[arg-type]
+
+    assert rc == 1
+    assert "no guest session connected" in capsys.readouterr().err
+
+
+def test_launch_rpc_error_exits_1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A transport-level RPC failure surfaces as a clean stderr message."""
+    sock = tmp_path / "crossdesk-host.sock"
+    sock.touch()
+
+    def boom(sock: str, app_id: str, file_path: str | None, *, timeout: float = 10.0) -> Any:
+        raise launch_cmd._LaunchError("connection refused")
+
+    monkeypatch.setattr(launch_cmd, "_send_launch", boom)
+
+    rc = _launch("notepad", notifier=RecordingNotifier(), _socket_path_override=str(sock))  # type: ignore[arg-type]
+
+    assert rc == 1
+    assert "connection refused" in capsys.readouterr().err
 
 
 # ---------------------------------------------------------------------------
@@ -243,23 +315,6 @@ def test_spawn_gui_returns_true_when_binary_found(
 # ---------------------------------------------------------------------------
 # _launch — RAIL stub log
 # ---------------------------------------------------------------------------
-
-
-def test_launch_logs_stub_message(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    """The Phase 4 RAIL stub produces an INFO log mentioning the app_id."""
-    sock = tmp_path / "crossdesk-host.sock"
-    sock.touch()
-
-    notifier = RecordingNotifier()
-    with caplog.at_level(logging.INFO, logger="crossdesk_host.cli.launch_cmd"):
-        _launch("excel", notifier=notifier, _socket_path_override=str(sock))  # type: ignore[arg-type]
-
-    stub_messages = [r.message for r in caplog.records]
-    assert any("Phase 4" in msg and "excel" in msg for msg in stub_messages), (
-        f"Expected Phase 4 stub log with app_id, got: {stub_messages}"
-    )
 
 
 # ---------------------------------------------------------------------------

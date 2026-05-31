@@ -1,24 +1,21 @@
 """``crossdesk launch <app-id>`` — start a registered Windows app as a RAIL window.
 
-**STATUS: Phase 4 partial.** Daemon reachability check + GUI spawn on
-"VM down" path are wired (commit ca49271). The RAIL session launch
-itself is still a Phase 4 stub (see ``_launch()`` toward the bottom).
-Tracked in ``.claude/ignorefiles.md`` so audits don't keep re-flagging
-the absence of a real spawn.
+Flow: check the daemon is reachable (its management Unix socket exists),
+send a desktop notification, then call the management ``Launch`` RPC over
+that socket. The daemon resolves the app, gates on the guest credential
+check, and spawns the FreeRDP RAIL session (see
+``crossdesk_host.ipc.management.ManagementServiceServicer.Launch``).
 
-Checks whether the CrossDesk daemon is reachable (via its management
-Unix socket), sends a desktop notification, and logs a Phase 4 stub
-message where the actual RAIL session launch will land.
-
-Why socket-exists instead of a gRPC ping: a socket-exists check is
-instant and avoids importing the gRPC stack just to surface a "daemon
-not running" message. A missing socket is definitive — the daemon
+Why a socket-exists check before the RPC: it's instant and gives a clean
+"VM not running" message (with a GUI nudge) without paying the gRPC import
+on the common down-path. A missing socket is definitive — the daemon
 always creates it at startup.
 
-Phase 4 wiring: the actual ``OpenSession`` call lives in
-``host/src/crossdesk_host/display/rail_manager.py`` (and its
-``spawn_rail`` path). When Phase 4 is ready, replace the stub log
-below with a call into that module.
+The actual RAIL window only appears once a guest with an RDP server is
+running; without it the daemon's Launch returns ``ok=false`` and we print
+the daemon's error (e.g. "no guest session connected"). The host-side
+wiring is exercised end-to-end against a mock FreeRDP in the in-process
+test harness.
 """
 
 from __future__ import annotations
@@ -135,6 +132,33 @@ def _resolve_display_name(app_id: str) -> str:
     return _KNOWN_NAMES.get(app_id, app_id.title())
 
 
+class _LaunchError(RuntimeError):
+    """Daemon RPC could not be completed (connection refused, timeout,
+    transport error). Carries a user-facing message."""
+
+
+def _send_launch(sock: str, app_id: str, file_path: Optional[str], *, timeout: float = 10.0) -> object:
+    """Call the management ``Launch`` RPC over the daemon's Unix socket.
+
+    Returns the ``LaunchResponse``. The gRPC stack is imported lazily here
+    so the daemon-down path (and ``--help``) don't pay for it. Wraps any
+    ``grpc.RpcError`` in :class:`_LaunchError` so the caller maps it to a
+    clean stderr message + exit code.
+    """
+    import grpc
+
+    from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2, mgmt_pb2_grpc
+
+    request = mgmt_pb2.LaunchRequest(app_id=app_id, file_path=file_path or "")
+    try:
+        with grpc.insecure_channel(f"unix://{sock}") as channel:
+            stub = mgmt_pb2_grpc.ManagementServiceStub(channel)
+            return stub.Launch(request, timeout=timeout)
+    except grpc.RpcError as exc:
+        detail = exc.details() if hasattr(exc, "details") else str(exc)
+        raise _LaunchError(detail or str(exc)) from exc
+
+
 def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
     p = sub.add_parser("launch", help="Launch a registered Windows app as a RAIL window")
     p.add_argument("app", metavar="APP_ID", help="App identifier (e.g. notepad, word)")
@@ -155,6 +179,7 @@ def run(args: argparse.Namespace) -> int:
 
     return _launch(
         app_id=args.app,
+        file_path=args.file,
         notifier=notifier,
     )
 
@@ -162,6 +187,7 @@ def run(args: argparse.Namespace) -> int:
 def _launch(
     app_id: str,
     *,
+    file_path: Optional[str] = None,
     notifier: SubprocessNotifier,
     _socket_path_override: Optional[str] = None,
 ) -> int:
@@ -205,13 +231,19 @@ def _launch(
         body=_("Starting {name}…").format(name=display_name),
     )
 
-    # Phase 4 stub — the real path calls RailManager.spawn_rail() which
-    # sends an OpenSession RPC to the daemon and monitors the RAIL window
-    # lifecycle. Wired in the Phase 4 milestone (display/ module).
-    logger.info(
-        "\U0001f6a7 RAIL session launch stub — Phase 4 not yet wired, app=%s",
-        app_id,
-    )
+    # Drive the real RAIL spawn through the daemon's management Launch RPC.
+    try:
+        response = _send_launch(sock, app_id, file_path)
+    except _LaunchError as exc:
+        print(_("Launch failed: {err}").format(err=exc), file=sys.stderr)
+        return 1
 
-    print(_("Launching {name}… (VM must be running)").format(name=display_name))
+    if not getattr(response, "ok", False):
+        print(
+            _("Launch failed: {err}").format(err=getattr(response, "error", "")),
+            file=sys.stderr,
+        )
+        return 1
+
+    print(_("Launching {name}…").format(name=display_name))
     return 0

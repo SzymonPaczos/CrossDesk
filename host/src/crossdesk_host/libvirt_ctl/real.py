@@ -58,6 +58,23 @@ class RealLibvirtController(LibvirtController):
                 f"libvirt domain {self.domain_name!r} not found: {exc}"
             ) from exc
 
+    def define_and_start(self, domain_xml: str) -> None:
+        import libvirt
+
+        conn = self._connect()
+        logger.info("define_and_start: defineXML + create for %s", self.domain_name)
+        try:
+            dom = conn.defineXML(domain_xml)
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"defineXML failed: {exc}") from exc
+        if dom is None:
+            raise RuntimeError("defineXML returned None")
+        try:
+            if not dom.isActive():
+                dom.create()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"domain create failed: {exc}") from exc
+
     def hard_destroy(self) -> None:
         import libvirt
 

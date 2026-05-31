@@ -28,6 +28,16 @@ class LibvirtController(Protocol):
     "device was already in the requested state" (idempotent retries).
     """
 
+    def define_and_start(self, domain_xml: str) -> None:
+        """Define a persistent domain from *domain_xml* and start it.
+
+        Used once by ``crossdesk install`` to bring the guest into
+        existence (DEC-0016). Redefining the same ``<name>`` updates the
+        config; if the domain is already running the start is a no-op.
+        Raises ``RuntimeError`` on libvirt error.
+        """
+        ...
+
     def hard_destroy(self) -> None:
         """Forceful kill+restart: ``virsh destroy`` then ``virsh start``."""
         ...

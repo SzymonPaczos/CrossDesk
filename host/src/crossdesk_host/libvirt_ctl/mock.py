@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import Optional
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 
@@ -30,8 +31,11 @@ class MockHooks:
     fail_next_attach_virtiofs: bool = False
     fail_next_detach_virtiofs: bool = False
     fail_next_is_running: bool = False
+    fail_next_define_and_start: bool = False
 
     hard_destroy_count: int = 0
+    define_and_start_count: int = 0
+    defined_xml: Optional[str] = None
     graceful_shutdown_count: int = 0
     suspend_count: int = 0
     resume_count: int = 0
@@ -75,6 +79,15 @@ class LibvirtControllerMock(LibvirtController):
     def __init__(self, domain_name: str = "windows-guest") -> None:
         self.domain_name = domain_name
         self.hooks = MockHooks()
+
+    def define_and_start(self, domain_xml: str) -> None:
+        if self.hooks.fail_next_define_and_start:
+            self.hooks.fail_next_define_and_start = False
+            raise RuntimeError("mock-injected define_and_start failure")
+        logger.info("[LIBVIRT MOCK] define_and_start: %s", self.domain_name)
+        self.hooks.defined_xml = domain_xml
+        self.hooks.define_and_start_count += 1
+        self.hooks.running = True
 
     def hard_destroy(self) -> None:
         if self.hooks.fail_next_hard_destroy:

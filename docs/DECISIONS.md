@@ -7,7 +7,63 @@ delete history.
 
 ---
 
-## DEC-0015: Windows Home is not a supported guest edition
+## DEC-0016: `crossdesk install` defines the guest as a libvirt domain from generated XML
+
+**Status:** Accepted — 2026-06-01
+**Owner:** install pipeline / Phase 3–4
+**Related:** DEC-0003 (`qemu:///session` only); `infra/launch-vm.py`;
+`host/src/crossdesk_host/installer/domain_xml.py`
+
+### Context
+
+`infra/launch-vm.py` boots a guest by invoking `qemu-system-x86_64`
+directly with a hand-built argv (q35 + UEFI + swtpm + balloon + virtio
+disk). That is fine for a one-shot manual boot, but the running host
+daemon manages the guest through `LibvirtController` (suspend / resume /
+hard-destroy / virtiofs hot-plug), which operates on a **libvirt-defined
+domain** looked up by name. A detached `qemu` process is invisible to
+libvirt and therefore unmanageable by the daemon.
+
+So the `crossdesk install` step that creates the VM must produce a
+persistent libvirt domain, not a raw qemu process.
+
+### Decision
+
+`create_libvirt_domain` generates a libvirt domain XML
+(`installer/domain_xml.py::build_domain_xml`) and defines + starts it via
+`LibvirtController.define_and_start(xml)` on `qemu:///session`. The XML is
+authored natively (libvirt elements) rather than by parsing
+`launch-vm.py`'s qemu argv — libvirt owns the swtpm lifecycle
+(`<tpm><backend type='emulator'/>`), UEFI loader/nvram
+(`<os firmware='efi'>`), the AF_VSOCK device (`<vsock>` with the fixed
+guest CID), virtio-net, and the balloon, which is cleaner and less
+drift-prone than argv translation.
+
+**Install-disk bus = SATA/AHCI, not virtio.** Windows 10/11 setup has no
+in-box virtio-blk driver, so a virtio boot disk would leave Setup with
+"no drives found" unless a virtio-win driver ISO is injected. Using the
+SATA bus lets the stock Microsoft ISO install unattended with zero extra
+media. virtio-blk (and a bundled virtio-win driver ISO) is a post-MVP
+performance optimization, tracked in the backlog.
+
+`launch-vm.py` stays as the standalone/manual-debug path and the
+reference for device choices; it is not deleted.
+
+### Alternatives considered
+
+- **Parse launch-vm.py's qemu argv → domain XML.** Brittle; couples the
+  installer to argv formatting and risks silent drift. Rejected.
+- **Run qemu directly from the installer (no libvirt).** Leaves the
+  daemon unable to manage the guest. Rejected (violates the
+  `LibvirtController` contract).
+- **virtio boot disk + bundled virtio-win ISO + autounattend DriverPaths.**
+  Best long-term perf, but adds a ~600 MB driver-ISO dependency and more
+  autounattend surface. Deferred to a perf follow-up.
+
+### Reconsider when
+
+A bundled virtio-win driver ISO ships (flip the boot disk to virtio-blk),
+or if `qemu:///system` is ever adopted (DEC-0003 would have to change first).
 
 **Status:** Accepted — 2026-05-08
 **Owner:** install wizard / Phase 4

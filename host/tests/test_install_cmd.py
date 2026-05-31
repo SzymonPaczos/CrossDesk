@@ -15,6 +15,7 @@ import pytest
 from crossdesk_host.cli import install_cmd
 from crossdesk_host.doctor.checks import CheckResult, Status
 from crossdesk_host.installer import credentials, state, tools_iso
+from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 
 
 def _args(*, iso_path: Path | None = None, dry_run: bool = False) -> argparse.Namespace:
@@ -26,6 +27,16 @@ def _state_in_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     sf = tmp_path / "install.state.json"
     monkeypatch.setattr(state, "default_state_file", lambda: sf)
     return sf
+
+
+@pytest.fixture(autouse=True)
+def _mock_libvirt(monkeypatch: pytest.MonkeyPatch) -> LibvirtControllerMock:
+    """Inject a mock LibvirtController so create_libvirt_domain never
+    touches real libvirt (which on a Linux+KVM box would actually define
+    and boot a VM)."""
+    ctl = LibvirtControllerMock()
+    monkeypatch.setattr(install_cmd, "_libvirt_ctl_override", ctl)
+    return ctl
 
 
 def _ok_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -54,11 +65,14 @@ def test_doctor_failure_stops_pipeline(monkeypatch: pytest.MonkeyPatch, _state_i
     assert not s.is_done("generate_credentials")
 
 
-def test_host_side_steps_run_then_gate_at_libvirt(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, _state_in_tmp: Path
+def test_full_pipeline_with_iso_defines_and_starts_domain(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    _state_in_tmp: Path,
+    _mock_libvirt: LibvirtControllerMock,
 ) -> None:
     _ok_doctor(monkeypatch)
-    iso = tmp_path / "Win11.iso"
+    iso = tmp_path / "Win10.iso"
     iso.write_bytes(b"fake-iso")
     monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
     # Point the tools-ISO inputs at fixtures so resolution is deterministic
@@ -71,27 +85,25 @@ def test_host_side_steps_run_then_gate_at_libvirt(
         f = tmp_path / name
         f.write_bytes(b"x")
         monkeypatch.setenv(env, str(f))
-    built: dict[str, Path] = {}
 
     def fake_build(**kw: Path) -> Path:
         kw["output_iso"].write_bytes(b"ISO")
-        built["out"] = kw["output_iso"]
         return kw["output_iso"]
 
     monkeypatch.setattr(tools_iso, "build_tools_iso", fake_build)
+    # Pre-create the disk so the qemu-img subprocess is skipped in the test.
+    (_state_in_tmp.parent / "crossdesk-win.qcow2").write_bytes(b"qcow")
 
     rc = install_cmd.run(_args(iso_path=iso))
 
-    assert rc == 1  # gated at create_libvirt_domain
+    assert rc == 0
     s = state.load(_state_in_tmp)
-    assert s.is_done("doctor")
-    assert s.is_done("download_iso")
-    assert s.is_done("generate_credentials")
-    assert s.is_done("build_tools_iso")
-    assert not s.is_done("create_libvirt_domain")
-    # The tools ISO landed beside the install state.
-    assert built["out"] == _state_in_tmp.parent / "tools.iso"
-    assert built["out"].is_file()
+    assert all(s.is_done(step) for step in install_cmd._STEPS)
+    # The domain was defined + started exactly once with the right name.
+    assert _mock_libvirt.hooks.define_and_start_count == 1
+    assert _mock_libvirt.hooks.defined_xml is not None
+    assert "windows-guest" in _mock_libvirt.hooks.defined_xml
+    assert (_state_in_tmp.parent / "tools.iso").is_file()
 
 
 def test_download_iso_requires_iso_path(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:

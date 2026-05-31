@@ -13,13 +13,33 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 from pathlib import Path
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
+from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import DEFAULT_CHECKS, Status
 from crossdesk_host.i18n import _
 from crossdesk_host.installer import credentials, state, tools_iso
+from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
+
+# Domain name the daemon's LibvirtController also defaults to, so the
+# domain `crossdesk install` defines is the one the daemon manages.
+_DOMAIN_NAME = "windows-guest"
+_DISK_GB = 64
+
+# Tests set this to a mock LibvirtController; production resolves the real
+# one lazily (deferred libvirt import keeps the CLI importable on dev hosts).
+_libvirt_ctl_override: Optional[LibvirtController] = None
+
+
+def _resolve_libvirt_ctl() -> LibvirtController:
+    if _libvirt_ctl_override is not None:
+        return _libvirt_ctl_override
+    from crossdesk_host.libvirt_ctl.real import RealLibvirtController
+
+    return RealLibvirtController(domain_name=_DOMAIN_NAME)
 
 _STEPS: List[str] = [
     "doctor",
@@ -128,6 +148,68 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     print(_("    built tools ISO at {path}").format(path=output))
 
 
+def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
+    iso: Path | None = args.iso_path
+    if iso is None or not iso.is_file():
+        raise _StepFailed(_("Windows ISO missing — pass --iso-path"))
+    state_dir = state.default_state_file().parent
+    disk = state_dir / "crossdesk-win.qcow2"
+    tools = state_dir / "tools.iso"
+    if not tools.is_file():
+        raise _StepFailed(_("tools ISO not found at {p} (build_tools_iso first)").format(p=tools))
+
+    if not disk.exists():
+        try:
+            subprocess.run(
+                ["qemu-img", "create", "-f", "qcow2", str(disk), f"{_DISK_GB}G"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=120.0,
+            )
+        except FileNotFoundError as exc:
+            raise _StepFailed(_("qemu-img not found — install qemu-utils")) from exc
+        except subprocess.CalledProcessError as exc:
+            raise _StepFailed(
+                _("qemu-img create failed: {err}").format(err=exc.stderr.strip())
+            ) from exc
+        print(_("    created {gb} GB disk at {p}").format(gb=_DISK_GB, p=disk))
+
+    spec = DomainSpec(name=_DOMAIN_NAME, disk_path=disk, windows_iso=iso, tools_iso=tools)
+    try:
+        _resolve_libvirt_ctl().define_and_start(build_domain_xml(spec))
+    except RuntimeError as exc:
+        raise _StepFailed(str(exc)) from exc
+    print(_("    defined + started libvirt domain {name}").format(name=_DOMAIN_NAME))
+
+
+def _step_run_autounattend(args: argparse.Namespace) -> None:
+    try:
+        running = _resolve_libvirt_ctl().is_running()
+    except RuntimeError as exc:
+        raise _StepFailed(str(exc)) from exc
+    if not running:
+        raise _StepFailed(_("domain is not running after start"))
+    # The unattended install is driven by autounattend.xml inside the
+    # guest; the host's role from here is to inform + let it proceed.
+    print(_("    Windows is installing unattended (~20-40 min)."))
+    print(_("    Watch it: virt-viewer / a VNC client to the domain's VNC port."))
+    print(_("    Setup + agent install run from autounattend.xml; the agent"))
+    print(_("    registers itself with the host when setup completes."))
+
+
+def _step_delegated_to_guest(args: argparse.Namespace) -> None:
+    # Agent-service install + post-install tweaks are performed inside the
+    # guest by autounattend.xml's FirstLogonCommands; the host has no
+    # synchronous action and verifies readiness later via the daemon.
+    print(_("    delegated to in-guest autounattend"))
+
+
+def _step_first_launch_notification(args: argparse.Namespace) -> None:
+    print(_("    install initiated. When Windows finishes and the agent"))
+    print(_("    connects, launch an app: crossdesk launch notepad"))
+
+
 def _gated(step: str) -> Callable[[argparse.Namespace], None]:
     def handler(args: argparse.Namespace) -> None:
         raise _HardwareGated(step)
@@ -140,11 +222,11 @@ _HANDLERS: Dict[str, Callable[[argparse.Namespace], None]] = {
     "download_iso": _step_download_iso,
     "generate_credentials": _step_generate_credentials,
     "build_tools_iso": _step_build_tools_iso,
-    "create_libvirt_domain": _gated("create_libvirt_domain"),
-    "run_autounattend": _gated("run_autounattend"),
-    "install_agent_service": _gated("install_agent_service"),
-    "post_install_tweaks": _gated("post_install_tweaks"),
-    "first_launch_notification": _gated("first_launch_notification"),
+    "create_libvirt_domain": _step_create_libvirt_domain,
+    "run_autounattend": _step_run_autounattend,
+    "install_agent_service": _step_delegated_to_guest,
+    "post_install_tweaks": _step_delegated_to_guest,
+    "first_launch_notification": _step_first_launch_notification,
 }
 
 
@@ -205,5 +287,5 @@ def run(args: argparse.Namespace) -> int:
         s.mark(step, "done")
         state.save(s, state_path)
 
-    print(_("install complete"))
+    print(_("install pipeline complete (Windows continues installing in the guest)"))
     return 0

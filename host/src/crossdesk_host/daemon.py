@@ -30,7 +30,9 @@ try:
 except ImportError:
     systemd_daemon = None
 
+from crossdesk_host.display.rail_manager import RailManager  # noqa: E402
 from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
+from crossdesk_host.freerdp.real import RealFreeRDPInvocation  # noqa: E402
 from crossdesk_host.ipc.auth import AuthValidator  # noqa: E402
 from crossdesk_host.ipc.control import ControlServiceServicer  # noqa: E402
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer  # noqa: E402
@@ -40,6 +42,7 @@ from crossdesk_host.ipc.management import (  # noqa: E402
     MgmtState,
     mgmt_socket_path,
 )
+from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402
@@ -84,6 +87,15 @@ async def main() -> None:
     libvirt_ctl = LibvirtControllerMock()
     mgmt_state = MgmtState()
 
+    # Shared RAIL launch backend. The control servicer registers the live
+    # guest session with the verify_coordinator and routes RailWindowEvents
+    # to the rail_manager; the management servicer's Launch RPC uses the
+    # same freerdp + coordinator to spawn sessions. One instance each so
+    # both planes agree on session/credential state.
+    freerdp = RealFreeRDPInvocation()
+    verify_coordinator = VerifyCoordinator()
+    rail_manager = RailManager(freerdp_inv=freerdp)
+
     transport = RealTransport()
     server = transport.create_server(
         ca_cert,
@@ -97,7 +109,12 @@ async def main() -> None:
         mgmt_state.agent_version = version
 
     control_pb2_grpc.add_ControlServiceServicer_to_server(
-        ControlServiceServicer(auth_validator, on_agent_version=_store_agent_version),
+        ControlServiceServicer(
+            auth_validator,
+            rail_manager=rail_manager,
+            verify_coordinator=verify_coordinator,
+            on_agent_version=_store_agent_version,
+        ),
         server,
     )
     heartbeat_pb2_grpc.add_HeartbeatServiceServicer_to_server(
@@ -114,7 +131,13 @@ async def main() -> None:
     # server, no mTLS — Unix permissions on the socket file gate access.
     mgmt_server = grpc.aio.server()
     mgmt_pb2_grpc.add_ManagementServiceServicer_to_server(
-        ManagementServiceServicer(mgmt_state, libvirt_ctl), mgmt_server
+        ManagementServiceServicer(
+            mgmt_state,
+            libvirt_ctl,
+            freerdp=freerdp,
+            verify_coordinator=verify_coordinator,
+        ),
+        mgmt_server,
     )
     sock_path = mgmt_socket_path()
     if sock_path.exists():

@@ -96,12 +96,15 @@ async def test_list_discovered_apps_starts_empty(context: MagicMock) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def test_launch_records_activity(context: MagicMock) -> None:
+async def test_launch_without_backend_reports_unavailable(context: MagicMock) -> None:
+    # _servicer() wires no freerdp / verify_coordinator, so Launch must
+    # report the backend is unavailable rather than pretending success.
     servicer = _servicer()
     response = await servicer.Launch(mgmt_pb2.LaunchRequest(app_id="notepad"), context)
-    assert response.ok
+    assert not response.ok
+    assert "backend" in response.error
     kinds = [a.kind for a in servicer.state.recent_activity]
-    assert mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED in kinds
+    assert mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED not in kinds
 
 
 async def test_suspend_uses_coordinator_when_present(context: MagicMock) -> None:

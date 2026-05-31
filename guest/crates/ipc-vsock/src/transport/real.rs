@@ -2,12 +2,17 @@
 //! `RealTransport` type:
 //!
 //! - **Windows** (`cfg(target_os = "windows")`): When the URI scheme
-//!   is `vsock`, dial AF_HYPERV via `WSAConnect` against the
-//!   `SOCKADDR_HV` carrying the host's `VmId` GUID. When the URI
-//!   scheme is `https` (dev path on Mac portfwd), fall back to TCP.
-//! - **Non-Windows**: AF_HYPERV does not exist in the kernel; we
-//!   only dial TCP loopback. This is the macOS / Linux integration
-//!   harness path.
+//!   is `vsock`, dial **AF_VSOCK** (virtio-vsock via the virtio-win
+//!   `viosock` driver) to the host's integer CID — `VMADDR_CID_HOST = 2`
+//!   (DEC-0017). When the scheme is `https` (dev path), fall back to TCP.
+//! - **Non-Windows**: the guest is Windows in production; the macOS /
+//!   Linux compile path is the integration harness, which always speaks
+//!   `https://` over TCP loopback.
+//!
+//! NOT AF_HYPERV: CrossDesk runs the guest under QEMU/KVM, not Hyper-V
+//! (DEC-0003). The earlier AF_HYPERV/`SOCKADDR_HV`/GUID model was wrong
+//! for a virtio-vsock device; see DEC-0017 for the retarget + the
+//! still-pending socket FFI / Response-boxing work (hardware-gated).
 //!
 //! Mock counterpart lives in `super::mock`. Both implementations
 //! satisfy `tower::Service<Uri, Response = TokioIo<TcpStream>>`,
@@ -44,7 +49,7 @@ impl Service<Uri> for RealTransport {
 #[cfg(target_os = "windows")]
 async fn dial(scheme: &str, host: &str, port: u16) -> std::io::Result<TokioIo<TcpStream>> {
     if scheme == "vsock" {
-        return dial_af_hyperv(host, port).await;
+        return dial_af_vsock(host, port).await;
     }
     let addr = format!("{host}:{port}");
     tracing::info!(target = %addr, "real transport dialing TCP loopback");
@@ -62,23 +67,47 @@ async fn dial(_scheme: &str, host: &str, port: u16) -> std::io::Result<TokioIo<T
     Ok(TokioIo::new(TcpStream::connect(addr).await?))
 }
 
-/// AF_HYPERV connector — implemented on Windows only. Today this is
-/// a placeholder that returns `Unsupported`; once the SCM-bootstrap
-/// path runs in a Hyper-V VM with vsock enabled, this body wires
-/// `WSAConnect` against `SOCKADDR_HV { Family: AF_HYPERV (34),
-/// VmId: <host GUID>, ServiceId: <port> }` and hands the resulting
-/// SOCKET to tokio. The URI host carries the VmId GUID.
+/// Parse a `vsock://CID:port` target into `(cid, port)`.
 ///
-/// Tracked in FOLLOWUPS as the AF_HYPERV vsock connector item.
+/// The CID is an **integer** (AF_VSOCK) — e.g. `2` for `VMADDR_CID_HOST` —
+/// NOT a GUID (that was the AF_HYPERV model retargeted in DEC-0017).
+/// Defined for the Windows build (used by `dial_af_vsock`) and under
+/// `test` so the parsing is exercised on any platform without a Windows
+/// kernel.
+#[cfg(any(target_os = "windows", test))]
+fn parse_vsock_target(host: &str, port: u16) -> std::io::Result<(u32, u32)> {
+    let cid: u32 = host.parse().map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("vsock CID must be an integer, got {host:?}"),
+        )
+    })?;
+    Ok((cid, u32::from(port)))
+}
+
+/// AF_VSOCK connector (virtio-vsock via the viosock driver) — Windows only.
+///
+/// Retargeted from AF_HYPERV per DEC-0017. Still returns `Unsupported`:
+/// the live socket call is hardware-gated (needs a booted guest carrying
+/// the viosock driver to verify). Remaining work, per DEC-0017:
+///   1. `windows` crate `Win32_Networking_WinSock`: `WSASocketW(AF_VSOCK,
+///      SOCK_STREAM, 0, ..)` → connect to `#[repr(C)] SOCKADDR_VM
+///      { svm_family, svm_reserved1, svm_port, svm_cid }`.
+///   2. box the IO — `Service::Response` is hard-typed to
+///      `TokioIo<TcpStream>` today; a vsock SOCKET is not a `TcpStream`.
+///   3. async-wrap the raw SOCKET for tokio.
 #[cfg(target_os = "windows")]
-async fn dial_af_hyperv(_host: &str, _port: u16) -> std::io::Result<TokioIo<TcpStream>> {
+async fn dial_af_vsock(host: &str, port: u16) -> std::io::Result<TokioIo<TcpStream>> {
+    let (cid, port) = parse_vsock_target(host, port)?;
     tracing::error!(
-        "AF_HYPERV connector not implemented — falling back to error. \
-         See FOLLOWUPS 'AF_HYPERV vsock connector' item."
+        cid,
+        port,
+        "AF_VSOCK connector not implemented yet (DEC-0017) — viosock socket \
+         FFI + Response-boxing are hardware-gated."
     );
     Err(std::io::Error::new(
         std::io::ErrorKind::Unsupported,
-        "AF_HYPERV connector not yet implemented",
+        "AF_VSOCK connector not yet implemented (DEC-0017)",
     ))
 }
 
@@ -105,9 +134,24 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[tokio::test]
     async fn vsock_uri_returns_unsupported_until_implemented() {
+        // Integer CID 2 = VMADDR_CID_HOST (AF_VSOCK, not a GUID — DEC-0017).
         let mut transport = RealTransport;
-        let uri = Uri::from_str("vsock://00000000-0000-0000-0000-000000000000:50051").unwrap();
+        let uri = Uri::from_str("vsock://2:50051").unwrap();
         let err = transport.call(uri).await.expect_err("vsock should fail");
         assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
+    }
+
+    #[test]
+    fn parse_vsock_target_extracts_integer_cid_and_port() {
+        let (cid, port) = parse_vsock_target("2", 50051).expect("valid CID");
+        assert_eq!((cid, port), (2u32, 50051u32));
+    }
+
+    #[test]
+    fn parse_vsock_target_rejects_non_integer_cid() {
+        // A GUID (the old AF_HYPERV form) is no longer a valid vsock CID.
+        let err = parse_vsock_target("00000000-0000-0000-0000-000000000000", 50051)
+            .expect_err("GUID is not a valid integer CID");
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
     }
 }

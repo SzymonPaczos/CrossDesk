@@ -7,6 +7,75 @@ delete history.
 
 ---
 
+## DEC-0017: Guest↔host transport is AF_VSOCK (virtio-vsock), not Hyper-V AF_HYPERV
+
+**Status:** Accepted — 2026-06-01
+**Owner:** transport / Phase 2–4
+**Related:** DEC-0003 (`qemu:///session`); DEC-0016 (`<vsock>` in domain XML);
+`guest/crates/ipc-vsock/src/transport/real.rs`
+
+### Context
+
+The guest agent's transport stub was written against **AF_HYPERV**
+(`SOCKADDR_HV` with a `VmId` GUID, family 34) — the address family
+Microsoft Hyper-V uses for host↔VM sockets. But CrossDesk runs the guest
+under **QEMU/KVM**, not Hyper-V (DEC-0003). QEMU exposes a **virtio-vsock**
+device (libvirt `<vsock>`, DEC-0016); the matching guest-side mechanism is
+the **virtio-win `viosock` driver**, which surfaces an `AF_VSOCK` Winsock
+provider. AF_HYPERV is simply the wrong family here — a guest dialing
+AF_HYPERV against a QEMU virtio-vsock device cannot connect.
+
+### Decision
+
+The guest dials the host over **AF_VSOCK** (integer CID + port), not
+AF_HYPERV:
+
+- Host CID is the well-known **`VMADDR_CID_HOST = 2`**; the guest is
+  assigned CID 3 in the domain XML (DEC-0016). The `vsock://CID:port` URI
+  carries an **integer CID** (not a GUID, as the AF_HYPERV stub assumed).
+- The guest requires the **virtio-win `viosock`** driver installed; without
+  it the `AF_VSOCK` provider is absent and dialing fails with a clear error.
+- The **dev / in-process path stays TCP loopback** on all platforms
+  (`https://127.0.0.1:50051`), so the integration harness and Mac/Linux
+  dev builds are unaffected.
+
+### Implementation status & remaining work (hardware-gated)
+
+This decision retargets the code from AF_HYPERV to AF_VSOCK (names,
+comments, `vsock://CID:port` integer parsing, tests) and documents the
+spec. The live socket connector is **not** wired yet because it cannot be
+verified without a booted Windows guest carrying the viosock driver. The
+remaining work, specified here for the next session:
+
+1. **Winsock FFI** (`windows` crate, `Win32_Networking_WinSock`):
+   `WSASocketW(AF_VSOCK, SOCK_STREAM, 0, …)` → `connect`/`WSAConnect` to a
+   `#[repr(C)] SOCKADDR_VM { svm_family, svm_reserved1, svm_port, svm_cid }`.
+   The numeric `AF_VSOCK` value is the one the installed viosock provider
+   registers (confirm on the live guest via `WSAEnumProtocols`).
+2. **Response-type refactor:** `RealTransport`'s `Service::Response` is
+   hard-typed to `TokioIo<TcpStream>`. A vsock SOCKET is not a `TcpStream`,
+   so box the IO — e.g. `TokioIo<Box<dyn AsyncRead + AsyncWrite + Send + Unpin>>`
+   — and have both the TCP and vsock paths box their stream.
+3. **tokio async-wrap** of the raw SOCKET (evaluate `from_raw_socket` vs a
+   small custom `AsyncRead`/`AsyncWrite` newtype; tokio's `TcpStream` may
+   apply TCP-only socket options).
+
+### Alternatives considered
+
+- **AF_HYPERV (status quo stub).** Wrong hypervisor family for QEMU/KVM.
+  Rejected — it can never connect to a virtio-vsock device.
+- **TCP-over-virtio-net forever.** Works, but loses the per-frame
+  CID-bound trust property AF_VSOCK gives and needs an in-guest port
+  forwarder. Kept only as the dev path.
+
+### Reconsider when
+
+CrossDesk ever supports a Hyper-V host backend (then AF_HYPERV returns as a
+second connector selected by hypervisor type), or virtio-vsock Windows
+support changes shape.
+
+---
+
 ## DEC-0016: `crossdesk install` defines the guest as a libvirt domain from generated XML
 
 **Status:** Accepted — 2026-06-01

@@ -61,8 +61,9 @@ def build_domain_xml(spec: DomainSpec) -> str:
     # UEFI is enough (Win11 would need <loader secure='yes'> + smm).
     os_el = ET.SubElement(domain, "os", {"firmware": "efi"})
     ET.SubElement(os_el, "type", {"arch": "x86_64", "machine": "q35"}).text = "hvm"
-    ET.SubElement(os_el, "boot", {"dev": "cdrom"})
-    ET.SubElement(os_el, "boot", {"dev": "hd"})
+    # Boot order is set per-device below (<boot order=.../>), not here:
+    # with UEFI + multiple SATA devices the global <os><boot> form left
+    # OVMF with "no bootable option" — per-device order is reliable.
 
     features = ET.SubElement(domain, "features")
     ET.SubElement(features, "acpi")
@@ -77,18 +78,25 @@ def build_domain_xml(spec: DomainSpec) -> str:
     ET.SubElement(devices, "emulator").text = spec.emulator
 
     # Boot disk on SATA (DEC-0016: Windows Setup has no in-box virtio-blk).
+    # boot order 2: the (empty) disk is only bootable after Setup installs.
     disk = ET.SubElement(devices, "disk", {"type": "file", "device": "disk"})
     ET.SubElement(disk, "driver", {"name": "qemu", "type": "qcow2", "discard": "unmap"})
     ET.SubElement(disk, "source", {"file": str(spec.disk_path)})
     ET.SubElement(disk, "target", {"dev": "sda", "bus": "sata"})
+    ET.SubElement(disk, "boot", {"order": "2"})
 
-    # index 0 (sdb) = Windows install media → C: source; index 1 (sdc) =
-    # tools ISO → D:, which autounattend.xml's FirstLogonCommands read.
-    for dev, iso in (("sdb", spec.windows_iso), ("sdc", spec.tools_iso)):
+    # sdb = Windows install media → C: source (boot order 1); sdc = tools
+    # ISO → D:, which autounattend.xml's FirstLogonCommands read (not boot).
+    for dev, iso, order in (
+        ("sdb", spec.windows_iso, "1"),
+        ("sdc", spec.tools_iso, None),
+    ):
         cd = ET.SubElement(devices, "disk", {"type": "file", "device": "cdrom"})
         ET.SubElement(cd, "driver", {"name": "qemu", "type": "raw"})
         ET.SubElement(cd, "source", {"file": str(iso)})
         ET.SubElement(cd, "target", {"dev": dev, "bus": "sata"})
+        if order is not None:
+            ET.SubElement(cd, "boot", {"order": order})
         ET.SubElement(cd, "readonly")
 
     # User-mode (SLIRP) networking — no root, no bridge setup (DEC-0003).

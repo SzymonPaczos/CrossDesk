@@ -30,13 +30,24 @@ def test_well_formed_kvm_domain() -> None:
     assert root.findtext("vcpu") == "4"
 
 
-def test_uefi_and_boot_order() -> None:
+def test_uefi_and_per_device_boot_order() -> None:
     root = _xml()
     os_el = root.find("os")
     assert os_el is not None and os_el.get("firmware") == "efi"
     assert os_el.findtext("type") == "hvm"
-    boots = [b.get("dev") for b in os_el.findall("boot")]
-    assert boots == ["cdrom", "hd"]
+    # Boot order is per-device (UEFI + multi-SATA): Windows ISO first, disk
+    # second, tools ISO not bootable. The global <os><boot> form is gone.
+    assert os_el.findall("boot") == []
+    disks = root.findall("devices/disk")
+    boot_orders = {
+        d.find("source").get("file"): (  # type: ignore[union-attr]
+            d.find("boot").get("order") if d.find("boot") is not None else None  # type: ignore[union-attr]
+        )
+        for d in disks
+    }
+    assert boot_orders["/iso/Win10.iso"] == "1"
+    assert boot_orders["/var/lib/crossdesk/win.qcow2"] == "2"
+    assert boot_orders["/iso/tools.iso"] is None
 
 
 def test_disk_is_sata_with_two_cdroms() -> None:

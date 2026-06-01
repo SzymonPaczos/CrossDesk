@@ -78,12 +78,14 @@
             <DiskID>0</DiskID>
             <PartitionID>3</PartitionID>
           </InstallTo>
-          <!-- Index 6 = Windows 10/11 Pro in most retail ISOs.
-               Run `dism /Get-WimInfo /WimFile:sources\install.wim` to verify. -->
+          <!-- Select by edition NAME, not numeric index: consumer
+               multi-edition ESDs reorder indices between ISO revisions, but
+               the edition name is stable. This also lets Setup auto-resolve
+               the image without showing the edition-picker screen. -->
           <InstallFrom>
             <MetaData wcm:action="add">
-              <Key>/IMAGE/INDEX</Key>
-              <Value>6</Value>
+              <Key>/IMAGE/NAME</Key>
+              <Value>Windows 10 Pro</Value>
             </MetaData>
           </InstallFrom>
         </OSImage>

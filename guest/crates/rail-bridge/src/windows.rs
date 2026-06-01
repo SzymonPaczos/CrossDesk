@@ -1,7 +1,8 @@
 use crate::events::build_rail_event;
 use proto::crossdesk::v1::RailWindowEvent;
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
@@ -19,6 +20,28 @@ static EVENT_SENDER: OnceLock<mpsc::Sender<RailWindowEvent>> = OnceLock::new();
 /// subsequent `request_shutdown()` can post `WM_QUIT` to break the
 /// `GetMessageW` loop. Zero means the thread has not started yet.
 static HOOK_THREAD_ID: AtomicU32 = AtomicU32::new(0);
+
+/// HWNDs (as isize) we've already announced to the host with a CREATED event.
+///
+/// A window's `EVENT_OBJECT_CREATE` typically fires *before* the window is
+/// visible, so the old code (which dropped every non-visible event) never
+/// forwarded a CREATED — the host then saw only later MOVE events for an HWND
+/// it had no record of ("ghost window" warnings), and CREATE-only work like
+/// icon extraction never ran. We instead emit CREATED on the first event
+/// where the window is top-level *and* visible, and track it here so
+/// subsequent events map to MOVE/etc. and DESTROY fires only for known
+/// windows.
+static SEEN_WINDOWS: OnceLock<Mutex<HashSet<isize>>> = OnceLock::new();
+
+fn seen_windows() -> std::sync::MutexGuard<'static, HashSet<isize>> {
+    // Recover from a poisoned lock rather than unwinding across the FFI
+    // callback boundary — the only state is a HashSet of integers, so a prior
+    // panic leaves it in a perfectly usable state.
+    SEEN_WINDOWS
+        .get_or_init(|| Mutex::new(HashSet::new()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 pub fn start_hook_thread(sender: mpsc::Sender<RailWindowEvent>) {
     if EVENT_SENDER.set(sender).is_err() {
@@ -108,19 +131,43 @@ unsafe extern "system" fn winevent_proc(
         return;
     }
 
-    // DESTROY arrives after the window has already disappeared; everything
-    // else must be visible to be worth forwarding.
-    if event != EVENT_OBJECT_DESTROY && !IsWindowVisible(hwnd).as_bool() {
+    let key = hwnd.0 as isize;
+
+    // DESTROY fires after the window is gone: forward it only for a window we
+    // actually announced, and forget it so the HWND can be reused cleanly.
+    if event == EVENT_OBJECT_DESTROY {
+        if seen_windows().remove(&key) {
+            forward(build_rail_event(EVENT_OBJECT_DESTROY, hwnd));
+        }
         return;
     }
 
-    if let Some(rail_event) = build_rail_event(event, hwnd) {
-        if let Some(sender) = EVENT_SENDER.get() {
-            // try_send: this is the Win32 pump thread, so blocking on a full
-            // queue would stall every other window event in the system.
-            if let Err(e) = sender.try_send(rail_event) {
-                debug!("Failed to send rail event: {:?}", e);
-            }
+    // Everything else must be visible to matter. A window is usually NOT yet
+    // visible at its CREATE, so the create is announced lazily on the first
+    // visible event below.
+    if !IsWindowVisible(hwnd).as_bool() {
+        return;
+    }
+
+    // First visible sighting → announce CREATED (carries geometry + the
+    // extracted icon); later sightings keep their natural kind (MOVE, etc.).
+    let first_sighting = seen_windows().insert(key);
+    let effective_event = if first_sighting {
+        EVENT_OBJECT_CREATE
+    } else {
+        event
+    };
+    forward(build_rail_event(effective_event, hwnd));
+}
+
+/// Push a (possibly `None`) rail event onto the channel, non-blocking.
+fn forward(rail_event: Option<RailWindowEvent>) {
+    let Some(rail_event) = rail_event else { return };
+    if let Some(sender) = EVENT_SENDER.get() {
+        // try_send: this is the Win32 pump thread, so blocking on a full
+        // queue would stall every other window event in the system.
+        if let Err(e) = sender.try_send(rail_event) {
+            debug!("Failed to send rail event: {:?}", e);
         }
     }
 }

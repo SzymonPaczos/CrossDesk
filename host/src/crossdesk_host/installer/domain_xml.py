@@ -24,6 +24,11 @@ from pathlib import Path
 # distinct CID here (3 by convention, matching infra/launch-vm.py).
 _DEFAULT_GUEST_CID = 3
 
+# libvirt's qemu-commandline passthrough namespace. Used for the user-net
+# NIC + host→guest RDP hostfwd: libvirt's native <portForward> needs the
+# passt backend, so we drive qemu's SLIRP hostfwd directly instead.
+_QEMU_NS = "http://libvirt.org/schemas/domain/qemu/1.0"
+
 
 @dataclass(frozen=True)
 class DomainSpec:
@@ -50,7 +55,7 @@ def build_domain_xml(spec: DomainSpec) -> str:
     Pure formatting — no I/O. ``ElementTree`` guarantees well-formed,
     attribute-escaped output (paths with ``&`` / quotes are handled).
     """
-    domain = ET.Element("domain", {"type": "kvm"})
+    domain = ET.Element("domain", {"type": "kvm", "xmlns:qemu": _QEMU_NS})
     ET.SubElement(domain, "name").text = spec.name
     ET.SubElement(domain, "memory", {"unit": "MiB"}).text = str(spec.ram_mib)
     ET.SubElement(domain, "currentMemory", {"unit": "MiB"}).text = str(spec.ram_mib)
@@ -99,14 +104,9 @@ def build_domain_xml(spec: DomainSpec) -> str:
             ET.SubElement(cd, "boot", {"order": order})
         ET.SubElement(cd, "readonly")
 
-    # User-mode (SLIRP) networking — no root, no bridge setup (DEC-0003).
-    iface = ET.SubElement(devices, "interface", {"type": "user"})
-    ET.SubElement(iface, "model", {"type": "virtio"})
-    # Forward host 127.0.0.1:3389 → guest:3389 so the host's FreeRDP can reach
-    # the guest's RDP server (RemoteApp/RAIL) over user-mode networking,
-    # which otherwise only routes guest→host.
-    pf = ET.SubElement(iface, "portForward", {"proto": "tcp", "address": "127.0.0.1"})
-    ET.SubElement(pf, "range", {"start": "3389", "to": "3389"})
+    # NIC + host→guest RDP forward are added via <qemu:commandline> below.
+    # libvirt's native <portForward> requires the passt backend; qemu's SLIRP
+    # hostfwd works with no extra host package (DEC-0003: no root/bridge).
 
     # libvirt spawns + tears down swtpm itself (no manual socket daemon).
     tpm = ET.SubElement(devices, "tpm", {"model": "tpm-crb"})
@@ -128,5 +128,20 @@ def build_domain_xml(spec: DomainSpec) -> str:
     video = ET.SubElement(devices, "video")
     ET.SubElement(video, "model", {"type": "vga"})
     ET.SubElement(devices, "input", {"type": "tablet", "bus": "usb"})
+
+    # User-mode NIC with a host→guest RDP forward, via qemu's SLIRP hostfwd
+    # (host 127.0.0.1:3389 → guest:3389). The literal "qemu:"-prefixed tags +
+    # the xmlns:qemu on <domain> emit the libvirt qemu-commandline passthrough
+    # without ElementTree's namespace machinery.
+    cmd = ET.SubElement(domain, "qemu:commandline")
+    for value in (
+        "-netdev",
+        "user,id=usernet0,hostfwd=tcp:127.0.0.1:3389-:3389",
+        "-device",
+        # Explicit PCI slot: qemu otherwise auto-picks 0x1, which libvirt
+        # already gave to the VGA device → "slot not available" collision.
+        "virtio-net-pci,netdev=usernet0,bus=pcie.0,addr=0x0a",
+    ):
+        ET.SubElement(cmd, "qemu:arg", {"value": value})
 
     return ET.tostring(domain, encoding="unicode")

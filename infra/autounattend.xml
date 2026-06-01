@@ -275,6 +275,28 @@
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>netsh advfirewall firewall add rule name="CrossDesk RDP" dir=in action=allow protocol=TCP localport=3389</CommandLine>
         </SynchronousCommand>
+        <!-- Enable the built-in Remote Desktop firewall group by RESOURCE ID
+             (@FirewallAPI.dll,-28752) — language-independent, unlike the
+             localized group display name on a Polish ISO. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>13</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>netsh advfirewall firewall set rule group="@FirewallAPI.dll,-28752" new enable=Yes</CommandLine>
+        </SynchronousCommand>
+        <!-- Force the RDP service to autostart + start now: it ships
+             Manual/trigger-start, so it may not be listening for the host's
+             first connection (the trigger can miss when the firewall drops
+             the SYN). Explicit start removes that race. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>14</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c sc config TermService start= auto</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>15</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c net start TermService</CommandLine>
+        </SynchronousCommand>
       </FirstLogonCommands>
 
     </component>

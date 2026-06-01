@@ -32,9 +32,13 @@ def test_basic_argv_for_notepad() -> None:
     assert "/u:cdtest" in argv
     assert "/p:cdtest-pass" in argv
     assert "/cert:tofu" in argv
+    assert "/sec:tls" in argv
     assert "/scale:100" in argv
     assert "+auto-reconnect" in argv
-    assert any(a.startswith("/app:program:||C:\\Windows\\notepad.exe") for a in argv)
+    # Direct executable path — no "||" alias prefix (RAIL_EXEC_E_FILE_NOT_FOUND
+    # on a live guest otherwise; verified).
+    assert any(a.startswith("/app:program:C:\\Windows\\notepad.exe") for a in argv)
+    assert not any("||" in a for a in argv)
     assert "/wm-class:notepad" in argv
 
 

@@ -138,9 +138,12 @@ def build_domain_xml(spec: DomainSpec) -> str:
         "-netdev",
         "user,id=usernet0,hostfwd=tcp:127.0.0.1:3389-:3389",
         "-device",
-        # Explicit PCI slot: qemu otherwise auto-picks 0x1, which libvirt
-        # already gave to the VGA device → "slot not available" collision.
-        "virtio-net-pci,netdev=usernet0,bus=pcie.0,addr=0x0a",
+        # e1000e, NOT virtio-net: Windows Setup/10 has no in-box virtio-net
+        # driver (same reason the boot disk is SATA — DEC-0016), so a virtio
+        # NIC leaves the guest with no network → no DHCP → RDP unreachable.
+        # The Intel e1000e (82574) driver ships in-box. Explicit PCI slot:
+        # qemu otherwise auto-picks 0x1, which libvirt gave to the VGA device.
+        "e1000e,netdev=usernet0,bus=pcie.0,addr=0x0a",
     ):
         ET.SubElement(cmd, "qemu:arg", {"value": value})
 

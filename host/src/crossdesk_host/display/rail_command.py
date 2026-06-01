@@ -73,6 +73,13 @@ class FreeRDPConnectionSpec:
     """Trust on first use. Production deployments may swap to
     ``ignore`` during the install handshake."""
 
+    security: str = "tls"
+    """RDP security protocol passed as ``/sec:``. The CrossDesk guest's
+    autounattend disables NLA (UserAuthentication=0), so ``tls`` (TLS without
+    CredSSP/NLA) connects + authenticates in-band — verified working against
+    a real Win10 guest. NLA would force CredSSP, which fails Kerberos→NTLM
+    fallback for a local workgroup account."""
+
 
 def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str]:
     """Construct the full xfreerdp RAIL argv (excluding the binary
@@ -82,7 +89,12 @@ def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str
         raise ValueError(f"FreeRDP only supports scale 100/140/180; got {conn.scale}")
 
     cmd_arg = " ".join(app.argv) if app.argv else ""
-    program_clause = f"||{app.executable_guest_path}"
+    # The program is a full executable PATH, so pass it directly. The "||"
+    # prefix is for a RemoteApp *alias* (an entry in the server's allow-list);
+    # prefixing a real path with "||" makes the guest report
+    # RAIL_EXEC_E_FILE_NOT_FOUND. Verified against a live Win10 guest:
+    # without "||" Notepad launches as a RAIL window; with it, file-not-found.
+    program_clause = app.executable_guest_path
     if cmd_arg:
         program_clause += f',cmd:"{cmd_arg}"'
     if app.icon_path:
@@ -93,6 +105,7 @@ def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str
         f"/u:{conn.username}",
         f"/p:{conn.password}",
         f"/cert:{conn.cert_policy}",
+        f"/sec:{conn.security}",
         f"/scale:{conn.scale}",
         "/dynamic-resolution",
         "+auto-reconnect",

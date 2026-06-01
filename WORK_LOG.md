@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-06-02 09:00] START · agent: claude-code · branch: feat/tcp-slirp-agent-online · task: tcp-slirp-agent-online · note: Continuing handoff.md. TCP-SLIRP transport so agent.exe reaches the daemon (guest 10.0.2.2:50051 → host 127.0.0.1 via SLIRP). Host: typed TransportConfig.bind_kind (auto|tcp|vsock) honored in transport/real.py + daemon wiring (no proto change). Guest: `console` run mode in agent-svc/main.rs (skip SCM, keep real LogonUserW/transport) for non-elevated bring-up + diagnostics. Catalog: add `notepad`. Then NON-DESTRUCTIVE live bring-up via FreeRDP drive-redirect + console agent (preserves baseline Notepad render), `crossdesk launch notepad` via daemon, production PKI provisioning (tools_iso + autounattend). NOT pushing to GitHub (owner pushes); local merges only.
+
 ## Recent
 
 - [2026-05-23 12:00] START · agent: claude-code · branch: feat/p1-batch · task: p1-batch · note: All non-HW P1 items: DBusNotifier real D-Bus call, crossdesk config migrate CLI, doctor expansion (vsock/qemu/cpu-virt/config-dir + --gpu), CLI i18n wave 2, Windows registry walker implementation + agent-svc wiring, EXECUTION_PLAN.md update.

@@ -33,6 +33,14 @@ from pathlib import Path
 _AGENT_ISO_NAME = "CrossDeskAgent.exe"
 _CA_ISO_NAME = "publisher-root-ca.crt"
 _AUTOUNATTEND_ISO_NAME = "autounattend.xml"
+# mTLS PKI trio (separate from the code-signing publisher root above):
+# the guest reads these from C:\CrossDesk\pki\ at runtime
+# (guest/.../ipc-vsock/src/tls.rs TlsMaterial::from_dir), and
+# autounattend.xml copies D:\{ca,guest.crt,guest.key} there on first
+# logon. Names match exactly what TlsMaterial::from_dir expects.
+_MTLS_CA_ISO_NAME = "ca.crt"
+_MTLS_GUEST_CERT_ISO_NAME = "guest.crt"
+_MTLS_GUEST_KEY_ISO_NAME = "guest.key"
 _VOLUME_ID = "CROSSDESK"
 
 # A local mkisofs run on three small files is bounded; a hang means a broken
@@ -130,23 +138,46 @@ def build_tools_iso(
     autounattend: Path,
     output_iso: Path,
     xorriso: str | None = None,
+    mtls_ca: Path | None = None,
+    mtls_guest_cert: Path | None = None,
+    mtls_guest_key: Path | None = None,
 ) -> Path:
     """Build the tools ISO at *output_iso* and return its path.
 
-    The three inputs are placed at the ISO root under their canonical names
-    (``CrossDeskAgent.exe`` / ``publisher-root-ca.crt`` / ``autounattend.xml``),
-    so the caller's on-disk filenames don't matter. Uses ``xorriso`` when
-    present (override the binary with *xorriso*) and otherwise falls back to
-    the pure-Python ``pycdlib`` writer.
+    The three core inputs are placed at the ISO root under their canonical
+    names (``CrossDeskAgent.exe`` / ``publisher-root-ca.crt`` /
+    ``autounattend.xml``), so the caller's on-disk filenames don't matter.
 
-    Raises :class:`ToolsIsoError` if any input is missing, if neither ISO
-    backend is available, or if the pack fails.
+    Optionally also carries the mTLS PKI trio (``ca.crt`` / ``guest.crt`` /
+    ``guest.key``) at the ISO root, which ``autounattend.xml`` copies to
+    ``C:\\CrossDesk\\pki\\`` so the agent can establish the mutually-
+    authenticated gRPC channel back to the host. All three must be supplied
+    together or omitted together — a partial PKI is a configuration error,
+    not a degraded mode.
+
+    Uses ``xorriso`` when present (override the binary with *xorriso*) and
+    otherwise falls back to the pure-Python ``pycdlib`` writer.
+
+    Raises :class:`ToolsIsoError` if any input is missing, if the PKI trio is
+    only partially supplied, if neither ISO backend is available, or if the
+    pack fails.
     """
     inputs = {
         _AGENT_ISO_NAME: agent_exe,
         _CA_ISO_NAME: ca_cert,
         _AUTOUNATTEND_ISO_NAME: autounattend,
     }
+    pki = (mtls_ca, mtls_guest_cert, mtls_guest_key)
+    if any(p is not None for p in pki):
+        if not all(p is not None for p in pki):
+            raise ToolsIsoError(
+                "mTLS PKI is all-or-nothing: pass mtls_ca, mtls_guest_cert, "
+                "and mtls_guest_key together, or none of them"
+            )
+        # mypy: the all() above proves these are not None.
+        inputs[_MTLS_CA_ISO_NAME] = mtls_ca  # type: ignore[assignment]
+        inputs[_MTLS_GUEST_CERT_ISO_NAME] = mtls_guest_cert  # type: ignore[assignment]
+        inputs[_MTLS_GUEST_KEY_ISO_NAME] = mtls_guest_key  # type: ignore[assignment]
     for iso_name, src in inputs.items():
         if not src.is_file():
             raise ToolsIsoError(f"input for {iso_name} is not a file: {src}")

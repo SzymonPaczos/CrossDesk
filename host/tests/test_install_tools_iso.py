@@ -116,6 +116,81 @@ def test_failed_pack_leaves_no_partial_iso(
     assert leftover == []
 
 
+def _stub_mtls(d: Path) -> dict[str, Path]:
+    ca = d / "mtls-ca.crt"
+    ca.write_text("-----BEGIN CERTIFICATE-----\nmtls-ca\n-----END CERTIFICATE-----\n")
+    cert = d / "mtls-guest.crt"
+    cert.write_text("-----BEGIN CERTIFICATE-----\nguest\n-----END CERTIFICATE-----\n")
+    key = d / "mtls-guest.key"
+    key.write_text("-----BEGIN PRIVATE KEY-----\nguest\n-----END PRIVATE KEY-----\n")
+    return {"mtls_ca": ca, "mtls_guest_cert": cert, "mtls_guest_key": key}
+
+
+def test_mtls_pki_trio_staged_under_canonical_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ins = _stub_inputs(tmp_path)
+    pki = _stub_mtls(tmp_path)
+    out = tmp_path / "out" / "tools.iso"
+    seen: dict[str, object] = {}
+
+    def fake_run(xorriso: str, staging: Path, out_tmp: Path) -> None:
+        seen["staged"] = sorted(p.name for p in staging.iterdir())
+        out_tmp.write_bytes(b"ISO\x00data")
+
+    monkeypatch.setattr(tools_iso, "_run_xorriso", fake_run)
+
+    build_tools_iso(**ins, **pki, output_iso=out, xorriso="/usr/bin/xorriso")
+
+    # The mTLS trio lands at the ISO root under the exact names the guest's
+    # TlsMaterial::from_dir + autounattend.xml expect.
+    assert seen["staged"] == [
+        "CrossDeskAgent.exe",
+        "autounattend.xml",
+        "ca.crt",
+        "guest.crt",
+        "guest.key",
+        "publisher-root-ca.crt",
+    ]
+
+
+def test_partial_mtls_pki_rejected(tmp_path: Path) -> None:
+    ins = _stub_inputs(tmp_path)
+    pki = _stub_mtls(tmp_path)
+    # Drop one leg of the trio → all-or-nothing contract violated.
+    del pki["mtls_guest_key"]
+    with pytest.raises(ToolsIsoError, match="all-or-nothing"):
+        build_tools_iso(
+            **ins, **pki, output_iso=tmp_path / "tools.iso", xorriso="xorriso"
+        )
+
+
+def test_mtls_missing_file_named_in_error(tmp_path: Path) -> None:
+    ins = _stub_inputs(tmp_path)
+    pki = _stub_mtls(tmp_path)
+    pki["mtls_guest_key"].unlink()
+    with pytest.raises(ToolsIsoError, match="guest.key"):
+        build_tools_iso(
+            **ins, **pki, output_iso=tmp_path / "tools.iso", xorriso="xorriso"
+        )
+
+
+def test_mtls_pki_in_pycdlib_image(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ins = _stub_inputs(tmp_path)
+    pki = _stub_mtls(tmp_path)
+    monkeypatch.setattr(tools_iso.shutil, "which", lambda _name: None)
+    out = tmp_path / "tools.iso"
+
+    build_tools_iso(**ins, **pki, output_iso=out)
+
+    data = out.read_bytes()
+    # Joliet long names for the mTLS material are present in the image.
+    assert "guest.crt".encode("utf-16-be") in data
+    assert "guest.key".encode("utf-16-be") in data
+
+
 @pytest.mark.skipif(shutil.which("xorriso") is None, reason="xorriso not installed")
 def test_real_xorriso_builds_iso(tmp_path: Path) -> None:
     ins = _stub_inputs(tmp_path)

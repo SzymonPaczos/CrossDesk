@@ -141,6 +141,35 @@ def _resolve_tools_inputs() -> tuple[Path, Path, Path]:
     return agent, ca, autounattend
 
 
+def _resolve_mtls_pki() -> Optional[tuple[Path, Path, Path]]:
+    """Locate the guest mTLS PKI trio (``ca.crt`` / ``guest.crt`` /
+    ``guest.key``) the tools ISO ships to ``C:\\CrossDesk\\pki\\``.
+
+    Resolution: ``CROSSDESK_MTLS_PKI_DIR`` env override, else the in-repo
+    ``infra/certs/pki`` produced by ``infra/certs/generate_mtls.sh``.
+    Returns ``None`` (with a printed warning) when the material is absent —
+    Windows still installs, but the agent cannot open its mutually-
+    authenticated channel until PKI is provisioned. All three must be
+    present; a partial set is treated as absent.
+    """
+    pki_dir = Path(
+        os.environ.get("CROSSDESK_MTLS_PKI_DIR", _repo_root() / "infra/certs/pki")
+    )
+    ca = pki_dir / "ca.crt"
+    cert = pki_dir / "guest.crt"
+    key = pki_dir / "guest.key"
+    if ca.is_file() and cert.is_file() and key.is_file():
+        return ca, cert, key
+    print(
+        _(
+            "    note: guest mTLS PKI not found under {dir} — the agent will "
+            "not connect until it is provisioned (run infra/certs/"
+            "generate_mtls.sh or set CROSSDESK_MTLS_PKI_DIR)"
+        ).format(dir=pki_dir)
+    )
+    return None
+
+
 def _prepare_autounattend(src: Path, locale: str, password: str, dest_dir: Path) -> Path:
     """Return a per-install autounattend with the windowsPE locale set to
     *locale* and the account-password placeholder filled with *password*.
@@ -170,9 +199,17 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     password = creds.password if creds is not None else ""
     autounattend = _prepare_autounattend(autounattend, locale, password, state_dir)
     output = state_dir / "tools.iso"
+    mtls = _resolve_mtls_pki()
+    mtls_ca, mtls_cert, mtls_key = mtls if mtls is not None else (None, None, None)
     try:
         tools_iso.build_tools_iso(
-            agent_exe=agent, ca_cert=ca, autounattend=autounattend, output_iso=output
+            agent_exe=agent,
+            ca_cert=ca,
+            autounattend=autounattend,
+            output_iso=output,
+            mtls_ca=mtls_ca,
+            mtls_guest_cert=mtls_cert,
+            mtls_guest_key=mtls_key,
         )
     except tools_iso.ToolsIsoError as exc:
         raise _StepFailed(str(exc)) from exc

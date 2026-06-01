@@ -9,28 +9,43 @@ prac — `history/completed-work.md`.
 
 ---
 
-## Live install — pierwszy realny boot Windows (2026-06-01, Linux+KVM box)
+## 🎉 MILESTONE — Windows app jako natywne okno Linuksa (2026-06-01, Linux+KVM)
 
-`crossdesk install --iso-path Win10_22H2_Polish.iso` realnie bootuje VM
-end-to-end: doctor → ISO → creds → tools.iso (pycdlib) → qemu-img 64G →
-define+start domeny libvirt → **Windows Setup uruchamia się** (OVMF → CD →
-WinPE → wybór edycji „Windows 10 Pro" via autounattend `/IMAGE/INDEX=6`).
-Naprawione w trakcie: per-device boot order, generic Pro ProductKey,
-`--locale` (autounattend en-US musi pasować do języka ISO).
+**Osiągnięte na żywo:** `crossdesk install --iso-path Win10_22H2_Polish.iso
+--locale pl-PL` instaluje Windows 10 Pro end-to-end, a FreeRDP RAIL renderuje
+**Notepada jako natywne okno X na pulpicie Linuksa** (`"Bez tytułu —
+Notatnik"` 1426×782, Map State IsViewable). Rdzeń obietnicy CrossDeska działa.
 
-**Co jeszcze NIE domknięte (autounattend tuning + sprzęt):**
-- **Pełna auto-instalacja**: nawet z pasującym locale Setup pokazuje
-  ekran wyboru edycji (autounattend nie tłumi w 100% UI windowsPE) —
-  potrzebny audyt kompletności answer-file / nudge. Dysk nie urósł =
-  Setup w fazie „Zbieranie informacji", przed kopiowaniem plików.
-- **`/dev/vhost-vsock` Permission denied** — `qemu:///session` nie otwiera
-  urządzenia (root-only). Vsock pomijany przy instalacji (Windows i tak
-  się instaluje); link agenta wymaga reguły udev. Patrz backlog.
-- **Guest AF_VSOCK connector** — niezaimplementowany (DEC-0017): retarget
-  + parsing gotowe, socket FFI hardware-gated. Bez tego agent po
-  instalacji nie połączy się z hostem (Faza 5).
-- **`--locale` domyślnie en-US** — dla polskiego ISO użyj
-  `crossdesk install --iso-path … --locale pl-PL`.
+Działająca komenda renderująca (bezpośredni RAIL; = to co `build_rail_argv`
+teraz produkuje):
+```
+DISPLAY=:0 XAUTHORITY=<xwayland-auth> xfreerdp3 /v:127.0.0.1:3389 \
+  /u:crossdesk /p:<vm.toml> /cert:ignore /sec:tls \
+  /app:program:'C:\Windows\System32\notepad.exe,name:Notepad' /wm-class:notepad
+```
+
+**Fixy zweryfikowane na żywo (zmergowane):** autounattend `/IMAGE/NAME`
+(nie INDEX), `--locale` (autounattend musi pasować do języka ISO),
+generic Pro ProductKey, per-device boot order, NIC **e1000e** (Win10 nie ma
+virtio-net w pudełku — jak dysk SATA), RDP enable + TermService autostart +
+firewall, injekcja hasła vm.toml→autounattend, hostfwd 3389 (qemu:commandline,
+bo `<portForward>` wymaga passt), `build_rail_argv`: `/sec:tls` + usunięcie
+prefiksu `||` (alias vs ścieżka → RAIL_EXEC_E_FILE_NOT_FOUND).
+
+**Pozostało (warstwa zarządzania CrossDeska, NIE blokuje renderowania):**
+- **`crossdesk launch` przez daemon** — działa host-side na mockach, ale na
+  realnym gueście wymaga agenta online (gate verify-credentials). To znaczy:
+  guest AF_VSOCK connector (DEC-0017, kod gotowy, niezweryfikowany — `/dev/
+  vhost-vsock` root-only bez reguły udev) ALBO transport TCP-przez-SLIRP
+  (10.0.2.2) + provisioning mTLS PKI do guesta + agent.exe uruchomiony na
+  realnym Windows (nigdy nietestowany). Dziś renderowanie idzie czystym
+  FreeRDP RAIL (bez agenta), co jest poprawne — agent dodaje zarządzanie
+  (zdarzenia okien, lifecycle) na wierzchu.
+- **NLA wyłączone** (`/sec:tls`) — dla konta lokalnego workgroup FreeRDP 3.x
+  nie robi fallbacku Kerberos→NTLM. Docelowo: NLA + NTLM z nazwą komputera
+  jako domeną (ustawić znany ComputerName), albo zostać przy TLS.
+- **virtio perf** — dysk SATA + NIC e1000e (zgodność instalacji). Po
+  instalacji można przełączyć na virtio-blk/virtio-net z virtio-win ISO.
 
 ---
 

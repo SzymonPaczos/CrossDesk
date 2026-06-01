@@ -73,15 +73,22 @@ def test_vsock_tpm_balloon_present() -> None:
     assert root.find("clock").get("offset") == "localtime"  # type: ignore[union-attr]
 
 
-def test_rdp_port_forward_present() -> None:
-    # Host 127.0.0.1:3389 → guest:3389 so the host's FreeRDP reaches the
-    # guest RDP server over user-mode networking.
-    root = _xml()
-    pf = root.find("devices/interface/portForward")
-    assert pf is not None and pf.get("proto") == "tcp"
-    assert pf.get("address") == "127.0.0.1"
-    rng = pf.find("range")
-    assert rng.get("start") == "3389" and rng.get("to") == "3389"  # type: ignore[union-attr]
+def test_rdp_host_forward_via_qemu_cmdline() -> None:
+    # Host 127.0.0.1:3389 → guest:3389 via qemu SLIRP hostfwd (libvirt
+    # <portForward> needs passt, which we don't require). NIC is the
+    # qemu-commandline one, so no libvirt <interface> remains.
+    xml = build_domain_xml(
+        DomainSpec(
+            name="windows-guest",
+            disk_path=Path("/d.qcow2"),
+            windows_iso=Path("/w.iso"),
+            tools_iso=Path("/t.iso"),
+        )
+    )
+    assert "xmlns:qemu=" in xml
+    assert "hostfwd=tcp:127.0.0.1:3389-:3389" in xml
+    assert "virtio-net-pci,netdev=usernet0" in xml
+    assert "<interface" not in xml
 
 
 def test_vsock_omitted_when_disabled() -> None:

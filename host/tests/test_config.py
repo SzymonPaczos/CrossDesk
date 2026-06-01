@@ -33,6 +33,7 @@ from crossdesk_host.config import (
 def test_defaults_all_sensible() -> None:
     cfg = CrossdeskConfig()
     assert cfg.transport.vsock_port == 50051
+    assert cfg.transport.bind_kind == "auto"
     assert cfg.transport.connect_timeout_seconds == 5.0
     assert cfg.heartbeat.ewma_alpha == 0.125
     assert cfg.heartbeat.miss_threshold == 3
@@ -132,6 +133,26 @@ def test_port_out_of_range_rejected() -> None:
         TransportConfig(vsock_port=0)
     with pytest.raises(ValueError, match="vsock_port"):
         TransportConfig(vsock_port=70000)
+
+
+def test_bind_kind_accepts_known_values() -> None:
+    assert TransportConfig(bind_kind="auto").bind_kind == "auto"
+    assert TransportConfig(bind_kind="tcp").bind_kind == "tcp"
+    assert TransportConfig(bind_kind="vsock").bind_kind == "vsock"
+
+
+def test_bind_kind_rejects_unknown() -> None:
+    with pytest.raises(ValueError, match="bind_kind"):
+        TransportConfig(bind_kind="udp")
+
+
+def test_bind_kind_env_override(tmp_path: Path) -> None:
+    toml = tmp_path / "config.toml"
+    toml.write_text("[transport]\nvsock_port = 50051\n")
+    cfg = load_from_toml(
+        toml, env={"CROSSDESK_CONFIG__TRANSPORT__BIND_KIND": "tcp"}
+    )
+    assert cfg.transport.bind_kind == "tcp"
 
 
 def test_negative_timeout_rejected() -> None:

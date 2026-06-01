@@ -127,6 +127,16 @@ icon = ""
 # ---------------------------------------------------------------------------
 
 [[apps]]
+app_id = "notepad"
+name = "Notepad"
+win_executable = 'C:\Windows\System32\notepad.exe'
+categories = ["Windows", "Utility"]
+mime_types = [
+    "text/plain",
+]
+icon = ""
+
+[[apps]]
 app_id = "mspaint"
 name = "Microsoft Paint"
 win_executable = 'C:\windows\system32\mspaint.exe'

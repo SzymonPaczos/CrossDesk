@@ -103,6 +103,7 @@ async def main() -> None:
         host_key,
         port=cfg.transport.vsock_port,
         interceptors=[TraceContextInterceptor()],
+        bind_kind=cfg.transport.bind_kind,
     )
 
     def _store_agent_version(version: str) -> None:

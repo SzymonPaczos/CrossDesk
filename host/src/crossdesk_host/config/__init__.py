@@ -141,6 +141,22 @@ class TransportConfig(BaseModel):
     vsock_port: int = 50051
     """AF_VSOCK port the host server binds. Falls back to TCP loopback in dev."""
 
+    bind_kind: str = "auto"
+    """Address family for the guest-facing gRPC server.
+
+    - ``auto`` (default): platform-canonical — AF_VSOCK on Linux,
+      TCP loopback on the macOS/Windows dev hosts (which have no
+      AF_VSOCK kernel support).
+    - ``tcp``: force TCP loopback (``127.0.0.1``) regardless of
+      platform. Used for the QEMU user-net (SLIRP) bring-up where the
+      guest reaches the host at ``10.0.2.2`` and SLIRP NATs that to the
+      host's loopback — so the daemon binds ``127.0.0.1`` and the guest
+      dials ``https://10.0.2.2:50051`` (DEC-0017 dev TCP path).
+    - ``vsock``: force AF_VSOCK regardless of platform.
+
+    Spike a single bring-up without editing config via
+    ``CROSSDESK_CONFIG__TRANSPORT__BIND_KIND=tcp``."""
+
     connect_timeout_seconds: float = 5.0
     """Initial gRPC channel connect deadline (mTLS handshake included)."""
 
@@ -153,6 +169,13 @@ class TransportConfig(BaseModel):
         # Validated at boundary — TOML parser hands us arbitrary ints.
         if not 1 <= v <= 65535:
             raise ValueError(f"vsock_port must be in 1..65535, got {v}")
+        return v
+
+    @field_validator("bind_kind")
+    @classmethod
+    def _bind_kind_known(cls, v: str) -> str:
+        if v not in {"auto", "tcp", "vsock"}:
+            raise ValueError(f"bind_kind must be auto|tcp|vsock, got {v!r}")
         return v
 
     @field_validator("connect_timeout_seconds", "rpc_timeout_seconds")

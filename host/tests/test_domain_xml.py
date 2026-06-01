@@ -87,7 +87,8 @@ def test_rdp_host_forward_via_qemu_cmdline() -> None:
     )
     assert "xmlns:qemu=" in xml
     assert "hostfwd=tcp:127.0.0.1:3389-:3389" in xml
-    assert "virtio-net-pci,netdev=usernet0" in xml
+    # e1000e (in-box Win10 driver), not virtio-net (no in-box driver).
+    assert "e1000e,netdev=usernet0" in xml
     assert "<interface" not in xml
 
 

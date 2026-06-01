@@ -58,17 +58,30 @@ przez nowy `TransportConfig.bind_kind=tcp`
   `install_cmd` przekazuje PKI. (Reinstalacja → agent auto-online.)
 - **catalog**: dodany `notepad` (find_app).
 
+**Ikony okien (user request 2026-06-02) — agent-side DONE + zweryfikowane na żywo:**
+rail-bridge ekstrahuje natywną ikonę .exe (256×256 przez `PrivateExtractIconsW`
+→ HICON→RGBA→PNG) do `RailWindowEvent.icon_png`. **Zweryfikowane na żywo:**
+realna ikona `notepad.exe` 256×256 (72 KB PNG, RGBA) trafia na hosta
+(`CROSSDESK_ICON_DUMP_DIR`). Plik: `guest/crates/rail-bridge/src/icon.rs`.
+**Pozostaje host consumer** (uczynić ikonę WIDOCZNĄ): ustawić bogaty multi-size
+`_NET_WM_ICON` na oknie RAIL (match po WM_CLASS=app_id) + `.desktop`/
+`StartupWMClass` dla docka. Pełny design: `backlog.md` P1 "RAIL window icons".
+Dziś FreeRDP ustawia tylko 32×32 `_NET_WM_ICON` z RAIL ICON orders.
+
 **Pozostało:**
-- **Ikony okien** (user request 2026-06-02): natywne wysokorozdzielcze ikony
-  Windows na oknach RAIL — patrz `backlog.md` P1 "RAIL window icons". Dziś
-  FreeRDP ustawia tylko 32×32 `_NET_WM_ICON` z RAIL ICON orders. Proto
-  (`RailWindowEvent.icon_png`) gotowe; agent jeszcze nie ekstrahuje (`events.rs`
-  `icon_png: vec![]` TODO), host jeszcze nie aplikuje.
-- **RailWindowEvent adoption** — "ghost window" warny: RailManager dostaje
-  MOVE dla HWND bez CREATED (rail-bridge forwarduje wszystko; RailManager to
-  dziś tracker, okna renderuje FreeRDP). Korelacja HWND↔X-window = Phase 4.
-- **cmd window artifact**: provisioning RemoteApp cmd renderuje się obok
-  Notepada (kosmetyka; produkcyjna ścieżka NT-service nie ma cmd).
+- **Host icon consumer** (patrz wyżej) — wymaga decyzji o zależnościach
+  (Pillow + python-xlib) albo bezzależnościowej ścieżki `.desktop`/icon-theme.
+- **RailWindowEvent adoption / "ghost window" — NAPRAWIONE 2026-06-02.**
+  Root cause: hook gubił `EVENT_OBJECT_CREATE` (okno niewidoczne w momencie
+  CREATE) → host nigdy nie dostawał CREATED → tylko późniejsze MOVE dla
+  nieznanego HWND ("ghost window"). Fix (`windows.rs`): emituj CREATED przy
+  pierwszym widocznym zdarzeniu (set `SEEN_WINDOWS`). Zweryfikowane: 0 ghost
+  warnów, RailManager loguje "Creating native Wayland window", a CREATED niesie
+  icon_png. (HWND↔X-window adoption do faktycznego zarządzania oknem przez
+  RailManager zamiast FreeRDP — dalej Phase 4.)
+- **cmd window artifact**: provisioning RemoteApp cmd ("crossdesk-agent")
+  renderuje się obok Notepada (kosmetyka bring-upu; produkcyjna ścieżka
+  NT-service via autounattend nie ma cmd ani console-mode).
 - **virtio perf / NLA→NTLM** — jak w milestone 2026-06-01.
 
 ---

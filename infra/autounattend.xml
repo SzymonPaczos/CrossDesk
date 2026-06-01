@@ -174,7 +174,7 @@
             <DisplayName>CrossDesk</DisplayName>
             <Group>Administrators</Group>
             <Password>
-              <Value></Value>
+              <Value>__CROSSDESK_PASSWORD__</Value>
               <PlainText>true</PlainText>
             </Password>
           </LocalAccount>
@@ -187,7 +187,7 @@
         <LogonCount>1</LogonCount>
         <Username>crossdesk</Username>
         <Password>
-          <Value></Value>
+          <Value>__CROSSDESK_PASSWORD__</Value>
           <PlainText>true</PlainText>
         </Password>
       </AutoLogon>
@@ -246,6 +246,34 @@
           <Order>8</Order>
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d 0 /f</CommandLine>
+        </SynchronousCommand>
+        <!-- Enable the RDP server: CrossDesk renders apps by connecting from
+             the host to this guest's RDP server (RemoteApp/RAIL). -->
+        <SynchronousCommand wcm:action="add">
+          <Order>9</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f</CommandLine>
+        </SynchronousCommand>
+        <!-- Disable NLA so FreeRDP connects without a Kerberos/NTLM pre-auth
+             dance (the host already authenticates with the stored creds). -->
+        <SynchronousCommand wcm:action="add">
+          <Order>10</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f</CommandLine>
+        </SynchronousCommand>
+        <!-- Allow launching arbitrary RemoteApp programs (not just an
+             allow-list) so /app:program:notepad.exe works. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>11</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Terminal Server\TSAppAllowList" /v fDisabledAllowList /t REG_DWORD /d 1 /f</CommandLine>
+        </SynchronousCommand>
+        <!-- Open the firewall for RDP by PORT (locale-independent — the
+             "Remote Desktop" rule group name is localized on a Polish ISO). -->
+        <SynchronousCommand wcm:action="add">
+          <Order>12</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>netsh advfirewall firewall add rule name="CrossDesk RDP" dir=in action=allow protocol=TCP localport=3389</CommandLine>
         </SynchronousCommand>
       </FirstLogonCommands>
 

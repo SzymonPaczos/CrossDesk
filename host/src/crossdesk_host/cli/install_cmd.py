@@ -141,18 +141,23 @@ def _resolve_tools_inputs() -> tuple[Path, Path, Path]:
     return agent, ca, autounattend
 
 
-def _localized_autounattend(src: Path, locale: str, dest_dir: Path) -> Path:
-    """Return an autounattend path with the windowsPE locale set to *locale*.
+def _prepare_autounattend(src: Path, locale: str, password: str, dest_dir: Path) -> Path:
+    """Return a per-install autounattend with the windowsPE locale set to
+    *locale* and the account-password placeholder filled with *password*.
 
-    The bundled file is authored in ``_DEFAULT_LOCALE`` (en-US); for any
-    other locale we substitute it (the only en-US strings in the file are
-    the five windowsPE language settings) and write the result beside the
-    install state. Returns *src* unchanged for the default locale.
+    The bundled file is the en-US template carrying a ``__CROSSDESK_PASSWORD__``
+    placeholder; substituting both means (a) the language screen is skipped on
+    a matching-locale ISO and (b) the guest account password equals the stored
+    vm.toml credential, so the host can log in over RDP. Always writes a fresh
+    copy — the password must never be baked into the repo template.
     """
-    if locale == _DEFAULT_LOCALE:
-        return src
-    text = src.read_text(encoding="utf-8").replace(_DEFAULT_LOCALE, locale)
-    out = dest_dir / f"autounattend.{locale}.xml"
+    from xml.sax.saxutils import escape
+
+    text = src.read_text(encoding="utf-8")
+    if locale != _DEFAULT_LOCALE:
+        text = text.replace(_DEFAULT_LOCALE, locale)
+    text = text.replace("__CROSSDESK_PASSWORD__", escape(password))
+    out = dest_dir / "autounattend.prepared.xml"
     out.write_text(text, encoding="utf-8")
     return out
 
@@ -161,7 +166,9 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     agent, ca, autounattend = _resolve_tools_inputs()
     state_dir = state.default_state_file().parent
     locale = getattr(args, "locale", _DEFAULT_LOCALE)
-    autounattend = _localized_autounattend(autounattend, locale, state_dir)
+    creds = credentials.load()
+    password = creds.password if creds is not None else ""
+    autounattend = _prepare_autounattend(autounattend, locale, password, state_dir)
     output = state_dir / "tools.iso"
     try:
         tools_iso.build_tools_iso(

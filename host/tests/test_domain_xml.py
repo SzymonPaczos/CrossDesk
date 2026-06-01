@@ -73,6 +73,17 @@ def test_vsock_tpm_balloon_present() -> None:
     assert root.find("clock").get("offset") == "localtime"  # type: ignore[union-attr]
 
 
+def test_rdp_port_forward_present() -> None:
+    # Host 127.0.0.1:3389 → guest:3389 so the host's FreeRDP reaches the
+    # guest RDP server over user-mode networking.
+    root = _xml()
+    pf = root.find("devices/interface/portForward")
+    assert pf is not None and pf.get("proto") == "tcp"
+    assert pf.get("address") == "127.0.0.1"
+    rng = pf.find("range")
+    assert rng.get("start") == "3389" and rng.get("to") == "3389"  # type: ignore[union-attr]
+
+
 def test_vsock_omitted_when_disabled() -> None:
     # When /dev/vhost-vsock is inaccessible the install drops the device so
     # the VM still boots (DEC-0017); the XML must then carry no <vsock>.

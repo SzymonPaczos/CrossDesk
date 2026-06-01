@@ -102,6 +102,11 @@ def build_domain_xml(spec: DomainSpec) -> str:
     # User-mode (SLIRP) networking — no root, no bridge setup (DEC-0003).
     iface = ET.SubElement(devices, "interface", {"type": "user"})
     ET.SubElement(iface, "model", {"type": "virtio"})
+    # Forward host 127.0.0.1:3389 → guest:3389 so the host's FreeRDP can reach
+    # the guest's RDP server (RemoteApp/RAIL) over user-mode networking,
+    # which otherwise only routes guest→host.
+    pf = ET.SubElement(iface, "portForward", {"proto": "tcp", "address": "127.0.0.1"})
+    ET.SubElement(pf, "range", {"start": "3389", "to": "3389"})
 
     # libvirt spawns + tears down swtpm itself (no manual socket daemon).
     tpm = ET.SubElement(devices, "tpm", {"model": "tpm-crb"})

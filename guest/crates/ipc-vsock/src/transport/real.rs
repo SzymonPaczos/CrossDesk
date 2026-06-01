@@ -85,30 +85,108 @@ fn parse_vsock_target(host: &str, port: u16) -> std::io::Result<(u32, u32)> {
     Ok((cid, u32::from(port)))
 }
 
+/// virtio-vsock `sockaddr_vm` (the viosock provider uses the same layout as
+/// the Linux `sockaddr_vm`). windows-rs has no binding for it — it's not a
+/// Microsoft struct — so we declare it. DEC-0017.
+#[cfg(target_os = "windows")]
+#[repr(C)]
+struct SockaddrVm {
+    svm_family: u16,
+    svm_reserved1: u16,
+    svm_port: u32,
+    svm_cid: u32,
+    svm_zero: [u8; 4],
+}
+
 /// AF_VSOCK connector (virtio-vsock via the viosock driver) — Windows only.
 ///
-/// Retargeted from AF_HYPERV per DEC-0017. Still returns `Unsupported`:
-/// the live socket call is hardware-gated (needs a booted guest carrying
-/// the viosock driver to verify). Remaining work, per DEC-0017:
-///   1. `windows` crate `Win32_Networking_WinSock`: `WSASocketW(AF_VSOCK,
-///      SOCK_STREAM, 0, ..)` → connect to `#[repr(C)] SOCKADDR_VM
-///      { svm_family, svm_reserved1, svm_port, svm_cid }`.
-///   2. box the IO — `Service::Response` is hard-typed to
-///      `TokioIo<TcpStream>` today; a vsock SOCKET is not a `TcpStream`.
-///   3. async-wrap the raw SOCKET for tokio.
+/// Retargeted from AF_HYPERV per DEC-0017. Creates an AF_VSOCK stream socket,
+/// connects to `cid:port`, and wraps the connected SOCKET for tokio.
+///
+/// HARDWARE-UNVERIFIED: this compiles for the windows-gnu target but has not
+/// been run against a live guest — it needs the virtio-win `viosock` driver
+/// installed in the VM. The `AF_VSOCK` family value (40) is the viosock
+/// convention; confirm via `WSAEnumProtocols` on the real guest if it fails.
+/// AF_VSOCK is `SOCK_STREAM`, so wrapping the SOCKET in a `std::net::TcpStream`
+/// is just a generic stream-socket handle (bytes flow identically); we never
+/// invoke TCP-specific options on it.
 #[cfg(target_os = "windows")]
 async fn dial_af_vsock(host: &str, port: u16) -> std::io::Result<TokioIo<TcpStream>> {
+    use std::os::windows::io::FromRawSocket;
+
+    use windows::Win32::Networking::WinSock::{
+        closesocket, connect, WSAGetLastError, WSASocketW, WSAStartup, SOCKADDR, SOCK_STREAM,
+        WSADATA, WSA_FLAG_OVERLAPPED,
+    };
+
+    // viosock registers AF_VSOCK as this family value (matches Linux).
+    const AF_VSOCK: u16 = 40;
+
     let (cid, port) = parse_vsock_target(host, port)?;
-    tracing::error!(
-        cid,
-        port,
-        "AF_VSOCK connector not implemented yet (DEC-0017) — viosock socket \
-         FFI + Response-boxing are hardware-gated."
-    );
-    Err(std::io::Error::new(
-        std::io::ErrorKind::Unsupported,
-        "AF_VSOCK connector not yet implemented (DEC-0017)",
-    ))
+
+    // WSAStartup is refcounted; a per-dial call is safe.
+    let mut wsadata = WSADATA::default();
+    // Safety: wsadata is a valid out-param; 0x0202 requests Winsock 2.2.
+    let rc = unsafe { WSAStartup(0x0202, &mut wsadata) };
+    if rc != 0 {
+        return Err(std::io::Error::other(format!("WSAStartup failed: {rc}")));
+    }
+
+    // Safety: standard WSASocketW call for an AF_VSOCK stream socket.
+    let sock = unsafe {
+        WSASocketW(
+            i32::from(AF_VSOCK),
+            SOCK_STREAM.0,
+            0,
+            None,
+            0,
+            WSA_FLAG_OVERLAPPED,
+        )
+    }
+    .map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            format!(
+                "WSASocketW(AF_VSOCK) failed ({e}): is the viosock driver \
+                 installed in the guest?"
+            ),
+        )
+    })?;
+
+    let addr = SockaddrVm {
+        svm_family: AF_VSOCK,
+        svm_reserved1: 0,
+        svm_port: u32::from(port as u16),
+        svm_cid: cid,
+        svm_zero: [0; 4],
+    };
+    // Safety: addr is a valid #[repr(C)] sockaddr_vm; the length matches.
+    let rc = unsafe {
+        connect(
+            sock,
+            std::ptr::addr_of!(addr) as *const SOCKADDR,
+            std::mem::size_of::<SockaddrVm>() as i32,
+        )
+    };
+    if rc != 0 {
+        let err = unsafe { WSAGetLastError() };
+        // Safety: sock is a valid socket we opened above.
+        unsafe {
+            let _ = closesocket(sock);
+        }
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::ConnectionRefused,
+            format!("connect AF_VSOCK cid={cid} port={port} failed (WSA {})", err.0),
+        ));
+    }
+
+    // Safety: sock is a valid connected socket whose ownership we transfer
+    // into the std wrapper (which closes it on drop).
+    let std_stream = unsafe { std::net::TcpStream::from_raw_socket(sock.0 as _) };
+    std_stream.set_nonblocking(true)?;
+    let stream = TcpStream::from_std(std_stream)?;
+    tracing::info!(cid, port, "AF_VSOCK connected to host");
+    Ok(TokioIo::new(stream))
 }
 
 #[cfg(test)]

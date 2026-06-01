@@ -68,6 +68,38 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 ## P1
 
 ### Display & forwarding
+- **RAIL window icons — native high-res Windows icons on Linux windows.**
+  (user request 2026-06-02; supersedes the P2 "Auto-extract icons" item.)
+  Today FreeRDP sets only a 32×32 `_NET_WM_ICON` from the RDP RAIL ICON
+  orders — blurry in docks/hi-DPI. The proto already carries the payload
+  (`RailWindowEvent.icon_png`, populated for CREATED/ICON_CHANGED), so **no
+  proto change**. Design:
+  1. **Agent (rail-bridge)** — on CREATED, resolve the window's process
+     image (`GetWindowThreadProcessId` → `OpenProcess` →
+     `QueryFullProcessImageNameW`), extract the largest icon
+     (`PrivateExtractIconsW(path, 0, 256, 256, …)`), convert HICON→RGBA
+     (`GetIconInfo` → `GetDIBits` 32bpp top-down BGRA; alpha-from-mask
+     fallback), PNG-encode (`png` crate), set `icon_png`. The exact seam is
+     `events.rs::build_rail_event` (`icon_png: vec![]` TODO). Adds windows-rs
+     `Win32_UI_Shell` + `Win32_Graphics_Gdi` features.
+  2. **Host consume** — two paths (do both):
+     a. *Titlebar / window icon*: set a rich multi-size `_NET_WM_ICON`
+        (16/32/48/64/128/256) on the RAIL X window, found by **WM_CLASS
+        instance == app_id** (we already pass `/wm-class:<app_id>`; per-app
+        is the right granularity for icons). Needs PNG decode + X11 prop
+        set — Pillow + python-xlib (new host deps) OR a small ctypes/xcb
+        helper. Source = the agent's `icon_png` (RailManager already stores
+        it in `_windows[hwnd]["icon_png"]`).
+     b. *Dock / launcher / alt-tab*: write per-app
+        `~/.local/share/applications/crossdesk-<app>.desktop` with
+        `StartupWMClass=<app_id>` + `Icon=crossdesk-<app_id>`, and install
+        the extracted icon into `~/.local/share/icons/hicolor/<size>/apps/`.
+        Idiomatic, **no runtime X11/deps** — the desktop matches WM_CLASS to
+        the .desktop and uses its icon. Highest-visibility, lowest-risk.
+  Correlation note: control-plane `icon_png` is keyed by HWND; the X window
+  is keyed by WM_CLASS=app_id. They don't share a key per-window, but
+  per-app is sufficient for icons (cache the latest non-empty icon per
+  process_id→app, or extract once at discovery). `[HW]`
 - **Wayland-native RAIL.** FreeRDP 3.x Wayland support audit; missing
   `xdg-shell` / `xdg-decoration-unstable-v1` / `xdg-foreign-unstable-v2`
   / `wlr-foreign-toplevel-management` handlers (upstream FreeRDP PR
@@ -382,9 +414,11 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 - **Auto-derive MIME types from registry.** Read `HKCR\<ext>` +
   `HKCR\<progid>\shell\open\command` during discovery → MIME associations
   automatic. WinApps hand-curates (unscalable).
-- **Auto-extract icons from `.exe` resources.** `ExtractIconExW` (already
-  na Phase 4 followups list for RAIL window icons) → PNGs at discovery.
-  No hand-drawn art; icon zawsze matches version user faktycznie ma.
+- **Auto-extract icons from `.exe` resources.** → **promoted to P1
+  "RAIL window icons"** (Display & forwarding) per user request
+  2026-06-02; see that entry for the full agent+host design. This P2 line
+  remains only as the *discovery-time* variant (extract icons for the app
+  catalog / launcher), distinct from the live per-window RAIL icon path.
 
 ### Operations & lifecycle (post-MVP P2 tier)
 - **`crossdesk vm snapshot create|list|restore|delete`.** Wraps

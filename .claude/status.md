@@ -9,6 +9,70 @@ prac — `history/completed-work.md`.
 
 ---
 
+## 🎉 MILESTONE — Pełna ścieżka produktowa: `crossdesk launch notepad` przez daemon + agent online (2026-06-02, Linux+KVM)
+
+**Osiągnięte na żywo:** agent.exe na realnym Windows łączy się z daemonem
+przez **TCP-SLIRP + mTLS**, kończy handshake (Hello accepted, control READY,
+heartbeat), a `crossdesk launch notepad` → daemon → **verify-credentials
+(realny LogonUserW na żywym agencie)** → FreeRDP RAIL → **Notepad jako
+natywne okno X** (`0x1000078 "Bez tytułu — Notatnik" 1426×782 IsViewable`).
+Warstwa zarządzania steruje renderem — nie ręczny FreeRDP. Daemon odbiera już
+`RailWindowEvent` z agenta (rail-bridge WinEvent hook → control plane).
+
+**Transport (DEC-0017 dev TCP path):** guest dial `https://10.0.2.2:50051`
+(SLIRP gateway → host loopback), host daemon binduje `127.0.0.1:50051`
+przez nowy `TransportConfig.bind_kind=tcp`
+(`CROSSDESK_CONFIG__TRANSPORT__BIND_KIND=tcp`). Bez vsock/udev/sudo.
+
+**Jak odtworzyć (bring-up):**
+1. Daemon (TCP, z X dla spawnu RAIL):
+   ```
+   cd host && source .venv/bin/activate
+   DISPLAY=:0 XAUTHORITY=/run/user/1000/.mutter-Xwaylandauth.* \
+   CROSSDESK_CONFIG__TRANSPORT__BIND_KIND=tcp CROSSDESK_FREERDP_BIN=xfreerdp3 \
+   python -m crossdesk_host > /tmp/cd-daemon.log 2>&1 &
+   ```
+2. Agent online (non-destructive, bez reinstalacji): `~/crossdesk-provision/`
+   ma `agent.exe` (windows-gnu, **console mode**) + `pki/{ca,guest.crt,guest.key}`
+   + `run-agent.cmd`. Provisioning przez FreeRDP drive-redirect + RemoteApp cmd:
+   ```
+   xfreerdp3 /v:127.0.0.1:3389 /u:crossdesk /p:<vm.toml> /cert:ignore /sec:tls \
+     /drive:prov,/home/szymon-paczos/crossdesk-provision \
+     '/app:program:C:\Windows\System32\cmd.exe,cmd:/k \\tsclient\prov\run-agent.cmd'
+   ```
+   (run_in_background; cmd ustawia `CROSSDESK_HOST_ENDPOINT=https://10.0.2.2:50051`
+   + `CROSSDESK_PKI_DIR` i uruchamia `agent.exe console`.)
+3. `crossdesk launch notepad` → okno.
+
+**Fixy/zmiany tej sesji (branch `feat/tcp-slirp-agent-online`, NIE pushnięte):**
+- **SMBIOS 'RSMB' byte-order bug** (`host_uuid.rs`): `from_le_bytes` →
+  `from_be_bytes` (0x52534D42). Bez tego `GetSystemFirmwareTable`=0 → agent
+  crashował przed Hello. + graceful fallback (warn + pusty UUID, nie crash).
+- **Host TCP-bind** `bind_kind` (auto|tcp|vsock) — `config` + `transport/real.py`
+  + daemon. mTLS bez zmian (review: 0 realnych defektów).
+- **Agent `console` run mode** (`main.rs`): `agent.exe console` / `CROSSDESK_CONSOLE=1`
+  → planes::run bez SCM, z REALNYMI impl (LogonUserW). Default = SCM.
+- **Production provisioning** (designed path): `tools_iso` wozi mTLS PKI;
+  `autounattend.xml` kopiuje do `C:\CrossDesk\pki\` + ustawia endpoint
+  `https://10.0.2.2:50051` przez **per-service Environment REG_MULTI_SZ**;
+  `install_cmd` przekazuje PKI. (Reinstalacja → agent auto-online.)
+- **catalog**: dodany `notepad` (find_app).
+
+**Pozostało:**
+- **Ikony okien** (user request 2026-06-02): natywne wysokorozdzielcze ikony
+  Windows na oknach RAIL — patrz `backlog.md` P1 "RAIL window icons". Dziś
+  FreeRDP ustawia tylko 32×32 `_NET_WM_ICON` z RAIL ICON orders. Proto
+  (`RailWindowEvent.icon_png`) gotowe; agent jeszcze nie ekstrahuje (`events.rs`
+  `icon_png: vec![]` TODO), host jeszcze nie aplikuje.
+- **RailWindowEvent adoption** — "ghost window" warny: RailManager dostaje
+  MOVE dla HWND bez CREATED (rail-bridge forwarduje wszystko; RailManager to
+  dziś tracker, okna renderuje FreeRDP). Korelacja HWND↔X-window = Phase 4.
+- **cmd window artifact**: provisioning RemoteApp cmd renderuje się obok
+  Notepada (kosmetyka; produkcyjna ścieżka NT-service nie ma cmd).
+- **virtio perf / NLA→NTLM** — jak w milestone 2026-06-01.
+
+---
+
 ## 🎉 MILESTONE — Windows app jako natywne okno Linuksa (2026-06-01, Linux+KVM)
 
 **Osiągnięte na żywo:** `crossdesk install --iso-path Win10_22H2_Polish.iso

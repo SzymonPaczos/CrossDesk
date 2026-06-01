@@ -75,6 +75,7 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     iso = tmp_path / "Win10.iso"
     iso.write_bytes(b"fake-iso")
     monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
+    monkeypatch.setattr(credentials, "load", lambda path=None: None)
     # Point the tools-ISO inputs at fixtures so resolution is deterministic
     # regardless of whether agent.exe has been built on this box.
     for env, name in (
@@ -106,17 +107,28 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     assert (_state_in_tmp.parent / "tools.iso").is_file()
 
 
-def test_localized_autounattend_substitutes_locale(tmp_path: Path) -> None:
+def test_prepare_autounattend_substitutes_locale_and_password(tmp_path: Path) -> None:
     src = tmp_path / "autounattend.xml"
-    src.write_text("<x><InputLocale>en-US</InputLocale><UILanguage>en-US</UILanguage></x>")
-    # Default locale → original file, untouched.
-    assert install_cmd._localized_autounattend(src, "en-US", tmp_path) == src
-    # Other locale → a sibling copy with every en-US swapped.
-    out = install_cmd._localized_autounattend(src, "pl-PL", tmp_path)
+    src.write_text(
+        "<x><InputLocale>en-US</InputLocale><UILanguage>en-US</UILanguage>"
+        "<Value>__CROSSDESK_PASSWORD__</Value></x>"
+    )
+    out = install_cmd._prepare_autounattend(src, "pl-PL", "p@ss<&>", tmp_path)
     assert out != src
     text = out.read_text()
-    assert "en-US" not in text
-    assert text.count("pl-PL") == 2
+    assert "en-US" not in text and text.count("pl-PL") == 2
+    # Placeholder filled, password XML-escaped.
+    assert "__CROSSDESK_PASSWORD__" not in text
+    assert "p@ss&lt;&amp;&gt;" in text
+
+
+def test_prepare_autounattend_default_locale_keeps_language_fills_password(tmp_path: Path) -> None:
+    src = tmp_path / "autounattend.xml"
+    src.write_text("<x><InputLocale>en-US</InputLocale><Value>__CROSSDESK_PASSWORD__</Value></x>")
+    out = install_cmd._prepare_autounattend(src, "en-US", "secret", tmp_path)
+    text = out.read_text()
+    assert text.count("en-US") == 1  # locale untouched at default
+    assert "secret" in text and "__CROSSDESK_PASSWORD__" not in text
 
 
 def test_download_iso_requires_iso_path(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:

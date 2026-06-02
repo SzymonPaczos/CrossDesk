@@ -354,7 +354,13 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             display_name=app.name,
         )
         conn = FreeRDPConnectionSpec(username=creds.username, password=creds.password)
-        argv = build_rail_argv(spec, conn)
+        # Apply peripheral redirection (audio / clipboard / printer / USB /
+        # the scoped shared folder) to the launch. Loaded fresh per launch so
+        # an edit to peripherals.toml takes effect on the next app without a
+        # daemon restart. Best-effort: a malformed config must not block the
+        # launch, so fall back to no extra flags.
+        extra_flags = self._peripheral_flags()
+        argv = build_rail_argv(spec, conn, extra_flags=extra_flags)
 
         try:
             session = await spawn_rail_with_auth_check(
@@ -384,6 +390,28 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             f"Launched {app.name} (pid {session.pid})",
         )
         return mgmt_pb2.LaunchResponse(ok=True, request_id=f"rail-{session.pid}")
+
+    def _peripheral_flags(self) -> list[str]:
+        """Resolve the FreeRDP redirection flags for this launch from
+        ``peripherals.toml`` (loaded fresh each launch), creating the shared
+        folder on demand. Best-effort: any config/IO error degrades to no
+        extra flags rather than blocking the launch."""
+        from crossdesk_host.config.peripherals import load_peripherals_config
+
+        try:
+            cfg = load_peripherals_config()
+        except Exception:
+            logger.warning("peripherals config invalid; launching with no redirections")
+            return []
+        share = cfg.shared_folder_host_path()
+        if share:
+            try:
+                Path(share).mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                logger.warning("shared folder %s not creatable: %s", share, exc)
+                # Drop just the drive redirect; keep the other peripheral flags.
+                return [f for f in cfg.to_freerdp_flags() if not f.startswith("/drive:")]
+        return cfg.to_freerdp_flags()
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

@@ -140,7 +140,49 @@ class PeripheralsConfig(BaseModel):
     ``["0403:6001", "046d:c534"]``.  Each entry must match
     ``<4-hex>:<4-hex>``; validated at parse time."""
 
+    # --- Shared folder -------------------------------------------------------
+
+    shared_folder_enabled: bool = False
+    """Expose ONE host directory to the guest as a redirected drive
+    (``\\\\tsclient\\<shared_folder_name>``) so a Windows app can open and
+    save files the user can reach from Linux, and so the user can drop an
+    installer into it and run it inside the guest.
+
+    OPT-IN and scoped to a single directory — NOT the whole home — by
+    design.  The endgame is JIT VirtioFS (see ``filesystem.proto``), which
+    never exposes a directory the user did not explicitly open; this is the
+    pragmatic interim until that lands.  Off by default to keep the
+    no-static-broad-mount posture (the static ``\\\\tsclient\\home`` mount
+    is rejected in ``docs/COMPARISON_WINAPPS.md`` §7 / DEC-META-005); the
+    scoped, user-chosen folder here is explicit consent, not an automatic
+    mount of the user's data."""
+
+    shared_folder_path: str = "~/CrossDesk-Shared"
+    """Host directory shared when ``shared_folder_enabled``.  Tilde- and
+    env-expanded; created on demand by the launcher.
+
+    NOT ``~/CrossDesk`` on purpose: on a dev checkout that path is the git
+    repository root, and exposing the source tree (read-write) to the guest
+    would be both a footgun and a security hole.  A dedicated
+    ``~/CrossDesk-Shared`` keeps the shared workspace separate from anything
+    the user didn't mean to share."""
+
+    shared_folder_name: str = "CrossDesk"
+    """Redirect name — the guest sees the share as
+    ``\\\\tsclient\\<shared_folder_name>``."""
+
     # --- Validators ----------------------------------------------------------
+
+    @field_validator("shared_folder_name")
+    @classmethod
+    def _share_name_safe(cls, v: str) -> str:
+        # The name becomes a UNC path component the guest navigates to; keep
+        # it to a simple token so it can't smuggle path separators.
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", v):
+            raise ValueError(
+                f"shared_folder_name must be 1-32 chars of [A-Za-z0-9_-], got {v!r}"
+            )
+        return v
 
     @field_validator("usb_devices", mode="before")
     @classmethod
@@ -219,7 +261,22 @@ class PeripheralsConfig(BaseModel):
         for device in self.usb_devices:
             flags.append(f"/usb:id,{device}")
 
+        # Shared folder (scoped, opt-in host directory redirect). FreeRDP
+        # auto-enables the rdpdr channel; the guest sees it as
+        # \\tsclient\<name>. The host path is tilde/env-expanded so a config
+        # of "~/CrossDesk" resolves per-user.
+        if self.shared_folder_enabled:
+            host_path = os.path.expanduser(os.path.expandvars(self.shared_folder_path))
+            flags.append(f"/drive:{self.shared_folder_name},{host_path}")
+
         return flags
+
+    def shared_folder_host_path(self) -> str:
+        """The expanded host directory for the shared folder (for the
+        launcher to create on demand). Empty string when disabled."""
+        if not self.shared_folder_enabled:
+            return ""
+        return os.path.expanduser(os.path.expandvars(self.shared_folder_path))
 
     # --- libvirt XML mapping -------------------------------------------------
 

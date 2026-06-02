@@ -46,6 +46,45 @@ def test_defaults_all_safe() -> None:
     assert cfg.printer_name == ""
     assert cfg.smartcard_enabled is False
     assert cfg.usb_devices == []
+    # Shared folder is opt-in / off by default (no static broad mount).
+    assert cfg.shared_folder_enabled is False
+    assert cfg.shared_folder_name == "CrossDesk"
+    assert "/drive:" not in " ".join(cfg.to_freerdp_flags())
+    assert cfg.shared_folder_host_path() == ""
+
+
+def test_shared_folder_emits_drive_flag_when_enabled() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True, shared_folder_path="/tmp/cd-share", clipboard_mode="off"
+    )
+    flags = cfg.to_freerdp_flags()
+    assert "/drive:CrossDesk,/tmp/cd-share" in flags
+    assert cfg.shared_folder_host_path() == "/tmp/cd-share"
+
+
+def test_shared_folder_expands_tilde() -> None:
+    import os
+
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_path="~/CrossDesk")
+    expected = os.path.expanduser("~/CrossDesk")
+    assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
+    assert cfg.shared_folder_host_path() == expected
+
+
+def test_shared_folder_custom_name() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True,
+        shared_folder_path="/tmp/x",
+        shared_folder_name="Linux_Home",
+    )
+    assert "/drive:Linux_Home,/tmp/x" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_name_rejects_path_separators() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="shared_folder_name"):
+        PeripheralsConfig(shared_folder_name="../etc")
 
 
 # ---------------------------------------------------------------------------

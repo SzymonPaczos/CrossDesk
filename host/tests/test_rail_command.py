@@ -21,6 +21,25 @@ def _conn(scale: int = 100) -> FreeRDPConnectionSpec:
     )
 
 
+def test_extra_flags_appended_after_core() -> None:
+    app = AppLaunchSpec(
+        app_id="notepad",
+        executable_guest_path="C:\\Windows\\notepad.exe",
+        display_name="Notepad",
+    )
+    extra = ["/sound:sys:pipewire", "/drive:CrossDesk,/home/u/CrossDesk"]
+    argv = build_rail_argv(app, _conn(), extra_flags=extra)
+    for flag in extra:
+        assert flag in argv
+    assert argv.index("/sound:sys:pipewire") > argv.index("/v:localhost:3389")
+
+
+def test_no_extra_flags_by_default() -> None:
+    app = AppLaunchSpec(app_id="notepad", executable_guest_path="C:\\Windows\\notepad.exe")
+    argv = build_rail_argv(app, _conn())
+    assert not any(a.startswith("/drive:") or a.startswith("/sound:") for a in argv)
+
+
 def test_basic_argv_for_notepad() -> None:
     app = AppLaunchSpec(
         app_id="notepad",

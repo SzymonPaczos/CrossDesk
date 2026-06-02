@@ -81,9 +81,20 @@ class FreeRDPConnectionSpec:
     fallback for a local workgroup account."""
 
 
-def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str]:
+def build_rail_argv(
+    app: AppLaunchSpec,
+    conn: FreeRDPConnectionSpec,
+    extra_flags: Sequence[str] = (),
+) -> list[str]:
     """Construct the full xfreerdp RAIL argv (excluding the binary
-    itself; :class:`RealFreeRDPInvocation` resolves and prepends it)."""
+    itself; :class:`RealFreeRDPInvocation` resolves and prepends it).
+
+    ``extra_flags`` are appended verbatim — used to apply the peripheral
+    redirection flags from
+    :meth:`crossdesk_host.config.peripherals.PeripheralsConfig.to_freerdp_flags`
+    (audio, clipboard, printer, USB, and the scoped shared folder). FreeRDP
+    parses flags regardless of order, so appending after the core flags is
+    safe."""
 
     if conn.scale not in (100, 140, 180):
         raise ValueError(f"FreeRDP only supports scale 100/140/180; got {conn.scale}")
@@ -112,4 +123,5 @@ def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str
         f"/app:program:{program_clause},hidef:on,name:{app.display_name or app.app_id}",
         f"/wm-class:{app.app_id}",
     ]
+    argv.extend(extra_flags)
     return argv

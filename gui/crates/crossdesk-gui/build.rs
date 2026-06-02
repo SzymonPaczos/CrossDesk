@@ -23,6 +23,16 @@ fn main() {
     CxxQtBuilder::new()
         .qt_module("Quick")
         .qt_module("QuickControls2")
+        // Register the sidebar icons via the top-level resource path so they
+        // resolve at qrc:/icons/*.svg (referenced that way from Manager.qml).
+        // Going through the QmlModule's `qrc_files` field did NOT register
+        // them at that root path in cxx-qt 0.7.3 (QML logged "Cannot open
+        // qrc:/icons/*.svg" — verified live), whereas the top-level `.qrc()`
+        // emits an explicit, linked resource initializer (cxx-qt-build
+        // generate_cpp_from_qrc_files + build_initializers). Icons are a
+        // separate qrc from qml.qrc so this path never depends on the .qm
+        // translation files (which need lrelease at build time).
+        .qrc("icons.qrc")
         .cc_builder(|cc| {
             cc.file("src/i18n/translator.cpp");
         })
@@ -44,6 +54,8 @@ fn main() {
                 "qml/manager/Settings.qml",
                 "qml/manager/About.qml",
             ],
+            // Translations (.qm) ride along here; tolerant of missing .qm when
+            // lrelease is absent (unlike the top-level .qrc above).
             qrc_files: &["qml.qrc"],
             ..Default::default()
         })

@@ -9,6 +9,52 @@ prac — `history/completed-work.md`.
 
 ---
 
+## Usability push (2026-06-02, branch `feat/usability-shared-fs`) — CLI/TUI/GUI + filesystem + any-app
+
+Sesja po resecie hosta. Wszystko gate-green (mypy --strict 120, host suite,
+cargo check/clippy). Live-proofy wymagające VM odłożone (host zresetowany —
+czekam na OK właściciela zanim wzniecę ciężką VM).
+
+**Shipped (zacommitowane na `feat/usability-shared-fs`):**
+- **Most plików host↔guest** (`d548d2e`): scoped, opt-in folder współdzielony
+  (`PeripheralsConfig.shared_folder_*`, default OFF, default path
+  `~/CrossDesk-Shared` — NIE `~/CrossDesk`, bo to repo). `to_freerdp_flags`
+  emituje `/drive:`; `build_rail_argv` dostał `extra_flags` i odpala CAŁY
+  `to_freerdp_flags()` (audio/clipboard/printer/USB/share) — wcześniej
+  peripherals config był liczony, ale NIGDY nieaplikowany przy launchu.
+- **GUI icon fix** (`bbc425b`): manager renderował się BEZ ikon nawigacji
+  ("Cannot open qrc:/icons/*.svg"). Root cause: ikony przez `QmlModule.qrc_files`
+  nie rejestrują się pod `qrc:/icons/` w cxx-qt 0.7.3. Fix: `icons.qrc` +
+  top-level `CxxQtBuilder::qrc()`. Zweryfikowane na żywo (0 błędów, okno wstaje).
+- **Launch-by-path** (`c1268f3`): `crossdesk launch 'C:\...\app.exe'` odpala
+  DOWOLNĄ zainstalowaną apkę (Office poza standardową ścieżką, gra, instalator)
+  bez wpisu w katalogu — `_spec_from_exe_path` wykrywa ścieżkę .exe i wyprowadza
+  app_id/WM_CLASS z basename. Zweryfikowane host-side na żywo (ścieżka
+  rozpoznana → gate verify-creds; gola na agencie odłożona).
+
+**CLI:** w pełni działa (audyt wszystkich subkomend na żywo — graceful errors,
+poprawne exit codes). **TUI:** nie istnieje (projekt = CLI + Qt GUI; nie
+tworzę). **GUI:** builduje + odpala (Qt6 6.10.2), ikony naprawione.
+
+**Otwarte znaleziska / decyzje:**
+- **Ikony okien (host consumer)** — CZEKA NA DECYZJĘ właściciela:
+  `.desktop`/icon-theme (bezzależnościowe) vs `_NET_WM_ICON` (python-xlib+Pillow).
+  Agent-side gotowy (256×256 płynie). Patrz `backlog.md` P1 "RAIL window icons".
+- **BUG: StartupWMClass↔WM_CLASS mismatch** — `apps install` pisze
+  `.desktop` z `StartupWMClass=crossdesk-<id>`, ale okno RAIL dostaje
+  WM_CLASS `<id>` (z `/wm-class:<id>`). Dock nie skojarzy okna z launcherem.
+  Do naprawy z konsumentem ikon (uzgodnić na `crossdesk-<id>` po obu stronach).
+- **i18n .qm nie kompilują się** — `lrelease` (Qt linguist) nieobecny na hoście;
+  `build.rs` go woła z `.ok()` (cicho), więc tłumaczenia nie wchodzą, GUI leci
+  po angielsku (źródłowy język). Env-gap (brak qt6 l10n tools). P2.
+- **App discovery proto-gated** — `registry-scan` (guest) realny, ale brak RPC
+  guest→host (RegistryScannerService) by przenieść wyniki + `ListDiscoveredApps`
+  to stub. Wymaga edycji proto (boundary, owner). Launch-by-path to interim.
+- **Live-proofy odłożone:** most plików (zapis z notepada → host; instalator →
+  guest) i launch-by-path na żywym agencie — wymagają wzniesienia VM.
+
+---
+
 ## 🎉 MILESTONE — Pełna ścieżka produktowa: `crossdesk launch notepad` przez daemon + agent online (2026-06-02, Linux+KVM)
 
 **Osiągnięte na żywo:** agent.exe na realnym Windows łączy się z daemonem

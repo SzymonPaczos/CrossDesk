@@ -132,3 +132,52 @@ async def test_launch_no_active_session(monkeypatch: pytest.MonkeyPatch, context
     resp = await _backend_servicer().Launch(mgmt_pb2.LaunchRequest(app_id="notepad"), context)
     assert not resp.ok
     assert "no guest session" in resp.error
+
+
+# ---------------------------------------------------------------------------
+# Launch by raw Windows .exe path (any installed program, no catalog entry)
+# ---------------------------------------------------------------------------
+
+
+def test_spec_from_exe_path_drive_letter() -> None:
+    spec = management._spec_from_exe_path("C:\\Games\\RobinHood\\RobinHood.exe")
+    assert spec is not None
+    assert spec.executable_guest_path == "C:\\Games\\RobinHood\\RobinHood.exe"
+    assert spec.app_id == "robinhood"  # drives WM_CLASS / grouping
+    assert spec.display_name == "RobinHood"
+
+
+def test_spec_from_exe_path_unc() -> None:
+    spec = management._spec_from_exe_path("\\\\server\\share\\setup.exe")
+    assert spec is not None
+    assert spec.app_id == "setup"
+
+
+def test_spec_from_exe_path_rejects_plain_id_and_non_exe() -> None:
+    assert management._spec_from_exe_path("notepad") is None
+    assert management._spec_from_exe_path("ghost") is None
+    assert management._spec_from_exe_path("C:\\Windows\\System32") is None  # no .exe
+    assert management._spec_from_exe_path("/usr/bin/foo") is None  # not a Windows path
+
+
+async def test_launch_by_exe_path_spawns(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock
+) -> None:
+    # Not in the catalog, but a real Windows .exe path → launches directly.
+    _patch_app_and_creds(monkeypatch, app=None)
+    seen: dict[str, object] = {}
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+        seen["argv"] = argv
+        return RailSession(pid=77, argv=list(argv))
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await _backend_servicer().Launch(
+        mgmt_pb2.LaunchRequest(app_id="C:\\Program Files\\Game\\game.exe"), context
+    )
+    assert resp.ok
+    argv = seen["argv"]
+    assert isinstance(argv, list)
+    assert any("game.exe" in part for part in argv)
+    assert any(part == "/wm-class:game" for part in argv)

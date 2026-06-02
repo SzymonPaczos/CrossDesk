@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -97,6 +98,29 @@ def _dur_ns(ns: Optional[int]) -> duration_pb2.Duration:
         return duration_pb2.Duration()
     seconds, n = divmod(int(ns), 1_000_000_000)
     return duration_pb2.Duration(seconds=seconds, nanos=n)
+
+
+# A drive-letter path (C:\…) or a UNC path (\\host\…) ending in .exe. Used to
+# let `crossdesk launch <path>` run any installed program without a catalog
+# entry. Anchored + .exe-terminated so a plain app_id ("notepad") never matches.
+_WIN_EXE_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\).*\.exe$", re.IGNORECASE)
+
+
+def _spec_from_exe_path(raw: str) -> Optional[AppLaunchSpec]:
+    """Build an :class:`AppLaunchSpec` from a raw Windows executable path, or
+    ``None`` when *raw* is not such a path. The ``app_id`` (which drives the
+    RAIL window's WM_CLASS / grouping) and the display name are derived from
+    the executable's base name, e.g. ``C:\\Games\\RobinHood\\RobinHood.exe`` →
+    app_id ``robinhood`` / name ``RobinHood``."""
+    candidate = raw.strip()
+    if not _WIN_EXE_RE.match(candidate):
+        return None
+    base = re.split(r"[\\/]", candidate)[-1]  # RobinHood.exe
+    stem = base[:-4] if base.lower().endswith(".exe") else base
+    app_id = re.sub(r"[^A-Za-z0-9_-]", "-", stem).strip("-").lower() or "app"
+    return AppLaunchSpec(
+        app_id=app_id, executable_guest_path=candidate, display_name=stem
+    )
 
 
 @dataclass
@@ -338,21 +362,36 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 ok=False, error="launch backend not available in this daemon"
             )
         app = find_app(app_id)
-        if app is None:
-            return mgmt_pb2.LaunchResponse(
-                ok=False, error=f"unknown app_id: {app_id!r}"
+        if app is not None:
+            spec = AppLaunchSpec(
+                app_id=app.app_id,
+                executable_guest_path=app.win_executable,
+                display_name=app.name,
             )
+        else:
+            # Not in the catalog: accept a raw Windows executable path so any
+            # installed program (an Office app at a non-standard path, a game,
+            # anything the user dropped in via the shared folder + installed)
+            # can be launched without first being catalogued. App discovery
+            # (registry-scan → catalog) is the scalable follow-up; this is the
+            # "just run this .exe" escape hatch.
+            by_path = _spec_from_exe_path(app_id)
+            if by_path is None:
+                return mgmt_pb2.LaunchResponse(
+                    ok=False,
+                    error=(
+                        f"unknown app_id: {app_id!r} (not in the catalog; to "
+                        "launch by path pass a Windows .exe path like "
+                        r"'C:\\Program Files\\App\\app.exe')"
+                    ),
+                )
+            spec = by_path
         creds = credentials.load()
         if creds is None:
             return mgmt_pb2.LaunchResponse(
                 ok=False, error="no VM credentials — run `crossdesk install`"
             )
 
-        spec = AppLaunchSpec(
-            app_id=app.app_id,
-            executable_guest_path=app.win_executable,
-            display_name=app.name,
-        )
         conn = FreeRDPConnectionSpec(username=creds.username, password=creds.password)
         # Apply peripheral redirection (audio / clipboard / printer / USB /
         # the scoped shared folder) to the launch. Loaded fresh per launch so
@@ -387,7 +426,9 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         self._sessions.append(session)
         self.state.append_activity(
             mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
-            f"Launched {app.name} (pid {session.pid})",
+            # spec.display_name covers both the catalog and launch-by-path
+            # cases (app may be None when launched by raw .exe path).
+            f"Launched {spec.display_name} (pid {session.pid})",
         )
         return mgmt_pb2.LaunchResponse(ok=True, request_id=f"rail-{session.pid}")
 

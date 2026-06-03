@@ -244,9 +244,13 @@ class PeripheralsConfig(BaseModel):
         """
         flags: List[str] = []
 
-        # Audio
+        # Audio. Use the PulseAudio backend, not pipewire: FreeRDP 3.24's
+        # rdpsnd failed to load the pipewire subsystem (error 1359) and that
+        # failure aborts the whole RAIL connect (ERRCONNECT_POST_CONNECT_FAILED).
+        # pulse is the broadly-available backend (PipeWire ships a pulse shim),
+        # so /sound:sys:pulse works whether the host runs PulseAudio or PipeWire.
         if self.audio_enabled:
-            flags.append("/sound:sys:pipewire")
+            flags.append("/sound:sys:pulse")
         if self.audio_enabled and self.audio_mode == "bidirectional":
             flags.append("/microphone:sys:pulse")
         elif self.microphone_enabled:

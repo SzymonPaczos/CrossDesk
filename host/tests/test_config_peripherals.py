@@ -100,7 +100,7 @@ def test_shared_folder_name_rejects_path_separators() -> None:
 def test_freerdp_flags_audio_playback() -> None:
     cfg = PeripheralsConfig(audio_enabled=True, audio_mode="playback", clipboard_mode="off")
     flags = cfg.to_freerdp_flags()
-    assert "/sound:sys:pipewire" in flags
+    assert "/sound:sys:pulse" in flags
     # No microphone in playback-only mode.
     assert not any("microphone" in f for f in flags)
 
@@ -113,7 +113,7 @@ def test_freerdp_flags_audio_playback() -> None:
 def test_freerdp_flags_audio_bidirectional() -> None:
     cfg = PeripheralsConfig(audio_enabled=True, audio_mode="bidirectional", clipboard_mode="off")
     flags = cfg.to_freerdp_flags()
-    assert "/sound:sys:pipewire" in flags
+    assert "/sound:sys:pulse" in flags
     assert "/microphone:sys:pulse" in flags
 
 

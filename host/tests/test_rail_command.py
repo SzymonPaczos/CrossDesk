@@ -85,6 +85,30 @@ def test_argv_includes_icon_when_provided() -> None:
     assert "icon:C:\\Program Files\\Microsoft Office\\WINWORD.EXE" in program
 
 
+def test_workdir_sets_app_working_directory() -> None:
+    app = AppLaunchSpec(
+        app_id="notepad",
+        executable_guest_path="C:\\Windows\\notepad.exe",
+        display_name="Notepad",
+    )
+    argv = build_rail_argv(app, _conn(), workdir="\\\\tsclient\\CrossDesk")
+    program = next(a for a in argv if a.startswith("/app:"))
+    # The working directory points at the shared folder's guest-side UNC so the
+    # first Save/Open dialog defaults to the Linux-visible folder.
+    assert "workdir:\\\\tsclient\\CrossDesk" in program
+
+
+def test_no_workdir_when_not_provided() -> None:
+    app = AppLaunchSpec(
+        app_id="notepad",
+        executable_guest_path="C:\\Windows\\notepad.exe",
+        display_name="Notepad",
+    )
+    argv = build_rail_argv(app, _conn())
+    program = next(a for a in argv if a.startswith("/app:"))
+    assert "workdir:" not in program
+
+
 def test_scale_140_accepted() -> None:
     app = AppLaunchSpec(
         app_id="notepad",

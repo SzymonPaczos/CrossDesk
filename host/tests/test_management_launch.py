@@ -15,6 +15,7 @@ import pytest
 
 from crossdesk_host.abstractions.freerdp import RailSession
 from crossdesk_host.catalog.schema import AppEntry
+from crossdesk_host.config.peripherals import PeripheralsConfig
 from crossdesk_host.display.session_starter import AuthHealthCheckFailed
 from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
 from crossdesk_host.installer.credentials import VerifyResult, VmCredentials
@@ -34,6 +35,19 @@ def context() -> MagicMock:
     ctx = MagicMock()
     ctx.cancelled.return_value = False
     return ctx
+
+
+@pytest.fixture(autouse=True)
+def _isolate_peripherals(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The Launch path loads peripherals.toml fresh per launch. Default every
+    # test in this module to an all-off config so the suite never depends on
+    # the developer's real ~/.config/crossdesk/peripherals.toml (which on a
+    # dev box may enable the shared folder and change the produced argv).
+    # Tests that exercise the shared folder re-patch via _patch_peripherals.
+    monkeypatch.setattr(
+        "crossdesk_host.config.peripherals.load_peripherals_config",
+        lambda path=None: PeripheralsConfig(),
+    )
 
 
 def _backend_servicer() -> ManagementServiceServicer:
@@ -181,3 +195,130 @@ async def test_launch_by_exe_path_spawns(
     assert isinstance(argv, list)
     assert any("game.exe" in part for part in argv)
     assert any(part == "/wm-class:crossdesk-game" for part in argv)
+
+
+# ---------------------------------------------------------------------------
+# Shared folder → RemoteApp working directory (Save/Open dialog default)
+# ---------------------------------------------------------------------------
+
+
+def _patch_peripherals(monkeypatch: pytest.MonkeyPatch, cfg: PeripheralsConfig) -> None:
+    # _peripheral_flags imports load_peripherals_config at call time from the
+    # source module, so patch it there.
+    monkeypatch.setattr(
+        "crossdesk_host.config.peripherals.load_peripherals_config",
+        lambda path=None: cfg,
+    )
+
+
+def test_peripheral_flags_workdir_when_shared_folder_enabled(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    share_dir = tmp_path / "CrossDesk-Shared"
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(
+            shared_folder_enabled=True, shared_folder_path=str(share_dir)
+        ),
+    )
+    flags, workdir = _backend_servicer()._peripheral_flags()
+    assert any(f.startswith("/drive:CrossDesk,") for f in flags)
+    assert workdir == "\\\\tsclient\\CrossDesk"
+    # Folder is created on demand so the redirect has something to mount.
+    assert share_dir.is_dir()
+
+
+def test_peripheral_flags_no_workdir_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_peripherals(monkeypatch, PeripheralsConfig())  # shared folder off
+    flags, workdir = _backend_servicer()._peripheral_flags()
+    assert not any(f.startswith("/drive:") for f in flags)
+    assert workdir == ""
+
+
+def test_peripheral_flags_drops_drive_and_workdir_when_uncreatable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    # Point the share at a path whose parent is a regular file → mkdir raises
+    # OSError (NotADirectoryError). The drive redirect AND the workdir must be
+    # dropped so the launch doesn't point the app at a share that won't mount.
+    blocker = tmp_path / "afile"
+    blocker.write_text("not a dir")
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(
+            shared_folder_enabled=True,
+            shared_folder_path=str(blocker / "nope"),
+            # A non-share flag survives so we can prove only the drive dropped.
+            clipboard_mode="text-only",
+        ),
+    )
+    flags, workdir = _backend_servicer()._peripheral_flags()
+    assert not any(f.startswith("/drive:") for f in flags)
+    assert "+clipboard" in flags
+    assert workdir == ""
+
+
+def test_peripheral_flags_drops_drive_and_workdir_for_relative_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A non-absolute path bypasses the OSError mkdir gate (Path("rel").mkdir
+    # succeeds against the CWD), so the launcher rejects it up front: drop the
+    # /drive: redirect AND the workdir, keep the other peripheral flags. No
+    # directory is created (the guard returns before mkdir).
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(
+            shared_folder_enabled=True,
+            shared_folder_path="relative/share",
+            clipboard_mode="text-only",
+        ),
+    )
+    flags, workdir = _backend_servicer()._peripheral_flags()
+    assert not any(f.startswith("/drive:") for f in flags)
+    assert "+clipboard" in flags
+    assert workdir == ""
+
+
+def test_peripheral_flags_invalid_config_degrades(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _boom(path=None):  # type: ignore[no-untyped-def]
+        raise ValueError("bad toml")
+
+    monkeypatch.setattr(
+        "crossdesk_host.config.peripherals.load_peripherals_config", _boom
+    )
+    flags, workdir = _backend_servicer()._peripheral_flags()
+    assert flags == []
+    assert workdir == ""
+
+
+async def test_launch_threads_workdir_into_argv(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock, tmp_path
+) -> None:
+    _patch_app_and_creds(monkeypatch)
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(
+            shared_folder_enabled=True,
+            shared_folder_path=str(tmp_path / "CrossDesk-Shared"),
+        ),
+    )
+    seen: dict[str, object] = {}
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+        seen["argv"] = argv
+        return RailSession(pid=99, argv=list(argv))
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await _backend_servicer().Launch(
+        mgmt_pb2.LaunchRequest(app_id="notepad"), context
+    )
+    assert resp.ok
+    argv = seen["argv"]
+    assert isinstance(argv, list)
+    program = next(a for a in argv if a.startswith("/app:"))
+    assert "workdir:\\\\tsclient\\CrossDesk" in program

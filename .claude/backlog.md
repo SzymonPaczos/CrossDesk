@@ -459,6 +459,17 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   `host/src/crossdesk_host/`, faktycznie 23 (m.in. `cli/`, `doctor/`,
   `abstractions/`, `lifecycle/`, `filesystem_ctl/`…). AGENTS.md =
   boundary file → edycja wymaga zgody właściciela. (audyt 2026-05-31)
+- **FreeRDP `/app:` quoted-`cmd:` tokenizer warning (Phase-5 latent).**
+  Na FreeRDP 3.24 klauzula z `cmd:"<plik>"` *przed* kolejnymi sub-keyami
+  (`hidef:`/`name:`/`workdir:`) emituje `[get_next_comma]: Invalid quoted
+  argument` (po jednym na trailing sub-key; non-fatal, parse dochodzi do TCP
+  connect). **Dziś uśpione** — `cmd_arg` jest zawsze `""` (`request.file_path`
+  → JIT-mount to Phase-5, niewpięte; oba call-site'y `AppLaunchSpec` mają
+  pustą `argv`), więc shipowana klauzula A1 (program+icon+hidef+name+workdir,
+  bez `cmd:`) parsuje się czysto (0 błędów, zweryfikowane na żywym
+  `xfreerdp3` 3.24.2, też ścieżki ze spacjami). Gdy Phase-5 wepnie
+  file-open: dać `cmd:` na końcu klauzuli, zrezygnować z cudzysłowu, albo
+  użyć `/args-from`; dodać test `workdir`+`cmd` razem. (review A1 2026-06-04)
 
 ---
 

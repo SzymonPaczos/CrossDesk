@@ -92,6 +92,20 @@ def test_shared_folder_name_rejects_path_separators() -> None:
         PeripheralsConfig(shared_folder_name="../etc")
 
 
+def test_shared_folder_empty_path_rejected_when_enabled() -> None:
+    # An empty path while enabled would expand to "" → malformed /drive:<name>,
+    # and Path("").mkdir silently resolves to CWD, defeating the launcher gate.
+    for bad in ("", "   "):
+        with pytest.raises(ValidationError, match="shared_folder_path"):
+            PeripheralsConfig(shared_folder_enabled=True, shared_folder_path=bad)
+
+
+def test_shared_folder_empty_path_allowed_when_disabled() -> None:
+    # Path is irrelevant when the redirect is off, so an empty value is fine.
+    cfg = PeripheralsConfig(shared_folder_enabled=False, shared_folder_path="")
+    assert cfg.shared_folder_host_path() == ""
+
+
 # ---------------------------------------------------------------------------
 # 2. FreeRDP — audio playback
 # ---------------------------------------------------------------------------

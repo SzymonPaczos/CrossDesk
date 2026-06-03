@@ -221,6 +221,15 @@ class PeripheralsConfig(BaseModel):
             raise ValueError(
                 'printer_name must be non-empty when printer_mode = "named"'
             )
+        # Same cross-field shape for the shared folder: an empty/whitespace
+        # path while the redirect is enabled is a footgun — it expands to ""
+        # (so ``to_freerdp_flags`` emits a malformed ``/drive:<name>,`` with no
+        # host path) and ``Path("").mkdir`` silently resolves to the daemon's
+        # CWD, defeating the launcher's "only mount a real directory" guard.
+        if self.shared_folder_enabled and not self.shared_folder_path.strip():
+            raise ValueError(
+                "shared_folder_path must be non-empty when shared_folder_enabled = true"
+            )
 
     # --- FreeRDP flag mapping ------------------------------------------------
 

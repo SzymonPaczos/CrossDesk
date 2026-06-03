@@ -50,6 +50,20 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   bez wpisu w katalogu — `_spec_from_exe_path` wykrywa ścieżkę .exe i wyprowadza
   app_id/WM_CLASS z basename. Zweryfikowane host-side na żywo (ścieżka
   rozpoznana → gate verify-creds; gola na agencie odłożona).
+- **A1 — Save dialog na folderze Linuksa (`workdir:`)** (branch, NIE merged,
+  2026-06-04): gdy shared folder ON, `build_rail_argv` dostał param `workdir`
+  i dodaje `workdir:\\tsclient\<share>` do klauzuli `/app:` → RemoteApp startuje
+  z CWD = folder Linuksa → Save/Open dialog defaultuje TAM (notepad używa CWD
+  gdy `lpstrInitialDir`=NULL). `_peripheral_flags` zwraca `(flags, workdir)`;
+  workdir ustawiany TYLKO gdy `/drive:` realnie przeżywa (gard: pusta/względna
+  ścieżka → drop drive+workdir; mkdir fail → drop). Domyka filesystem UX na
+  betę (handoff §6.A). **Live-verify zaległy** (otwórz Save w notepadzie — patrz
+  niżej). Adversarial review (10 agentów) → 2 realne defekty naprawione: (a)
+  pusty/whitespace `shared_folder_path` omijał mkdir-gate (`Path("").mkdir`
+  → CWD) — dodany walidator boundary (`peripherals.py model_post_init`) +
+  gard absolute-path; (b) `test_smoke_inprocess` czytał REALNY `peripherals.toml`
+  (nie-hermetyczny) — wpięta izolacja. Latent (uśpiony): quoted-`cmd:` tokenizer
+  warning gdy Phase-5 wepnie file-open — `backlog.md` Tech-debt.
 
 **CLI:** w pełni działa (audyt wszystkich subkomend na żywo — graceful errors,
 poprawne exit codes). **TUI:** nie istnieje (projekt = CLI + Qt GUI; nie

@@ -404,8 +404,8 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # an edit to peripherals.toml takes effect on the next app without a
         # daemon restart. Best-effort: a malformed config must not block the
         # launch, so fall back to no extra flags.
-        extra_flags = self._peripheral_flags()
-        argv = build_rail_argv(spec, conn, extra_flags=extra_flags)
+        extra_flags, workdir = self._peripheral_flags()
+        argv = build_rail_argv(spec, conn, extra_flags=extra_flags, workdir=workdir)
 
         # Register the icon expectation before the window appears: the agent's
         # CREATED-with-icon for the launched window then applies the real .exe
@@ -444,27 +444,50 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         )
         return mgmt_pb2.LaunchResponse(ok=True, request_id=f"rail-{session.pid}")
 
-    def _peripheral_flags(self) -> list[str]:
-        """Resolve the FreeRDP redirection flags for this launch from
-        ``peripherals.toml`` (loaded fresh each launch), creating the shared
-        folder on demand. Best-effort: any config/IO error degrades to no
-        extra flags rather than blocking the launch."""
+    def _peripheral_flags(self) -> tuple[list[str], str]:
+        """Resolve the FreeRDP redirection flags **and** the RemoteApp working
+        directory for this launch from ``peripherals.toml`` (loaded fresh each
+        launch), creating the shared folder on demand.
+
+        Returns ``(flags, workdir)``. *workdir* is the guest-side UNC of the
+        shared folder (``\\\\tsclient\\<name>``) when the shared folder is
+        enabled and its host directory exists — so a launched app's Save/Open
+        dialog defaults to the Linux-visible folder instead of ``C:\\``. It is
+        empty when the shared folder is off, or when its host directory could
+        not be created: in that case the drive redirect is dropped too, and a
+        workdir pointing at a share that won't mount would only fail the
+        RemoteApp launch.
+
+        Best-effort: any config/IO error degrades to no extra flags and no
+        workdir rather than blocking the launch."""
         from crossdesk_host.config.peripherals import load_peripherals_config
 
         try:
             cfg = load_peripherals_config()
         except Exception:
             logger.warning("peripherals config invalid; launching with no redirections")
-            return []
+            return [], ""
+        flags = cfg.to_freerdp_flags()
+        if not cfg.shared_folder_enabled:
+            return flags, ""
+        # The drive redirect (and the workdir that points the app at it) only
+        # make sense for a real, absolute host directory we can create. Drop
+        # both — keeping the other peripheral flags — for any path we can't
+        # honour, so the launch never points the app at a share that won't
+        # mount. Cases: empty/relative path (Path("").mkdir would silently
+        # succeed against the CWD, bypassing the OSError gate) and uncreatable
+        # path (parent is a file, permissions, etc.).
+        no_share = [f for f in flags if not f.startswith("/drive:")]
         share = cfg.shared_folder_host_path()
-        if share:
-            try:
-                Path(share).mkdir(parents=True, exist_ok=True)
-            except OSError as exc:
-                logger.warning("shared folder %s not creatable: %s", share, exc)
-                # Drop just the drive redirect; keep the other peripheral flags.
-                return [f for f in cfg.to_freerdp_flags() if not f.startswith("/drive:")]
-        return cfg.to_freerdp_flags()
+        if not share or not os.path.isabs(share):
+            logger.warning("shared folder path %r is not absolute; skipping redirect", share)
+            return no_share, ""
+        try:
+            Path(share).mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            logger.warning("shared folder %s not creatable: %s", share, exc)
+            return no_share, ""
+        return flags, f"\\\\tsclient\\{cfg.shared_folder_name}"
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

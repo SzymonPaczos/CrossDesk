@@ -91,9 +91,16 @@ class PeripheralsConfig(BaseModel):
 
     # --- Audio ---------------------------------------------------------------
 
-    audio_enabled: bool = True
-    """Enable audio forwarding.  Playback-only by default; see
-    ``audio_mode`` to add microphone capture."""
+    audio_enabled: bool = False
+    """Enable audio forwarding (``/sound``).  OFF by default: adding the audio
+    channel to the RAIL/RemoteApp connection caused FreeRDP 3.24
+    ``ERRCONNECT_POST_CONNECT_FAILED`` in live testing (observed under the
+    console-agent harness, where ``crossdesk launch`` reconnects to the
+    session the agent already holds — plausibly a session-takeover channel
+    renegotiation issue rather than a product defect). Until it's validated
+    against a production NT-service agent (which holds no RDP session), audio
+    is opt-in so the default launch always renders. Playback-only when
+    enabled; see ``audio_mode`` for microphone."""
 
     audio_mode: Literal["playback", "bidirectional"] = "playback"
     """``playback`` — guest-to-host only (speakers); ``bidirectional`` —
@@ -103,10 +110,16 @@ class PeripheralsConfig(BaseModel):
 
     # --- Clipboard -----------------------------------------------------------
 
-    clipboard_mode: Literal["off", "text-only", "rich"] = "text-only"
-    """``off`` — no clipboard sharing; ``text-only`` — plain text both
-    directions (default, safe); ``rich`` — HTML, RTF, images, file
-    references (FORMAT_FILELIST) with path translation."""
+    clipboard_mode: Literal["off", "text-only", "rich"] = "off"
+    """``off`` (default) — no clipboard sharing; ``text-only`` — plain text
+    both directions; ``rich`` — HTML, RTF, images, file references
+    (FORMAT_FILELIST) with path translation.
+
+    OFF by default for the same reason as ``audio_enabled``: enabling
+    ``+clipboard`` on the RAIL connection caused FreeRDP 3.24
+    ``ERRCONNECT_POST_CONNECT_FAILED`` (and a ``cliprdr_file_context_uninit``
+    SIGSEGV during the failed-connect cleanup) in the console-agent test
+    harness. Opt-in until validated against a production NT-service agent."""
 
     # --- Microphone ----------------------------------------------------------
 
@@ -240,11 +253,13 @@ class PeripheralsConfig(BaseModel):
             # Explicit mic without bidirectional audio (rare but valid).
             flags.append("/microphone:sys:pulse")
 
-        # Clipboard
-        if self.clipboard_mode == "text-only":
-            flags.append("+clipboard")
-            flags.append("/clipboard-redirect-type:text")
-        elif self.clipboard_mode == "rich":
+        # Clipboard. FreeRDP 3.x has no "/clipboard-redirect-type" flag — the
+        # parser rejects it ("Unexpected keyword"), which fails the whole RAIL
+        # spawn. `+clipboard` enables the channel; finer control (direction /
+        # selection) is via `/clipboard:` sub-options and the text-only vs rich
+        # *format* filtering is handled host-side at the FORMAT_FILELIST seam,
+        # not by a FreeRDP flag. So both enabled modes map to `+clipboard`.
+        if self.clipboard_mode in ("text-only", "rich"):
             flags.append("+clipboard")
 
         # Printer
@@ -257,9 +272,10 @@ class PeripheralsConfig(BaseModel):
         if self.smartcard_enabled:
             flags.append("/smartcard")
 
-        # USB devices
+        # USB devices. FreeRDP 3.x syntax is /usb:id:<vid>:<pid> (a colon after
+        # `id`, per `xfreerdp3 /help`), not `id,`.
         for device in self.usb_devices:
-            flags.append(f"/usb:id,{device}")
+            flags.append(f"/usb:id:{device}")
 
         # Shared folder (scoped, opt-in host directory redirect). FreeRDP
         # auto-enables the rdpdr channel; the guest sees it as

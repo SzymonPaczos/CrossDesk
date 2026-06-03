@@ -38,9 +38,14 @@ from crossdesk_host.config.peripherals import PeripheralsConfig, load_peripheral
 
 def test_defaults_all_safe() -> None:
     cfg = PeripheralsConfig()
-    assert cfg.audio_enabled is True
-    assert cfg.audio_mode == "playback"
-    assert cfg.clipboard_mode == "text-only"
+    # Audio + clipboard default OFF: enabling their FreeRDP channels broke the
+    # RAIL connect (POST_CONNECT_FAILED) in live testing, so they're opt-in
+    # until validated against a production agent — the default launch must
+    # render with no redirection channels and produce no FreeRDP flags.
+    assert cfg.audio_enabled is False
+    assert cfg.audio_mode == "playback"  # the mode if/when audio is enabled
+    assert cfg.clipboard_mode == "off"
+    assert cfg.to_freerdp_flags() == []
     assert cfg.microphone_enabled is False
     assert cfg.printer_mode == "off"
     assert cfg.printer_name == ""
@@ -305,11 +310,22 @@ def test_microphone_enabled_without_audio() -> None:
     assert not any("sound" in f for f in flags)
 
 
-def test_freerdp_flags_text_clipboard_includes_restriction() -> None:
+def test_freerdp_flags_text_clipboard_enables_channel() -> None:
+    # FreeRDP 3.x has no /clipboard-redirect-type flag (it rejects it and
+    # fails the whole spawn); text-only enables the channel with +clipboard,
+    # format filtering is host-side.
     cfg = PeripheralsConfig(clipboard_mode="text-only")
     flags = cfg.to_freerdp_flags()
     assert "+clipboard" in flags
-    assert "/clipboard-redirect-type:text" in flags
+    assert not any("clipboard-redirect-type" in f for f in flags)
+
+
+def test_freerdp_flags_usb_uses_colon_syntax() -> None:
+    cfg = PeripheralsConfig(usb_devices=["0403:6001"], clipboard_mode="off")
+    flags = cfg.to_freerdp_flags()
+    # FreeRDP 3.x: /usb:id:<vid>:<pid> (colon after id), not id,
+    assert "/usb:id:0403:6001" in flags
+    assert not any(f.startswith("/usb:id,") for f in flags)
 
 
 def test_unknown_field_rejected() -> None:

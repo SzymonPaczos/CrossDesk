@@ -9,11 +9,30 @@ prac — `history/completed-work.md`.
 
 ---
 
-## Usability push (2026-06-02, branch `feat/usability-shared-fs`) — CLI/TUI/GUI + filesystem + any-app
+## Usability push (2026-06-02/03, branch `feat/usability-shared-fs`) — CLI/TUI/GUI + filesystem + any-app + window icons
 
-Sesja po resecie hosta. Wszystko gate-green (mypy --strict 120, host suite,
-cargo check/clippy). Live-proofy wymagające VM odłożone (host zresetowany —
-czekam na OK właściciela zanim wzniecę ciężką VM).
+Wszystko gate-green (mypy --strict 121, host suite 859+, cargo check/clippy).
+**LIVE-zweryfikowane na żywej VM (2026-06-03):**
+- **Ikony okien (.desktop)** — `crossdesk launch notepad` → realna ikona
+  `notepad.exe` 256×256 zapisana do `~/.local/share/icons/hicolor/256x256/apps/
+  crossdesk-notepad.png`, `.desktop` ma `Icon=crossdesk-notepad` +
+  `StartupWMClass=crossdesk-notepad`, okno ma WM_CLASS `crossdesk-notepad`,
+  daemon loguje "applied window icon for notepad". Pełny pipeline działa.
+- **Most plików (shared folder)** — DWUKIERUNKOWO: plik zapisany przez appkę
+  Windows do `\\tsclient\CrossDesk` ląduje w `~/CrossDesk-Shared` na Linuksie
+  (scenariusz "zapisz → znajdź na Linuksie"); plik wrzucony na hoście jest
+  czytany w gueście (scenariusz "wrzuć instalator → odpal w VM").
+- **Launch-by-path** — `crossdesk launch 'C:\...\app.exe'` daemon resolve →
+  spawn RAIL z wyprowadzonym wm-class. Render = ta sama proven ścieżka.
+- **WM_CLASS namespacing** — okna RAIL to teraz `crossdesk-<app_id>`.
+
+**KLUCZOWE ZNALEZISKO (audio/clipboard):** wpięcie `peripherals.to_freerdp_flags()`
+do launchu (wcześniej dead code, nigdy nieaplikowane) ujawniło, że FreeRDP 3.24
+**nie ma backendu pipewire** (`rdpsnd: Unable to load sound playback subsystem
+pipewire, error 1359`) → cała RAIL łączność pada (POST_CONNECT_FAILED + cliprdr
+SIGSEGV w cleanupie). Fix: `/sound:sys:pulse` zamiast pipewire; audio+clipboard
+**domyślnie OFF** (opt-in) dopóki niezweryfikowane e2e na produkcyjnym agencie.
+Domyślny launch renderuje czysto (zero kanałów redirection).
 
 **Shipped (zacommitowane na `feat/usability-shared-fs`):**
 - **Most plików host↔guest** (`d548d2e`): scoped, opt-in folder współdzielony
@@ -36,22 +55,28 @@ czekam na OK właściciela zanim wzniecę ciężką VM).
 poprawne exit codes). **TUI:** nie istnieje (projekt = CLI + Qt GUI; nie
 tworzę). **GUI:** builduje + odpala (Qt6 6.10.2), ikony naprawione.
 
-**Otwarte znaleziska / decyzje:**
-- **Ikony okien (host consumer)** — CZEKA NA DECYZJĘ właściciela:
-  `.desktop`/icon-theme (bezzależnościowe) vs `_NET_WM_ICON` (python-xlib+Pillow).
-  Agent-side gotowy (256×256 płynie). Patrz `backlog.md` P1 "RAIL window icons".
-- **BUG: StartupWMClass↔WM_CLASS mismatch** — `apps install` pisze
-  `.desktop` z `StartupWMClass=crossdesk-<id>`, ale okno RAIL dostaje
-  WM_CLASS `<id>` (z `/wm-class:<id>`). Dock nie skojarzy okna z launcherem.
-  Do naprawy z konsumentem ikon (uzgodnić na `crossdesk-<id>` po obu stronach).
+**Rozwiązane w tej sesji:**
+- **Ikony okien (host consumer)** — ZROBIONE ścieżką `.desktop` (decyzja
+  właściciela 2026-06-03), commit `729f4b1`. `WindowIconStore` expect/offer:
+  launch rejestruje app_id, agent-CREATED-z-ikoną zapisuje PNG do icon-theme +
+  przepisuje `.desktop`. Bezzależnościowe (icon_png to już PNG). LIVE ✅.
+- **StartupWMClass↔WM_CLASS mismatch** — NAPRAWIONE (`729f4b1`):
+  `build_rail_argv` → `/wm-class:crossdesk-<app_id>`, zgodne z
+  `StartupWMClass=crossdesk-<app_id>` z `mime.install_app`. LIVE ✅.
+- **Audio/clipboard RAIL crash** — root-caused (FreeRDP brak pipewire) +
+  fixed (pulse + default off), commits `bf9fa79`/`1bc9b96`.
+
+**Otwarte (owner/HW-gated):**
+- **Audio/clipboard e2e** — domyślnie off; wymagają walidacji na produkcyjnym
+  NT-service agencie (z pulse). Opt-in via `peripherals.toml`.
 - **i18n .qm nie kompilują się** — `lrelease` (Qt linguist) nieobecny na hoście;
-  `build.rs` go woła z `.ok()` (cicho), więc tłumaczenia nie wchodzą, GUI leci
-  po angielsku (źródłowy język). Env-gap (brak qt6 l10n tools). P2.
+  `build.rs` woła z `.ok()` (cicho) → tłumaczenia nie wchodzą, GUI po angielsku.
+  Env-gap (brak qt6 l10n tools). P2.
 - **App discovery proto-gated** — `registry-scan` (guest) realny, ale brak RPC
-  guest→host (RegistryScannerService) by przenieść wyniki + `ListDiscoveredApps`
-  to stub. Wymaga edycji proto (boundary, owner). Launch-by-path to interim.
-- **Live-proofy odłożone:** most plików (zapis z notepada → host; instalator →
-  guest) i launch-by-path na żywym agencie — wymagają wzniesienia VM.
+  guest→host (RegistryScannerService) + `ListDiscoveredApps` to stub. Wymaga
+  edycji proto (boundary, owner). Launch-by-path to interim "any app".
+- **Window icon per-window correlation** — dziś launch-scoped (next-CREATED).
+  Robust = app/exe identity w `RailWindowEvent` (proto, owner).
 
 ---
 

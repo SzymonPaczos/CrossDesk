@@ -58,7 +58,7 @@ def test_basic_argv_for_notepad() -> None:
     # on a live guest otherwise; verified).
     assert any(a.startswith("/app:program:C:\\Windows\\notepad.exe") for a in argv)
     assert not any("||" in a for a in argv)
-    assert "/wm-class:notepad" in argv
+    assert "/wm-class:crossdesk-notepad" in argv
 
 
 def test_argv_carries_translated_cmd_argument() -> None:
@@ -109,4 +109,4 @@ def test_app_id_drives_wm_class() -> None:
         executable_guest_path="C:\\Windows\\System32\\cmd.exe",
     )
     argv = build_rail_argv(app, _conn())
-    assert "/wm-class:cmd" in argv
+    assert "/wm-class:crossdesk-cmd" in argv

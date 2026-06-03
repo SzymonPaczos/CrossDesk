@@ -44,6 +44,7 @@ from crossdesk_host.display.session_starter import (
     AuthHealthCheckFailed,
     spawn_rail_with_auth_check,
 )
+from crossdesk_host.display.window_icon import WindowIconStore
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
@@ -166,11 +167,16 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         metrics_registry: Optional[Registry] = None,
         freerdp: Optional[FreeRDPInvocation] = None,
         verify_coordinator: Optional[VerifyCoordinator] = None,
+        icon_store: Optional[WindowIconStore] = None,
     ) -> None:
         self.state = state
         self.libvirt_ctl = libvirt_ctl
         self.coordinator = coordinator
         self.push_interval_seconds = push_interval_seconds
+        # Shared with the RailManager: a launch registers its app_id here so
+        # the next window icon the agent reports gets applied to that app's
+        # .desktop / icon theme (display/window_icon.py). None ⇒ skip.
+        self._icon_store = icon_store
         # Launch backend: the FreeRDP spawner + the credential-verify
         # coordinator (shared with the control servicer, which registers
         # the live guest session). Both None ⇒ Launch reports the backend
@@ -400,6 +406,12 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # launch, so fall back to no extra flags.
         extra_flags = self._peripheral_flags()
         argv = build_rail_argv(spec, conn, extra_flags=extra_flags)
+
+        # Register the icon expectation before the window appears: the agent's
+        # CREATED-with-icon for the launched window then applies the real .exe
+        # icon to this app's .desktop (display/window_icon.py).
+        if self._icon_store is not None:
+            self._icon_store.expect(spec.app_id, spec.display_name)
 
         try:
             session = await spawn_rail_with_auth_check(

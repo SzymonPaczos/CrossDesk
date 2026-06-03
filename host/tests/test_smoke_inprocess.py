@@ -774,7 +774,7 @@ async def test_launch_spawns_freerdp_through_real_agent(
         assert len(mock_freerdp.hooks.spawned_argvs) == 1
         argv = mock_freerdp.hooks.spawned_argvs[0]
         assert any("notepad.exe" in part for part in argv)
-        assert "/wm-class:notepad" in argv
+        assert "/wm-class:crossdesk-notepad" in argv
         assert response.request_id.startswith("rail-")
     finally:
         if proc.returncode is None:

@@ -90,7 +90,7 @@ async def test_launch_success_spawns_and_tracks(
     argv = seen["argv"]
     assert isinstance(argv, list)
     assert any("notepad.exe" in part for part in argv)
-    assert any(part == "/wm-class:notepad" for part in argv)
+    assert any(part == "/wm-class:crossdesk-notepad" for part in argv)
     # Session tracked + activity recorded.
     assert [s.pid for s in servicer._sessions] == [42]
     kinds = [a.kind for a in servicer.state.recent_activity]
@@ -180,4 +180,4 @@ async def test_launch_by_exe_path_spawns(
     argv = seen["argv"]
     assert isinstance(argv, list)
     assert any("game.exe" in part for part in argv)
-    assert any(part == "/wm-class:game" for part in argv)
+    assert any(part == "/wm-class:crossdesk-game" for part in argv)

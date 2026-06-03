@@ -121,7 +121,12 @@ def build_rail_argv(
         "/dynamic-resolution",
         "+auto-reconnect",
         f"/app:program:{program_clause},hidef:on,name:{app.display_name or app.app_id}",
-        f"/wm-class:{app.app_id}",
+        # Namespace the WM_CLASS as crossdesk-<app_id> so (a) CrossDesk windows
+        # never collide with a native Linux app of the same name, and (b) it
+        # matches the StartupWMClass=crossdesk-<app_id> written into the app's
+        # .desktop (integrations/mime.install_app) — that match is what lets the
+        # dock/alt-tab show the app's real icon (display/window_icon.py).
+        f"/wm-class:crossdesk-{app.app_id}",
     ]
     argv.extend(extra_flags)
     return argv

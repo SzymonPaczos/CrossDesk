@@ -287,6 +287,18 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   via `org.freedesktop.Notifications`, brief next-steps file w
   `~/.config/crossdesk/getting-started.md`, optionally auto-launch
   Notepad jako smoke test (`--launch-test`). Don't open browsers.
+- **Produkcyjny agent jako NT-service (nie console) — STABILNOŚĆ, beta-blocker.**
+  Live finding 2026-06-09: console-mode agent jest związany z cyklem życia
+  sesji RDP → **zamknięcie okna RAIL / takeover sesji ubija ControlSession**,
+  kolejny `launch` failuje na verify-credentials ("no live guest session").
+  NT-service (kod jest, autounattend instaluje) przeżywa disconnect sesji +
+  reboot + nie trzyma sesji RDP (brak session-takeover, brak cmd-artefaktu).
+  Wymaga produkcyjnej reinstalacji guesta z autounattend (`[HW]`).
+- **Daemon reapuje zakończone xfreerdp (zombie `<defunct>`) — ops.** Live finding
+  2026-06-09: daemon spawnuje xfreerdp jako subprocess ale nie `wait()`-uje po
+  jego śmierci → zombie w tablicy procesów (PPID=daemon). Niegroźne, ale do
+  naprawy: `asyncio` child watcher / reap na `transport`/`freerdp` poziomie
+  gdy RAIL session kończy się lub jest ubijany.
 
 ### Cross-platform foundation
 
@@ -478,6 +490,18 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 Wymaga zgody na touch boundary plików per `AGENTS.md` "File boundaries"
 (proto, THREAT_MODEL, DECISIONS, REQUIREMENTS, MVP_SCOPE, GOALS, ROADMAP).
 
+- **⭐ Kierunek systemu plików (mapowanie plików Windows ↔ Linux) — BLOKADA
+  BETY.** A1 (`workdir:` na UNC) zacommitowane (`7e36f55`) ale live-verify
+  pokazał porażkę celu (Save → `C:\Windows\System32`; Windows nie bierze UNC
+  jako CWD procesu). Wybór kierunku (pełny kontekst + tabela opcji w
+  `handoff.md` §2): **A** litera-dysku (`Z:`) + redirect shell folders
+  Pulpit/Dokumenty — host+agent only, **bez boundary**, rekomendowane na betę;
+  **B** VirtioFS jednego folderu jako trwały dysk — **dotyka `docs/THREAT_MODEL.md`
+  + `docs/DECISIONS.md`** (trwały scoped mount) + sterownik virtio-win + ADR;
+  **C** pełny JIT VirtioFS (promocja mocka `fs-mount`/`filesystem.proto`) —
+  duży Phase-5 + threat-model; **D** całe `$HOME` — odrzucone (DEC-META-005),
+  tylko świadoma reaktywacja. Pytanie zadane właścicielowi 2026-06-09 (przerwane);
+  wrócić. `[user-approval]` dla B/C.
 - **`docs/THREAT_MODEL.md` flips po Stage 4 LogonUserW shipped**
   (`auth.verify-credentials.v1` residual risk wymaga uzupełnienia)
   i **`docs/VERSIONING.md` capability promotion** (`auth.verify-

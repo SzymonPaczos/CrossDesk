@@ -52,13 +52,19 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   rozpoznana → gate verify-creds; gola na agencie odłożona).
 - **A1 — Save dialog na folderze Linuksa (`workdir:`)** (branch, NIE merged,
   2026-06-04): gdy shared folder ON, `build_rail_argv` dostał param `workdir`
-  i dodaje `workdir:\\tsclient\<share>` do klauzuli `/app:` → RemoteApp startuje
-  z CWD = folder Linuksa → Save/Open dialog defaultuje TAM (notepad używa CWD
-  gdy `lpstrInitialDir`=NULL). `_peripheral_flags` zwraca `(flags, workdir)`;
-  workdir ustawiany TYLKO gdy `/drive:` realnie przeżywa (gard: pusta/względna
-  ścieżka → drop drive+workdir; mkdir fail → drop). Domyka filesystem UX na
-  betę (handoff §6.A). **Live-verify zaległy** (otwórz Save w notepadzie — patrz
-  niżej). Adversarial review (10 agentów) → 2 realne defekty naprawione: (a)
+  i dodaje `workdir:\\tsclient\<share>` do klauzuli `/app:`. `_peripheral_flags`
+  zwraca `(flags, workdir)`; workdir ustawiany TYLKO gdy `/drive:` realnie
+  przeżywa (gard: pusta/względna ścieżka → drop drive+workdir; mkdir fail → drop).
+  **LIVE-VERIFY (2026-06-09): PORAŻKA CELU.** Ctrl+S w notepadzie → Save dialog
+  defaultował do `C:\Windows\System32`, NIE do folderu. Root: **Windows nie
+  honoruje ścieżki UNC (`\\tsclient\CrossDesk`) jako CWD procesu → fallback
+  System32.** Sam `/drive:` bridge działa (user dotarł ręcznie przez „dysk
+  sieciowy"). Plumbing `workdir` POPRAWNY i reusable — zadziała na **literę dysku**
+  (`Z:\`), nie UNC. **Kierunek systemu plików = otwarta DECYZJA właściciela**
+  (opcje A litera-dysku+shell-redirect / B VirtioFS-1-folder / C pełny JIT /
+  D całe-home — handoff §2). `7e36f55` (nie-zmergowany branch) realnie pogarsza
+  default do System32 → do poprawy przy wyborze kierunku.
+  Adversarial review (10 agentów) → 2 realne defekty naprawione: (a)
   pusty/whitespace `shared_folder_path` omijał mkdir-gate (`Path("").mkdir`
   → CWD) — dodany walidator boundary (`peripherals.py model_post_init`) +
   gard absolute-path; (b) `test_smoke_inprocess` czytał REALNY `peripherals.toml`

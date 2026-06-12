@@ -60,10 +60,11 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   honoruje ścieżki UNC (`\\tsclient\CrossDesk`) jako CWD procesu → fallback
   System32.** Sam `/drive:` bridge działa (user dotarł ręcznie przez „dysk
   sieciowy"). Plumbing `workdir` POPRAWNY i reusable — zadziała na **literę dysku**
-  (`Z:\`), nie UNC. **Kierunek systemu plików = otwarta DECYZJA właściciela**
-  (opcje A litera-dysku+shell-redirect / B VirtioFS-1-folder / C pełny JIT /
-  D całe-home — handoff §2). `7e36f55` (nie-zmergowany branch) realnie pogarsza
-  default do System32 → do poprawy przy wyborze kierunku.
+  (`Z:\`), nie UNC. **Kierunek systemu plików = ROZSTRZYGNIĘTE 2026-06-12:
+  A (litera dysku + redirect Dokumenty) na betę → B (VirtioFS) po becie.**
+  Plan wykonawczy: `handoff.md` §2.7/§2.8 + `backlog.md` P0 „Filesystem
+  bridge". `7e36f55` (nie-zmergowany branch) realnie pogarsza default do
+  System32 → Etap A naprawia (workdir UNC→`Z:\`).
   Adversarial review (10 agentów) → 2 realne defekty naprawione: (a)
   pusty/whitespace `shared_folder_path` omijał mkdir-gate (`Path("").mkdir`
   → CWD) — dodany walidator boundary (`peripherals.py model_post_init`) +

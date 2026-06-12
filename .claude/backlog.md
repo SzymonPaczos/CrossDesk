@@ -21,6 +21,23 @@ częściowo shipped (reszta w [`status.md`](status.md)).
 
 ## P0
 
+### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
+- **Etap A: litera dysku `Z:` + redirect Dokumenty.** Pełny plan wykonawczy:
+  `handoff.md` §2.7. Host: workdir UNC→`Z:\` w `_peripheral_flags` (naprawa
+  regresji `7e36f55`), config `shared_folder_drive_letter` +
+  `redirect_documents`/`redirect_desktop`; guest: idempotentny krok logon
+  (map `Z:` + HKCU User Shell Folders `Personal`, restore-on-absence;
+  ścieżka (i) HKCU Run key — zweryfikować na żywo czy RAIL logon je
+  przetwarza; fallback (ii) agent `CreateProcessAsUser`). **Bez boundary
+  files.** Branch `feat/fs-drive-letter`; builds on `feat/usability-shared-fs`
+  (sequencing: handoff §2.7 krok 0). Acceptance: Ctrl+S w notepadzie →
+  Save dialog na `Z:\` = `~/CrossDesk-Shared`; disable → restore defaults.
+- **Etap B: VirtioFS jednego folderu jako trwały dysk `Z:`** (po becie).
+  Plan: `handoff.md` §2.8. Gated: smoke-test sterownika virtio-win VirtioFS
+  `[HW]` + weryfikacja vhost-user/memfd na `qemu:///session` + **ADR
+  właściciela + THREAT_MODEL row** **`[user-approval]`**. Provider-swap pod
+  tym samym `Z:` (redirect z Etapu A bez zmian); rdpdr zostaje fallbackiem.
+
 ### Display / Phase 4 baseline
 - **X11 RAIL pipeline.** Implement
   [`host/src/crossdesk_host/display/rail_manager.py`](../host/src/crossdesk_host/display/rail_manager.py)
@@ -490,18 +507,12 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 Wymaga zgody na touch boundary plików per `AGENTS.md` "File boundaries"
 (proto, THREAT_MODEL, DECISIONS, REQUIREMENTS, MVP_SCOPE, GOALS, ROADMAP).
 
-- **⭐ Kierunek systemu plików (mapowanie plików Windows ↔ Linux) — BLOKADA
-  BETY.** A1 (`workdir:` na UNC) zacommitowane (`7e36f55`) ale live-verify
-  pokazał porażkę celu (Save → `C:\Windows\System32`; Windows nie bierze UNC
-  jako CWD procesu). Wybór kierunku (pełny kontekst + tabela opcji w
-  `handoff.md` §2): **A** litera-dysku (`Z:`) + redirect shell folders
-  Pulpit/Dokumenty — host+agent only, **bez boundary**, rekomendowane na betę;
-  **B** VirtioFS jednego folderu jako trwały dysk — **dotyka `docs/THREAT_MODEL.md`
-  + `docs/DECISIONS.md`** (trwały scoped mount) + sterownik virtio-win + ADR;
-  **C** pełny JIT VirtioFS (promocja mocka `fs-mount`/`filesystem.proto`) —
-  duży Phase-5 + threat-model; **D** całe `$HOME` — odrzucone (DEC-META-005),
-  tylko świadoma reaktywacja. Pytanie zadane właścicielowi 2026-06-09 (przerwane);
-  wrócić. `[user-approval]` dla B/C.
+- **Kierunek systemu plików — ROZSTRZYGNIĘTE 2026-06-12: A → potem B.**
+  Praca przeniesiona do P0 „Filesystem bridge — kierunek A→B" (góra pliku);
+  plan wykonawczy `handoff.md` §2.7 (Etap A) + §2.8 (Etap B). Tu zostaje
+  tylko część `[user-approval]` Etapu B: **ADR + THREAT_MODEL row dla
+  trwałego scoped VirtioFS mount** — owner autoryzuje gdy Etap B startuje
+  (po smoke-teście sterownika virtio-win VirtioFS).
 - **`docs/THREAT_MODEL.md` flips po Stage 4 LogonUserW shipped**
   (`auth.verify-credentials.v1` residual risk wymaga uzupełnienia)
   i **`docs/VERSIONING.md` capability promotion** (`auth.verify-

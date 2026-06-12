@@ -223,9 +223,28 @@ def test_peripheral_flags_workdir_when_shared_folder_enabled(
     )
     flags, workdir = _backend_servicer()._peripheral_flags()
     assert any(f.startswith("/drive:CrossDesk,") for f in flags)
-    assert workdir == "\\\\tsclient\\CrossDesk"
+    # Drive letter, not the UNC: Windows ignores a UNC working directory and
+    # falls back to System32, so the launcher points the app at Z:\ (mapped to
+    # the share by the guest logon step).
+    assert workdir == "Z:\\"
     # Folder is created on demand so the redirect has something to mount.
     assert share_dir.is_dir()
+
+
+def test_peripheral_flags_workdir_honours_custom_drive_letter(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    share_dir = tmp_path / "CrossDesk-Shared"
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(
+            shared_folder_enabled=True,
+            shared_folder_path=str(share_dir),
+            shared_folder_drive_letter="m",  # lower-case normalised to M
+        ),
+    )
+    _flags, workdir = _backend_servicer()._peripheral_flags()
+    assert workdir == "M:\\"
 
 
 def test_peripheral_flags_no_workdir_when_disabled(
@@ -321,4 +340,4 @@ async def test_launch_threads_workdir_into_argv(
     argv = seen["argv"]
     assert isinstance(argv, list)
     program = next(a for a in argv if a.startswith("/app:"))
-    assert "workdir:\\\\tsclient\\CrossDesk" in program
+    assert "workdir:Z:\\" in program

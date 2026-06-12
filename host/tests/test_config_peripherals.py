@@ -107,6 +107,50 @@ def test_shared_folder_empty_path_allowed_when_disabled() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Shared folder drive letter (Stage A: drive-letter + workdir)
+# ---------------------------------------------------------------------------
+
+
+def test_shared_folder_drive_letter_defaults_to_z() -> None:
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_path="/tmp/x")
+    assert cfg.shared_folder_drive_letter == "Z"
+    assert cfg.shared_folder_drive_path() == "Z:\\"
+
+
+def test_shared_folder_drive_path_empty_when_disabled() -> None:
+    cfg = PeripheralsConfig(shared_folder_enabled=False)
+    assert cfg.shared_folder_drive_path() == ""
+
+
+def test_shared_folder_drive_letter_normalised_uppercase() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True, shared_folder_path="/tmp/x", shared_folder_drive_letter="m"
+    )
+    assert cfg.shared_folder_drive_letter == "M"
+    assert cfg.shared_folder_drive_path() == "M:\\"
+
+
+def test_shared_folder_drive_letter_rejects_system_and_floppy() -> None:
+    for bad in ("C", "c", "A", "B"):
+        with pytest.raises(ValidationError, match="shared_folder_drive_letter"):
+            PeripheralsConfig(shared_folder_drive_letter=bad)
+
+
+def test_shared_folder_drive_letter_rejects_non_letter() -> None:
+    for bad in ("", "ZZ", "1", "Z:"):
+        with pytest.raises(ValidationError, match="shared_folder_drive_letter"):
+            PeripheralsConfig(shared_folder_drive_letter=bad)
+
+
+def test_shared_folder_redirect_defaults() -> None:
+    cfg = PeripheralsConfig()
+    # Documents redirect on (least-invasive default that fixes Save dialogs);
+    # Desktop redirect opt-in.
+    assert cfg.shared_folder_redirect_documents is True
+    assert cfg.shared_folder_redirect_desktop is False
+
+
+# ---------------------------------------------------------------------------
 # 2. FreeRDP — audio playback
 # ---------------------------------------------------------------------------
 

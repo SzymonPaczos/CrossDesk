@@ -17,9 +17,11 @@ Flag rationale (each in the comment near the line that emits it):
 - ``/app:program:`` — the actual Windows binary to run as a RAIL app.
   ``hidef:on`` enables high-quality glyphs; ``cmd:`` carries argv
   forwarded from the Linux invocation; ``workdir:`` sets the launched
-  process's working directory — we point it at the shared folder's
-  guest-side UNC (``\\\\tsclient\\<share>``) so a Save/Open dialog defaults
-  to the Linux-visible folder instead of ``C:\\``.
+  process's working directory — we point it at the mapped drive root
+  (``Z:\\``, which the guest logon step maps to ``\\\\tsclient\\<share>``)
+  so a Save/Open dialog defaults to the Linux-visible folder instead of
+  ``C:\\``. A drive letter, not the UNC: Windows ignores a UNC working
+  directory and falls back to System32.
 - ``+auto-reconnect`` — we WANT auto-reconnect because heartbeat FSM's
   HARD_DESTROY path restarts the VM and we'd like the existing RAIL
   windows to come back when the agent does.
@@ -102,11 +104,12 @@ def build_rail_argv(
 
     ``workdir`` — when non-empty, becomes the ``workdir:`` sub-key of the
     ``/app:`` clause, setting the launched RemoteApp's working directory.
-    The caller passes the shared folder's guest-side UNC
-    (``\\\\tsclient\\<share>``) when the redirect is active, so the app's
-    first Save/Open dialog defaults to the Linux-visible folder rather than
-    ``C:\\``. Empty when no shared folder is mounted (the workdir must point
-    at a path that exists in the guest, or RemoteApp launch fails)."""
+    The caller passes the mapped drive root (``Z:\\``) when the redirect is
+    active, so the app's first Save/Open dialog defaults to the
+    Linux-visible folder rather than ``C:\\``. A drive letter, not the UNC:
+    Windows ignores a UNC working directory and falls back to System32.
+    Empty when no shared folder is mounted (the workdir must point at a path
+    that exists in the guest, or RemoteApp launch fails)."""
 
     if conn.scale not in (100, 140, 180):
         raise ValueError(f"FreeRDP only supports scale 100/140/180; got {conn.scale}")

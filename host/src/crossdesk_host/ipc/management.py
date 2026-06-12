@@ -449,14 +449,16 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         directory for this launch from ``peripherals.toml`` (loaded fresh each
         launch), creating the shared folder on demand.
 
-        Returns ``(flags, workdir)``. *workdir* is the guest-side UNC of the
-        shared folder (``\\\\tsclient\\<name>``) when the shared folder is
-        enabled and its host directory exists — so a launched app's Save/Open
-        dialog defaults to the Linux-visible folder instead of ``C:\\``. It is
-        empty when the shared folder is off, or when its host directory could
-        not be created: in that case the drive redirect is dropped too, and a
-        workdir pointing at a share that won't mount would only fail the
-        RemoteApp launch.
+        Returns ``(flags, workdir)``. *workdir* is the guest-side root of the
+        mapped drive (``Z:\\``) when the shared folder is enabled and its host
+        directory exists — so a launched app's Save/Open dialog defaults to the
+        Linux-visible folder instead of ``C:\\``. A drive letter, not the UNC
+        (``\\\\tsclient\\<name>``): Windows ignores a UNC working directory and
+        falls back to System32 (verified live 2026-06-09); the guest logon step
+        maps the letter to the share. It is empty when the shared folder is off,
+        or when its host directory could not be created: in that case the drive
+        redirect is dropped too, and a workdir pointing at a share that won't
+        mount would only fail the RemoteApp launch.
 
         Best-effort: any config/IO error degrades to no extra flags and no
         workdir rather than blocking the launch."""
@@ -487,7 +489,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         except OSError as exc:
             logger.warning("shared folder %s not creatable: %s", share, exc)
             return no_share, ""
-        return flags, f"\\\\tsclient\\{cfg.shared_folder_name}"
+        return flags, cfg.shared_folder_drive_path()
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

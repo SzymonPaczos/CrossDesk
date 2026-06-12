@@ -184,7 +184,48 @@ class PeripheralsConfig(BaseModel):
     """Redirect name — the guest sees the share as
     ``\\\\tsclient\\<shared_folder_name>``."""
 
+    shared_folder_drive_letter: str = "Z"
+    """Drive letter the guest logon step maps the share to (``net use
+    <letter>: \\\\tsclient\\<name>``).
+
+    Why a drive letter at all when the rdpdr redirect already exposes
+    ``\\\\tsclient\\<name>``?  Because Windows does **not** honour a UNC
+    path as a process working directory — a RemoteApp launched with
+    ``workdir:\\\\tsclient\\CrossDesk`` silently falls back to
+    ``C:\\Windows\\System32`` (verified live 2026-06-09).  A drive letter
+    *is* a valid CWD, so the launcher points the app's working directory
+    at ``<letter>:\\`` instead, and the Save/Open dialog defaults to the
+    Linux-visible folder.
+
+    Constrained to ``D``–``Z``: ``A``/``B`` are legacy floppy slots and
+    ``C`` is the system drive."""
+
+    shared_folder_redirect_documents: bool = True
+    """Point the guest user's *Documents* shell folder at the mapped
+    drive so apps that default their Save dialog to Documents land on the
+    Linux-visible folder.  Effective only when ``shared_folder_enabled``;
+    the guest logon step restores the default Documents path whenever the
+    share is absent so the profile never points at a dead drive."""
+
+    shared_folder_redirect_desktop: bool = False
+    """Also point the guest user's *Desktop* at the mapped drive.  Off by
+    default: redirecting the Desktop is more visually invasive (every icon
+    on the Windows desktop becomes the Linux folder's contents) than
+    redirecting Documents, so it's opt-in."""
+
     # --- Validators ----------------------------------------------------------
+
+    @field_validator("shared_folder_drive_letter")
+    @classmethod
+    def _drive_letter_valid(cls, v: str) -> str:
+        up = v.strip().upper()
+        if not re.fullmatch(r"[D-Z]", up):
+            raise ValueError(
+                "shared_folder_drive_letter must be a single letter D-Z "
+                "(A/B are legacy floppy slots, C is the system drive), "
+                f"got {v!r}"
+            )
+        return up
 
     @field_validator("shared_folder_name")
     @classmethod
@@ -306,6 +347,20 @@ class PeripheralsConfig(BaseModel):
         if not self.shared_folder_enabled:
             return ""
         return os.path.expanduser(os.path.expandvars(self.shared_folder_path))
+
+    def shared_folder_drive_path(self) -> str:
+        """Guest-side working directory for a launched RemoteApp: the root
+        of the mapped drive, e.g. ``Z:\\``.
+
+        The guest logon step maps ``<letter>:`` to ``\\\\tsclient\\<name>``;
+        the launcher passes this as the ``/app:`` ``workdir:`` so the app's
+        Save/Open dialog defaults to the Linux-visible folder.  A drive
+        letter is used rather than the UNC because Windows ignores a UNC
+        working directory (falls back to System32).  Empty when the shared
+        folder is off."""
+        if not self.shared_folder_enabled:
+            return ""
+        return f"{self.shared_folder_drive_letter}:\\"
 
     # --- libvirt XML mapping -------------------------------------------------
 

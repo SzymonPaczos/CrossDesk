@@ -72,6 +72,44 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   (nie-hermetyczny) — wpięta izolacja. Latent (uśpiony): quoted-`cmd:` tokenizer
   warning gdy Phase-5 wepnie file-open — `backlog.md` Tech-debt.
 
+- **Etap A (FS kierunek A) — implementacja host-side + ROZSTRZYGNIĘCIE
+  MECHANIZMU na żywo (2026-06-12, branch `feat/fs-drive-letter`, NIE merged).**
+  Host gotowy + bramki zielone (mypy 122, ruff src+własne testy, host suite):
+  - `PeripheralsConfig`: `shared_folder_drive_letter` (D-Z, default Z, walidacja
+    +upper), `shared_folder_redirect_documents` (default ON),
+    `shared_folder_redirect_desktop` (default OFF), `shared_folder_drive_path()`.
+  - `_peripheral_flags`: workdir UNC→`Z:\` (naprawa regresji `7e36f55`).
+  - `installer/drive_map.py`: generator skryptu logon `.cmd` (mapuje share na
+    `Z:` + redirect Documents/Desktop, idempotentny, restore-on-absence) +
+    9 testów.
+  **LIVE-FINDINGS (Linux+KVM, na żywej Win10 VM, RemoteApp przez FreeRDP):**
+  1. ✅ `net use Z: \\tsclient\CrossDesk` DZIAŁA w sesji RAIL; `dir Z:\` listuje
+     shared folder; `cd /d Z:\` → CWD=`Z:\` (litera dysku JEST poprawnym CWD,
+     tam gdzie UNC padał do System32).
+  2. ❌ **HKCU/HKLM `Run` key NIE odpala się przy logonie RAIL** — RemoteApp
+     używa `rdpinit.exe` jako shella, który pomija przetwarzanie Run keys przez
+     Explorer/userinit. Skrypt z Run key nigdy się nie wykonał (marker lokalny
+     `C:\CrossDesk\drivemap-ran.txt` nie powstał). **Ścieżka (i) z handoffa = MARTWA.**
+  3. ✅ **Trwałe mapowanie (`net use … /persistent:yes`) JEST auto-odtwarzane
+     przez Windows MPR przy logonie RAIL** — przeżyło `logoff` + świeży logon,
+     `dir Z:\` zadziałał. To jest mechanizm zastępczy za Run key (MPR restore
+     nie zależy od shella). `drive_map.py` zmieniony na `/persistent:yes`.
+  4. ⚠️ `workdir:Z:\` → CWD=System32 w teście, ALE test był skażony (użyłem
+     `cmd:` + `workdir:` razem = znany bug parsera FreeRDP, backlog Tech-debt;
+     realny launch notepada NIE ma `cmd:`). Dodatkowo realny **wyścig**: workdir
+     ustawiany przy tworzeniu procesu RemoteApp, a MPR odtwarza Z: ~sekundę
+     później → workdir:Z:\ jest best-effort/racy. **Robust lever = redirect
+     shell-foldera** (ewaluowany leniwie gdy dialog się otwiera, Z: już gotowe;
+     albo wprost na UNC — bez litery, bez wyścigu).
+  **POZOSTAJE (następny agent):** (a) GUI-verify realnego Save dialogu notepada
+  (brak xdotool/scrot na hoście + agent wylogowany w tej sesji → nie zrobione
+  autonomicznie; poprzednia A1-verify była z userem patrzącym); (b) wybór
+  triggera one-time setup: agent-on-session-connect (`CreateProcessAsUser`,
+  agent-svc Rust) LUB deklaratywny `HKCU\Network\Z` przez autounattend (do
+  zweryfikowania że MPR odtworzy z samego wpisu rejestru bez share przy
+  provisioningu); (c) ewaluacja czy redirect Documents→UNC sam wystarcza
+  (prościej niż litera+workdir). Plan zaktualizowany: `handoff.md` §2.7.
+
 **CLI:** w pełni działa (audyt wszystkich subkomend na żywo — graceful errors,
 poprawne exit codes). **TUI:** nie istnieje (projekt = CLI + Qt GUI; nie
 tworzę). **GUI:** builduje + odpala (Qt6 6.10.2), ikony naprawione.

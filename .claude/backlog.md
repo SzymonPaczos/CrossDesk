@@ -22,16 +22,20 @@ częściowo shipped (reszta w [`status.md`](status.md)).
 ## P0
 
 ### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
-- **Etap A: litera dysku `Z:` + redirect Dokumenty.** Pełny plan wykonawczy:
-  `handoff.md` §2.7. Host: workdir UNC→`Z:\` w `_peripheral_flags` (naprawa
-  regresji `7e36f55`), config `shared_folder_drive_letter` +
-  `redirect_documents`/`redirect_desktop`; guest: idempotentny krok logon
-  (map `Z:` + HKCU User Shell Folders `Personal`, restore-on-absence;
-  ścieżka (i) HKCU Run key — zweryfikować na żywo czy RAIL logon je
-  przetwarza; fallback (ii) agent `CreateProcessAsUser`). **Bez boundary
-  files.** Branch `feat/fs-drive-letter`; builds on `feat/usability-shared-fs`
-  (sequencing: handoff §2.7 krok 0). Acceptance: Ctrl+S w notepadzie →
-  Save dialog na `Z:\` = `~/CrossDesk-Shared`; disable → restore defaults.
+- **Etap A: litera dysku `Z:` + redirect Dokumenty.** `[~PARTIAL 2026-06-12]`
+  Host-side + generator skryptu **ZROBIONE** na `feat/fs-drive-letter`
+  (5 commitów; bramki zielone): config (`shared_folder_drive_letter` D-Z +
+  `redirect_documents`/`redirect_desktop` + `shared_folder_drive_path()`),
+  workdir UNC→`Z:\` w `_peripheral_flags`, `installer/drive_map.py` generator
+  skryptu logon + 9 testów. **Live-findings (na żywej VM) zmieniły mechanizm:**
+  Run key NIE odpala się przy logonie RAIL (rdpinit shell) → ścieżka (i)
+  MARTWA; **trwałe mapowanie `/persistent:yes` JEST auto-odtwarzane przez MPR**
+  → to jest mechanizm drive'a. `workdir:Z:\` jest racy → robust lever to
+  redirect shell-foldera (leniwy). **POZOSTAJE:** GUI-verify Save dialogu
+  (brak xdotool/scrot w sesji — doinstaluj lub user patrzy) + wybór triggera
+  one-time (A: deklaratywny `HKCU\Network` przez autounattend / B: agent-svc
+  `CreateProcessAsUser`) + wiring provisioning. Pełny stan: `handoff.md` §2.7
+  „AKTUALIZACJA MECHANIZMU" + `status.md` A1. **Bez boundary files.**
 - **Etap B: VirtioFS jednego folderu jako trwały dysk `Z:`** (po becie).
   Plan: `handoff.md` §2.8. Gated: smoke-test sterownika virtio-win VirtioFS
   `[HW]` + weryfikacja vhost-user/memfd na `qemu:///session` + **ADR

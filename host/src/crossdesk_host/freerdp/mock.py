@@ -9,6 +9,7 @@ FreeRDP install.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 
@@ -37,6 +38,10 @@ class MockHooks:
     """Each entry is the argv passed to ``spawn_rail``. Tests assert
     this list against expected RAIL command construction."""
 
+    spawned_labels: list[str] = field(default_factory=list)
+    """``log_label`` (app_id) passed alongside each ``spawn_rail``. Tests
+    assert the supervisor/launcher threads the app identity through."""
+
     terminated_pids: list[int] = field(default_factory=list)
     """pid order in which ``terminate`` was called. Tests use this
     to assert idempotence and termination ordering."""
@@ -55,8 +60,11 @@ class MockFreeRDPInvocation(FreeRDPInvocation):
     def __init__(self) -> None:
         self.hooks = MockHooks()
         self._next_pid = 1
+        # Per-pid exit gate: ``wait`` awaits it, ``simulate_exit`` sets it.
+        self._exit_events: dict[int, asyncio.Event] = {}
+        self._exit_codes: dict[int, int] = {}
 
-    def spawn_rail(self, argv: list[str]) -> RailSession:
+    def spawn_rail(self, argv: list[str], log_label: str = "") -> RailSession:
         if self.hooks.fail_next_spawn:
             self.hooks.fail_next_spawn = False
             raise RuntimeError("mock-injected spawn_rail failure")
@@ -64,6 +72,7 @@ class MockFreeRDPInvocation(FreeRDPInvocation):
         self._next_pid += 1
         self.hooks.spawn_count += 1
         self.hooks.spawned_argvs.append(list(argv))
+        self.hooks.spawned_labels.append(log_label)
         self.hooks.live_pids.add(pid)
         logger.debug("[FREERDP MOCK] spawn_rail pid=%d argv=%s", pid, argv)
         return RailSession(pid=pid, argv=list(argv))
@@ -79,6 +88,27 @@ class MockFreeRDPInvocation(FreeRDPInvocation):
         self.hooks.terminated_pids.append(session.pid)
         self.hooks.terminate_count += 1
         logger.debug("[FREERDP MOCK] terminate pid=%d", session.pid)
+        # Mirror real FreeRDP: terminating the process makes any pending
+        # ``wait`` return (SIGTERM-ish code) so a supervisor draining on
+        # shutdown doesn't hang.
+        self._exit_codes.setdefault(session.pid, -15)
+        self._exit_events.setdefault(session.pid, asyncio.Event()).set()
 
     def is_alive(self, session: RailSession) -> bool:
         return session.pid in self.hooks.live_pids
+
+    async def wait(self, session: RailSession) -> int:
+        """Await an injected exit. Tests drive completion via
+        :meth:`simulate_exit`; until then this blocks like a live process
+        would, so a supervisor task started over the mock stays pending
+        exactly as it would over a real FreeRDP."""
+        event = self._exit_events.setdefault(session.pid, asyncio.Event())
+        await event.wait()
+        self.hooks.live_pids.discard(session.pid)
+        return self._exit_codes.get(session.pid, 0)
+
+    def simulate_exit(self, session: RailSession, returncode: int = 0) -> None:
+        """Unblock a pending :meth:`wait` with ``returncode`` — the test
+        hook standing in for the FreeRDP process exiting."""
+        self._exit_codes[session.pid] = returncode
+        self._exit_events.setdefault(session.pid, asyncio.Event()).set()

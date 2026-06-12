@@ -48,6 +48,7 @@ async def spawn_rail_with_auth_check(
     *,
     creds: Optional[VmCredentials] = None,
     verify_timeout: float = 5.0,
+    log_label: str = "",
 ) -> RailSession:
     """Verify creds against the guest, then spawn the FreeRDP RAIL session.
 
@@ -64,6 +65,8 @@ async def spawn_rail_with_auth_check(
         argv: full xfreerdp argv (typically built by ``rail_command``)
         creds: optional explicit credentials; loaded from vm.toml if omitted
         verify_timeout: seconds to wait for the guest reply
+        log_label: app_id forwarded to ``spawn_rail`` so the real
+            invocation captures FreeRDP's output to a per-app log
 
     Raises:
         AuthHealthCheckFailed: guest LogonUserW probe rejected the creds
@@ -81,4 +84,4 @@ async def spawn_rail_with_auth_check(
             result.detail,
         )
         raise AuthHealthCheckFailed(result)
-    return invocation.spawn_rail(argv)
+    return invocation.spawn_rail(argv, log_label=log_label)

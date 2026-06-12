@@ -46,7 +46,7 @@ class FreeRDPInvocation(Protocol):
     rail-event handlers without async wrapping.
     """
 
-    def spawn_rail(self, argv: list[str]) -> RailSession:
+    def spawn_rail(self, argv: list[str], log_label: str = "") -> RailSession:
         """Spawn an ``xfreerdp`` (or equivalent) RAIL session.
 
         Real implementations run the binary discovery chain
@@ -54,6 +54,11 @@ class FreeRDPInvocation(Protocol):
         flatpak); the resolved binary is prepended to ``argv``.
         Raises ``FileNotFoundError`` if no FreeRDP binary is found
         on PATH and no flatpak install matches.
+
+        ``log_label`` (typically the app_id) names the per-app file the
+        real implementation tees FreeRDP's stdout+stderr into, so a crash
+        reason is captured rather than lost to the inherited stderr. Empty
+        means "don't capture" (the mock ignores it).
         """
         ...
 
@@ -65,4 +70,15 @@ class FreeRDPInvocation(Protocol):
 
     def is_alive(self, session: RailSession) -> bool:
         """``True`` if the session's subprocess is still running."""
+        ...
+
+    async def wait(self, session: RailSession) -> int:
+        """Block until the session's subprocess exits; return its exit
+        code (negative if killed by signal ``-N``).
+
+        Reaps the process — this is the call that prevents the zombie
+        ``<defunct>`` left when nothing ever ``wait()``s a spawned
+        FreeRDP. Must not block the event loop (real implementations run
+        the OS wait on a thread). Returns immediately for a session that
+        already exited or never started."""
         ...

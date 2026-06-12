@@ -127,6 +127,15 @@ cfg-gate, mTLS failure-mode testy, NT-service agent, zombie xfreerdp reaper.)
 
 **Cadence:** poprzedni audyt 2026-05-23 (20 dni) — powyżej 7-dniowego rytmu.
 
+**Ratchet (zamknięte tego samego dnia, decyzja właściciela, branch
+`chore/audit-p2-fixes`):** wszystkie 4 P2 naprawione — (1) `fd1365e` ruff
+0 błędów + `c04769b`/`e0f73c9` bramki pre-push i CI rozszerzone na `tests/`;
+(2) `e0f73c9` coverage floor `fail_under=75` (baseline 77.74%) uzbrojony
+przez `--cov` w CI; (3) `31c8198` audit.sh widzi host/.venv (ruff/mypy/
+pytest/bandit przestają raportować n/a); (4) `b754b42` deny.toml allowlisty
+przycięte do faktycznie występujących licencji (`cargo deny check licenses`
+→ "licenses ok" w guest+gui).
+
 ---
 
 ## Audyt 2026-05-31

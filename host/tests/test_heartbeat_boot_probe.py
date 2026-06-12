@@ -17,12 +17,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from crossdesk_host.ipc import heartbeat as heartbeat_module
 from crossdesk_host.ipc.heartbeat import BootProbe, HeartbeatServiceServicer
 from crossdesk_host.proto.crossdesk.v1 import common_pb2, heartbeat_pb2
 from crossdesk_host.watchdog import FsmConfig
 from tests.conftest import FakeServicerContext
-
 
 # -----------------------------------------------------------------
 # Unit: _run_boot_probe direct

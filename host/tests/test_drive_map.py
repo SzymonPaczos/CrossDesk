@@ -24,8 +24,10 @@ def _cfg(**kw: object) -> PeripheralsConfig:
 def test_maps_default_letter_to_share() -> None:
     script = render_drive_map_script(_cfg())
     # Maps Z: to the rdpdr share, dropping any stale mapping first.
+    # Persistent so the MPR restores it at later RAIL logons (Run keys don't
+    # fire there — live finding 2026-06-12).
     assert 'net use Z: /delete /y' in script
-    assert 'net use Z: "\\\\tsclient\\CrossDesk" /persistent:no' in script
+    assert 'net use Z: "\\\\tsclient\\CrossDesk" /persistent:yes' in script
     # Guards the whole thing on the share being present this session.
     assert 'if exist "\\\\tsclient\\CrossDesk\\" (' in script
 

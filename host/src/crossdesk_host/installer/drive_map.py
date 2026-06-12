@@ -20,6 +20,16 @@ restores the default shell-folder paths and drops any stale mapping, so the
 profile never ends up pointing at a dead drive (the failure mode that makes
 Explorer hang).
 
+The mapping is created **persistent** (``net use … /persistent:yes``). Live
+finding 2026-06-12 (``handoff.md`` §2.7): a persistent mapping is restored
+automatically by the Windows MPR at every subsequent logon — *including a
+RemoteApp/RAIL logon* — whereas HKCU/HKLM ``Run`` keys do **not** fire in a
+RAIL logon (``rdpinit.exe`` is the RemoteApp shell and skips the
+Explorer/userinit Run-key processing). So the persistent flag is what keeps
+the drive available across logons; running this script once in a session
+that has the share is enough to establish it, and the agent re-running it on
+session-connect is belt-and-suspenders plus the absent-branch cleanup.
+
 Why a batch ``.cmd`` rather than PowerShell: it matches the existing
 provisioning artifact style (``run-agent.cmd``), needs no execution-policy
 handling, and the operations here (``net use`` / ``reg add`` / ``if
@@ -28,10 +38,10 @@ not a template the guest fills in — the host bakes the drive letter, share
 name and redirect choices from :class:`PeripheralsConfig` at provision time
 (no new RPC, no proto change).
 
-The mechanism that *runs* this script per logon (an HKLM/HKCU ``Run`` key
-vs. an agent-driven ``CreateProcessAsUser`` on session-connect) is a
-provisioning concern handled by the caller; this module only renders the
-script body.
+The mechanism that *runs* this script (an agent-driven
+``CreateProcessAsUser`` on session-connect, or a one-time provisioning
+step — **not** a ``Run`` key, which a RAIL logon ignores) is a provisioning
+concern handled by the caller; this module only renders the script body.
 """
 
 from __future__ import annotations
@@ -68,10 +78,12 @@ def render_drive_map_script(cfg: PeripheralsConfig) -> str:
     share = f"\\\\tsclient\\{cfg.shared_folder_name}"
     root = f"{drive}:\\"
 
-    # Map-and-redirect branch (share present).
+    # Map-and-redirect branch (share present). /persistent:yes so the Windows
+    # MPR restores the drive at every later logon (verified to work for RAIL
+    # logons, where Run keys do not fire — see module docstring).
     set_lines = [
         f'    net use {drive}: /delete /y >nul 2>&1',
-        f'    net use {drive}: "{share}" /persistent:no >nul 2>&1',
+        f'    net use {drive}: "{share}" /persistent:yes >nul 2>&1',
     ]
     if cfg.shared_folder_redirect_documents:
         set_lines.append(

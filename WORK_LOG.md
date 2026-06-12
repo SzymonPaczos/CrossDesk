@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-06-12 13:00] START · agent: claude-code · branch: chore/audit-p2-fixes · task: audit-p2-fixes · note: Owner-approved fixes for all 4 P2 from audit 2026-06-12 (see audit-log.md section dated today): (1) ruff 8 errors in host/tests + widen pre-push gate to `ruff check src/ tests/` (ratchet); (2) coverage floor `fail_under` in host/pyproject.toml from measured baseline; (3) audit.sh prefers host/.venv/bin tools so the Python static layer stops reporting n/a; (4) prune unused licenses from guest/+gui/ deny.toml allowlists. Branch from local main (infra files identical to feat/usability-shared-fs). NOT pushing; owner merges.
+
 - [2026-06-02 09:00] START · agent: claude-code · branch: feat/tcp-slirp-agent-online · task: tcp-slirp-agent-online · note: Continuing handoff.md. TCP-SLIRP transport so agent.exe reaches the daemon (guest 10.0.2.2:50051 → host 127.0.0.1 via SLIRP). Host: typed TransportConfig.bind_kind (auto|tcp|vsock) honored in transport/real.py + daemon wiring (no proto change). Guest: `console` run mode in agent-svc/main.rs (skip SCM, keep real LogonUserW/transport) for non-elevated bring-up + diagnostics. Catalog: add `notepad`. Then NON-DESTRUCTIVE live bring-up via FreeRDP drive-redirect + console agent (preserves baseline Notepad render), `crossdesk launch notepad` via daemon, production PKI provisioning (tools_iso + autounattend). NOT pushing to GitHub (owner pushes); local merges only.
 
 ## Recent

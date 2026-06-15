@@ -61,13 +61,22 @@ pub fn build_rail_event(event: u32, hwnd: HWND) -> Option<RailWindowEvent> {
         }
     }
 
+    // High-res window icon: extract the owning process's .exe icon (256px)
+    // and PNG-encode it, only on CREATED (the host caches it for the window's
+    // lifetime). Best-effort — a missing icon leaves the field empty and the
+    // host falls back to FreeRDP's native RAIL icon.
+    let icon_png = if event == EVENT_OBJECT_CREATE {
+        crate::icon::extract_window_icon_png(hwnd).unwrap_or_default()
+    } else {
+        vec![]
+    };
+
     Some(RailWindowEvent {
         window_id: hwnd.0 as u64,
         process_id,
         kind: kind.into(),
         geometry,
         title,
-        // Phase 4 will populate this via ExtractIconExW + PNG-encode.
-        icon_png: vec![],
+        icon_png,
     })
 }

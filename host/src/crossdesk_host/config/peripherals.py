@@ -91,9 +91,16 @@ class PeripheralsConfig(BaseModel):
 
     # --- Audio ---------------------------------------------------------------
 
-    audio_enabled: bool = True
-    """Enable audio forwarding.  Playback-only by default; see
-    ``audio_mode`` to add microphone capture."""
+    audio_enabled: bool = False
+    """Enable audio forwarding (``/sound``).  OFF by default: adding the audio
+    channel to the RAIL/RemoteApp connection caused FreeRDP 3.24
+    ``ERRCONNECT_POST_CONNECT_FAILED`` in live testing (observed under the
+    console-agent harness, where ``crossdesk launch`` reconnects to the
+    session the agent already holds — plausibly a session-takeover channel
+    renegotiation issue rather than a product defect). Until it's validated
+    against a production NT-service agent (which holds no RDP session), audio
+    is opt-in so the default launch always renders. Playback-only when
+    enabled; see ``audio_mode`` for microphone."""
 
     audio_mode: Literal["playback", "bidirectional"] = "playback"
     """``playback`` — guest-to-host only (speakers); ``bidirectional`` —
@@ -103,10 +110,16 @@ class PeripheralsConfig(BaseModel):
 
     # --- Clipboard -----------------------------------------------------------
 
-    clipboard_mode: Literal["off", "text-only", "rich"] = "text-only"
-    """``off`` — no clipboard sharing; ``text-only`` — plain text both
-    directions (default, safe); ``rich`` — HTML, RTF, images, file
-    references (FORMAT_FILELIST) with path translation."""
+    clipboard_mode: Literal["off", "text-only", "rich"] = "off"
+    """``off`` (default) — no clipboard sharing; ``text-only`` — plain text
+    both directions; ``rich`` — HTML, RTF, images, file references
+    (FORMAT_FILELIST) with path translation.
+
+    OFF by default for the same reason as ``audio_enabled``: enabling
+    ``+clipboard`` on the RAIL connection caused FreeRDP 3.24
+    ``ERRCONNECT_POST_CONNECT_FAILED`` (and a ``cliprdr_file_context_uninit``
+    SIGSEGV during the failed-connect cleanup) in the console-agent test
+    harness. Opt-in until validated against a production NT-service agent."""
 
     # --- Microphone ----------------------------------------------------------
 
@@ -140,7 +153,90 @@ class PeripheralsConfig(BaseModel):
     ``["0403:6001", "046d:c534"]``.  Each entry must match
     ``<4-hex>:<4-hex>``; validated at parse time."""
 
+    # --- Shared folder -------------------------------------------------------
+
+    shared_folder_enabled: bool = False
+    """Expose ONE host directory to the guest as a redirected drive
+    (``\\\\tsclient\\<shared_folder_name>``) so a Windows app can open and
+    save files the user can reach from Linux, and so the user can drop an
+    installer into it and run it inside the guest.
+
+    OPT-IN and scoped to a single directory — NOT the whole home — by
+    design.  The endgame is JIT VirtioFS (see ``filesystem.proto``), which
+    never exposes a directory the user did not explicitly open; this is the
+    pragmatic interim until that lands.  Off by default to keep the
+    no-static-broad-mount posture (the static ``\\\\tsclient\\home`` mount
+    is rejected in ``docs/COMPARISON_WINAPPS.md`` §7 / DEC-META-005); the
+    scoped, user-chosen folder here is explicit consent, not an automatic
+    mount of the user's data."""
+
+    shared_folder_path: str = "~/CrossDesk-Shared"
+    """Host directory shared when ``shared_folder_enabled``.  Tilde- and
+    env-expanded; created on demand by the launcher.
+
+    NOT ``~/CrossDesk`` on purpose: on a dev checkout that path is the git
+    repository root, and exposing the source tree (read-write) to the guest
+    would be both a footgun and a security hole.  A dedicated
+    ``~/CrossDesk-Shared`` keeps the shared workspace separate from anything
+    the user didn't mean to share."""
+
+    shared_folder_name: str = "CrossDesk"
+    """Redirect name — the guest sees the share as
+    ``\\\\tsclient\\<shared_folder_name>``."""
+
+    shared_folder_drive_letter: str = "Z"
+    """Drive letter the guest logon step maps the share to (``net use
+    <letter>: \\\\tsclient\\<name>``).
+
+    Why a drive letter at all when the rdpdr redirect already exposes
+    ``\\\\tsclient\\<name>``?  Because Windows does **not** honour a UNC
+    path as a process working directory — a RemoteApp launched with
+    ``workdir:\\\\tsclient\\CrossDesk`` silently falls back to
+    ``C:\\Windows\\System32`` (verified live 2026-06-09).  A drive letter
+    *is* a valid CWD, so the launcher points the app's working directory
+    at ``<letter>:\\`` instead, and the Save/Open dialog defaults to the
+    Linux-visible folder.
+
+    Constrained to ``D``–``Z``: ``A``/``B`` are legacy floppy slots and
+    ``C`` is the system drive."""
+
+    shared_folder_redirect_documents: bool = True
+    """Point the guest user's *Documents* shell folder at the mapped
+    drive so apps that default their Save dialog to Documents land on the
+    Linux-visible folder.  Effective only when ``shared_folder_enabled``;
+    the guest logon step restores the default Documents path whenever the
+    share is absent so the profile never points at a dead drive."""
+
+    shared_folder_redirect_desktop: bool = False
+    """Also point the guest user's *Desktop* at the mapped drive.  Off by
+    default: redirecting the Desktop is more visually invasive (every icon
+    on the Windows desktop becomes the Linux folder's contents) than
+    redirecting Documents, so it's opt-in."""
+
     # --- Validators ----------------------------------------------------------
+
+    @field_validator("shared_folder_drive_letter")
+    @classmethod
+    def _drive_letter_valid(cls, v: str) -> str:
+        up = v.strip().upper()
+        if not re.fullmatch(r"[D-Z]", up):
+            raise ValueError(
+                "shared_folder_drive_letter must be a single letter D-Z "
+                "(A/B are legacy floppy slots, C is the system drive), "
+                f"got {v!r}"
+            )
+        return up
+
+    @field_validator("shared_folder_name")
+    @classmethod
+    def _share_name_safe(cls, v: str) -> str:
+        # The name becomes a UNC path component the guest navigates to; keep
+        # it to a simple token so it can't smuggle path separators.
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", v):
+            raise ValueError(
+                f"shared_folder_name must be 1-32 chars of [A-Za-z0-9_-], got {v!r}"
+            )
+        return v
 
     @field_validator("usb_devices", mode="before")
     @classmethod
@@ -166,6 +262,15 @@ class PeripheralsConfig(BaseModel):
             raise ValueError(
                 'printer_name must be non-empty when printer_mode = "named"'
             )
+        # Same cross-field shape for the shared folder: an empty/whitespace
+        # path while the redirect is enabled is a footgun — it expands to ""
+        # (so ``to_freerdp_flags`` emits a malformed ``/drive:<name>,`` with no
+        # host path) and ``Path("").mkdir`` silently resolves to the daemon's
+        # CWD, defeating the launcher's "only mount a real directory" guard.
+        if self.shared_folder_enabled and not self.shared_folder_path.strip():
+            raise ValueError(
+                "shared_folder_path must be non-empty when shared_folder_enabled = true"
+            )
 
     # --- FreeRDP flag mapping ------------------------------------------------
 
@@ -189,20 +294,26 @@ class PeripheralsConfig(BaseModel):
         """
         flags: List[str] = []
 
-        # Audio
+        # Audio. Use the PulseAudio backend, not pipewire: FreeRDP 3.24's
+        # rdpsnd failed to load the pipewire subsystem (error 1359) and that
+        # failure aborts the whole RAIL connect (ERRCONNECT_POST_CONNECT_FAILED).
+        # pulse is the broadly-available backend (PipeWire ships a pulse shim),
+        # so /sound:sys:pulse works whether the host runs PulseAudio or PipeWire.
         if self.audio_enabled:
-            flags.append("/sound:sys:pipewire")
+            flags.append("/sound:sys:pulse")
         if self.audio_enabled and self.audio_mode == "bidirectional":
             flags.append("/microphone:sys:pulse")
         elif self.microphone_enabled:
             # Explicit mic without bidirectional audio (rare but valid).
             flags.append("/microphone:sys:pulse")
 
-        # Clipboard
-        if self.clipboard_mode == "text-only":
-            flags.append("+clipboard")
-            flags.append("/clipboard-redirect-type:text")
-        elif self.clipboard_mode == "rich":
+        # Clipboard. FreeRDP 3.x has no "/clipboard-redirect-type" flag — the
+        # parser rejects it ("Unexpected keyword"), which fails the whole RAIL
+        # spawn. `+clipboard` enables the channel; finer control (direction /
+        # selection) is via `/clipboard:` sub-options and the text-only vs rich
+        # *format* filtering is handled host-side at the FORMAT_FILELIST seam,
+        # not by a FreeRDP flag. So both enabled modes map to `+clipboard`.
+        if self.clipboard_mode in ("text-only", "rich"):
             flags.append("+clipboard")
 
         # Printer
@@ -215,11 +326,41 @@ class PeripheralsConfig(BaseModel):
         if self.smartcard_enabled:
             flags.append("/smartcard")
 
-        # USB devices
+        # USB devices. FreeRDP 3.x syntax is /usb:id:<vid>:<pid> (a colon after
+        # `id`, per `xfreerdp3 /help`), not `id,`.
         for device in self.usb_devices:
-            flags.append(f"/usb:id,{device}")
+            flags.append(f"/usb:id:{device}")
+
+        # Shared folder (scoped, opt-in host directory redirect). FreeRDP
+        # auto-enables the rdpdr channel; the guest sees it as
+        # \\tsclient\<name>. The host path is tilde/env-expanded so a config
+        # of "~/CrossDesk" resolves per-user.
+        if self.shared_folder_enabled:
+            host_path = os.path.expanduser(os.path.expandvars(self.shared_folder_path))
+            flags.append(f"/drive:{self.shared_folder_name},{host_path}")
 
         return flags
+
+    def shared_folder_host_path(self) -> str:
+        """The expanded host directory for the shared folder (for the
+        launcher to create on demand). Empty string when disabled."""
+        if not self.shared_folder_enabled:
+            return ""
+        return os.path.expanduser(os.path.expandvars(self.shared_folder_path))
+
+    def shared_folder_drive_path(self) -> str:
+        """Guest-side working directory for a launched RemoteApp: the root
+        of the mapped drive, e.g. ``Z:\\``.
+
+        The guest logon step maps ``<letter>:`` to ``\\\\tsclient\\<name>``;
+        the launcher passes this as the ``/app:`` ``workdir:`` so the app's
+        Save/Open dialog defaults to the Linux-visible folder.  A drive
+        letter is used rather than the UNC because Windows ignores a UNC
+        working directory (falls back to System32).  Empty when the shared
+        folder is off."""
+        if not self.shared_folder_enabled:
+            return ""
+        return f"{self.shared_folder_drive_letter}:\\"
 
     # --- libvirt XML mapping -------------------------------------------------
 

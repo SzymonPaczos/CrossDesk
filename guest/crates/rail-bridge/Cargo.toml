@@ -14,11 +14,14 @@ repository.workspace = true
 ignored = ["anyhow", "tonic"]
 
 [dependencies]
-windows = { workspace = true, features = ["Win32_UI_WindowsAndMessaging", "Win32_UI_Accessibility", "Win32_Foundation", "Win32_System_Threading"] }
+windows = { workspace = true, features = ["Win32_UI_WindowsAndMessaging", "Win32_UI_Accessibility", "Win32_Graphics_Gdi", "Win32_Foundation", "Win32_System_Threading"] }
 tonic   = { workspace = true }
 anyhow  = { workspace = true }
 tracing = { workspace = true }
 tokio   = { workspace = true }
+# PNG-encodes extracted window icons for RailWindowEvent.icon_png (the host
+# sets _NET_WM_ICON from it). Pure-Rust, cross-compiles to windows-gnu.
+png     = "0.17"
 proto   = { path = "../proto" }
 
 [lints]

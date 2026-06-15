@@ -47,6 +47,7 @@ import grpc
 import pytest
 
 from crossdesk_host.catalog.schema import AppEntry
+from crossdesk_host.config.peripherals import PeripheralsConfig
 from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController
 from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
 from crossdesk_host.installer.credentials import VmCredentials
@@ -750,6 +751,15 @@ async def test_launch_spawns_freerdp_through_real_agent(
         "load",
         lambda path=None: VmCredentials(username="__inject_ok__", password="ignored"),
     )
+    # Isolate from the developer's real ~/.config/crossdesk/peripherals.toml.
+    # This test is gated on cargo + PKI, i.e. it only runs on the dev box —
+    # exactly where that file may enable the shared folder, which would mkdir a
+    # real ~/CrossDesk-Shared and append /drive: + workdir to the argv. Pin an
+    # all-off config so the launch argv is deterministic and side-effect free.
+    monkeypatch.setattr(
+        "crossdesk_host.config.peripherals.load_peripherals_config",
+        lambda path=None: PeripheralsConfig(),
+    )
 
     try:
         deadline = asyncio.get_event_loop().time() + 30.0
@@ -774,7 +784,7 @@ async def test_launch_spawns_freerdp_through_real_agent(
         assert len(mock_freerdp.hooks.spawned_argvs) == 1
         argv = mock_freerdp.hooks.spawned_argvs[0]
         assert any("notepad.exe" in part for part in argv)
-        assert "/wm-class:notepad" in argv
+        assert "/wm-class:crossdesk-notepad" in argv
         assert response.request_id.startswith("rail-")
     finally:
         if proc.returncode is None:

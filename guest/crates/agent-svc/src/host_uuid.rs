@@ -15,7 +15,21 @@ pub fn read_host_domain_uuid() -> anyhow::Result<String> {
 
     #[cfg(windows)]
     {
-        smbios::read()
+        // The domain UUID is a host-side cross-check only: the host echoes
+        // it back as guest_smbios_uuid and logs a mismatch, but the Hello
+        // handshake completes regardless (see ipc/control.py _handle_hello +
+        // version_negotiation.is_compatible, which ignore the UUID). A guest
+        // where SMBIOS is unreadable must therefore still be able to open its
+        // control session — degrade to an empty UUID with a warning rather
+        // than crashing the whole agent. Verified live: a hard error here
+        // tore the agent down before it ever sent ClientHello.
+        match smbios::read() {
+            Ok(uuid) => Ok(uuid),
+            Err(e) => {
+                tracing::warn!(error = %e, "SMBIOS domain UUID unavailable; sending empty UUID");
+                Ok(String::new())
+            }
+        }
     }
     #[cfg(not(windows))]
     {
@@ -31,10 +45,15 @@ mod smbios {
         GetSystemFirmwareTable, FIRMWARE_TABLE_PROVIDER,
     };
 
-    // 'RSMB' little-endian, as the Win32 API expects. Wrapped in the
-    // FIRMWARE_TABLE_PROVIDER newtype required by `windows` 0.58+.
+    // The 'RSMB' (Raw SMBIOS) provider signature is the DWORD 0x52534D42
+    // per MSDN — i.e. the bytes "RSMB" read big-endian ('R' is the MSB).
+    // `from_le_bytes` here yielded 0x424D5352, an unknown provider, so
+    // GetSystemFirmwareTable returned 0 ("SMBIOS unavailable") on a real
+    // guest even though the table was present. `from_be_bytes(*b"RSMB")`
+    // == 0x52534D42. Wrapped in the FIRMWARE_TABLE_PROVIDER newtype
+    // required by `windows` 0.58+.
     const SMBIOS_PROVIDER: FIRMWARE_TABLE_PROVIDER =
-        FIRMWARE_TABLE_PROVIDER(u32::from_le_bytes(*b"RSMB"));
+        FIRMWARE_TABLE_PROVIDER(u32::from_be_bytes(*b"RSMB"));
     const RAW_SMBIOS_HEADER_LEN: usize = 8;
     const TYPE_SYSTEM_INFORMATION: u8 = 1;
     const TYPE_END_OF_TABLE: u8 = 127;

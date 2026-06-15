@@ -36,6 +36,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
+from crossdesk_host.display.window_icon import WindowIconStore
 from crossdesk_host.lifecycle.error_notifications import notify_rdp_drop
 from crossdesk_host.lifecycle.notifications import Notifier
 from crossdesk_host.proto.crossdesk.v1 import control_pb2
@@ -52,11 +53,15 @@ class RailManager:
         self,
         freerdp_inv: Optional[FreeRDPInvocation] = None,
         notifier: Optional[Notifier] = None,
+        icon_store: Optional[WindowIconStore] = None,
     ) -> None:
         self._windows: Dict[int, Dict[str, Any]] = {}
         self._sessions: Dict[int, RailSession] = {}
         self._freerdp_inv = freerdp_inv
         self._notifier = notifier
+        # Applies the agent's extracted .exe icon to the launched app's
+        # .desktop / icon theme (display/window_icon.py). None ⇒ skip.
+        self._icon_store = icon_store
 
     def handle_rail_event(self, event: control_pb2.RailWindowEvent) -> None:
         hwnd = event.window_id
@@ -115,6 +120,11 @@ class RailManager:
             rect.width,
             rect.height,
         )
+        # Hand the freshly-extracted .exe icon to the icon store, which matches
+        # it to the launch that just happened and applies it to that app's
+        # .desktop / icon theme (best-effort; never blocks event handling).
+        if self._icon_store is not None and event.icon_png:
+            self._icon_store.offer(bytes(event.icon_png))
 
     def _handle_destroy(self, hwnd: int) -> None:
         if hwnd not in self._windows:

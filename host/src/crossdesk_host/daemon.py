@@ -31,6 +31,7 @@ except ImportError:
     systemd_daemon = None
 
 from crossdesk_host.display.rail_manager import RailManager  # noqa: E402
+from crossdesk_host.display.window_icon import WindowIconStore  # noqa: E402
 from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
 from crossdesk_host.freerdp.real import RealFreeRDPInvocation  # noqa: E402
 from crossdesk_host.ipc.auth import AuthValidator  # noqa: E402
@@ -94,7 +95,11 @@ async def main() -> None:
     # both planes agree on session/credential state.
     freerdp = RealFreeRDPInvocation()
     verify_coordinator = VerifyCoordinator()
-    rail_manager = RailManager(freerdp_inv=freerdp)
+    # Shared icon store: the management Launch RPC registers each launch's
+    # app_id; the rail_manager applies the agent's extracted .exe icon to that
+    # app's .desktop / icon theme so it shows in the dock (display/window_icon).
+    icon_store = WindowIconStore()
+    rail_manager = RailManager(freerdp_inv=freerdp, icon_store=icon_store)
 
     transport = RealTransport()
     server = transport.create_server(
@@ -103,6 +108,7 @@ async def main() -> None:
         host_key,
         port=cfg.transport.vsock_port,
         interceptors=[TraceContextInterceptor()],
+        bind_kind=cfg.transport.bind_kind,
     )
 
     def _store_agent_version(version: str) -> None:
@@ -136,6 +142,7 @@ async def main() -> None:
             libvirt_ctl,
             freerdp=freerdp,
             verify_coordinator=verify_coordinator,
+            icon_store=icon_store,
         ),
         mgmt_server,
     )

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -43,6 +44,7 @@ from crossdesk_host.display.session_starter import (
     AuthHealthCheckFailed,
     spawn_rail_with_auth_check,
 )
+from crossdesk_host.display.window_icon import WindowIconStore
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
@@ -99,6 +101,29 @@ def _dur_ns(ns: Optional[int]) -> duration_pb2.Duration:
     return duration_pb2.Duration(seconds=seconds, nanos=n)
 
 
+# A drive-letter path (C:\…) or a UNC path (\\host\…) ending in .exe. Used to
+# let `crossdesk launch <path>` run any installed program without a catalog
+# entry. Anchored + .exe-terminated so a plain app_id ("notepad") never matches.
+_WIN_EXE_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\).*\.exe$", re.IGNORECASE)
+
+
+def _spec_from_exe_path(raw: str) -> Optional[AppLaunchSpec]:
+    """Build an :class:`AppLaunchSpec` from a raw Windows executable path, or
+    ``None`` when *raw* is not such a path. The ``app_id`` (which drives the
+    RAIL window's WM_CLASS / grouping) and the display name are derived from
+    the executable's base name, e.g. ``C:\\Games\\RobinHood\\RobinHood.exe`` →
+    app_id ``robinhood`` / name ``RobinHood``."""
+    candidate = raw.strip()
+    if not _WIN_EXE_RE.match(candidate):
+        return None
+    base = re.split(r"[\\/]", candidate)[-1]  # RobinHood.exe
+    stem = base[:-4] if base.lower().endswith(".exe") else base
+    app_id = re.sub(r"[^A-Za-z0-9_-]", "-", stem).strip("-").lower() or "app"
+    return AppLaunchSpec(
+        app_id=app_id, executable_guest_path=candidate, display_name=stem
+    )
+
+
 @dataclass
 class MgmtState:
     """Mutable state the daemon updates from the heartbeat plane,
@@ -142,11 +167,16 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         metrics_registry: Optional[Registry] = None,
         freerdp: Optional[FreeRDPInvocation] = None,
         verify_coordinator: Optional[VerifyCoordinator] = None,
+        icon_store: Optional[WindowIconStore] = None,
     ) -> None:
         self.state = state
         self.libvirt_ctl = libvirt_ctl
         self.coordinator = coordinator
         self.push_interval_seconds = push_interval_seconds
+        # Shared with the RailManager: a launch registers its app_id here so
+        # the next window icon the agent reports gets applied to that app's
+        # .desktop / icon theme (display/window_icon.py). None ⇒ skip.
+        self._icon_store = icon_store
         # Launch backend: the FreeRDP spawner + the credential-verify
         # coordinator (shared with the control servicer, which registers
         # the live guest session). Both None ⇒ Launch reports the backend
@@ -338,23 +368,50 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 ok=False, error="launch backend not available in this daemon"
             )
         app = find_app(app_id)
-        if app is None:
-            return mgmt_pb2.LaunchResponse(
-                ok=False, error=f"unknown app_id: {app_id!r}"
+        if app is not None:
+            spec = AppLaunchSpec(
+                app_id=app.app_id,
+                executable_guest_path=app.win_executable,
+                display_name=app.name,
             )
+        else:
+            # Not in the catalog: accept a raw Windows executable path so any
+            # installed program (an Office app at a non-standard path, a game,
+            # anything the user dropped in via the shared folder + installed)
+            # can be launched without first being catalogued. App discovery
+            # (registry-scan → catalog) is the scalable follow-up; this is the
+            # "just run this .exe" escape hatch.
+            by_path = _spec_from_exe_path(app_id)
+            if by_path is None:
+                return mgmt_pb2.LaunchResponse(
+                    ok=False,
+                    error=(
+                        f"unknown app_id: {app_id!r} (not in the catalog; to "
+                        "launch by path pass a Windows .exe path like "
+                        r"'C:\\Program Files\\App\\app.exe')"
+                    ),
+                )
+            spec = by_path
         creds = credentials.load()
         if creds is None:
             return mgmt_pb2.LaunchResponse(
                 ok=False, error="no VM credentials — run `crossdesk install`"
             )
 
-        spec = AppLaunchSpec(
-            app_id=app.app_id,
-            executable_guest_path=app.win_executable,
-            display_name=app.name,
-        )
         conn = FreeRDPConnectionSpec(username=creds.username, password=creds.password)
-        argv = build_rail_argv(spec, conn)
+        # Apply peripheral redirection (audio / clipboard / printer / USB /
+        # the scoped shared folder) to the launch. Loaded fresh per launch so
+        # an edit to peripherals.toml takes effect on the next app without a
+        # daemon restart. Best-effort: a malformed config must not block the
+        # launch, so fall back to no extra flags.
+        extra_flags, workdir = self._peripheral_flags()
+        argv = build_rail_argv(spec, conn, extra_flags=extra_flags, workdir=workdir)
+
+        # Register the icon expectation before the window appears: the agent's
+        # CREATED-with-icon for the launched window then applies the real .exe
+        # icon to this app's .desktop (display/window_icon.py).
+        if self._icon_store is not None:
+            self._icon_store.expect(spec.app_id, spec.display_name)
 
         try:
             session = await spawn_rail_with_auth_check(
@@ -381,9 +438,58 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         self._sessions.append(session)
         self.state.append_activity(
             mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
-            f"Launched {app.name} (pid {session.pid})",
+            # spec.display_name covers both the catalog and launch-by-path
+            # cases (app may be None when launched by raw .exe path).
+            f"Launched {spec.display_name} (pid {session.pid})",
         )
         return mgmt_pb2.LaunchResponse(ok=True, request_id=f"rail-{session.pid}")
+
+    def _peripheral_flags(self) -> tuple[list[str], str]:
+        """Resolve the FreeRDP redirection flags **and** the RemoteApp working
+        directory for this launch from ``peripherals.toml`` (loaded fresh each
+        launch), creating the shared folder on demand.
+
+        Returns ``(flags, workdir)``. *workdir* is the guest-side root of the
+        mapped drive (``Z:\\``) when the shared folder is enabled and its host
+        directory exists — so a launched app's Save/Open dialog defaults to the
+        Linux-visible folder instead of ``C:\\``. A drive letter, not the UNC
+        (``\\\\tsclient\\<name>``): Windows ignores a UNC working directory and
+        falls back to System32 (verified live 2026-06-09); the guest logon step
+        maps the letter to the share. It is empty when the shared folder is off,
+        or when its host directory could not be created: in that case the drive
+        redirect is dropped too, and a workdir pointing at a share that won't
+        mount would only fail the RemoteApp launch.
+
+        Best-effort: any config/IO error degrades to no extra flags and no
+        workdir rather than blocking the launch."""
+        from crossdesk_host.config.peripherals import load_peripherals_config
+
+        try:
+            cfg = load_peripherals_config()
+        except Exception:
+            logger.warning("peripherals config invalid; launching with no redirections")
+            return [], ""
+        flags = cfg.to_freerdp_flags()
+        if not cfg.shared_folder_enabled:
+            return flags, ""
+        # The drive redirect (and the workdir that points the app at it) only
+        # make sense for a real, absolute host directory we can create. Drop
+        # both — keeping the other peripheral flags — for any path we can't
+        # honour, so the launch never points the app at a share that won't
+        # mount. Cases: empty/relative path (Path("").mkdir would silently
+        # succeed against the CWD, bypassing the OSError gate) and uncreatable
+        # path (parent is a file, permissions, etc.).
+        no_share = [f for f in flags if not f.startswith("/drive:")]
+        share = cfg.shared_folder_host_path()
+        if not share or not os.path.isabs(share):
+            logger.warning("shared folder path %r is not absolute; skipping redirect", share)
+            return no_share, ""
+        try:
+            Path(share).mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            logger.warning("shared folder %s not creatable: %s", share, exc)
+            return no_share, ""
+        return flags, cfg.shared_folder_drive_path()
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

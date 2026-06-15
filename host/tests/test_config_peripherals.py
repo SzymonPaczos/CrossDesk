@@ -38,14 +38,116 @@ from crossdesk_host.config.peripherals import PeripheralsConfig, load_peripheral
 
 def test_defaults_all_safe() -> None:
     cfg = PeripheralsConfig()
-    assert cfg.audio_enabled is True
-    assert cfg.audio_mode == "playback"
-    assert cfg.clipboard_mode == "text-only"
+    # Audio + clipboard default OFF: enabling their FreeRDP channels broke the
+    # RAIL connect (POST_CONNECT_FAILED) in live testing, so they're opt-in
+    # until validated against a production agent — the default launch must
+    # render with no redirection channels and produce no FreeRDP flags.
+    assert cfg.audio_enabled is False
+    assert cfg.audio_mode == "playback"  # the mode if/when audio is enabled
+    assert cfg.clipboard_mode == "off"
+    assert cfg.to_freerdp_flags() == []
     assert cfg.microphone_enabled is False
     assert cfg.printer_mode == "off"
     assert cfg.printer_name == ""
     assert cfg.smartcard_enabled is False
     assert cfg.usb_devices == []
+    # Shared folder is opt-in / off by default (no static broad mount).
+    assert cfg.shared_folder_enabled is False
+    assert cfg.shared_folder_name == "CrossDesk"
+    assert "/drive:" not in " ".join(cfg.to_freerdp_flags())
+    assert cfg.shared_folder_host_path() == ""
+
+
+def test_shared_folder_emits_drive_flag_when_enabled() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True, shared_folder_path="/tmp/cd-share", clipboard_mode="off"
+    )
+    flags = cfg.to_freerdp_flags()
+    assert "/drive:CrossDesk,/tmp/cd-share" in flags
+    assert cfg.shared_folder_host_path() == "/tmp/cd-share"
+
+
+def test_shared_folder_expands_tilde() -> None:
+    import os
+
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_path="~/CrossDesk")
+    expected = os.path.expanduser("~/CrossDesk")
+    assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
+    assert cfg.shared_folder_host_path() == expected
+
+
+def test_shared_folder_custom_name() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True,
+        shared_folder_path="/tmp/x",
+        shared_folder_name="Linux_Home",
+    )
+    assert "/drive:Linux_Home,/tmp/x" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_name_rejects_path_separators() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="shared_folder_name"):
+        PeripheralsConfig(shared_folder_name="../etc")
+
+
+def test_shared_folder_empty_path_rejected_when_enabled() -> None:
+    # An empty path while enabled would expand to "" → malformed /drive:<name>,
+    # and Path("").mkdir silently resolves to CWD, defeating the launcher gate.
+    for bad in ("", "   "):
+        with pytest.raises(ValidationError, match="shared_folder_path"):
+            PeripheralsConfig(shared_folder_enabled=True, shared_folder_path=bad)
+
+
+def test_shared_folder_empty_path_allowed_when_disabled() -> None:
+    # Path is irrelevant when the redirect is off, so an empty value is fine.
+    cfg = PeripheralsConfig(shared_folder_enabled=False, shared_folder_path="")
+    assert cfg.shared_folder_host_path() == ""
+
+
+# ---------------------------------------------------------------------------
+# Shared folder drive letter (Stage A: drive-letter + workdir)
+# ---------------------------------------------------------------------------
+
+
+def test_shared_folder_drive_letter_defaults_to_z() -> None:
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_path="/tmp/x")
+    assert cfg.shared_folder_drive_letter == "Z"
+    assert cfg.shared_folder_drive_path() == "Z:\\"
+
+
+def test_shared_folder_drive_path_empty_when_disabled() -> None:
+    cfg = PeripheralsConfig(shared_folder_enabled=False)
+    assert cfg.shared_folder_drive_path() == ""
+
+
+def test_shared_folder_drive_letter_normalised_uppercase() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True, shared_folder_path="/tmp/x", shared_folder_drive_letter="m"
+    )
+    assert cfg.shared_folder_drive_letter == "M"
+    assert cfg.shared_folder_drive_path() == "M:\\"
+
+
+def test_shared_folder_drive_letter_rejects_system_and_floppy() -> None:
+    for bad in ("C", "c", "A", "B"):
+        with pytest.raises(ValidationError, match="shared_folder_drive_letter"):
+            PeripheralsConfig(shared_folder_drive_letter=bad)
+
+
+def test_shared_folder_drive_letter_rejects_non_letter() -> None:
+    for bad in ("", "ZZ", "1", "Z:"):
+        with pytest.raises(ValidationError, match="shared_folder_drive_letter"):
+            PeripheralsConfig(shared_folder_drive_letter=bad)
+
+
+def test_shared_folder_redirect_defaults() -> None:
+    cfg = PeripheralsConfig()
+    # Documents redirect on (least-invasive default that fixes Save dialogs);
+    # Desktop redirect opt-in.
+    assert cfg.shared_folder_redirect_documents is True
+    assert cfg.shared_folder_redirect_desktop is False
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +158,7 @@ def test_defaults_all_safe() -> None:
 def test_freerdp_flags_audio_playback() -> None:
     cfg = PeripheralsConfig(audio_enabled=True, audio_mode="playback", clipboard_mode="off")
     flags = cfg.to_freerdp_flags()
-    assert "/sound:sys:pipewire" in flags
+    assert "/sound:sys:pulse" in flags
     # No microphone in playback-only mode.
     assert not any("microphone" in f for f in flags)
 
@@ -69,7 +171,7 @@ def test_freerdp_flags_audio_playback() -> None:
 def test_freerdp_flags_audio_bidirectional() -> None:
     cfg = PeripheralsConfig(audio_enabled=True, audio_mode="bidirectional", clipboard_mode="off")
     flags = cfg.to_freerdp_flags()
-    assert "/sound:sys:pipewire" in flags
+    assert "/sound:sys:pulse" in flags
     assert "/microphone:sys:pulse" in flags
 
 
@@ -266,11 +368,22 @@ def test_microphone_enabled_without_audio() -> None:
     assert not any("sound" in f for f in flags)
 
 
-def test_freerdp_flags_text_clipboard_includes_restriction() -> None:
+def test_freerdp_flags_text_clipboard_enables_channel() -> None:
+    # FreeRDP 3.x has no /clipboard-redirect-type flag (it rejects it and
+    # fails the whole spawn); text-only enables the channel with +clipboard,
+    # format filtering is host-side.
     cfg = PeripheralsConfig(clipboard_mode="text-only")
     flags = cfg.to_freerdp_flags()
     assert "+clipboard" in flags
-    assert "/clipboard-redirect-type:text" in flags
+    assert not any("clipboard-redirect-type" in f for f in flags)
+
+
+def test_freerdp_flags_usb_uses_colon_syntax() -> None:
+    cfg = PeripheralsConfig(usb_devices=["0403:6001"], clipboard_mode="off")
+    flags = cfg.to_freerdp_flags()
+    # FreeRDP 3.x: /usb:id:<vid>:<pid> (colon after id), not id,
+    assert "/usb:id:0403:6001" in flags
+    assert not any(f.startswith("/usb:id,") for f in flags)
 
 
 def test_unknown_field_rejected() -> None:

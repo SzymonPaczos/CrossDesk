@@ -52,7 +52,11 @@ class MockTransport(Transport):
         host_key_pem: bytes,
         port: int,
         interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
+        bind_kind: str = "auto",
     ) -> grpc.aio.Server:
+        # bind_kind is part of the Transport contract but the mock is
+        # TCP-only by design (see module docstring) — accepted + ignored.
+        del bind_kind
         if self.hooks.fail_next_bind:
             self.hooks.fail_next_bind = False
             raise RuntimeError("mock-injected bind failure")

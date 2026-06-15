@@ -118,6 +118,15 @@ def _resolve_display_name(app_id: str) -> str:
     2. Static fallback table (covers the most common IDs without I/O).
     3. ``app_id.title()`` — guaranteed non-empty last resort.
     """
+    # A raw Windows .exe path: use the executable's base name, not the whole
+    # path, as the friendly label (e.g. C:\Games\RobinHood\RobinHood.exe →
+    # "RobinHood").
+    if ":" in app_id and ("\\" in app_id or "/" in app_id):
+        import re
+
+        base = re.split(r"[\\/]", app_id.strip())[-1]
+        return base[:-4] if base.lower().endswith(".exe") else base
+
     try:
         from crossdesk_host.catalog.curated import load_curated
 
@@ -160,8 +169,15 @@ def _send_launch(sock: str, app_id: str, file_path: Optional[str], *, timeout: f
 
 
 def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
-    p = sub.add_parser("launch", help="Launch a registered Windows app as a RAIL window")
-    p.add_argument("app", metavar="APP_ID", help="App identifier (e.g. notepad, word)")
+    p = sub.add_parser("launch", help="Launch a Windows app as a RAIL window")
+    p.add_argument(
+        "app",
+        metavar="APP",
+        help=(
+            "Catalog app id (e.g. notepad, word) OR a Windows .exe path to "
+            r"launch any installed program (e.g. 'C:\\Games\\Game\\game.exe')"
+        ),
+    )
     p.add_argument(
         "file",
         nargs="?",

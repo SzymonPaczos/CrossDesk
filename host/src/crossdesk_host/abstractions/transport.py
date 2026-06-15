@@ -38,6 +38,7 @@ class Transport(Protocol):
         host_key_pem: bytes,
         port: int,
         interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
+        bind_kind: str = "auto",
     ) -> grpc.aio.Server:
         """Build a secure gRPC server bound to a transport-specific endpoint.
 
@@ -45,6 +46,12 @@ class Transport(Protocol):
         servicer is registered — used for cross-cutting concerns
         (W3C Trace Context extraction, redaction enforcement,
         metrics) per DEC-0006.
+
+        ``bind_kind`` (``auto`` | ``tcp`` | ``vsock``) overrides the
+        address-family decision: ``auto`` picks the platform default,
+        ``tcp`` forces TCP loopback (the SLIRP user-net bring-up path),
+        ``vsock`` forces AF_VSOCK. Implementations that only support one
+        family (the test mock is TCP-only) ignore it.
 
         Raises ``RuntimeError`` if the bind fails — production paths must
         not silently fall back to a less-isolated transport (Linux refusing

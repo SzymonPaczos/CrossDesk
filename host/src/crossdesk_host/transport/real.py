@@ -16,14 +16,26 @@ from crossdesk_host.abstractions.transport import Transport
 logger = logging.getLogger(__name__)
 
 
-def _expected_endpoint(port: int) -> tuple[str, str]:
-    """Pick the canonical bind endpoint for the current platform.
+def _expected_endpoint(port: int, bind_kind: str = "auto") -> tuple[str, str]:
+    """Pick the bind endpoint + address family.
 
     Returns ``(endpoint, kind)`` where ``kind`` is either ``"vsock"`` or
-    ``"tcp"``. macOS and stock Windows have no AF_VSOCK, so they
-    intentionally target TCP — that is *not* a fallback, it is the
-    production path on those platforms during development.
+    ``"tcp"``.
+
+    ``bind_kind`` overrides the platform default:
+    - ``tcp`` forces TCP loopback (``127.0.0.1``). This is the QEMU
+      user-net / SLIRP bring-up path — the guest dials ``10.0.2.2`` and
+      SLIRP NATs that to the host's loopback, so the daemon listens on
+      ``127.0.0.1``.
+    - ``vsock`` forces AF_VSOCK regardless of platform.
+    - ``auto`` (default): macOS / stock Windows have no AF_VSOCK so they
+      target TCP — that is *not* a fallback, it is the production path on
+      those platforms during development. Linux targets AF_VSOCK.
     """
+    if bind_kind == "tcp":
+        return f"127.0.0.1:{port}", "tcp"
+    if bind_kind == "vsock":
+        return f"vsock:-1:{port}", "vsock"
     if sys.platform in ("darwin", "win32"):
         return f"127.0.0.1:{port}", "tcp"
     return f"vsock:-1:{port}", "vsock"
@@ -44,6 +56,7 @@ class RealTransport(Transport):
         host_key_pem: bytes,
         port: int,
         interceptors: Sequence[grpc.aio.ServerInterceptor] | None = None,
+        bind_kind: str = "auto",
     ) -> grpc.aio.Server:
         server = grpc.aio.server(
             interceptors=tuple(interceptors) if interceptors else None
@@ -55,7 +68,7 @@ class RealTransport(Transport):
             require_client_auth=True,
         )
 
-        endpoint, kind = _expected_endpoint(port)
+        endpoint, kind = _expected_endpoint(port, bind_kind)
 
         bound_port = server.add_secure_port(endpoint, server_credentials)
         if bound_port == 0:

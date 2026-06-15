@@ -21,6 +21,27 @@ częściowo shipped (reszta w [`status.md`](status.md)).
 
 ## P0
 
+### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
+- **Etap A: litera dysku `Z:` + redirect Dokumenty.** `[~PARTIAL 2026-06-12]`
+  Host-side + generator skryptu **ZROBIONE** na `feat/fs-drive-letter`
+  (5 commitów; bramki zielone): config (`shared_folder_drive_letter` D-Z +
+  `redirect_documents`/`redirect_desktop` + `shared_folder_drive_path()`),
+  workdir UNC→`Z:\` w `_peripheral_flags`, `installer/drive_map.py` generator
+  skryptu logon + 9 testów. **Live-findings (na żywej VM) zmieniły mechanizm:**
+  Run key NIE odpala się przy logonie RAIL (rdpinit shell) → ścieżka (i)
+  MARTWA; **trwałe mapowanie `/persistent:yes` JEST auto-odtwarzane przez MPR**
+  → to jest mechanizm drive'a. `workdir:Z:\` jest racy → robust lever to
+  redirect shell-foldera (leniwy). **POZOSTAJE:** GUI-verify Save dialogu
+  (brak xdotool/scrot w sesji — doinstaluj lub user patrzy) + wybór triggera
+  one-time (A: deklaratywny `HKCU\Network` przez autounattend / B: agent-svc
+  `CreateProcessAsUser`) + wiring provisioning. Pełny stan: `handoff.md` §2.7
+  „AKTUALIZACJA MECHANIZMU" + `status.md` A1. **Bez boundary files.**
+- **Etap B: VirtioFS jednego folderu jako trwały dysk `Z:`** (po becie).
+  Plan: `handoff.md` §2.8. Gated: smoke-test sterownika virtio-win VirtioFS
+  `[HW]` + weryfikacja vhost-user/memfd na `qemu:///session` + **ADR
+  właściciela + THREAT_MODEL row** **`[user-approval]`**. Provider-swap pod
+  tym samym `Z:` (redirect z Etapu A bez zmian); rdpdr zostaje fallbackiem.
+
 ### Display / Phase 4 baseline
 - **X11 RAIL pipeline.** Implement
   [`host/src/crossdesk_host/display/rail_manager.py`](../host/src/crossdesk_host/display/rail_manager.py)
@@ -68,6 +89,38 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 ## P1
 
 ### Display & forwarding
+- **RAIL window icons — native high-res Windows icons on Linux windows.**
+  (user request 2026-06-02; supersedes the P2 "Auto-extract icons" item.)
+  Today FreeRDP sets only a 32×32 `_NET_WM_ICON` from the RDP RAIL ICON
+  orders — blurry in docks/hi-DPI. The proto already carries the payload
+  (`RailWindowEvent.icon_png`, populated for CREATED/ICON_CHANGED), so **no
+  proto change**. Design:
+  1. **Agent (rail-bridge)** — on CREATED, resolve the window's process
+     image (`GetWindowThreadProcessId` → `OpenProcess` →
+     `QueryFullProcessImageNameW`), extract the largest icon
+     (`PrivateExtractIconsW(path, 0, 256, 256, …)`), convert HICON→RGBA
+     (`GetIconInfo` → `GetDIBits` 32bpp top-down BGRA; alpha-from-mask
+     fallback), PNG-encode (`png` crate), set `icon_png`. The exact seam is
+     `events.rs::build_rail_event` (`icon_png: vec![]` TODO). Adds windows-rs
+     `Win32_UI_Shell` + `Win32_Graphics_Gdi` features.
+  2. **Host consume** — two paths (do both):
+     a. *Titlebar / window icon*: set a rich multi-size `_NET_WM_ICON`
+        (16/32/48/64/128/256) on the RAIL X window, found by **WM_CLASS
+        instance == app_id** (we already pass `/wm-class:<app_id>`; per-app
+        is the right granularity for icons). Needs PNG decode + X11 prop
+        set — Pillow + python-xlib (new host deps) OR a small ctypes/xcb
+        helper. Source = the agent's `icon_png` (RailManager already stores
+        it in `_windows[hwnd]["icon_png"]`).
+     b. *Dock / launcher / alt-tab*: write per-app
+        `~/.local/share/applications/crossdesk-<app>.desktop` with
+        `StartupWMClass=<app_id>` + `Icon=crossdesk-<app_id>`, and install
+        the extracted icon into `~/.local/share/icons/hicolor/<size>/apps/`.
+        Idiomatic, **no runtime X11/deps** — the desktop matches WM_CLASS to
+        the .desktop and uses its icon. Highest-visibility, lowest-risk.
+  Correlation note: control-plane `icon_png` is keyed by HWND; the X window
+  is keyed by WM_CLASS=app_id. They don't share a key per-window, but
+  per-app is sufficient for icons (cache the latest non-empty icon per
+  process_id→app, or extract once at discovery). `[HW]`
 - **Wayland-native RAIL.** FreeRDP 3.x Wayland support audit; missing
   `xdg-shell` / `xdg-decoration-unstable-v1` / `xdg-foreign-unstable-v2`
   / `wlr-foreign-toplevel-management` handlers (upstream FreeRDP PR
@@ -255,6 +308,18 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   via `org.freedesktop.Notifications`, brief next-steps file w
   `~/.config/crossdesk/getting-started.md`, optionally auto-launch
   Notepad jako smoke test (`--launch-test`). Don't open browsers.
+- **Produkcyjny agent jako NT-service (nie console) — STABILNOŚĆ, beta-blocker.**
+  Live finding 2026-06-09: console-mode agent jest związany z cyklem życia
+  sesji RDP → **zamknięcie okna RAIL / takeover sesji ubija ControlSession**,
+  kolejny `launch` failuje na verify-credentials ("no live guest session").
+  NT-service (kod jest, autounattend instaluje) przeżywa disconnect sesji +
+  reboot + nie trzyma sesji RDP (brak session-takeover, brak cmd-artefaktu).
+  Wymaga produkcyjnej reinstalacji guesta z autounattend (`[HW]`).
+- **Daemon reapuje zakończone xfreerdp (zombie `<defunct>`) — ops.** Live finding
+  2026-06-09: daemon spawnuje xfreerdp jako subprocess ale nie `wait()`-uje po
+  jego śmierci → zombie w tablicy procesów (PPID=daemon). Niegroźne, ale do
+  naprawy: `asyncio` child watcher / reap na `transport`/`freerdp` poziomie
+  gdy RAIL session kończy się lub jest ubijany.
 
 ### Cross-platform foundation
 
@@ -382,9 +447,11 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 - **Auto-derive MIME types from registry.** Read `HKCR\<ext>` +
   `HKCR\<progid>\shell\open\command` during discovery → MIME associations
   automatic. WinApps hand-curates (unscalable).
-- **Auto-extract icons from `.exe` resources.** `ExtractIconExW` (already
-  na Phase 4 followups list for RAIL window icons) → PNGs at discovery.
-  No hand-drawn art; icon zawsze matches version user faktycznie ma.
+- **Auto-extract icons from `.exe` resources.** → **promoted to P1
+  "RAIL window icons"** (Display & forwarding) per user request
+  2026-06-02; see that entry for the full agent+host design. This P2 line
+  remains only as the *discovery-time* variant (extract icons for the app
+  catalog / launcher), distinct from the live per-window RAIL icon path.
 
 ### Operations & lifecycle (post-MVP P2 tier)
 - **`crossdesk vm snapshot create|list|restore|delete`.** Wraps
@@ -425,6 +492,17 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   `host/src/crossdesk_host/`, faktycznie 23 (m.in. `cli/`, `doctor/`,
   `abstractions/`, `lifecycle/`, `filesystem_ctl/`…). AGENTS.md =
   boundary file → edycja wymaga zgody właściciela. (audyt 2026-05-31)
+- **FreeRDP `/app:` quoted-`cmd:` tokenizer warning (Phase-5 latent).**
+  Na FreeRDP 3.24 klauzula z `cmd:"<plik>"` *przed* kolejnymi sub-keyami
+  (`hidef:`/`name:`/`workdir:`) emituje `[get_next_comma]: Invalid quoted
+  argument` (po jednym na trailing sub-key; non-fatal, parse dochodzi do TCP
+  connect). **Dziś uśpione** — `cmd_arg` jest zawsze `""` (`request.file_path`
+  → JIT-mount to Phase-5, niewpięte; oba call-site'y `AppLaunchSpec` mają
+  pustą `argv`), więc shipowana klauzula A1 (program+icon+hidef+name+workdir,
+  bez `cmd:`) parsuje się czysto (0 błędów, zweryfikowane na żywym
+  `xfreerdp3` 3.24.2, też ścieżki ze spacjami). Gdy Phase-5 wepnie
+  file-open: dać `cmd:` na końcu klauzuli, zrezygnować z cudzysłowu, albo
+  użyć `/args-from`; dodać test `workdir`+`cmd` razem. (review A1 2026-06-04)
 
 ---
 
@@ -433,6 +511,12 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
 Wymaga zgody na touch boundary plików per `AGENTS.md` "File boundaries"
 (proto, THREAT_MODEL, DECISIONS, REQUIREMENTS, MVP_SCOPE, GOALS, ROADMAP).
 
+- **Kierunek systemu plików — ROZSTRZYGNIĘTE 2026-06-12: A → potem B.**
+  Praca przeniesiona do P0 „Filesystem bridge — kierunek A→B" (góra pliku);
+  plan wykonawczy `handoff.md` §2.7 (Etap A) + §2.8 (Etap B). Tu zostaje
+  tylko część `[user-approval]` Etapu B: **ADR + THREAT_MODEL row dla
+  trwałego scoped VirtioFS mount** — owner autoryzuje gdy Etap B startuje
+  (po smoke-teście sterownika virtio-win VirtioFS).
 - **`docs/THREAT_MODEL.md` flips po Stage 4 LogonUserW shipped**
   (`auth.verify-credentials.v1` residual risk wymaga uzupełnienia)
   i **`docs/VERSIONING.md` capability promotion** (`auth.verify-

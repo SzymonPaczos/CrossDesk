@@ -16,7 +16,12 @@ Flag rationale (each in the comment near the line that emits it):
   gRPC channel.
 - ``/app:program:`` — the actual Windows binary to run as a RAIL app.
   ``hidef:on`` enables high-quality glyphs; ``cmd:`` carries argv
-  forwarded from the Linux invocation.
+  forwarded from the Linux invocation; ``workdir:`` sets the launched
+  process's working directory — we point it at the mapped drive root
+  (``Z:\\``, which the guest logon step maps to ``\\\\tsclient\\<share>``)
+  so a Save/Open dialog defaults to the Linux-visible folder instead of
+  ``C:\\``. A drive letter, not the UNC: Windows ignores a UNC working
+  directory and falls back to System32.
 - ``+auto-reconnect`` — we WANT auto-reconnect because heartbeat FSM's
   HARD_DESTROY path restarts the VM and we'd like the existing RAIL
   windows to come back when the agent does.
@@ -81,9 +86,30 @@ class FreeRDPConnectionSpec:
     fallback for a local workgroup account."""
 
 
-def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str]:
+def build_rail_argv(
+    app: AppLaunchSpec,
+    conn: FreeRDPConnectionSpec,
+    extra_flags: Sequence[str] = (),
+    workdir: str = "",
+) -> list[str]:
     """Construct the full xfreerdp RAIL argv (excluding the binary
-    itself; :class:`RealFreeRDPInvocation` resolves and prepends it)."""
+    itself; :class:`RealFreeRDPInvocation` resolves and prepends it).
+
+    ``extra_flags`` are appended verbatim — used to apply the peripheral
+    redirection flags from
+    :meth:`crossdesk_host.config.peripherals.PeripheralsConfig.to_freerdp_flags`
+    (audio, clipboard, printer, USB, and the scoped shared folder). FreeRDP
+    parses flags regardless of order, so appending after the core flags is
+    safe.
+
+    ``workdir`` — when non-empty, becomes the ``workdir:`` sub-key of the
+    ``/app:`` clause, setting the launched RemoteApp's working directory.
+    The caller passes the mapped drive root (``Z:\\``) when the redirect is
+    active, so the app's first Save/Open dialog defaults to the
+    Linux-visible folder rather than ``C:\\``. A drive letter, not the UNC:
+    Windows ignores a UNC working directory and falls back to System32.
+    Empty when no shared folder is mounted (the workdir must point at a path
+    that exists in the guest, or RemoteApp launch fails)."""
 
     if conn.scale not in (100, 140, 180):
         raise ValueError(f"FreeRDP only supports scale 100/140/180; got {conn.scale}")
@@ -100,6 +126,13 @@ def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str
     if app.icon_path:
         program_clause += f",icon:{app.icon_path}"
 
+    app_clause = (
+        f"/app:program:{program_clause},hidef:on,name:{app.display_name or app.app_id}"
+    )
+    if workdir:
+        # Trailing sub-key; FreeRDP parses /app: sub-keys order-independently.
+        app_clause += f",workdir:{workdir}"
+
     argv: list[str] = [
         f"/v:{conn.host}:{conn.port}",
         f"/u:{conn.username}",
@@ -109,7 +142,13 @@ def build_rail_argv(app: AppLaunchSpec, conn: FreeRDPConnectionSpec) -> list[str
         f"/scale:{conn.scale}",
         "/dynamic-resolution",
         "+auto-reconnect",
-        f"/app:program:{program_clause},hidef:on,name:{app.display_name or app.app_id}",
-        f"/wm-class:{app.app_id}",
+        app_clause,
+        # Namespace the WM_CLASS as crossdesk-<app_id> so (a) CrossDesk windows
+        # never collide with a native Linux app of the same name, and (b) it
+        # matches the StartupWMClass=crossdesk-<app_id> written into the app's
+        # .desktop (integrations/mime.install_app) — that match is what lets the
+        # dock/alt-tab show the app's real icon (display/window_icon.py).
+        f"/wm-class:crossdesk-{app.app_id}",
     ]
+    argv.extend(extra_flags)
     return argv

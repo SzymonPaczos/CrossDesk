@@ -9,6 +9,9 @@
 
 #[cfg(windows)]
 pub mod events;
+// `icon` is always compiled: its pixel + PNG helpers carry cross-platform
+// unit tests, while the Win32 icon extraction inside it is `#[cfg(windows)]`.
+mod icon;
 #[cfg(windows)]
 pub mod windows;
 

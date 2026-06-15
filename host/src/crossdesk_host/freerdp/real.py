@@ -18,18 +18,41 @@ but spawning will fail (no FreeRDP binary on PATH).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+import re
 import shutil
 import signal
 import subprocess
-from typing import Sequence
+from pathlib import Path
+from typing import IO, Optional, Sequence
 
 from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
 
 logger = logging.getLogger(__name__)
 
 _ENV_PIN = "CROSSDESK_FREERDP_BIN"
+
+_LOG_TAIL_BYTES = 4096
+"""How much of a crashed session's captured output to include in the
+exit log line — enough for the FreeRDP error banner, bounded so a chatty
+session can't bloat a single log record."""
+
+
+def freerdp_log_dir() -> Path:
+    """Directory holding per-app FreeRDP capture logs. Under the XDG
+    state dir so ``crossdesk logs --component freerdp`` and a beta user's
+    "send me your logs" both find them."""
+    return Path.home() / ".local" / "state" / "crossdesk" / "logs"
+
+
+def freerdp_app_log_path(label: str) -> Path:
+    """Per-app capture log path. ``label`` (app_id) is sanitised to a
+    filesystem-safe token so a launch-by-path app_id can't escape the
+    logs dir."""
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", label) or "app"
+    return freerdp_log_dir() / f"freerdp-{safe}.log"
 
 # Order matters — use the first binary that exists on PATH. xfreerdp
 # (unversioned) takes precedence so distros that ship 2.x are still
@@ -76,28 +99,69 @@ def _resolve_freerdp_binary() -> list[str]:
     )
 
 
+class _Tracked:
+    """A spawned FreeRDP process plus the capture-log file we redirect
+    its output into (``None`` when no ``log_label`` was given)."""
+
+    __slots__ = ("proc", "log_file", "log_path")
+
+    def __init__(
+        self,
+        proc: subprocess.Popen[bytes],
+        log_file: Optional[IO[bytes]],
+        log_path: Optional[Path],
+    ) -> None:
+        self.proc = proc
+        self.log_file = log_file
+        self.log_path = log_path
+
+
 class RealFreeRDPInvocation(FreeRDPInvocation):
     """Spawns FreeRDP via subprocess.Popen and tracks the resulting
     process handle inside the ``RailSession``."""
 
     def __init__(self) -> None:
-        # Maps pid → Popen so terminate/is_alive don't reach into
-        # ``RailSession`` internals.
-        self._processes: dict[int, subprocess.Popen[bytes]] = {}
+        # Maps pid → tracked process so terminate/wait/is_alive don't
+        # reach into ``RailSession`` internals.
+        self._processes: dict[int, _Tracked] = {}
+        # Capture-log paths survive reaping so read_log_tail works in the
+        # post-exit window when the supervisor builds its log line.
+        self._last_log_path: dict[int, Path] = {}
 
-    def spawn_rail(self, argv: list[str]) -> RailSession:
+    def spawn_rail(self, argv: list[str], log_label: str = "") -> RailSession:
         full_argv = _resolve_freerdp_binary() + argv
         logger.info("spawning FreeRDP RAIL session: %s", " ".join(full_argv))
-        proc = subprocess.Popen(full_argv)
-        self._processes[proc.pid] = proc
+        log_file: Optional[IO[bytes]] = None
+        log_path: Optional[Path] = None
+        if log_label:
+            log_path = freerdp_app_log_path(log_label)
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                # Append so re-launching the same app keeps history; the
+                # rotation of these files is left to the size cap a future
+                # caller can add — FreeRDP output per session is small.
+                log_file = log_path.open("ab")
+            except OSError as exc:
+                # Capture is best-effort: if we can't open the file, spawn
+                # anyway with inherited stderr rather than block the launch.
+                logger.warning("freerdp capture log %s unopenable: %s", log_path, exc)
+                log_file = None
+                log_path = None
+        proc = subprocess.Popen(
+            full_argv,
+            stdout=log_file if log_file is not None else None,
+            stderr=subprocess.STDOUT if log_file is not None else None,
+        )
+        self._processes[proc.pid] = _Tracked(proc, log_file, log_path)
         return RailSession(pid=proc.pid, argv=full_argv)
 
     def terminate(self, session: RailSession) -> None:
-        proc = self._processes.get(session.pid)
-        if proc is None:
+        tracked = self._processes.get(session.pid)
+        if tracked is None:
             return
+        proc = tracked.proc
         if proc.poll() is not None:
-            self._processes.pop(session.pid, None)
+            self._reap_tracked(session.pid)
             return
         logger.info("terminating FreeRDP RAIL session pid=%d", session.pid)
         try:
@@ -111,10 +175,49 @@ class RealFreeRDPInvocation(FreeRDPInvocation):
             proc.kill()
             proc.wait()
         finally:
-            self._processes.pop(session.pid, None)
+            self._reap_tracked(session.pid)
+
+    async def wait(self, session: RailSession) -> int:
+        tracked = self._processes.get(session.pid)
+        if tracked is None:
+            return 0
+        proc = tracked.proc
+        # Block a thread-pool thread on the OS wait so the event loop stays
+        # free; this also reaps the child (no zombie). No polling.
+        returncode = await asyncio.get_running_loop().run_in_executor(
+            None, proc.wait
+        )
+        self._reap_tracked(session.pid)
+        return returncode
+
+    def read_log_tail(self, session: RailSession, max_bytes: int = _LOG_TAIL_BYTES) -> str:
+        """Return the last ``max_bytes`` of the session's capture log as
+        text, or '' if there is none. One-shot: consumes the remembered
+        path so it doesn't leak. Used to attach the FreeRDP error banner
+        to the exit log line after ``wait`` returns."""
+        path = self._last_log_path.pop(session.pid, None)
+        if path is None:
+            return ""
+        try:
+            data = path.read_bytes()
+        except OSError:
+            return ""
+        return data[-max_bytes:].decode("utf-8", errors="replace").strip()
 
     def is_alive(self, session: RailSession) -> bool:
-        proc = self._processes.get(session.pid)
-        if proc is None:
+        tracked = self._processes.get(session.pid)
+        if tracked is None:
             return False
-        return proc.poll() is None
+        return tracked.proc.poll() is None
+
+    def _reap_tracked(self, pid: int) -> None:
+        tracked = self._processes.pop(pid, None)
+        if tracked is None:
+            return
+        if tracked.log_path is not None:
+            self._last_log_path[pid] = tracked.log_path
+        if tracked.log_file is not None:
+            try:
+                tracked.log_file.close()
+            except OSError:
+                pass

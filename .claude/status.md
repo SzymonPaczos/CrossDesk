@@ -294,6 +294,27 @@ prefiksu `||` (alias vs ścieżka → RAIL_EXEC_E_FILE_NOT_FOUND).
 
 ## Partial — kod shipped, podłączenia / pokrycie brakujące
 
+- **Resilience & observability (public-beta)** — branch `feat/resilience-logging`
+  (z `main`, NIE merged). **Shipped + przetestowane** (bramki: mypy --strict 122,
+  ruff src czysto, host suite 842+): (1) **monitoring FreeRDP** —
+  `RailSupervisor` await-uje każdy spawnowany xfreerdp (reap → koniec zombie
+  `<defunct>`), klasyfikuje wyjście (terminated/clean-close = cicho; non-zero =
+  warning z przechwyconym bannerem FreeRDP + `notify_rdp_drop`); stderr+stdout
+  per-app do `~/.local/state/crossdesk/logs/freerdp-<app>.log`. (2) **Notifier
+  ożywiony** — daemon wpina `SubprocessNotifier` do RailManager+Heartbeat (były
+  dead-code, `notify_*` cicho no-opowały). (3) **Graceful shutdown** —
+  SIGTERM/SIGINT → terminate dzieci FreeRDP + stop gRPC (zamiast kill bez
+  cleanupu); `__main__` loguje `daemon_crashed` przed re-raise. (4) **Log do
+  pliku** — `configure_logging(log_file=)` tee do rotującego pliku (5 MiB×1) →
+  `crossdesk logs` działa bez journald. (5) **VM-death reactor seam** —
+  `DomainEventReactor`+`MockDomainEventSource` (testowane).
+  **Deferred (udokumentowane, NIE shipped jako fake):** real
+  `LibvirtDomainEventSource` = **Phase-3 `[HW]`** (daemon używa mock-libvirt;
+  event-loop libvirt nietestowalny bez sprzętu — heartbeat już notyfikuje
+  VM-death dziś); `crossdesk logs --component guest` = **blokada proto**
+  (wymaga nowego RPC host→guest = boundary, zgoda właściciela). **Live-verify
+  realnego crashu FreeRDP** (notyfikacja + log) — nie zrobione w tej sesji
+  (kod-side + unit-tested; live na żywej VM zostaje).
 - **Multi-monitor RAIL** — `enumerate_monitors()` shipped, ale
   wiring do `rail_manager._handle_create` + `_NET_WM_DESKTOP` /
   xdg_output_manager hints + per-monitor scale re-eval na drag-between

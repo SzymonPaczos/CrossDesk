@@ -40,6 +40,7 @@ from crossdesk_host.display.rail_command import (
     FreeRDPConnectionSpec,
     build_rail_argv,
 )
+from crossdesk_host.display.rail_supervisor import RailSupervisor
 from crossdesk_host.display.session_starter import (
     AuthHealthCheckFailed,
     spawn_rail_with_auth_check,
@@ -168,6 +169,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         freerdp: Optional[FreeRDPInvocation] = None,
         verify_coordinator: Optional[VerifyCoordinator] = None,
         icon_store: Optional[WindowIconStore] = None,
+        supervisor: Optional["RailSupervisor"] = None,
     ) -> None:
         self.state = state
         self.libvirt_ctl = libvirt_ctl
@@ -183,9 +185,14 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # is unavailable rather than pretending success.
         self._freerdp = freerdp
         self._verify_coordinator = verify_coordinator
-        # RAIL sessions spawned via Launch, kept so they aren't lost
-        # (terminate-on-window-close adoption by RailManager is a Phase-4
-        # follow-up; for now this keeps the handle reachable).
+        # Watches each spawned FreeRDP process: reaps it on exit, logs the
+        # reason, and surfaces a notification on an unexpected drop. None ⇒
+        # sessions are still spawned but not monitored (e.g. unit tests that
+        # don't exercise the supervisor).
+        self._supervisor = supervisor
+        # RAIL sessions spawned via Launch, kept so they aren't lost. The
+        # supervisor's on-exit callback removes a session here once its
+        # FreeRDP process dies, so the list reflects live sessions.
         self._sessions: List[RailSession] = []
         # Tests inject a fresh Registry to avoid cross-test pollution;
         # production wires the module-level singleton so every metric
@@ -415,7 +422,11 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
 
         try:
             session = await spawn_rail_with_auth_check(
-                self._freerdp, self._verify_coordinator, argv, creds=creds
+                self._freerdp,
+                self._verify_coordinator,
+                argv,
+                creds=creds,
+                log_label=app_id,
             )
         except AuthHealthCheckFailed as exc:
             hint = exc.result.repair_hint or exc.result.detail
@@ -436,6 +447,15 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             return mgmt_pb2.LaunchResponse(ok=False, error=f"launch failed: {exc}")
 
         self._sessions.append(session)
+        if self._supervisor is not None:
+            # Watch the process: reap on exit, log the reason, notify on an
+            # unexpected drop, and drop our handle when it dies.
+            self._supervisor.supervise(
+                session,
+                app_id=spec.app_id,
+                display_name=spec.display_name,
+                on_exit=self._on_session_exit,
+            )
         self.state.append_activity(
             mgmt_pb2.RecentActivity.Kind.KIND_APP_LAUNCHED,
             # spec.display_name covers both the catalog and launch-by-path
@@ -490,6 +510,10 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             logger.warning("shared folder %s not creatable: %s", share, exc)
             return no_share, ""
         return flags, cfg.shared_folder_drive_path()
+
+    def _on_session_exit(self, session: RailSession, returncode: int) -> None:
+        """Supervisor callback: drop the dead session from the live list."""
+        self._sessions = [s for s in self._sessions if s.pid != session.pid]
 
     async def Suspend(  # noqa: N802
         self, request: mgmt_pb2.Empty, context: grpc.aio.ServicerContext

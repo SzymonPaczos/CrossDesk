@@ -290,6 +290,24 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   sync/async context detection via `asyncio.get_running_loop()`. Wired
   to 3 call sites via `SubprocessNotifier` interface compatibility.
 
+### Resilience & observability (public-beta)
+Branch `feat/resilience-logging` (z `main`, NIE merged). Pełny stan:
+[`status.md`](status.md) "Resilience & observability". Z audytu/diagnozy
+2026-06-12: gdy komponent zewnętrzny pada (FreeRDP itd.), host tego nie
+wykrywał/logował/notyfikował.
+- **✅ FreeRDP supervision** — `display/rail_supervisor.py` reap+log+notify;
+  per-app capture log; `FreeRDPInvocation.wait()`. Naprawia zombie xfreerdp.
+- **✅ Notifier ożywiony w prod** — daemon wpina `SubprocessNotifier` do
+  RailManager+Heartbeat (były dead-code).
+- **✅ Graceful shutdown + crash catchall** — SIGTERM/SIGINT, `daemon_crashed` log.
+- **✅ Log do rotującego pliku** — `crossdesk logs` działa bez journald.
+- **Real `LibvirtDomainEventSource`** — Phase-3, **`[HW]`** (lands z real
+  libvirt controller; reactor+mock seam już shipped+testowany).
+- **`crossdesk logs --component guest`** — wymaga **nowego RPC host→guest
+  (proto = boundary)**; `[user-approval]`. Dziś stub P2.
+- **Live-verify realnego crashu FreeRDP** na żywej VM (notyfikacja+log+brak
+  zombie) — kod+unit-tested, live zostaje.
+
 ### Operations & lifecycle (post-MVP)
 - **`crossdesk doctor` — pre-flight diagnostic.** Expanded 2026-05-23:
   added `check_cpu_virt_extensions`, `check_vsock_module`,

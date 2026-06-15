@@ -17,12 +17,87 @@ exporters (OTLP, Honeycomb) can rely on the schema.
 from __future__ import annotations
 
 import logging
+import os
 import sys
-from typing import Any, MutableMapping
+import threading
+from pathlib import Path
+from typing import Any, List, MutableMapping, Optional
 
 import structlog
 
 from crossdesk_host.observability.redaction import redaction_processor
+
+# Bounded rotating file: 5 MiB per file, one backup (.1) → ~10 MiB ceiling.
+# Enough history to diagnose a session without unbounded growth for users
+# not running under journald (which would rotate for us).
+_LOG_FILE_MAX_BYTES = 5 * 1024 * 1024
+_LOG_FILE_BACKUPS = 1
+
+
+class _RotatingFileWriter:
+    """Minimal size-rotating text sink with a ``write``/``flush`` surface
+    so it can sit behind structlog's ``PrintLoggerFactory`` and a stdlib
+    ``StreamHandler`` alike. Rotates between writes (each write is one
+    complete JSON line), so a line is never split across files. Best-effort:
+    an IO error degrades to dropping the line rather than crashing the
+    logging call."""
+
+    def __init__(self, path: Path, max_bytes: int, backups: int) -> None:
+        self._path = path
+        self._max_bytes = max_bytes
+        self._backups = backups
+        self._lock = threading.Lock()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._size = path.stat().st_size if path.exists() else 0
+        self._fh = path.open("a", encoding="utf-8")
+
+    def write(self, s: str) -> int:
+        data_len = len(s.encode("utf-8"))
+        with self._lock:
+            try:
+                if self._size + data_len > self._max_bytes:
+                    self._rotate()
+                n = self._fh.write(s)
+                self._size += data_len
+                return n
+            except OSError:
+                return 0
+
+    def flush(self) -> None:
+        with self._lock:
+            try:
+                self._fh.flush()
+            except OSError:
+                pass
+
+    def _rotate(self) -> None:
+        self._fh.close()
+        if self._backups > 0:
+            backup = self._path.with_name(self._path.name + ".1")
+            try:
+                os.replace(self._path, backup)
+            except OSError:
+                pass
+        self._fh = self._path.open("w", encoding="utf-8")
+        self._size = 0
+
+
+class _Tee:
+    """Fan a ``write``/``flush`` out to several sinks (stderr + the
+    rotating file). Used so both structlog's own lines and foreign stdlib
+    records land in the file as well as the console."""
+
+    def __init__(self, sinks: List[Any]) -> None:
+        self._sinks = sinks
+
+    def write(self, s: str) -> int:
+        for sink in self._sinks:
+            sink.write(s)
+        return len(s)
+
+    def flush(self) -> None:
+        for sink in self._sinks:
+            sink.flush()
 
 # Mandatory fields every log line MUST carry. Renderers and tests verify
 # this set is present even when callers forget to bind them — missing
@@ -58,12 +133,20 @@ def _stringify_event(
     return event_dict
 
 
-def configure_logging(level: str = "INFO", stream: Any = None) -> None:
+def configure_logging(
+    level: str = "INFO", stream: Any = None, log_file: Optional[Path] = None
+) -> None:
     """Configure structlog + stdlib logging to emit JSON Lines.
 
     ``stream`` defaults to whatever ``sys.stderr`` resolves to at log
     emission time (so pytest's capture and runtime stderr redirection
     both work). Tests that need direct capture pass an ``io.StringIO``.
+
+    ``log_file`` (production daemon only) additionally tees every line into
+    a bounded size-rotating file at that path, so ``crossdesk logs`` works
+    without journald and a beta user can attach it. When ``None`` (the
+    default, and every test) nothing is written to disk and the behaviour
+    is byte-identical to the stream-only path.
 
     Idempotent — calling more than once rebinds the processor chain.
     """
@@ -93,6 +176,12 @@ def configure_logging(level: str = "INFO", stream: Any = None) -> None:
                 sys.stderr.flush()
 
         stream = _LiveStderr()
+
+    if log_file is not None:
+        # Tee the resolved stream and the rotating file so both structlog
+        # lines (via PrintLoggerFactory) and foreign stdlib records (via
+        # the StreamHandler below) reach disk as well as the console.
+        stream = _Tee([stream, _RotatingFileWriter(log_file, _LOG_FILE_MAX_BYTES, _LOG_FILE_BACKUPS)])
 
     structlog.configure(
         processors=shared_processors

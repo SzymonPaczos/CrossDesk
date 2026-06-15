@@ -16,6 +16,7 @@ import pytest
 from crossdesk_host.abstractions.freerdp import RailSession
 from crossdesk_host.catalog.schema import AppEntry
 from crossdesk_host.config.peripherals import PeripheralsConfig
+from crossdesk_host.display.rail_supervisor import RailSupervisor
 from crossdesk_host.display.session_starter import AuthHealthCheckFailed
 from crossdesk_host.freerdp.mock import MockFreeRDPInvocation
 from crossdesk_host.installer.credentials import VerifyResult, VmCredentials
@@ -23,6 +24,7 @@ from crossdesk_host.ipc import management
 from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
 from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
+from crossdesk_host.lifecycle.notifications import RecordingNotifier
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2
 from crossdesk_host.watchdog import HeartbeatFsm
 
@@ -69,6 +71,42 @@ def _patch_app_and_creds(
     monkeypatch.setattr(management.credentials, "load", lambda path=None: creds)
 
 
+async def test_launch_supervises_and_drops_session_on_exit(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock
+) -> None:
+    _patch_app_and_creds(monkeypatch)
+    mock_freerdp = MockFreeRDPInvocation()
+    supervisor = RailSupervisor(mock_freerdp, notifier=RecordingNotifier())
+    servicer = ManagementServiceServicer(
+        MgmtState(fsm=HeartbeatFsm()),
+        LibvirtControllerMock(),
+        freerdp=mock_freerdp,
+        verify_coordinator=VerifyCoordinator(),
+        supervisor=supervisor,
+    )
+    session = RailSession(pid=77)
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
+        # The app_id must reach spawn so the per-app capture log is named.
+        assert log_label == "notepad"
+        return session
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await servicer.Launch(mgmt_pb2.LaunchRequest(app_id="notepad"), context)
+    assert resp.ok
+    assert [s.pid for s in servicer._sessions] == [77]
+    assert supervisor.active_count() == 1
+
+    # When the FreeRDP process exits, the supervisor's on-exit callback
+    # drops the dead session from the live list.
+    task = supervisor._tasks[77]
+    mock_freerdp.simulate_exit(session, returncode=0)
+    await task
+    assert servicer._sessions == []
+    assert supervisor.active_count() == 0
+
+
 async def test_launch_unknown_app(monkeypatch: pytest.MonkeyPatch, context: MagicMock) -> None:
     _patch_app_and_creds(monkeypatch, app=None)
     resp = await _backend_servicer().Launch(mgmt_pb2.LaunchRequest(app_id="ghost"), context)
@@ -89,7 +127,7 @@ async def test_launch_success_spawns_and_tracks(
     _patch_app_and_creds(monkeypatch)
     seen: dict[str, object] = {}
 
-    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
         seen["argv"] = argv
         return RailSession(pid=42, argv=list(argv))
 
@@ -117,7 +155,7 @@ async def test_launch_auth_failure_surfaces_repair_hint(
     _patch_app_and_creds(monkeypatch)
     hint = "run `crossdesk vm credentials repair`"
 
-    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
         raise AuthHealthCheckFailed(
             VerifyResult(
                 ok=False,
@@ -138,7 +176,7 @@ async def test_launch_auth_failure_surfaces_repair_hint(
 async def test_launch_no_active_session(monkeypatch: pytest.MonkeyPatch, context: MagicMock) -> None:
     _patch_app_and_creds(monkeypatch)
 
-    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
         raise NoActiveSession("no active guest session for verify")
 
     monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
@@ -181,7 +219,7 @@ async def test_launch_by_exe_path_spawns(
     _patch_app_and_creds(monkeypatch, app=None)
     seen: dict[str, object] = {}
 
-    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
         seen["argv"] = argv
         return RailSession(pid=77, argv=list(argv))
 
@@ -327,7 +365,7 @@ async def test_launch_threads_workdir_into_argv(
     )
     seen: dict[str, object] = {}
 
-    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0):  # type: ignore[no-untyped-def]
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
         seen["argv"] = argv
         return RailSession(pid=99, argv=list(argv))
 

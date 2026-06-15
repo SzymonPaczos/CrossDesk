@@ -8,7 +8,9 @@ the asyncio loop until SIGTERM. Configuration is loaded once from
 daemon does not reload on SIGHUP — restart instead.
 """
 
+import asyncio
 import os
+import signal
 
 # Configure structured logging FIRST — before importing any module that
 # captures `structlog.get_logger(...)` (or stdlib logging) at import
@@ -31,6 +33,7 @@ except ImportError:
     systemd_daemon = None
 
 from crossdesk_host.display.rail_manager import RailManager  # noqa: E402
+from crossdesk_host.display.rail_supervisor import RailSupervisor  # noqa: E402
 from crossdesk_host.display.window_icon import WindowIconStore  # noqa: E402
 from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
 from crossdesk_host.freerdp.real import RealFreeRDPInvocation  # noqa: E402
@@ -45,6 +48,7 @@ from crossdesk_host.ipc.management import (  # noqa: E402
 )
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
+from crossdesk_host.lifecycle.notifications import SubprocessNotifier  # noqa: E402
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402
 from crossdesk_host.proto.crossdesk.v1 import (  # noqa: E402
@@ -80,6 +84,13 @@ async def main() -> None:
 
     cfg = load_from_toml()
 
+    # Re-configure logging now that we know the state dir, adding a bounded
+    # rotating file alongside stderr so `crossdesk logs` works for users not
+    # running under journald and we can ask a beta tester to attach it.
+    # Done here (not at import) so merely importing the daemon never writes
+    # a file. Idempotent — rebinds the processor chain.
+    configure_logging(log_file=cfg.paths.state_dir / "logs" / "crossdesk-host.jsonl")
+
     ca_cert = cfg.paths.ca_cert.read_bytes()
     host_cert = cfg.paths.host_cert.read_bytes()
     host_key = cfg.paths.host_key.read_bytes()
@@ -95,11 +106,22 @@ async def main() -> None:
     # both planes agree on session/credential state.
     freerdp = RealFreeRDPInvocation()
     verify_coordinator = VerifyCoordinator()
+    # One notifier surfaces watchdog / RAIL-drop errors to the desktop
+    # (notify-send; a silent no-op on headless boxes). Previously the
+    # servicers were constructed without one, so every notify_* helper
+    # was dead code in production — wire it once here.
+    notifier = SubprocessNotifier()
     # Shared icon store: the management Launch RPC registers each launch's
     # app_id; the rail_manager applies the agent's extracted .exe icon to that
     # app's .desktop / icon theme so it shows in the dock (display/window_icon).
     icon_store = WindowIconStore()
-    rail_manager = RailManager(freerdp_inv=freerdp, icon_store=icon_store)
+    rail_manager = RailManager(
+        freerdp_inv=freerdp, icon_store=icon_store, notifier=notifier
+    )
+    # Supervises each spawned FreeRDP process: reaps it on exit (no more
+    # zombie xfreerdp), logs why it ended, and notifies on an unexpected
+    # drop instead of leaving a dead window with no message.
+    rail_supervisor = RailSupervisor(freerdp, notifier=notifier)
 
     transport = RealTransport()
     server = transport.create_server(
@@ -124,7 +146,8 @@ async def main() -> None:
         server,
     )
     heartbeat_pb2_grpc.add_HeartbeatServiceServicer_to_server(
-        HeartbeatServiceServicer(auth_validator, libvirt_ctl), server
+        HeartbeatServiceServicer(auth_validator, libvirt_ctl, notifier=notifier),
+        server,
     )
     filesystem_pb2_grpc.add_FilesystemServiceServicer_to_server(
         FilesystemServiceServicer(
@@ -143,6 +166,7 @@ async def main() -> None:
             freerdp=freerdp,
             verify_coordinator=verify_coordinator,
             icon_store=icon_store,
+            supervisor=rail_supervisor,
         ),
         mgmt_server,
     )
@@ -161,8 +185,30 @@ async def main() -> None:
     if systemd_daemon is not None:
         systemd_daemon.notify("READY=1")
 
+    # Graceful shutdown on SIGTERM (systemd stop) / SIGINT (Ctrl-C): the
+    # default SIGTERM action kills the process before the gRPC servers and
+    # FreeRDP children get a chance to stop cleanly, leaking sockets and
+    # leaving orphaned xfreerdp. Trip a stop event instead and unwind below.
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, stop_event.set)
+        except (NotImplementedError, RuntimeError):
+            # add_signal_handler isn't available on every platform/loop
+            # (e.g. a non-main thread). Fall back to the default disposition.
+            pass
+
     logger.info(
         "Server is running. Awaiting connections.",
         mgmt_socket=str(sock_path),
     )
-    await server.wait_for_termination()
+    try:
+        await stop_event.wait()
+    finally:
+        logger.info("daemon_shutting_down")
+        # Stop FreeRDP children first so the supervisor's monitor tasks see
+        # an expected exit, then the gRPC servers.
+        await rail_supervisor.shutdown_all()
+        await server.stop(grace=2.0)
+        await mgmt_server.stop(grace=2.0)

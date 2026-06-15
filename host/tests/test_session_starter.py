@@ -19,8 +19,9 @@ class _StubInvocation:
     def __init__(self) -> None:
         self.spawned: list[list[str]] = []
 
-    def spawn_rail(self, argv: list[str]) -> RailSession:
+    def spawn_rail(self, argv: list[str], log_label: str = "") -> RailSession:
         self.spawned.append(argv)
+        self.last_label = log_label
         return RailSession(pid=1234, argv=list(argv))
 
     def terminate(self, _session: RailSession) -> None:  # pragma: no cover

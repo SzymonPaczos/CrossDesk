@@ -2,6 +2,142 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-06-12
+
+**Git:** `8f266bb` on `feat/usability-shared-fs`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff: n/a (not on PATH)
+- mypy: n/a
+- pytest: n/a
+- bandit: n/a
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 24
+- gui cargo-deny issues: 15
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 234
+- #[test] annotations (rust): 84
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-06-09 (3d ago)
+- META decisions (status: aktywna): 6
+- ADR DEC-NNNN total: 16
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-05-23 (20d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Korekta warstwy statycznej (venv niedostępny dla audit.sh)
+
+Skrypt nie widzi `host/.venv` — wartości policzone ręcznie z aktywowanym venv:
+
+- ruff: **8 błędów, wszystkie w `host/tests/`** (3× I001 import-sort, 1× F401 unused
+  import `test_heartbeat_boot_probe.py:20`, 3× E402 `test_lifecycle_coordinator.py:148-151`);
+  5 auto-fixable
+- mypy --strict: **0 błędów (121 plików)**
+- pytest: **870 passed, 2 skipped, 36.9s**
+- cargo-deny "issues" 24/15 = wyłącznie warningi `duplicate` (transitive windows-*
+  crates) + 8× `license-not-encountered` (licencje w allowliście nieużywane przez
+  graf zależności) — zero błędów, kosmetyka konfiguracji deny.toml
+
+### Warstwa głęboka (4 równoległe przeglądy: bezpieczeństwo / slop / testy / architektura+decyzje)
+
+**1. Bezpieczeństwo — czysto.** Per-frame `verify_auth_context` na każdej ramce
+wszystkich 3 płaszczyzn (control.py:253, filesystem.py:46, heartbeat.py:205);
+mTLS leaves poza git tree (`git ls-files infra/certs` → tylko generate_mtls.sh);
+wszystkie bloki `unsafe` w guest/ mają `// Safety:`; spawn FreeRDP przez
+list-argv (brak shell injection); walidatory shared-folder (pusta/względna
+ścieżka, separatory w nazwie share, mkdir-fail → drop drive+workdir) działają
+i są przetestowane.
+
+**2. Slop — werdykt: to NIE jest AI slop.** Zero hardcoded danych udających
+realne; zero "Coming soon"/TBD w src; wszystkie zaślepki (sleep_sync,
+ScrapeBackend, fs-mount mocks, control.py:149 pid=9999) jawnie opisane i
+zarejestrowane w ignorefiles.md/status.md; status.md uczciwie raportuje
+PORAŻKI (A1 workdir UNC→System32); komentarze to "why", nie "what"; milestone'y
+"LIVE-verified" mają pokrycie w realnych commitach. Jedyny znany wyjątek:
+`mock_generate_release_ack` wołany bez cfg-gate z `agent-svc/filesystem.rs:98`
+— już w backlogu (Tech debt).
+
+**3. Testy — mocne na ścieżkach krytycznych.** AuthValidator rejection paths
+(3 tryby × 3 płaszczyzny), FSM watchdog (wszystkie przejścia + backoff cap),
+VerifyCoordinator (korelacja, timeout, trace), nowe gardy peripherals
+(empty-path, relative-path, mkdir-fail — pokryte po adversarial review),
+WindowIconStore (expect/offer/TTL). Znane luki bez zmian: mTLS cert-pinning
+failure-modes (backlog), CLI semver snapshot (backlog). **Brak progu coverage
+w pyproject** mimo deklarowanych 78% — kandydat na ratchet.
+
+**4. Architektura/decyzje — zgodne.** No-Docker (DEC-0003) ✅; no-polling —
+jedyny `while True: sleep` to zatwierdzony wyjątek `_tail_file` (DEC-META-006),
+reszta to event-driven `await` ✅; brak `import libvirt` poza real.py ✅; brak
+edycji proto na branchu ✅; layering config→display→ipc respektowany w nowym
+kodzie ✅; brak dead code poza pozycjami z ignorefiles.md. Fałszywy alarm
+odrzucony w weryfikacji: stdlib `logging.getLogger` w window_icon.py to
+celowy wzorzec projektu (udokumentowany w heartbeat.py:67,
+verify_coordinator.py:39, rail_manager.py:44 — caplog + configure_logging
+timing), nie drift.
+
+### Lista P0/P1/P2
+
+**P0:** brak.
+
+**P1:** brak nowych. (Istniejące w backlogu bez zmian stanu: fs-mount mock
+cfg-gate, mTLS failure-mode testy, NT-service agent, zombie xfreerdp reaper.)
+
+**P2 (nowe):**
+1. **ruff 8 błędów w testach** — I001/F401/E402, 5 auto-fixable
+   (`ruff check --fix tests/`); pre-commit gate najwyraźniej nie obejmuje
+   `tests/` albo wersja ruff dryfuje vs CI.
+2. **Brak coverage ratchet** — pyproject.toml nie ma `fail_under`; baseline
+   ~78% znany → zamrozić podłogę (np. 75) zgodnie z regułą ratchet.
+3. **audit.sh nie aktywuje `host/.venv`** — sekcja Python raportuje n/a;
+   dodać `source host/.venv/bin/activate` fallback do skryptu.
+4. **deny.toml: 8× license-not-encountered** — przyciąć allowlistę licencji
+   do faktycznie występujących (kosmetyka).
+
+**Cadence:** poprzedni audyt 2026-05-23 (20 dni) — powyżej 7-dniowego rytmu.
+
+**Ratchet (zamknięte tego samego dnia, decyzja właściciela, branch
+`chore/audit-p2-fixes`):** wszystkie 4 P2 naprawione — (1) `fd1365e` ruff
+0 błędów + `c04769b`/`e0f73c9` bramki pre-push i CI rozszerzone na `tests/`;
+(2) `e0f73c9` coverage floor `fail_under=75` (baseline 77.74%) uzbrojony
+przez `--cov` w CI; (3) `31c8198` audit.sh widzi host/.venv (ruff/mypy/
+pytest/bandit przestają raportować n/a); (4) `b754b42` deny.toml allowlisty
+przycięte do faktycznie występujących licencji (`cargo deny check licenses`
+→ "licenses ok" w guest+gui).
+
+---
+
 ## Audyt 2026-05-31
 
 **Git:** `73c6141` on `main`

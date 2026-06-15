@@ -21,6 +21,13 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Python tooling (ruff/mypy/pytest/bandit) lives in host/.venv, not on
+# PATH — without this the whole Python section reported "n/a" (audit
+# 2026-06-12). Same venv-first convention as .githooks/pre-commit.
+if [ -d "$REPO_ROOT/host/.venv/bin" ]; then
+  PATH="$REPO_ROOT/host/.venv/bin:$PATH"
+fi
+
 LOG="$REPO_ROOT/.claude/audit-log.md"
 DATE="$(date '+%Y-%m-%d')"
 SECTION=""

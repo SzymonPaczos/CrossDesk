@@ -7,6 +7,11 @@ tested here.
 
 from __future__ import annotations
 
+import time
+from typing import List, Tuple
+
+import pytest
+
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.watchdog import HeartbeatFsm, State
@@ -143,12 +148,6 @@ def test_no_notifier_means_no_notification_on_failure() -> None:
 # ``FakeClock`` so the suspend/resume cycle takes microseconds of wall time
 # regardless of the wall delta we want to model.
 # ---------------------------------------------------------------------------
-
-
-import time
-from typing import List, Tuple
-
-import pytest
 
 
 class _FakeClock:

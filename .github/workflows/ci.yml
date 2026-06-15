@@ -65,8 +65,9 @@ jobs:
       - name: ruff check
         # Bans `print()` (T201) per DEC-0006; backstop pycodestyle/
         # pyflakes/isort. Generated proto modules excluded via
-        # pyproject `extend-exclude`.
-        run: ruff check src/
+        # pyproject `extend-exclude`. tests/ included since audit
+        # 2026-06-12 hit 0 findings — ratchet floor.
+        run: ruff check src/ tests/
       - name: mypy --strict
         # Verified locally on macOS Python 3.12: 0 issues across 32 source
         # files (commit 58dad5f). Enforced rather than tolerated.
@@ -92,7 +93,9 @@ jobs:
             exit 1
           fi
       - name: pytest
-        run: pytest -q
+        # --cov arms the fail_under ratchet floor in pyproject.toml
+        # [tool.coverage.report] (audit 2026-06-12).
+        run: pytest -q --cov=crossdesk_host --cov-report=term
 
   rust-guest-cross-compile:
     name: Rust guest (cargo check + test on host arch)

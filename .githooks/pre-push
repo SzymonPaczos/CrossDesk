@@ -45,8 +45,9 @@ is_excluded() {
 # --- 0A. Python host: ruff + mypy --strict + mock-import gate + pytest ---
 if echo "$CHANGED_FILES" | grep -qE "^host/"; then
     if [ -x "$REPO_ROOT/host/.venv/bin/ruff" ]; then
-        echo "🐍 ruff check src/ ..."
-        ( cd "$REPO_ROOT/host" && .venv/bin/ruff check src/ ) || {
+        # tests/ included since audit 2026-06-12 hit 0 findings — ratchet floor.
+        echo "🐍 ruff check src/ tests/ ..."
+        ( cd "$REPO_ROOT/host" && .venv/bin/ruff check src/ tests/ ) || {
             echo "❌ ruff found issues. Fix locally before pushing."
             exit 1
         }

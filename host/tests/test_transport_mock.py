@@ -13,9 +13,10 @@ real PKI wasn't on disk — coverage on transport/mock.py sat at 59%.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 from pathlib import Path
-from typing import Tuple
+from typing import Iterator, Tuple
 from unittest.mock import MagicMock, patch
 
 import grpc
@@ -29,6 +30,27 @@ from crossdesk_host.abstractions.transport import Transport
 from crossdesk_host.transport.mock import MockHooks, MockTransport
 
 _REAL_PKI_DIR = Path(__file__).resolve().parent.parent.parent / "infra" / "certs" / "pki"
+
+
+@pytest.fixture(autouse=True)
+def _current_event_loop() -> Iterator[None]:
+    """Give each sync test in this module its own current event loop.
+
+    ``grpc.aio.server()`` calls ``asyncio.get_event_loop()`` internally; on
+    Python 3.12 that raises ``RuntimeError: no current event loop`` when none
+    is set — exactly the state pytest-asyncio leaves behind after any
+    preceding async test (it closes its loop and unsets the current one). That
+    made these create_server tests fail only when ordered after an async test
+    (green in isolation, green on the 3.10 CI where get_event_loop still
+    auto-creates). A fresh per-test loop makes them order-independent.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        yield
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
 
 
 def _mint_self_signed(name: str) -> Tuple[bytes, bytes, bytes]:

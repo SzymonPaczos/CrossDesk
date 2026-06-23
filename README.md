@@ -7,14 +7,17 @@ service inside the VM forwards window events to the host, which spawns
 FreeRDP RAIL processes to render each app as its own native window.
 
 ```sh
-crossdesk install            # auto-download Win11 ISO, install, register agent
-crossdesk launch notepad     # Notepad appears as a native Linux window
+crossdesk install --iso-path Win.iso   # install Windows from your ISO, register agent
+crossdesk launch notepad               # Notepad appears as a native Linux window
 ```
 
-**Status:** pre-release. v0.1.0 (Phases 1–5) and v1.0 (Phases 6–9 —
-Manager GUI, KDE/GNOME integrations, app catalog, recovery
-diagnostics) are both complete in code; end-to-end hardware
-verification is pending arrival of a Linux+KVM machine. See
+**Status:** pre-alpha. The core promise is live-verified on Linux+KVM —
+`crossdesk launch notepad` renders Notepad as a native Linux window via
+FreeRDP RAIL, with the in-VM agent online over mTLS. The surrounding
+management layer (production NT-service agent, persistent file sharing,
+app discovery, packaging) is in progress and not yet hardware-verified
+end-to-end. Bring your own Windows ISO (`--iso-path`); auto-download is
+not implemented. See
 [ROADMAP.md](ROADMAP.md) for phase definitions,
 [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) for the v0.1.0
 week-by-week, and [docs/GUI_PLAN.md](docs/GUI_PLAN.md) for v1.0

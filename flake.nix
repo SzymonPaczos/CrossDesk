@@ -26,6 +26,15 @@
             cryptography
             structlog
             hdrhistogram
+            # Runtime deps that were missing — without them the Nix build
+            # succeeds but the daemon ImportErrors at startup (config uses
+            # pydantic; installer/tools_iso uses pycdlib; observability/otlp
+            # uses opentelemetry). Mirrors host/pyproject.toml dependencies.
+            pydantic
+            pycdlib
+            opentelemetry-api
+            opentelemetry-sdk
+            opentelemetry-exporter-otlp-proto-grpc
           ];
 
           # Hardware-gated tests (libvirt, real FreeRDP) are skipped in

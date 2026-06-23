@@ -1,12 +1,17 @@
 name: CI
 
-# 2026-05-20: push / pull_request triggers REMOVED to stop GitHub
-# Actions billing — owner moved CI/CD to the local machine via the
-# pre-push hook (.githooks/pre-push) and on-demand runner
-# (scripts/local-ci.sh). Both mirror the jobs below. The workflow
-# stays in the repo for traceability and manual one-off runs via the
-# Actions UI ("Run workflow"); it no longer fires automatically.
+# 2026-05-20: push/pull_request triggers were removed to stop GitHub Actions
+# billing; CI/CD moved to the local pre-push hook (.githooks/pre-push) +
+# scripts/local-ci.sh.
+# 2026-06-24: re-enabled on push-to-main + pull_request as the server-side
+# gate for the autonomous loop (.claude/loop-spec.md) while there is no
+# self-hosted Proxmox runner yet. Jobs are already ubuntu-only + single
+# Python, so per-push cost is bounded; the heavy security sweep stays weekly
+# in security.yml. The local pre-push hook still mirrors these gates.
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 # concurrency still useful for the manual-dispatch case (e.g. user

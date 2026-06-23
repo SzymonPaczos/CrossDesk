@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-06-15 19:39:47
+**Last Updated:** 2026-06-23 15:35:08
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in

@@ -11,6 +11,7 @@ daemon does not reload on SIGHUP — restart instead.
 import asyncio
 import os
 import signal
+from typing import Optional
 
 # Configure structured logging FIRST — before importing any module that
 # captures `structlog.get_logger(...)` (or stdlib logging) at import
@@ -32,6 +33,7 @@ try:
 except ImportError:
     systemd_daemon = None
 
+from crossdesk_host.abstractions.libvirt import LibvirtController  # noqa: E402
 from crossdesk_host.display.rail_manager import RailManager  # noqa: E402
 from crossdesk_host.display.rail_supervisor import RailSupervisor  # noqa: E402
 from crossdesk_host.display.window_icon import WindowIconStore  # noqa: E402
@@ -48,6 +50,8 @@ from crossdesk_host.ipc.management import (  # noqa: E402
 )
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
+from crossdesk_host.lifecycle.coordinator import LifecycleCoordinator  # noqa: E402
+from crossdesk_host.lifecycle.dbus_listener import start_listener  # noqa: E402
 from crossdesk_host.lifecycle.notifications import SubprocessNotifier  # noqa: E402
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402
@@ -68,6 +72,28 @@ from crossdesk_host.transport.real import RealTransport  # noqa: E402
 configure_otlp_from_env()
 
 logger = get_logger("host.daemon")
+
+
+def _assert_suspend_protection(
+    libvirt_ctl: LibvirtController, listener_active: bool
+) -> None:
+    """Fail closed: the real libvirt controller must never run without the
+    host-suspend listener wired.
+
+    Without it, a host sleep strands the heartbeat FSMs ticking across the
+    pause; missed pongs escalate to HARD_DESTROY, which on the real
+    controller is ``virsh destroy`` — the VM and everything unsaved in it,
+    gone. The mock controller has nothing to lose, so dev hosts without
+    D-Bus are allowed through (the caller already logged the warning).
+    """
+    if listener_active or isinstance(libvirt_ctl, LibvirtControllerMock):
+        return
+    raise RuntimeError(
+        "refusing to start: real libvirt controller without host-suspend "
+        "protection. A host suspend could escalate the heartbeat FSM to "
+        "virsh destroy and lose the VM. Install crossdesk-host[linux] so the "
+        "PrepareForSleep listener can start."
+    )
 
 
 async def main() -> None:
@@ -145,9 +171,19 @@ async def main() -> None:
         ),
         server,
     )
+    heartbeat_servicer = HeartbeatServiceServicer(
+        auth_validator, libvirt_ctl, notifier=notifier
+    )
     heartbeat_pb2_grpc.add_HeartbeatServiceServicer_to_server(
-        HeartbeatServiceServicer(auth_validator, libvirt_ctl, notifier=notifier),
-        server,
+        heartbeat_servicer, server
+    )
+    # Host suspend/resume protection. On a host sleep the coordinator moves
+    # the heartbeat FSMs into SUSPENDED before the VM pauses (and back after),
+    # so missed pongs across the sleep can't escalate to a false-positive
+    # HARD_DESTROY. fsm_group = the heartbeat servicer: it already owns every
+    # live channel and inherits SUSPENDED onto channels that attach mid-sleep.
+    lifecycle_coordinator = LifecycleCoordinator(
+        libvirt_ctl, notifier=notifier, fsm_group=heartbeat_servicer
     )
     filesystem_pb2_grpc.add_FilesystemServiceServicer_to_server(
         FilesystemServiceServicer(
@@ -182,6 +218,17 @@ async def main() -> None:
     if sock_path.exists():
         os.chmod(sock_path, 0o600)
 
+    # Drive the coordinator from the host's D-Bus PrepareForSleep signal.
+    # Linux-only (needs dbus-next); on a dev host start_listener raises and we
+    # run without protection — _assert_suspend_protection then refuses to
+    # continue if that's paired with the real controller (fail-closed).
+    lifecycle_listener: Optional[asyncio.Task[None]] = None
+    try:
+        lifecycle_listener = await start_listener(lifecycle_coordinator)
+    except RuntimeError as exc:
+        logger.warning("lifecycle_listener_unavailable", error=str(exc))
+    _assert_suspend_protection(libvirt_ctl, lifecycle_listener is not None)
+
     if systemd_daemon is not None:
         systemd_daemon.notify("READY=1")
 
@@ -207,6 +254,8 @@ async def main() -> None:
         await stop_event.wait()
     finally:
         logger.info("daemon_shutting_down")
+        if lifecycle_listener is not None:
+            lifecycle_listener.cancel()
         # Stop FreeRDP children first so the supervisor's monitor tasks see
         # an expected exit, then the gRPC servers.
         await rail_supervisor.shutdown_all()

@@ -29,7 +29,7 @@ coordinator itself only emits a structured log and dispatches.
 from __future__ import annotations
 
 import time
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Protocol
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.lifecycle.error_notifications import (
@@ -66,14 +66,35 @@ prevent the rest of the resume sequence.
 """
 
 
+class Suspendable(Protocol):
+    """Anything the coordinator can move in/out of SUSPENDED in bulk.
+
+    Satisfied by a single :class:`HeartbeatFsm` and by
+    ``HeartbeatServiceServicer`` (whose ``suspend`` / ``resume`` fan the
+    call out to every active per-channel FSM, including channels that
+    attach mid-suspend — it tracks its own ``suspended`` flag for that).
+    Wiring the servicer in as the ``fsm_group`` lets the daemon keep one
+    source of truth for live FSMs instead of mirroring the registry here.
+    """
+
+    def suspend(self) -> None: ...
+
+    def resume(self) -> None: ...
+
+
 class LifecycleCoordinator:
     def __init__(
         self,
         libvirt_ctl: LibvirtController,
         notifier: Optional[Notifier] = None,
+        fsm_group: Optional[Suspendable] = None,
     ) -> None:
         self.libvirt_ctl = libvirt_ctl
         self.notifier = notifier
+        # Optional bulk FSM owner (the heartbeat servicer). Preferred over
+        # register_fsm for the daemon: it already tracks every live channel
+        # and inherits SUSPENDED onto late-attaching ones.
+        self._fsm_group = fsm_group
         self._registered_fsms: List[HeartbeatFsm] = []
         self._hibernation_hooks: List[HibernationHook] = []
         self._suspended = False
@@ -112,6 +133,8 @@ class LifecycleCoordinator:
         logger.info("lifecycle_suspend_begin", fsms=len(self._registered_fsms))
         for fsm in self._registered_fsms:
             fsm.suspend()
+        if self._fsm_group is not None:
+            self._fsm_group.suspend()
         try:
             self.libvirt_ctl.suspend()
         except Exception as exc:
@@ -146,6 +169,8 @@ class LifecycleCoordinator:
             raise
         for fsm in self._registered_fsms:
             fsm.resume()
+        if self._fsm_group is not None:
+            self._fsm_group.resume()
         self._suspended = False
         # Snapshot before clearing so the hook dispatch below sees the
         # same values that drove the detection.

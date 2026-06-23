@@ -150,9 +150,15 @@ def test_libvirt_logs_from_file(
 ) -> None:
     """Reads libvirt plain-text log with leading timestamp prefix."""
     log_file = tmp_path / "crossdesk-vm.log"
+    # Stamp the lines relative to now: a hardcoded calendar date silently
+    # drops out of the relative --since window once the wall clock passes it
+    # (a fixed 2026-05-10 + `--since 1000h` started failing ~2026-06-21).
+    recent = (datetime.now(timezone.utc) - timedelta(hours=1)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
     log_file.write_text(
-        "2026-05-10 12:34:56.123+0000: VM crossdesk-vm started\n"
-        "2026-05-10 12:34:57.456+0000: NBD disk attached\n",
+        f"{recent}.123+0000: VM crossdesk-vm started\n"
+        f"{recent}.456+0000: NBD disk attached\n",
         encoding="utf-8",
     )
 
@@ -161,7 +167,7 @@ def test_libvirt_logs_from_file(
         lambda: log_file,
     )
 
-    # Use a cutoff that includes both lines (well before 2026-05-10 12:34).
+    # A 1000h window trivially includes lines stamped an hour ago.
     rc = main(["logs", "--component", "libvirt", "--since", "1000h"])
     out = capsys.readouterr().out
     assert rc == 0

@@ -21,7 +21,7 @@ from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import DEFAULT_CHECKS, Status
 from crossdesk_host.i18n import _
-from crossdesk_host.installer import credentials, state, tools_iso
+from crossdesk_host.installer import credentials, pki, state, tools_iso
 from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
 
 # Domain name the daemon's LibvirtController also defaults to, so the
@@ -141,33 +141,39 @@ def _resolve_tools_inputs() -> tuple[Path, Path, Path]:
     return agent, ca, autounattend
 
 
-def _resolve_mtls_pki() -> Optional[tuple[Path, Path, Path]]:
-    """Locate the guest mTLS PKI trio (``ca.crt`` / ``guest.crt`` /
-    ``guest.key``) the tools ISO ships to ``C:\\CrossDesk\\pki\\``.
+def _install_pki_dir() -> Path:
+    """Per-install mTLS PKI home: ``$CROSSDESK_PKI_DIR`` or
+    ``~/.config/crossdesk/pki``."""
+    env = os.environ.get("CROSSDESK_PKI_DIR")
+    return Path(env) if env else Path.home() / ".config" / "crossdesk" / "pki"
 
-    Resolution: ``CROSSDESK_MTLS_PKI_DIR`` env override, else the in-repo
-    ``infra/certs/pki`` produced by ``infra/certs/generate_mtls.sh``.
-    Returns ``None`` (with a printed warning) when the material is absent —
-    Windows still installs, but the agent cannot open its mutually-
-    authenticated channel until PKI is provisioned. All three must be
-    present; a partial set is treated as absent.
+
+def _resolve_mtls_pki() -> tuple[Path, Path, Path]:
+    """Return the guest mTLS trio (``ca.crt`` / ``guest.crt`` / ``guest.key``)
+    the tools ISO ships to ``C:\\CrossDesk\\pki\\``.
+
+    Prefers a pre-provisioned dir (``CROSSDESK_MTLS_PKI_DIR`` env override, or
+    the in-repo dev ``infra/certs/pki`` from ``generate_mtls.sh``). When
+    absent, mints a **unique per-install** PKI — its own CA + host + guest
+    leaf — under :func:`_install_pki_dir`, so this install never shares a CA
+    or identity with any other and a leaked ``guest.key`` can't impersonate
+    the guest on a different machine. Generated once; reused on re-runs.
     """
-    pki_dir = Path(
+    provisioned = Path(
         os.environ.get("CROSSDESK_MTLS_PKI_DIR", _repo_root() / "infra/certs/pki")
     )
-    ca = pki_dir / "ca.crt"
-    cert = pki_dir / "guest.crt"
-    key = pki_dir / "guest.key"
+    ca = provisioned / "ca.crt"
+    cert = provisioned / "guest.crt"
+    key = provisioned / "guest.key"
     if ca.is_file() and cert.is_file() and key.is_file():
         return ca, cert, key
+    minted = pki.ensure_install_pki(_install_pki_dir())
     print(
-        _(
-            "    note: guest mTLS PKI not found under {dir} — the agent will "
-            "not connect until it is provisioned (run infra/certs/"
-            "generate_mtls.sh or set CROSSDESK_MTLS_PKI_DIR)"
-        ).format(dir=pki_dir)
+        _("    minted a unique per-install mTLS PKI under {dir}").format(
+            dir=_install_pki_dir()
+        )
     )
-    return None
+    return minted.ca_cert, minted.guest_cert, minted.guest_key
 
 
 def _prepare_autounattend(src: Path, locale: str, password: str, dest_dir: Path) -> Path:
@@ -199,8 +205,7 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     password = creds.password if creds is not None else ""
     autounattend = _prepare_autounattend(autounattend, locale, password, state_dir)
     output = state_dir / "tools.iso"
-    mtls = _resolve_mtls_pki()
-    mtls_ca, mtls_cert, mtls_key = mtls if mtls is not None else (None, None, None)
+    mtls_ca, mtls_cert, mtls_key = _resolve_mtls_pki()
     try:
         tools_iso.build_tools_iso(
             agent_exe=agent,

@@ -287,3 +287,73 @@ def test_resume_without_prior_suspend_does_not_consult_clock(
     assert events == []
     assert libvirt.hooks.resume_count == 0
 
+
+class _OrderRecorder:
+    def __init__(self) -> None:
+        self.order: List[str] = []
+
+
+class _FsmGroupSpy:
+    """Stands in for the heartbeat servicer's bulk suspend/resume."""
+
+    def __init__(self, rec: _OrderRecorder) -> None:
+        self._rec = rec
+        self.suspend_count = 0
+        self.resume_count = 0
+
+    def suspend(self) -> None:
+        self.suspend_count += 1
+        self._rec.order.append("fsm_group.suspend")
+
+    def resume(self) -> None:
+        self.resume_count += 1
+        self._rec.order.append("fsm_group.resume")
+
+
+class _LibvirtSpy(LibvirtControllerMock):
+    def __init__(self, rec: _OrderRecorder) -> None:
+        super().__init__()
+        self._rec = rec
+
+    def suspend(self) -> None:
+        super().suspend()
+        self._rec.order.append("libvirt.suspend")
+
+    def resume(self) -> None:
+        super().resume()
+        self._rec.order.append("libvirt.resume")
+
+
+def test_fsm_group_suspended_before_libvirt() -> None:
+    rec = _OrderRecorder()
+    group = _FsmGroupSpy(rec)
+    coordinator = LifecycleCoordinator(_LibvirtSpy(rec), fsm_group=group)
+    coordinator.on_prepare_for_sleep()
+    assert group.suspend_count == 1
+    # FSMs must be SUSPENDED before the VM pauses, else missed pongs across
+    # the pause escalate to a false-positive HARD_DESTROY.
+    assert rec.order == ["fsm_group.suspend", "libvirt.suspend"]
+
+
+def test_fsm_group_resumed_after_libvirt() -> None:
+    rec = _OrderRecorder()
+    group = _FsmGroupSpy(rec)
+    coordinator = LifecycleCoordinator(_LibvirtSpy(rec), fsm_group=group)
+    coordinator.on_prepare_for_sleep()
+    rec.order.clear()
+    coordinator.on_resumed()
+    assert group.resume_count == 1
+    # Guest must be running again before FSMs leave SUSPENDED into PROBING.
+    assert rec.order == ["libvirt.resume", "fsm_group.resume"]
+
+
+def test_fsm_group_and_registered_fsm_both_fire() -> None:
+    rec = _OrderRecorder()
+    group = _FsmGroupSpy(rec)
+    fsm = HeartbeatFsm()
+    coordinator = LifecycleCoordinator(_LibvirtSpy(rec), fsm_group=group)
+    coordinator.register_fsm(fsm)
+    coordinator.on_prepare_for_sleep()
+    assert fsm.state == State.SUSPENDED
+    assert group.suspend_count == 1
+

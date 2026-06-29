@@ -66,8 +66,10 @@ queue item ⏸, and move on. Boundary files (draft-and-park, never edit):
 
 ## Toggles (owner sets these)
 
-- **PUSH:** `OFF` — loop merges to local `main` only; owner pushes.
-- **ENV:** `mac-hardware-free` — set to `proxmox-box` when running there.
+- **PUSH:** `ON` — owner present on the live box (2026-06-29); loop pushes its
+  own merges to `origin/main` after green gates.
+- **ENV:** `box` — running on the live Linux+KVM box (TUF FX505DT; `windows-guest`
+  VM live). Both 🟢 and 🔵 items are in play.
 
 ## Work queue (v0.1.0)
 

@@ -78,6 +78,8 @@ branch names and the user merges by hand later.
 
 ## Active
 
+- [2026-06-29 11:55] START · agent: claude-code · branch: (loop) · task: v010-autonomous-loop · note: Owner-supervised autonomous loop on the live KVM box (windows-guest VM live; [HW] gating lifted). Per `.claude/loop-spec.md` (PUSH=ON, ENV=box): work queue 🟢→🔵 toward v0.1.0. Owner decisions captured this session: FS Stage-B default = WHOLE $HOME R/W (reverses DEC-META-005); semver 0.1.0-alpha; MVP_SCOPE #3 + THREAT_MODEL alignment = draft-to-sign-off. Per-item record in loop-spec.md "Loop log"; boundary edits parked in needs-owner.md.
+
 ## Recent
 
 - [2026-06-12 14:00] START · agent: claude-code · branch: feat/fs-drive-letter · task: fs-stage-a-drive-letter · note: Stage A of the owner-decided A→B filesystem direction (handoff.md §2.7). Branch from feat/usability-shared-fs (stacked; krok 0 wariant b — owner hasn't said merge). Host: drive-letter config + workdir UNC→Z:\ + guest logon drive-map script generator. Then live-verify the guest mechanism on the running Win10 VM.

@@ -60,7 +60,10 @@ def test_defaults_all_safe() -> None:
 
 def test_shared_folder_emits_drive_flag_when_enabled() -> None:
     cfg = PeripheralsConfig(
-        shared_folder_enabled=True, shared_folder_path="/tmp/cd-share", clipboard_mode="off"
+        shared_folder_enabled=True,
+        shared_folder_scope="custom",
+        shared_folder_path="/tmp/cd-share",
+        clipboard_mode="off",
     )
     flags = cfg.to_freerdp_flags()
     assert "/drive:CrossDesk,/tmp/cd-share" in flags
@@ -70,7 +73,11 @@ def test_shared_folder_emits_drive_flag_when_enabled() -> None:
 def test_shared_folder_expands_tilde() -> None:
     import os
 
-    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_path="~/CrossDesk")
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True,
+        shared_folder_scope="custom",
+        shared_folder_path="~/CrossDesk",
+    )
     expected = os.path.expanduser("~/CrossDesk")
     assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
     assert cfg.shared_folder_host_path() == expected
@@ -79,10 +86,44 @@ def test_shared_folder_expands_tilde() -> None:
 def test_shared_folder_custom_name() -> None:
     cfg = PeripheralsConfig(
         shared_folder_enabled=True,
+        shared_folder_scope="custom",
         shared_folder_path="/tmp/x",
         shared_folder_name="Linux_Home",
     )
     assert "/drive:Linux_Home,/tmp/x" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_scope_home_is_default() -> None:
+    import os
+
+    cfg = PeripheralsConfig(shared_folder_enabled=True)
+    assert cfg.shared_folder_scope == "home"
+    home = os.path.expanduser("~")
+    assert cfg.shared_folder_resolved_path() == home
+    assert f"/drive:CrossDesk,{home}" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_scope_documents() -> None:
+    import os
+
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_scope="documents")
+    expected = os.path.join(os.path.expanduser("~"), "Documents")
+    assert cfg.shared_folder_resolved_path() == expected
+    assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_scope_custom_ignores_home() -> None:
+    cfg = PeripheralsConfig(
+        shared_folder_enabled=True,
+        shared_folder_scope="custom",
+        shared_folder_path="/tmp/cd-x",
+    )
+    assert cfg.shared_folder_resolved_path() == "/tmp/cd-x"
+
+
+def test_shared_folder_scope_rejects_invalid() -> None:
+    with pytest.raises(ValidationError):
+        PeripheralsConfig(shared_folder_enabled=True, shared_folder_scope="bogus")
 
 
 def test_shared_folder_name_rejects_path_separators() -> None:
@@ -93,11 +134,16 @@ def test_shared_folder_name_rejects_path_separators() -> None:
 
 
 def test_shared_folder_empty_path_rejected_when_enabled() -> None:
-    # An empty path while enabled would expand to "" → malformed /drive:<name>,
-    # and Path("").mkdir silently resolves to CWD, defeating the launcher gate.
+    # An empty custom path while enabled would expand to "" → malformed
+    # /drive:<name>, and Path("").mkdir silently resolves to CWD, defeating
+    # the launcher gate. Only the "custom" scope reads shared_folder_path.
     for bad in ("", "   "):
         with pytest.raises(ValidationError, match="shared_folder_path"):
-            PeripheralsConfig(shared_folder_enabled=True, shared_folder_path=bad)
+            PeripheralsConfig(
+                shared_folder_enabled=True,
+                shared_folder_scope="custom",
+                shared_folder_path=bad,
+            )
 
 
 def test_shared_folder_empty_path_allowed_when_disabled() -> None:

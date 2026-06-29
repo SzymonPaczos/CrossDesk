@@ -156,29 +156,45 @@ class PeripheralsConfig(BaseModel):
     # --- Shared folder -------------------------------------------------------
 
     shared_folder_enabled: bool = False
-    """Expose ONE host directory to the guest as a redirected drive
+    """Expose a host directory to the guest as a redirected drive
     (``\\\\tsclient\\<shared_folder_name>``) so a Windows app can open and
-    save files the user can reach from Linux, and so the user can drop an
+    save files the user reaches from Linux, and so the user can drop an
     installer into it and run it inside the guest.
 
-    OPT-IN and scoped to a single directory — NOT the whole home — by
-    design.  The endgame is JIT VirtioFS (see ``filesystem.proto``), which
-    never exposes a directory the user did not explicitly open; this is the
-    pragmatic interim until that lands.  Off by default to keep the
-    no-static-broad-mount posture (the static ``\\\\tsclient\\home`` mount
-    is rejected in ``docs/COMPARISON_WINAPPS.md`` §7 / DEC-META-005); the
-    scoped, user-chosen folder here is explicit consent, not an automatic
-    mount of the user's data."""
+    OPT-IN (OFF by default).  :attr:`shared_folder_scope` chooses *what* is
+    exposed once enabled; the owner-confirmed default (2026-06-29) is the whole
+    ``$HOME`` R/W for maximum usefulness — a deliberate widening from the
+    earlier single-scoped-folder stance (which rejected the static
+    ``\\\\tsclient\\home`` mount in ``docs/COMPARISON_WINAPPS.md`` §7 /
+    DEC-META-005).
+
+    SECURITY: the ``home`` scope gives the Windows guest R/W to *everything*
+    under ``$HOME`` — including ``~/.ssh`` and ``~/.config/crossdesk`` (the
+    host mTLS private key and the VM password). A compromised Windows app
+    could read or overwrite them. This is the owner's accepted trade-off for
+    the default; set ``shared_folder_scope = "documents"`` (or ``custom``) to
+    keep those out of the guest. The matching ``docs/THREAT_MODEL.md`` /
+    DECISIONS rows are drafted for owner sign-off (``.claude/needs-owner.md``)."""
+
+    shared_folder_scope: Literal["home", "documents", "custom"] = "home"
+    """What the shared folder exposes once :attr:`shared_folder_enabled`:
+
+    - ``home`` (default) — the whole ``$HOME`` R/W.  The Windows app's
+      Open/Save dialog reaches anything the user has, no hunting for a
+      special folder.  Owner-confirmed default (2026-06-29). Exposes secrets
+      under ``$HOME`` to the guest — see :attr:`shared_folder_enabled`.
+    - ``documents`` — only ``~/Documents`` R/W (covers the common
+      open-here / save-here path without exposing the rest of ``$HOME``).
+    - ``custom`` — the explicit :attr:`shared_folder_path` directory."""
 
     shared_folder_path: str = "~/CrossDesk-Shared"
-    """Host directory shared when ``shared_folder_enabled``.  Tilde- and
-    env-expanded; created on demand by the launcher.
+    """Host directory shared when :attr:`shared_folder_scope` = ``custom``.
+    Tilde- and env-expanded; created on demand by the launcher.  Ignored for
+    the ``home`` / ``documents`` scopes.
 
-    NOT ``~/CrossDesk`` on purpose: on a dev checkout that path is the git
-    repository root, and exposing the source tree (read-write) to the guest
-    would be both a footgun and a security hole.  A dedicated
-    ``~/CrossDesk-Shared`` keeps the shared workspace separate from anything
-    the user didn't mean to share."""
+    Defaults to ``~/CrossDesk-Shared`` — NOT ``~/CrossDesk``: on a dev
+    checkout that path is the git repository root, and exposing the source
+    tree read-write to the guest would be a footgun."""
 
     shared_folder_name: str = "CrossDesk"
     """Redirect name — the guest sees the share as
@@ -262,14 +278,21 @@ class PeripheralsConfig(BaseModel):
             raise ValueError(
                 'printer_name must be non-empty when printer_mode = "named"'
             )
-        # Same cross-field shape for the shared folder: an empty/whitespace
-        # path while the redirect is enabled is a footgun — it expands to ""
-        # (so ``to_freerdp_flags`` emits a malformed ``/drive:<name>,`` with no
-        # host path) and ``Path("").mkdir`` silently resolves to the daemon's
-        # CWD, defeating the launcher's "only mount a real directory" guard.
-        if self.shared_folder_enabled and not self.shared_folder_path.strip():
+        # Same cross-field shape for the shared folder, but only for the
+        # ``custom`` scope: an empty/whitespace path there is a footgun — it
+        # expands to "" (so ``to_freerdp_flags`` emits a malformed
+        # ``/drive:<name>,`` with no host path) and ``Path("").mkdir`` silently
+        # resolves to the daemon's CWD, defeating the launcher's "only mount a
+        # real directory" guard. The ``home``/``documents`` scopes derive the
+        # path from ``$HOME`` and ignore ``shared_folder_path`` entirely.
+        if (
+            self.shared_folder_enabled
+            and self.shared_folder_scope == "custom"
+            and not self.shared_folder_path.strip()
+        ):
             raise ValueError(
-                "shared_folder_path must be non-empty when shared_folder_enabled = true"
+                "shared_folder_path must be non-empty when shared_folder_enabled "
+                'and shared_folder_scope = "custom"'
             )
 
     # --- FreeRDP flag mapping ------------------------------------------------
@@ -331,22 +354,38 @@ class PeripheralsConfig(BaseModel):
         for device in self.usb_devices:
             flags.append(f"/usb:id:{device}")
 
-        # Shared folder (scoped, opt-in host directory redirect). FreeRDP
-        # auto-enables the rdpdr channel; the guest sees it as
-        # \\tsclient\<name>. The host path is tilde/env-expanded so a config
-        # of "~/CrossDesk" resolves per-user.
+        # Shared folder (opt-in host directory redirect). FreeRDP auto-enables
+        # the rdpdr channel; the guest sees it as \\tsclient\<name>. The host
+        # path is resolved from the exposure scope (default: whole $HOME).
         if self.shared_folder_enabled:
-            host_path = os.path.expanduser(os.path.expandvars(self.shared_folder_path))
-            flags.append(f"/drive:{self.shared_folder_name},{host_path}")
+            flags.append(
+                f"/drive:{self.shared_folder_name},{self.shared_folder_resolved_path()}"
+            )
 
         return flags
 
-    def shared_folder_host_path(self) -> str:
-        """The expanded host directory for the shared folder (for the
-        launcher to create on demand). Empty string when disabled."""
+    def shared_folder_resolved_path(self) -> str:
+        """The expanded host directory the share exposes, per
+        :attr:`shared_folder_scope`. Empty string when the share is off.
+
+        - ``home`` → ``$HOME``; ``documents`` → ``$HOME/Documents``;
+          ``custom`` → the tilde/env-expanded :attr:`shared_folder_path`.
+        """
         if not self.shared_folder_enabled:
             return ""
+        if self.shared_folder_scope == "home":
+            return os.path.expanduser("~")
+        if self.shared_folder_scope == "documents":
+            return os.path.join(os.path.expanduser("~"), "Documents")
         return os.path.expanduser(os.path.expandvars(self.shared_folder_path))
+
+    def shared_folder_host_path(self) -> str:
+        """The expanded host directory for the shared folder (for the
+        launcher to create on demand). Empty string when disabled.
+
+        Alias of :meth:`shared_folder_resolved_path` kept as the launcher's
+        existing call site."""
+        return self.shared_folder_resolved_path()
 
     def shared_folder_drive_path(self) -> str:
         """Guest-side working directory for a launched RemoteApp: the root

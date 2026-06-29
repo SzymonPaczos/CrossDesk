@@ -326,6 +326,22 @@ class DaemonConfig(BaseModel):
         return tuple(sorted(v))
 
 
+class ObservabilityConfig(BaseModel):
+    """Logging / telemetry policy. Every form of off-machine transmission
+    is opt-in and OFF by default — CrossDesk ships no telemetry backend.
+    """
+
+    model_config = _FROZEN_MODEL_CONFIG
+
+    crash_report_enabled: bool = False
+    """When True, an unhandled exception in the CLI or daemon writes a
+    redacted, self-contained crash-report file under
+    ``paths.state_dir/crash-reports/`` that the user can attach to a bug
+    report. Default OFF: the user still gets a friendly, actionable error
+    message and (for the daemon) a structured log line, but no separate
+    report file is generated and nothing ever leaves the machine."""
+
+
 class CrossdeskConfig(BaseModel):
     """Top-level config aggregate. Every sub-model has defaults so an
     empty TOML file (or a missing one) still produces a valid instance.
@@ -338,6 +354,7 @@ class CrossdeskConfig(BaseModel):
     heartbeat: HeartbeatConfig = Field(default_factory=HeartbeatConfig)
     peripherals: PeripheralsConfig = Field(default_factory=PeripheralsConfig)
     daemon: DaemonConfig = Field(default_factory=DaemonConfig)
+    observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
 
 
 def default_config_path() -> Path:

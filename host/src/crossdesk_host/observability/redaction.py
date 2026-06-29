@@ -170,3 +170,24 @@ def redaction_processor(
         event_dict["redaction_drop_count"] = len(violations)
 
     return event_dict
+
+
+def mask_sensitive(text: str) -> str:
+    """Mask any line of ``text`` containing a forbidden substring
+    (passwords, tokens, secrets).
+
+    Used by the crash reporter to scrub a formatted traceback before
+    writing it to a shareable report file. Reuses the same pattern set
+    the log processor enforces so "sensitive" has a single definition.
+    Over-redacts by design — a whole line on any match — because a crash
+    report leaves the machine only if the user attaches it, and a masked
+    stack frame beats a leaked secret.
+    """
+    masked: list[str] = []
+    for line in text.splitlines(keepends=True):
+        if any(pat.search(line) for pat in _FORBIDDEN_PATTERNS):
+            newline = "\n" if line.endswith("\n") else ""
+            masked.append("<redacted: sensitive content>" + newline)
+        else:
+            masked.append(line)
+    return "".join(masked)

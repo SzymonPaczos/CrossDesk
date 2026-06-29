@@ -356,6 +356,16 @@ def run(args: argparse.Namespace) -> int:
     if args.dry_run:
         print(_("dry-run mode: no libvirt or network calls"))
 
+    if s.last_error:
+        print(_("  last attempt stopped: {err}").format(err=s.last_error))
+
+    # Pre-flight re-validation: when there's still install work to resume,
+    # re-run `doctor` even if it passed before, so an environment regression
+    # since the last attempt (libvirt removed, /dev/kvm perms changed) is
+    # caught before we touch hardware. A fully-completed install stays a no-op.
+    if not args.dry_run and s.is_done("doctor") and s.first_unfinished() is not None:
+        s.mark("doctor", "pending")
+
     if s.first_unfinished() is None:
         print(_("all steps already done; nothing to do"))
         return 0
@@ -377,12 +387,15 @@ def run(args: argparse.Namespace) -> int:
                     step=step
                 )
             )
-            s.mark(step, "pending")
+            s.record_failure(
+                step,
+                _("{step}: hardware-gated (needs a booted Windows VM)").format(step=step),
+            )
             state.save(s, state_path)
             return 1
         except _StepFailed as exc:
             print(_("    {step}: {err}").format(step=step, err=exc))
-            s.mark(step, "pending")
+            s.record_failure(step, _("{step}: {err}").format(step=step, err=exc))
             state.save(s, state_path)
             return 1
         s.mark(step, "done")

@@ -156,3 +156,108 @@ def test_build_tools_iso_fails_when_agent_missing(
     s = state.load(_state_in_tmp)
     assert s.is_done("generate_credentials")
     assert not s.is_done("build_tools_iso")
+
+
+# ---------------------------------------------------------------------------
+# last_error population + doctor re-check on resume (A7 install idempotency)
+# ---------------------------------------------------------------------------
+
+
+def test_step_failure_records_last_error(
+    monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path
+) -> None:
+    # doctor fails → the stop reason is persisted to last_error (was lost).
+    monkeypatch.setattr(
+        install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.FAIL, "no /dev/kvm")]
+    )
+    monkeypatch.setattr(install_cmd, "has_failures", lambda results: True)
+
+    assert install_cmd.run(_args()) == 1
+    s = state.load(_state_in_tmp)
+    assert s.last_error is not None
+    assert "doctor" in s.last_error
+
+
+def test_hardware_gated_step_records_last_error(
+    monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path
+) -> None:
+    _ok_doctor(monkeypatch)
+    # No --iso-path → download_iso is hardware-gated; the reason is recorded.
+    assert install_cmd.run(_args(iso_path=None)) == 1
+    s = state.load(_state_in_tmp)
+    assert s.last_error is not None
+    assert "download_iso" in s.last_error
+    assert "hardware-gated" in s.last_error
+
+
+def test_last_error_cleared_on_success(
+    monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path
+) -> None:
+    # A failed run sets last_error; a later run that completes the step clears it.
+    monkeypatch.setattr(
+        install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.FAIL)]
+    )
+    monkeypatch.setattr(install_cmd, "has_failures", lambda results: True)
+    assert install_cmd.run(_args()) == 1
+    assert state.load(_state_in_tmp).last_error is not None
+
+    # dry-run marks every step done → mark('done') clears last_error.
+    assert install_cmd.run(_args(dry_run=True)) == 0
+    assert state.load(_state_in_tmp).last_error is None
+
+
+def test_last_error_surfaced_on_resume(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], _state_in_tmp: Path
+) -> None:
+    s = state.InstallState()
+    install_cmd._ensure_steps(s)
+    s.last_error = "download_iso: boom from a prior run"
+    state.save(s, _state_in_tmp)
+    _ok_doctor(monkeypatch)
+
+    install_cmd.run(_args(iso_path=None))
+    out = capsys.readouterr().out
+    assert "last attempt stopped" in out
+    assert "download_iso: boom from a prior run" in out
+
+
+def test_doctor_rechecked_on_resume_catches_regression(
+    monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path
+) -> None:
+    # A prior run got past doctor; the environment then regressed. On resume,
+    # doctor must re-run (not be skipped as 'done') and catch it.
+    s = state.InstallState()
+    install_cmd._ensure_steps(s)
+    s.mark("doctor", "done")
+    state.save(s, _state_in_tmp)
+
+    monkeypatch.setattr(
+        install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.FAIL, "no /dev/kvm")]
+    )
+    monkeypatch.setattr(install_cmd, "has_failures", lambda results: True)
+
+    assert install_cmd.run(_args()) == 1
+    s2 = state.load(_state_in_tmp)
+    assert not s2.is_done("doctor")  # reset to pending + re-run, which failed
+    assert s2.last_error is not None and "doctor" in s2.last_error
+
+
+def test_completed_install_does_not_recheck_doctor(
+    monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path
+) -> None:
+    # A fully-done install stays a no-op: no doctor re-run, no work.
+    s = state.InstallState()
+    install_cmd._ensure_steps(s)
+    for step in install_cmd._STEPS:
+        s.mark(step, "done")
+    state.save(s, _state_in_tmp)
+
+    called = {"doctor": False}
+
+    def _boom(checks: object) -> list[CheckResult]:
+        called["doctor"] = True
+        return [CheckResult("kvm", Status.FAIL)]
+
+    monkeypatch.setattr(install_cmd, "run_all", _boom)
+    assert install_cmd.run(_args()) == 0
+    assert called["doctor"] is False  # doctor was not re-run

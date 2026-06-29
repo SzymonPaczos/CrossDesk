@@ -56,6 +56,18 @@ class InstallState:
         if status == "done":
             self.last_error = None
 
+    def record_failure(self, step: str, error: str) -> None:
+        """Leave *step* ``pending`` (so the next run retries it) and stash
+        *error* as the human-readable cause.
+
+        Why ``pending`` rather than ``failed``: the install loop resumes from
+        the first non-``done`` step, so ``pending`` is what makes a re-run pick
+        the step back up. ``last_error`` carries *why* it stopped, surfaced on
+        the next run and inspectable in ``install.state.json`` — without it a
+        failed install records only that a step is unfinished, not the reason."""
+        self.steps[step] = "pending"
+        self.last_error = error
+
     def is_done(self, step: str) -> bool:
         return self.steps.get(step) == "done"
 

@@ -84,9 +84,11 @@ Priority top-to-bottom within each tier.
    "bring your own ISO via `--iso-path`"; fix the status banner. (README is
    not a boundary file. The matching `REQUIREMENTS.md` F-marker re-baseline
    is 🟠 — park it.)
-3. **B — diagnostics/logging.** Opt-in telemetry/crash-report path
+3. ✅ **B — diagnostics/logging.** Opt-in telemetry/crash-report path
    (host-side, default OFF); turn install/CLI failures into actionable
-   recovery messages instead of raw tracebacks.
+   recovery messages instead of raw tracebacks. *(2026-06-29: CLI
+   last-resort handler + redacted opt-in crash report; i18n .pot regen
+   deferred — gettext absent on box.)*
 4. **A5-host — FS Stage B host-side.** `<filesystem driver='virtiofs'>` +
    memfd shared-memory in `infra/launch-vm.py`; extend the User Shell
    Folders redirect generator; typed config for exposure scope (Documents
@@ -129,3 +131,5 @@ UX · guest BSOD / failure UX.
 ## Loop log
 
 (append one line per merged item: `[iso-ts] <sha> <topic> — <result>`)
+
+- [2026-06-29 12:45] 244b12b B diagnostics — CLI friendly last-resort errors + opt-in crash reports; 937 host tests green, 3-lens review clean; i18n .pot regen pending gettext on box.

@@ -106,38 +106,71 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[4]
 
 
+def _packaged_data_dir() -> Path:
+    """System data dir where distro packages place the tools-ISO inputs
+    (``agent.exe`` + publisher CA + autounattend) — ``/usr/share/crossdesk``
+    per ``docs/PACKAGING.md``. Overridable via ``CROSSDESK_DATA_DIR`` for
+    relocatable installs and tests."""
+    return Path(os.environ.get("CROSSDESK_DATA_DIR", "/usr/share/crossdesk"))
+
+
+def _resolve_input(env_var: str, repo_path: Path, packaged_name: str) -> Optional[Path]:
+    """Resolve one tools-ISO input by precedence:
+
+    1. ``$env_var`` — when set, the *only* candidate (an explicit pin that
+       doesn't exist is an error, not a silent fallthrough).
+    2. the in-repo dev build/layout path.
+    3. the packaged ``/usr/share/crossdesk/<packaged_name>`` so deb/rpm/AUR/
+       Nix installs find inputs the package placed there.
+
+    Returns the first existing path, or ``None`` if none exist.
+    """
+    override = os.environ.get(env_var)
+    candidates = (
+        [Path(override)]
+        if override
+        else [repo_path, _packaged_data_dir() / packaged_name]
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def _resolve_tools_inputs() -> tuple[Path, Path, Path]:
-    """Locate the three tools-ISO inputs via env overrides, falling back to
-    the in-repo dev layout. Raises :class:`_StepFailed` naming the first
-    missing input plus how to produce it."""
+    """Locate the three tools-ISO inputs via env override → in-repo dev path
+    → packaged ``/usr/share/crossdesk``. Raises :class:`_StepFailed` naming
+    the missing input plus how to produce it."""
     root = _repo_root()
-    agent = Path(
-        os.environ.get(
-            "CROSSDESK_AGENT_EXE",
-            root / "guest/target/x86_64-pc-windows-gnu/release/agent.exe",
-        )
+    pkg = _packaged_data_dir()
+    agent = _resolve_input(
+        "CROSSDESK_AGENT_EXE",
+        root / "guest/target/x86_64-pc-windows-gnu/release/agent.exe",
+        "agent.exe",
     )
-    ca = Path(
-        os.environ.get(
-            "CROSSDESK_PUBLISHER_CA",
-            root / "infra/code-signing/pki/publisher-root-ca.crt",
-        )
-    )
-    autounattend = Path(
-        os.environ.get("CROSSDESK_AUTOUNATTEND", root / "infra/autounattend.xml")
-    )
-    if not agent.is_file():
+    if agent is None:
         raise _StepFailed(
             _(
-                "agent.exe not found at {p} — build it "
-                "(`cd guest && cargo build --release "
-                "--target x86_64-pc-windows-gnu`) or set CROSSDESK_AGENT_EXE"
-            ).format(p=agent)
+                "agent.exe not found (looked in $CROSSDESK_AGENT_EXE, the in-repo "
+                "build dir, and {pkg}) — build it (`cd guest && cargo build "
+                "--release --target x86_64-pc-windows-gnu`), install the crossdesk "
+                "package, or set CROSSDESK_AGENT_EXE"
+            ).format(pkg=pkg)
         )
-    if not ca.is_file():
-        raise _StepFailed(_("publisher CA not found at {p}").format(p=ca))
-    if not autounattend.is_file():
-        raise _StepFailed(_("autounattend.xml not found at {p}").format(p=autounattend))
+    ca = _resolve_input(
+        "CROSSDESK_PUBLISHER_CA",
+        root / "infra/code-signing/pki/publisher-root-ca.crt",
+        "publisher-root-ca.crt",
+    )
+    if ca is None:
+        raise _StepFailed(_("publisher CA not found (in-repo or {pkg})").format(pkg=pkg))
+    autounattend = _resolve_input(
+        "CROSSDESK_AUTOUNATTEND", root / "infra/autounattend.xml", "autounattend.xml"
+    )
+    if autounattend is None:
+        raise _StepFailed(
+            _("autounattend.xml not found (in-repo or {pkg})").format(pkg=pkg)
+        )
     return agent, ca, autounattend
 
 

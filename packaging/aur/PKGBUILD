@@ -25,6 +25,10 @@ makedepends=(
   'python-installer'
   'python-hatchling'
   'rust>=1.74'
+  # Cross-compile the Windows guest agent (agent.exe). rustup provides the
+  # x86_64-pc-windows-gnu std; mingw-w64-gcc is the linker for that target.
+  'rustup'
+  'mingw-w64-gcc'
 )
 source=("$pkgname-$pkgver.tar.gz::https://github.com/SzymonPaczos/CrossDesk/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP')
@@ -32,6 +36,15 @@ sha256sums=('SKIP')
 build() {
   cd "CrossDesk-$pkgver/host"
   python -m build --wheel --no-isolation
+
+  # Cross-compile the Windows guest agent so the package can ship it at
+  # /usr/share/crossdesk/agent.exe — where `crossdesk install` looks
+  # (cli/install_cmd.py::_resolve_input packaged fallback). The signed
+  # release artifact from CI is the production source; building from source
+  # here keeps the AUR package self-contained.
+  cd ../guest
+  rustup target add x86_64-pc-windows-gnu
+  cargo build --release --target x86_64-pc-windows-gnu -p agent-svc
 }
 
 package() {
@@ -43,4 +56,14 @@ package() {
   install -Dm644 infra/desktop/crossdesk-ms-office-protocol-handler.desktop \
     "$pkgdir/usr/share/applications/crossdesk-ms-office-protocol-handler.desktop"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Tools-ISO inputs `crossdesk install` resolves from /usr/share/crossdesk
+  # (see cli/install_cmd.py::_packaged_data_dir). agent.exe is guest data
+  # (never executed on the host), so 0644.
+  install -Dm644 guest/target/x86_64-pc-windows-gnu/release/agent.exe \
+    "$pkgdir/usr/share/crossdesk/agent.exe"
+  install -Dm644 infra/code-signing/pki/publisher-root-ca.crt \
+    "$pkgdir/usr/share/crossdesk/publisher-root-ca.crt"
+  install -Dm644 infra/autounattend.xml \
+    "$pkgdir/usr/share/crossdesk/autounattend.xml"
 }

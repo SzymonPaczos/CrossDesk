@@ -99,11 +99,15 @@ Priority top-to-bottom within each tier.
    half-created libvirt domain on failure; wire `doctor` pre-flight. Real
    install execution is 🔵. *(2026-06-29: persist last_error + re-run doctor
    on resume; the atomic state / domain cleanup were already in place.)*
-6. **D — packaging scaffolding.** Bundle `agent.exe` into the wheel /
-   PKGBUILD `build()`; fix `flake.nix` missing runtime deps
-   (pydantic/tomli/pycdlib/opentelemetry). Signing + repo domain are 🟠.
-7. **A1-config — CI runner wiring.** Self-hosted runner workflow YAML +
+6. ✅ **D — packaging scaffolding.** Bundle `agent.exe` into the wheel /
+   PKGBUILD `build()`; fix `flake.nix` missing runtime deps. Signing + repo
+   domain are 🟠. *(2026-06-29: `_resolve_tools_inputs` packaged
+   `/usr/share/crossdesk` fallback + AUR cross-builds/installs agent.exe;
+   flake.nix deps were already fixed overnight.)*
+7. ✅ **A1-config — CI runner wiring.** Self-hosted runner workflow YAML +
    re-enable CI auto-triggers. Runner stand-up itself is 🔵 (Proxmox).
+   *(2026-06-29: linux-kvm-smoke wired to `[self-hosted, linux, kvm]`; CI
+   auto-triggers were re-enabled overnight.)*
 
 ### 🔵 Needs the box (loop does these on Proxmox)
 - **A3** enable the real `LibvirtController` + lifecycle FSM recovery live
@@ -138,3 +142,6 @@ UX · guest BSOD / failure UX.
 - [2026-06-29 12:45] 244b12b B diagnostics — CLI friendly last-resort errors + opt-in crash reports; 937 host tests green, 3-lens review clean; i18n .pot regen pending gettext on box.
 - [2026-06-29 13:40] 2bb2b88 A7-logic — install state machine records last_error + re-runs doctor pre-flight on resume; 943 green; self-reviewed (low-risk polish).
 - [2026-06-29 13:30] a0ca5ca A5-host — FS Stage B host-side (virtio-fs domain device + memfd + exposure scope, default whole $HOME); merged after 3-lens review (applied abs-path + dup-tag validation + invalid-scope test) + owner confirmed whole-$HOME knowing it exposes ~/.ssh + ~/.config/crossdesk to the guest; 947 green.
+- [2026-06-29 14:00] ae4943e chore(deps) — bump anyhow 1.0.102→1.0.103 (RUSTSEC-2026-0190) in guest+gui; unblocked the pre-push cargo-audit gate.
+- [2026-06-29 14:20] 5c404b9 D packaging — `_resolve_tools_inputs` /usr/share/crossdesk fallback + AUR installs agent.exe; 957 green; self-reviewed.
+- [2026-06-29 14:35] 8851262 A1 CI — linux-kvm-smoke wired to [self-hosted, linux, kvm] (YAML only; runner stand-up is 🔵); YAML validated.

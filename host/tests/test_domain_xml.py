@@ -5,6 +5,8 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pytest
+
 from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
 
 
@@ -114,3 +116,78 @@ def test_paths_with_special_chars_are_escaped() -> None:
     root = _xml(disk="/data/A & B/win.qcow2")
     src = root.find("devices/disk/source").get("file")  # type: ignore[union-attr]
     assert src == "/data/A & B/win.qcow2"
+
+
+def _spec_with_shares(shares: tuple[tuple[str, str], ...]) -> ET.Element:
+    spec = DomainSpec(
+        name="windows-guest",
+        disk_path=Path("/d.qcow2"),
+        windows_iso=Path("/w.iso"),
+        tools_iso=Path("/t.iso"),
+        persistent_shares=shares,
+    )
+    return ET.fromstring(build_domain_xml(spec))
+
+
+def test_no_filesystem_or_memfd_without_shares() -> None:
+    # FS Stage B is opt-in: a no-share domain keeps byte-identical XML — no
+    # <memoryBacking> and no <filesystem>.
+    root = _xml()
+    assert root.find("memoryBacking") is None
+    assert root.find("devices/filesystem") is None
+
+
+def test_persistent_share_emits_virtiofs_filesystem() -> None:
+    root = _spec_with_shares((("crossdesk-home", "/home/u"),))
+    fs = root.find("devices/filesystem")
+    assert fs is not None
+    assert fs.get("type") == "mount"
+    assert fs.get("accessmode") == "passthrough"
+    assert fs.find("driver").get("type") == "virtiofs"  # type: ignore[union-attr]
+    assert fs.find("source").get("dir") == "/home/u"  # type: ignore[union-attr]
+    assert fs.find("target").get("dir") == "crossdesk-home"  # type: ignore[union-attr]
+
+
+def test_persistent_shares_enable_shared_memfd_backing() -> None:
+    # virtio-fs (vhost-user) requires shared guest memory.
+    root = _spec_with_shares((("crossdesk-home", "/home/u"),))
+    mb = root.find("memoryBacking")
+    assert mb is not None
+    assert mb.find("source").get("type") == "memfd"  # type: ignore[union-attr]
+    assert mb.find("access").get("mode") == "shared"  # type: ignore[union-attr]
+
+
+def test_multiple_persistent_shares_in_order() -> None:
+    root = _spec_with_shares(
+        (("share-a", "/home/u/a"), ("share-b", "/home/u/b"))
+    )
+    targets = [fs.find("target").get("dir") for fs in root.findall("devices/filesystem")]  # type: ignore[union-attr]
+    assert targets == ["share-a", "share-b"]
+
+
+def test_persistent_share_relative_path_rejected() -> None:
+    # libvirt rejects a relative <source dir>; fail loudly at build time.
+    with pytest.raises(ValueError, match="absolute path"):
+        build_domain_xml(
+            DomainSpec(
+                name="windows-guest",
+                disk_path=Path("/d.qcow2"),
+                windows_iso=Path("/w.iso"),
+                tools_iso=Path("/t.iso"),
+                persistent_shares=(("tag", "relative/dir"),),
+            )
+        )
+
+
+def test_persistent_share_duplicate_tag_rejected() -> None:
+    # virtio-fs target tags must be unique within a domain.
+    with pytest.raises(ValueError, match="duplicate target tag"):
+        build_domain_xml(
+            DomainSpec(
+                name="windows-guest",
+                disk_path=Path("/d.qcow2"),
+                windows_iso=Path("/w.iso"),
+                tools_iso=Path("/t.iso"),
+                persistent_shares=(("dup", "/home/u/a"), ("dup", "/home/u/b")),
+            )
+        )

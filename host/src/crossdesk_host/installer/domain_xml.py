@@ -17,8 +17,9 @@ the unattended install.
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Tuple
 
 # qemu's hard-coded host CID for AF_VSOCK is 2; the guest is assigned a
 # distinct CID here (3 by convention, matching infra/launch-vm.py).
@@ -48,17 +49,52 @@ class DomainSpec:
     fix is required) — Windows installs fine without it; vsock only carries
     the post-install agent connection (DEC-0017)."""
 
+    persistent_shares: Tuple[Tuple[str, str], ...] = field(default_factory=tuple)
+    """FS Stage B persistent virtio-fs mounts, as ``(target_tag, host_dir)``
+    pairs present from domain start (not JIT). Each adds a
+    ``<filesystem driver='virtiofs'>`` device; a non-empty list also enables
+    shared ``memfd`` memory backing, which virtio-fs (vhost-user) requires.
+
+    Empty by default so a no-share install emits byte-identical XML. The
+    guest side (WinFSP + VirtioFsSvc) and live-mount verification are
+    box-gated follow-ups; this is the host-side capability the install path
+    consumes once the guest driver is confirmed."""
+
 
 def build_domain_xml(spec: DomainSpec) -> str:
     """Return the libvirt domain XML string for *spec*.
 
     Pure formatting — no I/O. ``ElementTree`` guarantees well-formed,
     attribute-escaped output (paths with ``&`` / quotes are handled).
+
+    Raises:
+        ValueError: a ``persistent_shares`` entry has a relative ``host_dir``
+            (libvirt rejects a relative ``<source dir>``) or a duplicate tag
+            (virtio-fs target tags must be unique within a domain). Failing
+            here gives a clear message instead of a cryptic libvirt error at
+            ``define`` time.
     """
+    seen_tags: set[str] = set()
+    for tag, host_dir in spec.persistent_shares:
+        if not Path(host_dir).is_absolute():
+            raise ValueError(
+                f"persistent_shares host_dir must be an absolute path, got {host_dir!r}"
+            )
+        if tag in seen_tags:
+            raise ValueError(f"persistent_shares has a duplicate target tag {tag!r}")
+        seen_tags.add(tag)
+
     domain = ET.Element("domain", {"type": "kvm", "xmlns:qemu": _QEMU_NS})
     ET.SubElement(domain, "name").text = spec.name
     ET.SubElement(domain, "memory", {"unit": "MiB"}).text = str(spec.ram_mib)
     ET.SubElement(domain, "currentMemory", {"unit": "MiB"}).text = str(spec.ram_mib)
+    # virtio-fs (vhost-user) needs the guest RAM exposed as a shared mapping
+    # so the virtiofsd helper can mmap it. Only emitted when there are shares,
+    # so a no-share domain keeps its default (private) memory backing.
+    if spec.persistent_shares:
+        mem_backing = ET.SubElement(domain, "memoryBacking")
+        ET.SubElement(mem_backing, "source", {"type": "memfd"})
+        ET.SubElement(mem_backing, "access", {"mode": "shared"})
     ET.SubElement(domain, "vcpu").text = str(spec.vcpus)
 
     # firmware='efi' lets libvirt pick the OVMF descriptor and manage the
@@ -119,6 +155,18 @@ def build_domain_xml(spec: DomainSpec) -> str:
         ET.SubElement(vsock, "cid", {"auto": "no", "address": str(spec.vsock_cid)})
 
     ET.SubElement(devices, "memballoon", {"model": "virtio"})
+
+    # FS Stage B: persistent virtio-fs shares (host dir → guest), present from
+    # domain start. accessmode='passthrough' maps host uid/gid through;
+    # libvirt spawns the virtiofsd helper. <target dir='...'> is the virtio-fs
+    # tag the guest mounts (WinFSP + VirtioFsSvc). Empty list → no devices.
+    for tag, host_dir in spec.persistent_shares:
+        fs = ET.SubElement(
+            devices, "filesystem", {"type": "mount", "accessmode": "passthrough"}
+        )
+        ET.SubElement(fs, "driver", {"type": "virtiofs"})
+        ET.SubElement(fs, "source", {"dir": host_dir})
+        ET.SubElement(fs, "target", {"dir": tag})
 
     # Loopback VNC so the operator can watch the unattended install; plain
     # VGA so Windows Setup has a driver before any guest tools land.

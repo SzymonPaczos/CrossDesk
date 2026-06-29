@@ -256,7 +256,9 @@ def test_peripheral_flags_workdir_when_shared_folder_enabled(
     _patch_peripherals(
         monkeypatch,
         PeripheralsConfig(
-            shared_folder_enabled=True, shared_folder_path=str(share_dir)
+            shared_folder_enabled=True,
+            shared_folder_scope="custom",
+            shared_folder_path=str(share_dir),
         ),
     )
     flags, workdir = _backend_servicer()._peripheral_flags()
@@ -306,6 +308,7 @@ def test_peripheral_flags_drops_drive_and_workdir_when_uncreatable(
         monkeypatch,
         PeripheralsConfig(
             shared_folder_enabled=True,
+            shared_folder_scope="custom",
             shared_folder_path=str(blocker / "nope"),
             # A non-share flag survives so we can prove only the drive dropped.
             clipboard_mode="text-only",
@@ -328,6 +331,7 @@ def test_peripheral_flags_drops_drive_and_workdir_for_relative_path(
         monkeypatch,
         PeripheralsConfig(
             shared_folder_enabled=True,
+            shared_folder_scope="custom",
             shared_folder_path="relative/share",
             clipboard_mode="text-only",
         ),

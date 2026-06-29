@@ -93,9 +93,10 @@ Priority top-to-bottom within each tier.
    memfd shared-memory in `infra/launch-vm.py`; extend the User Shell
    Folders redirect generator; typed config for exposure scope (Documents
    default + whole-home toggle). Live mount is 🔵.
-5. **A7-logic — install idempotency.** Atomic state file; clean up a
+5. ✅ **A7-logic — install idempotency.** Atomic state file; clean up a
    half-created libvirt domain on failure; wire `doctor` pre-flight. Real
-   install execution is 🔵.
+   install execution is 🔵. *(2026-06-29: persist last_error + re-run doctor
+   on resume; the atomic state / domain cleanup were already in place.)*
 6. **D — packaging scaffolding.** Bundle `agent.exe` into the wheel /
    PKGBUILD `build()`; fix `flake.nix` missing runtime deps
    (pydantic/tomli/pycdlib/opentelemetry). Signing + repo domain are 🟠.
@@ -133,3 +134,5 @@ UX · guest BSOD / failure UX.
 (append one line per merged item: `[iso-ts] <sha> <topic> — <result>`)
 
 - [2026-06-29 12:45] 244b12b B diagnostics — CLI friendly last-resort errors + opt-in crash reports; 937 host tests green, 3-lens review clean; i18n .pot regen pending gettext on box.
+- [2026-06-29 13:40] 2bb2b88 A7-logic — install state machine records last_error + re-runs doctor pre-flight on resume; 943 green; self-reviewed (low-risk polish).
+- [2026-06-29 13:30] 27e87a4 A5-host — FS Stage B host-side (virtio-fs domain device + exposure scope); committed on feat/fs-stage-b-host, NOT merged: 3-lens review surfaced 2 correctness fixes (abs-path + dup-tag) + a whole-$HOME-exposes-secrets question for the owner. Held pending fixes + owner FS-default confirmation.

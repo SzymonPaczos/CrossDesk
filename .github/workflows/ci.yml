@@ -299,11 +299,37 @@ jobs:
                  exit 1; }
 
   linux-kvm-smoke:
-    name: Linux + KVM smoke (placeholder — needs self-hosted runner)
-    runs-on: ubuntu-latest
+    name: Linux + KVM smoke (self-hosted)
+    # Hardware-bound suite (real libvirt + /dev/kvm), opt-in via the
+    # 'hardware-smoke' PR label. Runs on the self-hosted Proxmox/KVM runner
+    # (registered with labels: self-hosted, linux, kvm). The runner stand-up
+    # is tracked separately (A1-standup); until a matching runner registers, a
+    # labeled PR's job simply queues — it never blocks the other checks. Once
+    # the runner is permanently online, add `github.event_name == 'push'` to
+    # the `if:` below to also smoke every push to main.
     if: contains(github.event.pull_request.labels.*.name, 'hardware-smoke')
+    runs-on: [self-hosted, linux, kvm]
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: host
     steps:
-      - run: |
-          echo "Hardware-bound smoke tests not yet wired."
-          echo "Add a self-hosted runner with KVM access and remove this placeholder."
-          exit 0
+      - uses: actions/checkout@v4
+      - name: KVM + libvirt preflight
+        run: |
+          test -e /dev/kvm || { echo "::error::self-hosted runner is missing /dev/kvm"; exit 1; }
+          virsh -c qemu:///session version
+      - name: Install host (linux extra)
+        run: |
+          python3 -m venv .ci-venv
+          . .ci-venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -e ".[mock,dev,linux]"
+      - name: doctor (informational)
+        run: |
+          . .ci-venv/bin/activate
+          crossdesk doctor || true
+      - name: linux_only tests
+        run: |
+          . .ci-venv/bin/activate
+          pytest -m linux_only -v --timeout=900 --timeout-method=signal

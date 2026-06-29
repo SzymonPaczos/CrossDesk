@@ -261,3 +261,53 @@ def test_completed_install_does_not_recheck_doctor(
     monkeypatch.setattr(install_cmd, "run_all", _boom)
     assert install_cmd.run(_args()) == 0
     assert called["doctor"] is False  # doctor was not re-run
+
+
+# ---------------------------------------------------------------------------
+# Packaged-input resolution (D packaging: /usr/share/crossdesk fallback)
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_input_env_override_wins(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    pinned = tmp_path / "custom-agent.exe"
+    pinned.write_bytes(b"x")
+    monkeypatch.setenv("CROSSDESK_AGENT_EXE", str(pinned))
+    out = install_cmd._resolve_input("CROSSDESK_AGENT_EXE", tmp_path / "repo.exe", "agent.exe")
+    assert out == pinned
+
+
+def test_resolve_input_packaged_fallback(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.delenv("CROSSDESK_AGENT_EXE", raising=False)
+    monkeypatch.setenv("CROSSDESK_DATA_DIR", str(tmp_path))
+    (tmp_path / "agent.exe").write_bytes(b"x")
+    out = install_cmd._resolve_input(
+        "CROSSDESK_AGENT_EXE", tmp_path / "nope" / "repo.exe", "agent.exe"
+    )
+    assert out == tmp_path / "agent.exe"
+
+
+def test_resolve_input_repo_path_preferred_over_packaged(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.delenv("CROSSDESK_AGENT_EXE", raising=False)
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "agent.exe").write_bytes(b"pkg")
+    monkeypatch.setenv("CROSSDESK_DATA_DIR", str(pkg))
+    repo = tmp_path / "repo.exe"
+    repo.write_bytes(b"repo")
+    out = install_cmd._resolve_input("CROSSDESK_AGENT_EXE", repo, "agent.exe")
+    assert out == repo  # the in-repo dev path wins over the packaged copy
+
+
+def test_resolve_input_missing_returns_none(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.delenv("CROSSDESK_AGENT_EXE", raising=False)
+    monkeypatch.setenv("CROSSDESK_DATA_DIR", str(tmp_path / "empty"))
+    out = install_cmd._resolve_input("CROSSDESK_AGENT_EXE", tmp_path / "nope.exe", "agent.exe")
+    assert out is None

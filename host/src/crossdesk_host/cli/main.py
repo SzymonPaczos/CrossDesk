@@ -21,6 +21,8 @@ modules to keep ``main.py`` thin.
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import sys
 from typing import List, Optional
 
@@ -37,6 +39,7 @@ from crossdesk_host.cli import (
     version_cmd,
     vm_cmd,
 )
+from crossdesk_host.i18n import _
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -66,10 +69,12 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> int:
-    parser = _build_parser()
-    args = parser.parse_args(argv)
+def _dispatch(args: argparse.Namespace) -> int:
+    """Route parsed ``args`` to the owning subcommand handler.
 
+    Subparsers are ``required=True`` so an unknown top-level command
+    can't reach the trailing ``return`` — it's there to keep mypy happy.
+    """
     if args.command == "install":
         return install_cmd.run(args)
     if args.command == "apps":
@@ -96,8 +101,87 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.command == "uninstall":
         return uninstall_cmd.run(args)
 
-    parser.error(f"unknown command {args.command!r}")
-    return 2  # unreachable but keeps mypy happy
+    return 2  # unreachable (subparsers are required)
+
+
+# Control characters (ANSI escapes, raw newlines) in an exception message
+# must never reach the terminal verbatim: a crafted message could reflow the
+# error output or inject escape sequences. Collapse newlines to a visible
+# separator and drop the rest before printing the summary.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _sanitize_for_terminal(text: str) -> str:
+    return _CONTROL_CHARS.sub(" ", text.replace("\n", " | "))
+
+
+def _handle_unexpected(exc: Exception, argv: Optional[List[str]]) -> int:
+    """Last-resort handler: turn an unhandled exception into a friendly,
+    actionable message (never a raw traceback) and exit 2.
+
+    Opt-in (default OFF), it also writes a redacted crash-report file the
+    user can attach to a bug report. ``CROSSDESK_DEBUG=1`` re-raises the
+    original so a developer still gets the full traceback.
+    """
+    if os.environ.get("CROSSDESK_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}:
+        raise exc
+
+    # Lazy imports keep the happy path's import cost unchanged.
+    from crossdesk_host.observability import mask_sensitive, report_exception
+
+    report_path = None
+    enabled = False
+    try:
+        from crossdesk_host.config import load_from_toml
+
+        cfg = load_from_toml()
+        enabled = cfg.observability.crash_report_enabled
+        report_path = report_exception(
+            exc,
+            component="host.cli",
+            command=["crossdesk", *(argv if argv is not None else sys.argv[1:])],
+            host_version=cfg.daemon.host_version,
+            enabled=enabled,
+            report_dir=cfg.paths.state_dir / "crash-reports",
+        )
+    except Exception:  # noqa: BLE001 - reporting must never mask the real error
+        pass
+
+    summary = _sanitize_for_terminal(mask_sensitive(f"{type(exc).__name__}: {exc}"))
+    print(_("crossdesk hit an unexpected error and stopped."), file=sys.stderr)
+    print(_("  what: {summary}").format(summary=summary), file=sys.stderr)
+    print(
+        _("  re-run with CROSSDESK_DEBUG=1 for the full traceback."),
+        file=sys.stderr,
+    )
+    if report_path is not None:
+        print(
+            _("  crash report written to {path} — attach it to a bug report.").format(
+                path=report_path
+            ),
+            file=sys.stderr,
+        )
+    elif not enabled:
+        print(
+            _(
+                "  tip: set CROSSDESK_CONFIG__OBSERVABILITY__CRASH_REPORT_ENABLED=true "
+                "to capture a shareable crash report."
+            ),
+            file=sys.stderr,
+        )
+    return 2
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    try:
+        return _dispatch(args)
+    except KeyboardInterrupt:
+        print(_("interrupted."), file=sys.stderr)
+        return 130
+    except Exception as exc:  # noqa: BLE001 - last-resort friendly handler
+        return _handle_unexpected(exc, argv)
 
 
 if __name__ == "__main__":

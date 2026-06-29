@@ -145,6 +145,9 @@ select = ["E", "F", "I", "T201"]
 "tests/*" = ["T201"]
 # CLI subcommands are the legitimate place for stdout — that's their job.
 "src/crossdesk_host/cli/*_cmd.py" = ["T201"]
+# The CLI entry point prints friendly, actionable errors to stderr from
+# its last-resort handler — same stdout-is-the-job rationale as *_cmd.py.
+"src/crossdesk_host/cli/main.py" = ["T201"]
 # gRPC servicers must use the proto-defined method names (CamelCase per
 # Google's gRPC convention). The N802 lint would force PascalCase or
 # snake_case, but the wire contract is fixed.

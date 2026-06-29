@@ -5,6 +5,10 @@ in-memory metrics registry. Other modules import from here and never
 configure ``logging``/``structlog`` directly.
 """
 
+from crossdesk_host.observability.crash_reporter import (
+    CrashReport,
+    report_exception,
+)
 from crossdesk_host.observability.log import (
     LOG_SCHEMA_FIELDS,
     configure_logging,
@@ -21,6 +25,7 @@ from crossdesk_host.observability.metrics import (
 from crossdesk_host.observability.redaction import (
     ALLOWED_FIELDS,
     RedactionViolation,
+    mask_sensitive,
 )
 from crossdesk_host.observability.trace_ctx import (
     TraceContext,
@@ -39,6 +44,7 @@ __all__ = [
     "LOG_SCHEMA_FIELDS",
     "REGISTRY",
     "Counter",
+    "CrashReport",
     "Gauge",
     "Histogram",
     "MetricNames",
@@ -53,6 +59,8 @@ __all__ = [
     "extract_from_metadata",
     "generate_root",
     "get_logger",
+    "mask_sensitive",
     "metadata_pair",
     "parse_traceparent",
+    "report_exception",
 ]

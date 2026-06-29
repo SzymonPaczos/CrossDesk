@@ -89,10 +89,12 @@ Priority top-to-bottom within each tier.
    recovery messages instead of raw tracebacks. *(2026-06-29: CLI
    last-resort handler + redacted opt-in crash report; i18n .pot regen
    deferred — gettext absent on box.)*
-4. **A5-host — FS Stage B host-side.** `<filesystem driver='virtiofs'>` +
-   memfd shared-memory in `infra/launch-vm.py`; extend the User Shell
-   Folders redirect generator; typed config for exposure scope (Documents
-   default + whole-home toggle). Live mount is 🔵.
+4. ✅ **A5-host — FS Stage B host-side.** `<filesystem driver='virtiofs'>` +
+   memfd shared-memory in `domain_xml.py`; typed config for exposure scope.
+   *(2026-06-29: virtio-fs domain device + memfd + scope home|documents|custom,
+   default **whole $HOME** per owner confirmation. install_cmd wiring + the
+   User Shell Folders redirect for virtio-fs land with A5-live.)* Live mount
+   is 🔵.
 5. ✅ **A7-logic — install idempotency.** Atomic state file; clean up a
    half-created libvirt domain on failure; wire `doctor` pre-flight. Real
    install execution is 🔵. *(2026-06-29: persist last_error + re-run doctor
@@ -135,4 +137,4 @@ UX · guest BSOD / failure UX.
 
 - [2026-06-29 12:45] 244b12b B diagnostics — CLI friendly last-resort errors + opt-in crash reports; 937 host tests green, 3-lens review clean; i18n .pot regen pending gettext on box.
 - [2026-06-29 13:40] 2bb2b88 A7-logic — install state machine records last_error + re-runs doctor pre-flight on resume; 943 green; self-reviewed (low-risk polish).
-- [2026-06-29 13:30] 27e87a4 A5-host — FS Stage B host-side (virtio-fs domain device + exposure scope); committed on feat/fs-stage-b-host, NOT merged: 3-lens review surfaced 2 correctness fixes (abs-path + dup-tag) + a whole-$HOME-exposes-secrets question for the owner. Held pending fixes + owner FS-default confirmation.
+- [2026-06-29 13:30] a0ca5ca A5-host — FS Stage B host-side (virtio-fs domain device + memfd + exposure scope, default whole $HOME); merged after 3-lens review (applied abs-path + dup-tag validation + invalid-scope test) + owner confirmed whole-$HOME knowing it exposes ~/.ssh + ~/.config/crossdesk to the guest; 947 green.

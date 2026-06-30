@@ -27,8 +27,10 @@ Everything in that sentence must work for v0.1.0.
   DEGRADED → PROBING → SOFT_RECOVERY → HARD_DESTROY)
 - **Phase 4** — RAIL display integration (FreeRDP RAIL with
   per-window events; X11 baseline acceptable)
-- **Phase 5** — JIT VirtioFS (per-file mount/detach with
-  `ReleaseAck`)
+- **Phase 5 / FS** — Stage B persistent virtio-fs share (one configured
+  mount, default the whole `$HOME` R/W; DEC-0018) is the v0.1.0 floor;
+  Stage C JIT-per-file mount/detach with `ReleaseAck` is a post-1.0,
+  user-selectable tight-isolation mode
 
 ### From cross-cutting follow-ups
 

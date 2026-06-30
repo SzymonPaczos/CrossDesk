@@ -131,3 +131,23 @@ deep-layer, P1).
 **Jak stosować:** Audyt (`.claude/rules/audit.md` §3/§7) **nie raportuje**
 `_tail_file` jako naruszenia. Każdy NOWY `while True: sleep` poza tym
 jednym call-site nadal jest naruszeniem wymagającym uzasadnienia.
+
+## DEC-META-007 — whole-`$HOME` FS default zastępuje skip z DEC-META-005
+
+**Data:** 2026-06-29 · **Status:** aktywna
+
+DEC-META-005 listuje „Static `\\tsclient\home` mount — security regression
+vs JIT VirtioFS" wśród pozycji skip-on-purpose. [`docs/DECISIONS.md`](../../docs/DECISIONS.md)
+DEC-0018 czyni whole-`$HOME` **domyślnym** zakresem Stage B (decyzja
+właściciela 2026-06-29; share jest opt-in, default OFF). Mechanizm różni się
+od always-on WinApps (nasz share jest opt-in i etapowalny przez
+`shared_folder_scope`), ale zakres jest porównywalny. Pozycja DEC-META-005
+dla tego itemu jest **zastąpiona** przez DEC-0018.
+
+**Powód:** restrykcyjny JIT-per-file (Stage C) jest w większości niezbudowany;
+pragmatyczny scoped folder już shipował. „Max usefulness, no paranoia"
+(właściciel) dla same-user threat modelu, który `docs/THREAT_MODEL.md` §C7 już
+traktuje jako out-of-scope.
+
+**Jak stosować:** Audyt nie raportuje whole-`$HOME` jako naruszenia
+DEC-META-005; zgodność sprawdza przeciw DEC-0018 + DEC-META-007.

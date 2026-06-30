@@ -42,10 +42,14 @@ resumes. Resolving one = either you author the boundary edit, or you reply
   the licensing/legal expectation plainly to a Linux-forum audience.
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
 
-## Ready-to-apply boundary drafts (owner sign-off → "apply")
+## Boundary drafts — ✅ APPLIED 2026-07-01 (owner sign-off)
 
-Exact text the loop will apply on your word (or paste it yourself). Boundary
-files — never applied without sign-off.
+Applied to the boundary files after the owner's "apply" sign-off: §1
+MVP_SCOPE Phase-5 line, §2 DEC-0018, §3a/§3b THREAT_MODEL rows, §4 as
+**DEC-META-007** (DEC-META-006 was already taken by the CLI file-tail
+exception). §3c (transport wording + LogonUserW residual-risk /
+VERSIONING capability promotion) is left for the owner to author. The
+exact text applied is below for the record.
 
 ### §1 — `docs/MVP_SCOPE.md` Phase 5 / FS line
 

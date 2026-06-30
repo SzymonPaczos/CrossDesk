@@ -145,3 +145,4 @@ UX · guest BSOD / failure UX.
 - [2026-06-29 14:00] ae4943e chore(deps) — bump anyhow 1.0.102→1.0.103 (RUSTSEC-2026-0190) in guest+gui; unblocked the pre-push cargo-audit gate.
 - [2026-06-29 14:20] 5c404b9 D packaging — `_resolve_tools_inputs` /usr/share/crossdesk fallback + AUR installs agent.exe; 957 green; self-reviewed.
 - [2026-06-29 14:35] 8851262 A1 CI — linux-kvm-smoke wired to [self-hosted, linux, kvm] (YAML only; runner stand-up is 🔵); YAML validated.
+- [2026-07-01 01:35] (live) BASELINE RENDER re-verified on the box post-batch — `xfreerdp3` RAIL renders Windows Notepad as a native Linux X window (`Bez tytułu — Notatnik` 1426×782, WM_CLASS crossdesk-notepad, Map State IsViewable). Screenshot: /tmp/cd-evidence/notepad-window.png. GUI capture tooling working (`import -window`) for the A5-live eyeball. Boundary edits applied on owner sign-off (DEC-0018 etc.); i18n .pot regenerated.

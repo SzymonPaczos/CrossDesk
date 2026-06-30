@@ -7,6 +7,53 @@ delete history.
 
 ---
 
+## DEC-0018: FS share defaults to the whole `$HOME` (Stage B); JIT-per-file is post-1.0
+
+**Status:** Accepted — 2026-06-29
+**Owner:** filesystem / Phase 4–5
+**Related:** DEC-META-005 (whole-`$HOME` skip — superseded for the FS item by
+DEC-META-007); `docs/COMPARISON_WINAPPS.md` §7;
+`host/src/crossdesk_host/config/peripherals.py`
+
+### Context
+
+CrossDesk file sharing ships in stages. v0.1.0 ships Stage A (FreeRDP rdpdr
+`/drive:` redirect) plus the Stage B host-side plumbing (a persistent
+virtio-fs `<filesystem>` device + shared `memfd` memory backing). The earlier
+design rejected exposing the whole `$HOME` (the static `\\tsclient\home`
+mount, COMPARISON_WINAPPS §7 / DEC-META-005) in favour of a single scoped
+folder, with JIT-per-file VirtioFS as the endgame — but the JIT design is
+largely unbuilt, and the pragmatic single scoped folder was the only thing
+actually shipping.
+
+### Decision
+
+File sharing stays **opt-in** (`shared_folder_enabled` defaults OFF). When
+enabled, the default exposure scope is the **whole `$HOME` R/W**
+(`shared_folder_scope = "home"`), chosen for maximum usefulness — the Windows
+app's Open/Save reaches anything the user has, no hunting for a special
+folder. `documents` (`~/Documents` only) and `custom` (one explicit folder)
+scopes narrow the surface.
+
+The whole-`$HOME` scope means the Windows guest can read/write everything
+under `$HOME`, including `~/.ssh` and `~/.config/crossdesk` (the host mTLS
+private key and the VM password). This is an accepted trade-off for a
+single-user, same-trust-domain VM — the same-user threat is already out of
+scope (THREAT_MODEL §C7). **Stage C** (JIT-per-file VirtioFS — mount only the
+directory of the file being opened) remains the eventual tight-isolation
+mode, post-1.0 and user-selectable.
+
+**Supersedes:** the blanket "reject whole `$HOME`" stance for the FS item in
+COMPARISON_WINAPPS §7 / DEC-META-005 (see DEC-META-007). CrossDesk's share
+differs (opt-in + stage-able) but reaches a comparable scope by default.
+
+### Reconsider when
+
+Stage C JIT-per-file lands (then `home` may stop being the default), or a
+multi-user / lower-trust guest scenario enters scope.
+
+---
+
 ## DEC-0017: Guest↔host transport is AF_VSOCK (virtio-vsock), not Hyper-V AF_HYPERV
 
 **Status:** Accepted — 2026-06-01

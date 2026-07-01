@@ -21,6 +21,68 @@ częściowo shipped (reszta w [`status.md`](status.md)).
 
 ## P0
 
+### A7-live install-path findings (żywa reinstalacja + adversarial audyt 11-agent, 2026-07-01)
+Czysta reinstalacja na żywym KVM boxie **potwierdziła A7-live core**: świeży
+`crossdesk install` → Windows unattended → agent NT-service **auto-łączy się w
+~12 min, zero ręcznych kroków** (Hello+READY+heartbeat). Naprawione+zmergowane:
+drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflow
+(6 potwierdzonych defektów) + live-diagnoza odsłoniły resztę:
+
+- **[P0-latentny, BLOKUJE A3] `hard_destroy` → REINSTALACJA Windows = utrata danych.**
+  Domena ma install-ISO na `<boot order='1'>` przez CAŁE życie VM; nie ma
+  steady-state XML. `hard_destroy()` ([`libvirt_ctl/real.py`](../host/src/crossdesk_host/libvirt_ctl/real.py) 94-107)
+  robi `destroy()`+`create()` z persistent config → post-install auto-recovery
+  heartbeat-FSM ([`ipc/heartbeat.py`](../host/src/crossdesk_host/ipc/heartbeat.py) 272-274 →
+  `watchdog/fsm.py` HARD_DESTROY) bootuje install-ISO → **autounattend reinstaluje
+  Windows na istniejącym dysku, bez człowieka** (albo wedge na firmware). Dziś
+  latentny (daemon używa mock-libvirt); **A3 NIE MOŻE wpiąć realnego
+  `LibvirtController` do lifecycle dopóki to nie naprawione.** Fix: po pierwszym
+  Hello redefiniuj domenę do steady-state (eject oba CD, disk `boot order=1`,
+  `updateDeviceFlags`+`AFFECT_CONFIG` by przeżyło destroy+create) + persist flag
+  „installed" w `install.state.json`.
+- **[P1] Brak post-install wait — `_step_run_autounattend` deklaruje sukces gdy
+  domena tylko `is_running()`.** ([`cli/install_cmd.py`](../host/src/crossdesk_host/cli/install_cmd.py)
+  398-411; `install_agent_service`/`post_install_tweaks` = no-op printy). Host
+  nigdy nie obserwuje przejścia installing→installed → **żaden finalize (eject /
+  redefine / logoff konsoli / healthcheck) nie może być zsekwencjonowany**, a
+  padnięty in-guest FirstLogonCommand jest niewidoczny. Enabler dla powyższego +
+  console-session fix. Fix: bounded poll na pierwszy Hello/heartbeat (timeout →
+  czytelny błąd wskazujący VNC + FirstLogonCommands log) gate'ujący finalize.
+- **[P1] Console-session blokuje PIERWSZY managed RAIL launch po świeżej
+  instalacji.** AutoLogon(LogonCount=1) w [`infra/autounattend.xml`](../infra/autounattend.xml)
+  zostawia aktywną sesję konsoli `crossdesk`; Win10 single-session → RDP RemoteApp
+  jako ten sam user pada `LOGON_FAILED_OTHER` (live 2026-07-01). A4/A6 działały bo
+  guest był po reboocie (czysty logon screen). Fix (deliberate, needs reinstall
+  verify): OS-initiated `shutdown /r` jako ostatni FirstLogonCommand (order 21) —
+  OOBE-reboots fall-through'ują CD-prompt OK, więc niższe ryzyko niż mój manualny
+  ACPI reboot który zawiesił gościa; ALBO host-side logoff po post-install-wait.
+- **[P1] Eject install media po instalacji.** Install-ISO zostaje podłączone →
+  każdy reboot re-trafia „press any key to boot from CD"; **live: ACPI reboot
+  świeżego gościa ZAWIESIŁ go na firmware**, recovery = eject ISO + destroy+start.
+  Współdzieli fix ze steady-state XML (P0 wyżej). Host-side, gated na post-install-wait.
+- **[P1] Hardcoded ścieżki OVMF łamią instalację na non-Debian.**
+  [`installer/domain_xml.py`](../host/src/crossdesk_host/installer/domain_xml.py)
+  115-116 pinuje `/usr/share/OVMF/OVMF_CODE_4M.fd` + `OVMF_VARS_4M.fd` (Debian/Ubuntu-only);
+  Fedora `/usr/share/edk2/ovmf/`, Arch `/usr/share/edk2-ovmf/x64/`, NixOS store.
+  `defineXML` padnie na tych distro (PACKAGING.md targetuje rpm/AUR/NixOS).
+  Wzorzec candidate-list JUŻ istnieje w [`infra/launch-vm.py`](../infra/launch-vm.py)
+  (`_OVMF_*_CANDIDATES`+`find_first`, nieużywany w install flow) + precedens
+  `_resolve_freerdp_binary`. Fix: probe candidate-list + `CROSSDESK_OVMF_CODE/VARS`
+  env override + doctor OVMF-present check. Win11 (secure=yes+smm) osobno.
+- **[P2] mTLS guest identity nie rotuje przy reinstalacji.** `_resolve_mtls_pki`
+  ([`cli/install_cmd.py`](../host/src/crossdesk_host/cli/install_cmd.py) 185-210)
+  reużywa `infra/certs/pki` (default) → każda instalacja na klonie dzieli tę samą
+  guest identity + CA (contra per-install-uniqueness obietnica `pki.py`). RDP TOFU
+  rotuje, mTLS nie — niespójność. Hardening (same-user host compromise = out of
+  scope per THREAT_MODEL). Fix: mint fresh leaf przy wykrytej reinstalacji, albo
+  głośny warn + gate in-repo dev-dir za env/flag.
+- **[P2] Single-VM hardcoded assumptions.** `_DISK_GB=64` (brak `--disk-size`),
+  `vsock_cid=3` + `_DOMAIN_NAME="windows-guest"` (2 instalacje kolidują;
+  `define_and_start` cicho niszczy istniejącą domenę), hostfwd `3389` + endpoint
+  `10.0.2.2:50051` (SLIRP-only, brak port-conflict detekcji). Większość świadoma
+  per DEC-0017 single-VM; warte: `--force`/confirm guard przed clobber + port-conflict
+  doctor check.
+
 ### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
 - **Etap A: litera dysku `Z:` + redirect Dokumenty.** `[~PARTIAL 2026-06-12]`
   Host-side + generator skryptu **ZROBIONE** na `feat/fs-drive-letter`

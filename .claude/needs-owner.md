@@ -40,6 +40,23 @@ resumes. Resolving one = either you author the boundary edit, or you reply
 - [ ] **ISO acquisition + Windows licensing stance.** *Rec:* "bring your
   own ISO + your own license" in README/wizard (drop auto-download); state
   the licensing/legal expectation plainly to a Linux-forum audience.
+- [ ] **FreeRDP RDP cert policy — `tofu` vs `ignore`.** Shipped fix
+  (`2ab10d1`) clears the stale TOFU pin on reinstall (keeps change-detection
+  for steady-state). But a daemon-spawned FreeRDP has NO stdin, so ANY future
+  cert rotation (Windows update, expiry) still deadlocks the launch on an
+  unanswerable prompt. The RDP endpoint is `localhost:3389` SLIRP-forwarded to
+  OUR OWN guest (no MITM surface; real trust = mTLS gRPC + Windows cred).
+  *Rec:* switch `rail_command.py` `cert_policy` default `tofu`→`ignore` for the
+  localhost path — robust against all rotations. Touches security posture →
+  likely a `docs/THREAT_MODEL.md` row (boundary). Owner call.
+- [ ] **A7-live adversarial-audit findings (2026-07-01).** 6 confirmed defects
+  in `backlog.md` P0 "A7-live install-path findings". The one needing owner
+  awareness: **[P0-latent] `hard_destroy` → Windows REINSTALL / data-loss** —
+  the heartbeat-FSM auto-recovery boots the install-ISO (still boot-order-1 for
+  the VM's whole life) and can silently reinstall over the disk. Latent today
+  (daemon uses mock-libvirt) but **A3 must not wire the real LibvirtController
+  into lifecycle until the steady-state-XML finalize lands.** Not a boundary
+  edit — flagged so it's on the go/no-go radar.
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
 
 ## Boundary drafts — ✅ APPLIED 2026-07-01 (owner sign-off)

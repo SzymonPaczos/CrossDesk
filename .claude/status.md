@@ -9,6 +9,40 @@ prac — `history/completed-work.md`.
 
 ---
 
+## 🎉 MILESTONE — A7-live: świeży `crossdesk install` → agent auto-online (2026-07-01, Linux+KVM)
+
+**Czysta destructive reinstalacja na żywym boxie** (owner autoryzował): `crossdesk
+install --iso-path Win10... --locale pl-PL` z nowym 64GB dyskiem → Windows unattended
+→ **NT-service agent auto-połączył się w ~12 min, ZERO ręcznych kroków** (Hello
+protocol_version=1 features=['rail.v1'] + filesystem + heartbeat + READY). To była
+właściwa obietnica A7-live: instalacja sama składa działającego agenta.
+
+**3 realne install-bugi wykryte przez tę reinstalację (2 naprawione+zmergowane):**
+1. ✅ **drive-find** (`0dc3424`) — autounattend hardkodował `D:\`, tools ISO ląduje
+   na `E:` przy 2 CD-ROM-ach → agent+PKI nie kopiowały się (usługa STOPPED, brak
+   binary/PKI). Fix: skan `D..I` po markerze `CrossDeskAgent.exe`.
+2. ✅ **FreeRDP TOFU pin-clear** (`2ab10d1`) — reinstalacja rotuje self-signed cert
+   RDP gościa; stały `/cert:tofu` pin → cert-change prompt bez stdin → launch pada.
+   Fix: install czyści pin przy create_libvirt_domain. Adversarial Workflow (11
+   agentów) złapał non-hermetyczny test w tym fixie (kasował realny dev pin) →
+   naprawione autouse fixture'em (sentinel-verified).
+3. 🔲 **render-from-fresh-install NIE domknięty** — verify-creds status=1 + TOFU
+   działają, ale okno RAIL nie wstało: `LOGON_FAILED_OTHER` bo AutoLogon(LogonCount=1)
+   zostawia aktywną sesję konsoli, Win10 single-session blokuje RDP RemoteApp jako
+   ten sam user (A4/A6 działały bo po reboocie). Reboot dla wyczyszczenia sesji
+   **zawiesił świeżego gościa na firmware** (install-ISO wciąż boot-order-1); eject
+   ISO + destroy+start odzyskało do lock screena, ale po agresywnych resetach agent
+   przestał wracać (Win repair). Render PIPELINE udowodniony (A4/A6). Diagnoza +
+   fix-plany → `backlog.md` P0/P1 „A7-live install-path findings".
+
+**Adversarial audyt (11 agentów) — 6 potwierdzonych defektów** (backlog.md P0):
+najważniejszy **[P0-latentny] `hard_destroy` → REINSTALACJA Windows** (auto-recovery
+heartbeat-FSM bootuje install-ISO → wipe dysku bez człowieka) — **BLOKUJE A3** (dziś
+latentny bo daemon=mock-libvirt). Plus: brak post-install-wait, console-session,
+eject-media, hardcoded OVMF (non-Debian break), mTLS-no-rotate, single-VM assumptions.
+
+---
+
 ## 🎉 MILESTONE — pełny stack end-to-end na realnym HW (2026-07-01, Linux+KVM)
 
 Cały łańcuch CrossDeska zweryfikowany na żywo na `windows-guest`:

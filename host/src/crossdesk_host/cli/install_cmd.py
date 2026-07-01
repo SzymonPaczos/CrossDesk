@@ -23,7 +23,7 @@ from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import DEFAULT_CHECKS, Status
 from crossdesk_host.i18n import _
 from crossdesk_host.installer import credentials, pki, state, tools_iso
-from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
+from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml, resolve_ovmf
 
 # Domain name the daemon's LibvirtController also defaults to, so the
 # domain `crossdesk install` defines is the one the daemon manages.
@@ -374,11 +374,21 @@ def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
         )
         print(_("    rule granting access — see DEC-0017. Install proceeds.)"))
 
+    # Resolve the host's OVMF firmware here (I/O) so build_domain_xml stays
+    # pure and a missing package fails with a fixable message, not an opaque
+    # libvirt defineXML error, on non-Debian layouts (Fedora/Arch/NixOS).
+    try:
+        ovmf_code, ovmf_vars = resolve_ovmf()
+    except FileNotFoundError as exc:
+        raise _StepFailed(str(exc)) from exc
+
     spec = DomainSpec(
         name=_DOMAIN_NAME,
         disk_path=disk,
         windows_iso=iso,
         tools_iso=tools,
+        ovmf_code=ovmf_code,
+        ovmf_vars=ovmf_vars,
         vsock_enabled=vsock_ok,
     )
     ctl = _resolve_libvirt_ctl()

@@ -28,16 +28,17 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-# Canonical names inside the ISO root — these are the literal paths
-# infra/autounattend.xml copies from D:\, so they are a hard contract.
+# Canonical names inside the ISO root — these are the literal filenames
+# infra/autounattend.xml copies (finding this ISO's drive letter by the
+# CrossDeskAgent.exe marker, not a hardcoded D:), so they are a hard contract.
 _AGENT_ISO_NAME = "CrossDeskAgent.exe"
 _CA_ISO_NAME = "publisher-root-ca.crt"
 _AUTOUNATTEND_ISO_NAME = "autounattend.xml"
 # mTLS PKI trio (separate from the code-signing publisher root above):
 # the guest reads these from C:\CrossDesk\pki\ at runtime
 # (guest/.../ipc-vsock/src/tls.rs TlsMaterial::from_dir), and
-# autounattend.xml copies D:\{ca,guest.crt,guest.key} there on first
-# logon. Names match exactly what TlsMaterial::from_dir expects.
+# autounattend.xml copies {ca,guest.crt,guest.key} there on first logon.
+# Names match exactly what TlsMaterial::from_dir expects.
 _MTLS_CA_ISO_NAME = "ca.crt"
 _MTLS_GUEST_CERT_ISO_NAME = "guest.crt"
 _MTLS_GUEST_KEY_ISO_NAME = "guest.key"

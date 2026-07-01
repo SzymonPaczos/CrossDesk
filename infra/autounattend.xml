@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   autounattend.xml — Zero-touch Windows 10/11 install for CrossDesk guest VM.
-  Place this file + CrossDeskAgent.exe in the root of the tools ISO (D: in the VM).
+  Place this file + CrossDeskAgent.exe in the root of the tools ISO.
   Windows Setup picks up autounattend.xml automatically from any optical drive root.
 -->
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
@@ -198,7 +198,7 @@
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c mkdir "C:\CrossDesk"</CommandLine>
         </SynchronousCommand>
-        <!-- mTLS PKI: the tools ISO (D:) carries ca.crt + guest.crt +
+        <!-- mTLS PKI: the tools ISO carries ca.crt + guest.crt +
              guest.key (the per-VM mutual-TLS material, distinct from the
              publisher-root-ca.crt code-signing root below). The agent reads
              them from C:\CrossDesk\pki\ (guest tls.rs TlsMaterial::from_dir)
@@ -211,19 +211,19 @@
         <SynchronousCommand wcm:action="add">
           <Order>3</Order>
           <RequiresUserInput>false</RequiresUserInput>
-          <CommandLine>cmd /c copy /Y "D:\ca.crt" "C:\CrossDesk\pki\ca.crt"</CommandLine>
+          <CommandLine>cmd /c for %A in (D E F G H I) do @if exist "%A:\CrossDeskAgent.exe" copy /Y "%A:\ca.crt" "C:\CrossDesk\pki\ca.crt"</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
           <Order>4</Order>
           <RequiresUserInput>false</RequiresUserInput>
-          <CommandLine>cmd /c copy /Y "D:\guest.crt" "C:\CrossDesk\pki\guest.crt"</CommandLine>
+          <CommandLine>cmd /c for %A in (D E F G H I) do @if exist "%A:\CrossDeskAgent.exe" copy /Y "%A:\guest.crt" "C:\CrossDesk\pki\guest.crt"</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
           <Order>5</Order>
           <RequiresUserInput>false</RequiresUserInput>
-          <CommandLine>cmd /c copy /Y "D:\guest.key" "C:\CrossDesk\pki\guest.key"</CommandLine>
+          <CommandLine>cmd /c for %A in (D E F G H I) do @if exist "%A:\CrossDeskAgent.exe" copy /Y "%A:\guest.key" "C:\CrossDesk\pki\guest.key"</CommandLine>
         </SynchronousCommand>
-        <!-- D: is the tools ISO (second CD-ROM), containing CrossDeskAgent.exe
+        <!-- The tools ISO (second CD-ROM) contains CrossDeskAgent.exe
              AND publisher-root-ca.crt (the CrossDesk publisher root CA whose
              private leaf signed CrossDeskAgent.exe). Importing the root into
              Cert:\LocalMachine\Root makes Windows treat the agent as a
@@ -232,7 +232,7 @@
         <SynchronousCommand wcm:action="add">
           <Order>6</Order>
           <RequiresUserInput>false</RequiresUserInput>
-          <CommandLine>cmd /c copy /Y "D:\publisher-root-ca.crt" "C:\CrossDesk\publisher-root-ca.crt"</CommandLine>
+          <CommandLine>cmd /c for %A in (D E F G H I) do @if exist "%A:\CrossDeskAgent.exe" copy /Y "%A:\publisher-root-ca.crt" "C:\CrossDesk\publisher-root-ca.crt"</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
           <Order>7</Order>
@@ -253,7 +253,7 @@
         <SynchronousCommand wcm:action="add">
           <Order>9</Order>
           <RequiresUserInput>false</RequiresUserInput>
-          <CommandLine>cmd /c copy /Y "D:\CrossDeskAgent.exe" "C:\Windows\System32\CrossDeskAgent.exe"</CommandLine>
+          <CommandLine>cmd /c for %A in (D E F G H I) do @if exist "%A:\CrossDeskAgent.exe" copy /Y "%A:\CrossDeskAgent.exe" "C:\Windows\System32\CrossDeskAgent.exe"</CommandLine>
         </SynchronousCommand>
         <!-- Note: sc.exe requires a space after each = sign. -->
         <SynchronousCommand wcm:action="add">

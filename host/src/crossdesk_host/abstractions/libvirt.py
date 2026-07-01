@@ -10,7 +10,7 @@ installer) can be parameterised over it.
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Sequence, runtime_checkable
 
 
 @runtime_checkable
@@ -35,6 +35,18 @@ class LibvirtController(Protocol):
         existence (DEC-0016). Redefining the same ``<name>`` updates the
         config; if the domain is already running the start is a no-op.
         Raises ``RuntimeError`` on libvirt error.
+        """
+        ...
+
+    def send_key(self, keycodes: Sequence[int]) -> None:
+        """Inject key presses into the guest console (Linux keycodes).
+
+        Used by ``crossdesk install`` to satisfy the "Press any key to boot
+        from CD or DVD" prompt on the first boot of a fresh install — the
+        Windows installer media waits for a keystroke and an unattended
+        install has no human to provide one. Best-effort: swallow the
+        transient libvirt error raised while the guest console isn't ready
+        for input yet (the caller sends a short burst to cover the window).
         """
         ...
 

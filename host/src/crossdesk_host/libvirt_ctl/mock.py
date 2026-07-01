@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Sequence
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 
@@ -47,6 +47,10 @@ class MockHooks:
     attached_shares: set[str] = field(default_factory=set)
     """Shares currently attached. Tests assert this matches the
     expected state after a sequence of attach/detach calls."""
+
+    sent_keys: list[list[int]] = field(default_factory=list)
+    """One entry per ``send_key`` call (the keycode list), so tests can
+    assert the install fired the boot-from-CD keystrokes."""
 
     memory_mib: int = 4096
     """Current balloon target in MiB. Adjusted by set_memory()."""
@@ -88,6 +92,9 @@ class LibvirtControllerMock(LibvirtController):
         self.hooks.defined_xml = domain_xml
         self.hooks.define_and_start_count += 1
         self.hooks.running = True
+
+    def send_key(self, keycodes: Sequence[int]) -> None:
+        self.hooks.sent_keys.append(list(keycodes))
 
     def hard_destroy(self) -> None:
         if self.hooks.fail_next_hard_destroy:

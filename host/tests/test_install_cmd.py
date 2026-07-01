@@ -39,6 +39,17 @@ def _mock_libvirt(monkeypatch: pytest.MonkeyPatch) -> LibvirtControllerMock:
     return ctl
 
 
+@pytest.fixture(autouse=True)
+def _isolate_freerdp_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Redirect _freerdp_config_dir into tmp for EVERY test. create_libvirt_domain
+    now clears the guest's FreeRDP TOFU pin (fix: reinstall cert rotation), which
+    would otherwise delete the developer's real ~/.config/freerdp/server pin when
+    the full-pipeline test drives that step — the suite must never write ~/.config."""
+    cfg = tmp_path / "freerdp"
+    monkeypatch.setattr(install_cmd, "_freerdp_config_dir", lambda: cfg)
+    return cfg
+
+
 def _ok_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.OK)])
     monkeypatch.setattr(install_cmd, "has_failures", lambda results: False)
@@ -316,3 +327,64 @@ def test_resolve_input_missing_returns_none(
     monkeypatch.setenv("CROSSDESK_DATA_DIR", str(tmp_path / "empty"))
     out = install_cmd._resolve_input("CROSSDESK_AGENT_EXE", tmp_path / "nope.exe", "agent.exe")
     assert out is None
+
+
+def _freerdp_cfg(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    cfg = tmp_path / "freerdp"
+    monkeypatch.setattr(install_cmd, "_freerdp_config_dir", lambda: cfg)
+    return cfg
+
+
+def test_clear_tofu_pin_removes_stale_server_pem(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A reinstall rotates the guest RDP cert; the old per-host pin must go so
+    # the daemon-spawned FreeRDP (no stdin) doesn't deadlock on the cert-change
+    # prompt at the next managed launch.
+    cfg = _freerdp_cfg(monkeypatch, tmp_path)
+    pin = cfg / "server" / "localhost_3389.pem"
+    pin.parent.mkdir(parents=True)
+    pin.write_text("-----BEGIN CERTIFICATE-----\nstale\n", encoding="utf-8")
+    install_cmd._clear_guest_rdp_tofu_pin()
+    assert not pin.exists()
+
+
+def test_clear_tofu_pin_absent_is_noop(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # First install on a host has no pin yet — must not raise.
+    _freerdp_cfg(monkeypatch, tmp_path)
+    install_cmd._clear_guest_rdp_tofu_pin()  # no FileNotFoundError
+
+
+def test_clear_tofu_pin_prunes_only_guest_known_hosts_line(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The alternate line-per-host store: drop the guest's entry, keep others.
+    cfg = _freerdp_cfg(monkeypatch, tmp_path)
+    cfg.mkdir(parents=True)
+    known = cfg / "known_hosts2"
+    known.write_text(
+        "localhost 3389 CN=CrossDesk-Guest oldfingerprint\n"
+        "example.com 3389 CN=Other otherfingerprint\n",
+        encoding="utf-8",
+    )
+    install_cmd._clear_guest_rdp_tofu_pin()
+    remaining = known.read_text(encoding="utf-8")
+    assert "localhost 3389" not in remaining
+    assert "example.com 3389" in remaining
+
+
+def test_clear_tofu_pin_honours_host_port(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A non-default endpoint clears its own pin, not the default one.
+    cfg = _freerdp_cfg(monkeypatch, tmp_path)
+    (cfg / "server").mkdir(parents=True)
+    default_pin = cfg / "server" / "localhost_3389.pem"
+    custom_pin = cfg / "server" / "127.0.0.1_13389.pem"
+    default_pin.write_text("keep", encoding="utf-8")
+    custom_pin.write_text("drop", encoding="utf-8")
+    install_cmd._clear_guest_rdp_tofu_pin(host="127.0.0.1", port=13389)
+    assert not custom_pin.exists()
+    assert default_pin.exists()

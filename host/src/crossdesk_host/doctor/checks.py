@@ -580,12 +580,33 @@ def check_config_dir_writable() -> CheckResult:
     )
 
 
+def check_ovmf_firmware() -> CheckResult:
+    """Check that a plain OVMF (UEFI) firmware descriptor is installed.
+
+    The install defines a UEFI domain, so a missing OVMF package makes
+    libvirt ``defineXML`` fail at install time. Firmware paths differ by
+    distro, so probe the same candidates the install resolver uses
+    (Debian/Fedora/Arch) plus the ``$CROSSDESK_OVMF_*`` overrides — surfacing
+    the gap at pre-flight instead of mid-install.
+    """
+    if not _is_linux():
+        return CheckResult("ovmf", Status.WARN, "non-Linux host — OVMF check skipped")
+    from crossdesk_host.installer.domain_xml import resolve_ovmf
+
+    try:
+        code, _vars = resolve_ovmf()
+    except FileNotFoundError as exc:
+        return CheckResult("ovmf", Status.FAIL, str(exc))
+    return CheckResult("ovmf", Status.OK, code)
+
+
 DEFAULT_CHECKS: List[CheckFn] = [
     check_cpu_virt_extensions,
     check_kvm_device,
     check_vsock_module,
     check_qemu_version,
     check_freerdp_available,
+    check_ovmf_firmware,
     check_libvirt_session,
     check_disk_space,
     check_config_dir_writable,

@@ -12,9 +12,46 @@ from crossdesk_host.doctor.checks import (
     Status,
     check_config_dir_writable,
     check_cpu_virt_extensions,
+    check_ovmf_firmware,
     check_qemu_version,
     check_vsock_module,
 )
+
+# ---------------------------------------------------------------------------
+# check_ovmf_firmware
+# ---------------------------------------------------------------------------
+
+
+def test_ovmf_non_linux() -> None:
+    with patch("crossdesk_host.doctor.checks._is_linux", return_value=False):
+        result = check_ovmf_firmware()
+    assert result.status == Status.WARN
+
+
+def test_ovmf_present() -> None:
+    with (
+        patch("crossdesk_host.doctor.checks._is_linux", return_value=True),
+        patch(
+            "crossdesk_host.installer.domain_xml.resolve_ovmf",
+            return_value=("/usr/share/OVMF/OVMF_CODE_4M.fd", "/usr/share/OVMF/OVMF_VARS_4M.fd"),
+        ),
+    ):
+        result = check_ovmf_firmware()
+    assert result.status == Status.OK
+    assert result.message == "/usr/share/OVMF/OVMF_CODE_4M.fd"
+
+
+def test_ovmf_missing_fails() -> None:
+    with (
+        patch("crossdesk_host.doctor.checks._is_linux", return_value=True),
+        patch(
+            "crossdesk_host.installer.domain_xml.resolve_ovmf",
+            side_effect=FileNotFoundError("OVMF firmware (CODE) not found — install ovmf"),
+        ),
+    ):
+        result = check_ovmf_firmware()
+    assert result.status == Status.FAIL
+    assert "ovmf" in result.message.lower()
 
 # ---------------------------------------------------------------------------
 # check_cpu_virt_extensions

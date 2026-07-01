@@ -77,6 +77,14 @@ def render_drive_map_script(cfg: PeripheralsConfig) -> str:
     drive = cfg.shared_folder_drive_letter  # already upper-normalised + validated
     share = f"\\\\tsclient\\{cfg.shared_folder_name}"
     root = f"{drive}:\\"
+    # reg.exe parses its own argv with C-runtime rules where `\"` is an
+    # ESCAPED quote — so `/d "Z:\"` doesn't end the value at the backslash,
+    # it swallows the following `/f` and the redirect is stored literally as
+    # `Z:" /f` (silently never applies → Save dialog falls back to System32).
+    # Diagnosed live on the guest 2026-07-01. Doubling the trailing backslash
+    # makes reg store a clean `Z:\`. (cmd builtins like `if exist` don't parse
+    # this way, so `if exist "…\"` below is fine.)
+    root_regval = f"{root}\\"  # Z:\\  ->  reg stores Z:\
 
     # Map-and-redirect branch (share present). /persistent:yes so the Windows
     # MPR restores the drive at every later logon (verified to work for RAIL
@@ -88,12 +96,12 @@ def render_drive_map_script(cfg: PeripheralsConfig) -> str:
     if cfg.shared_folder_redirect_documents:
         set_lines.append(
             f'    reg add "{_USER_SHELL_FOLDERS}" /v Personal '
-            f'/t REG_EXPAND_SZ /d "{root}" /f >nul'
+            f'/t REG_EXPAND_SZ /d "{root_regval}" /f >nul'
         )
     if cfg.shared_folder_redirect_desktop:
         set_lines.append(
             f'    reg add "{_USER_SHELL_FOLDERS}" /v Desktop '
-            f'/t REG_EXPAND_SZ /d "{root}" /f >nul'
+            f'/t REG_EXPAND_SZ /d "{root_regval}" /f >nul'
         )
 
     # Restore branch (share absent). Mirror exactly the redirects we set, so

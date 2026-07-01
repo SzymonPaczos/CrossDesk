@@ -45,7 +45,10 @@ def test_documents_redirect_on_by_default() -> None:
     script = render_drive_map_script(_cfg())
     # Personal (Documents) shell folder points at the drive root in the
     # share-present branch, and is restored to the default in the absent branch.
-    assert '/v Personal /t REG_EXPAND_SZ /d "Z:\\"' in script
+    # The drive-root value carries a DOUBLED trailing backslash (`Z:\\`) so
+    # reg.exe's C-runtime arg parser stores a clean `Z:\` instead of eating
+    # the `/f` flag — see drive_map.py::render_drive_map_script.
+    assert '/v Personal /t REG_EXPAND_SZ /d "Z:\\\\"' in script
     assert '/v Personal /t REG_EXPAND_SZ /d "%USERPROFILE%\\Documents"' in script
 
 
@@ -56,7 +59,7 @@ def test_desktop_redirect_off_by_default() -> None:
 
 def test_desktop_redirect_when_enabled() -> None:
     script = render_drive_map_script(_cfg(shared_folder_redirect_desktop=True))
-    assert '/v Desktop /t REG_EXPAND_SZ /d "Z:\\"' in script
+    assert '/v Desktop /t REG_EXPAND_SZ /d "Z:\\\\"' in script
     assert '/v Desktop /t REG_EXPAND_SZ /d "%USERPROFILE%\\Desktop"' in script
 
 

@@ -337,6 +337,19 @@
           <RequiresUserInput>false</RequiresUserInput>
           <CommandLine>cmd /c net start TermService</CommandLine>
         </SynchronousCommand>
+        <!-- Reboot once so the AutoLogon(LogonCount=1) console session is
+             gone before the host connects: Win10 is single-session-per-user,
+             so a lingering console logon makes the host's FIRST RDP RemoteApp
+             launch fail (LOGON_FAILED_OTHER). An OS-initiated restart is clean
+             (unlike an ACPI power event, which wedged a fresh guest at firmware)
+             and boots straight to the logon screen where the agent (session 0,
+             start=auto) reconnects. Verified live 2026-07-01 (A7-live): the
+             managed render only worked after a reboot cleared the console. -->
+        <SynchronousCommand wcm:action="add">
+          <Order>21</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <CommandLine>cmd /c shutdown /r /t 20 /c "CrossDesk setup complete, restarting"</CommandLine>
+        </SynchronousCommand>
       </FirstLogonCommands>
 
     </component>

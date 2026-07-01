@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
+import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -254,6 +255,30 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     print(_("    built tools ISO at {path} (locale {loc})").format(path=output, loc=locale))
 
 
+# Linux keycode for ENTER + boot-assist burst tuning (see _boot_from_cd).
+_KEY_ENTER = 28
+_BOOT_KEY_PRESSES = 12
+_BOOT_KEY_INTERVAL_S = 1.25
+
+
+def _boot_from_cd(ctl: LibvirtController) -> None:
+    """Satisfy the Windows installer's "Press any key to boot from CD or
+    DVD" prompt on the first boot of a fresh install.
+
+    That prompt shows for a few seconds once the firmware POSTs and is the
+    only keystroke a fresh unattended install needs — every later reboot
+    falls through to the (now-bootable) disk by itself. Send ENTER a bounded
+    number of times across the prompt window (a one-shot boot assist — a
+    fixed-count ``for``, not a ``while True`` poll). The burst finishes long
+    before Windows Setup's first reboot, so it never re-triggers the prompt
+    and restarts Setup. Verified live 2026-07-01 (A7-live).
+    """
+    print(_("    clearing the installer's 'press any key to boot' prompt"))
+    for _i in range(_BOOT_KEY_PRESSES):
+        ctl.send_key([_KEY_ENTER])
+        time.sleep(_BOOT_KEY_INTERVAL_S)
+
+
 def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
     iso: Path | None = args.iso_path
     if iso is None or not iso.is_file():
@@ -302,11 +327,13 @@ def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
         tools_iso=tools,
         vsock_enabled=vsock_ok,
     )
+    ctl = _resolve_libvirt_ctl()
     try:
-        _resolve_libvirt_ctl().define_and_start(build_domain_xml(spec))
+        ctl.define_and_start(build_domain_xml(spec))
     except RuntimeError as exc:
         raise _StepFailed(str(exc)) from exc
     print(_("    defined + started libvirt domain {name}").format(name=_DOMAIN_NAME))
+    _boot_from_cd(ctl)
 
 
 def _step_run_autounattend(args: argparse.Namespace) -> None:

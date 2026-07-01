@@ -72,6 +72,8 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     _mock_libvirt: LibvirtControllerMock,
 ) -> None:
     _ok_doctor(monkeypatch)
+    # No real key-send sleep in the test.
+    monkeypatch.setattr(install_cmd, "_BOOT_KEY_INTERVAL_S", 0.0)
     iso = tmp_path / "Win10.iso"
     iso.write_bytes(b"fake-iso")
     monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
@@ -105,6 +107,9 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     assert _mock_libvirt.hooks.defined_xml is not None
     assert "windows-guest" in _mock_libvirt.hooks.defined_xml
     assert (_state_in_tmp.parent / "tools.iso").is_file()
+    # The boot-from-CD key burst fired (ENTER, one press per iteration) so a
+    # fresh unattended install clears "Press any key to boot from CD or DVD".
+    assert _mock_libvirt.hooks.sent_keys == [[install_cmd._KEY_ENTER]] * install_cmd._BOOT_KEY_PRESSES
 
 
 def test_prepare_autounattend_substitutes_locale_and_password(tmp_path: Path) -> None:

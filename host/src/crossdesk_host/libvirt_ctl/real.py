@@ -6,7 +6,7 @@ checking but constructing it raises if ``libvirt`` is not installed.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 
@@ -105,6 +105,18 @@ class RealLibvirtController(LibvirtController):
             domain.create()
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"start after destroy failed: {exc}") from exc
+
+    def send_key(self, keycodes: Sequence[int]) -> None:
+        import libvirt
+
+        domain = self._domain()
+        try:
+            # codeset=LINUX, holdtime=0, keycodes, nkeycodes, flags=0
+            domain.sendKey(libvirt.VIR_KEYCODE_SET_LINUX, 0, list(keycodes), len(keycodes), 0)
+        except libvirt.libvirtError as exc:
+            # Best-effort: the console may not accept input yet in early boot;
+            # the caller sends a short burst so a single miss is harmless.
+            logger.debug("send_key ignored (%s): %s", list(keycodes), exc)
 
     def graceful_shutdown(self) -> None:
         import libvirt

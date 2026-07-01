@@ -39,6 +39,17 @@ def _mock_libvirt(monkeypatch: pytest.MonkeyPatch) -> LibvirtControllerMock:
     return ctl
 
 
+@pytest.fixture(autouse=True)
+def _isolate_freerdp_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Redirect _freerdp_config_dir into tmp for EVERY test. create_libvirt_domain
+    now clears the guest's FreeRDP TOFU pin (fix: reinstall cert rotation), which
+    would otherwise delete the developer's real ~/.config/freerdp/server pin when
+    the full-pipeline test drives that step — the suite must never write ~/.config."""
+    cfg = tmp_path / "freerdp"
+    monkeypatch.setattr(install_cmd, "_freerdp_config_dir", lambda: cfg)
+    return cfg
+
+
 def _ok_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.OK)])
     monkeypatch.setattr(install_cmd, "has_failures", lambda results: False)

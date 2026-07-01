@@ -48,27 +48,25 @@ drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflo
   padnięty in-guest FirstLogonCommand jest niewidoczny. Enabler dla powyższego +
   console-session fix. Fix: bounded poll na pierwszy Hello/heartbeat (timeout →
   czytelny błąd wskazujący VNC + FirstLogonCommands log) gate'ujący finalize.
-- **[P1] Console-session blokuje PIERWSZY managed RAIL launch po świeżej
-  instalacji.** AutoLogon(LogonCount=1) w [`infra/autounattend.xml`](../infra/autounattend.xml)
-  zostawia aktywną sesję konsoli `crossdesk`; Win10 single-session → RDP RemoteApp
-  jako ten sam user pada `LOGON_FAILED_OTHER` (live 2026-07-01). A4/A6 działały bo
-  guest był po reboocie (czysty logon screen). Fix (deliberate, needs reinstall
-  verify): OS-initiated `shutdown /r` jako ostatni FirstLogonCommand (order 21) —
-  OOBE-reboots fall-through'ują CD-prompt OK, więc niższe ryzyko niż mój manualny
-  ACPI reboot który zawiesił gościa; ALBO host-side logoff po post-install-wait.
+- **✅ [P1 ZROBIONE `0bccb73`] Console-session blokowała PIERWSZY managed RAIL
+  launch.** AutoLogon(LogonCount=1) zostawiała aktywną sesję konsoli `crossdesk`;
+  Win10 single-session → RDP RemoteApp jako ten sam user padał `LOGON_FAILED_OTHER`.
+  Fix: order-21 `shutdown /r` (OS-initiated, czysty) na końcu FirstLogonCommands →
+  czysty logon screen, agent (session 0) reconnectuje. **LIVE-VERIFIED na drugiej
+  pristine reinstalacji:** Hello#1 → auto-reboot → Hello#2 → `crossdesk launch
+  notepad` renderuje Notepada (1426×782 natywne okno). Follow-up (P1): pierwszy
+  launch tuż po reconnectcie ściga się z verify-creds → bounded post-install-wait
+  (niżej) by wygładził.
 - **[P1] Eject install media po instalacji.** Install-ISO zostaje podłączone →
   każdy reboot re-trafia „press any key to boot from CD"; **live: ACPI reboot
   świeżego gościa ZAWIESIŁ go na firmware**, recovery = eject ISO + destroy+start.
   Współdzieli fix ze steady-state XML (P0 wyżej). Host-side, gated na post-install-wait.
-- **[P1] Hardcoded ścieżki OVMF łamią instalację na non-Debian.**
-  [`installer/domain_xml.py`](../host/src/crossdesk_host/installer/domain_xml.py)
-  115-116 pinuje `/usr/share/OVMF/OVMF_CODE_4M.fd` + `OVMF_VARS_4M.fd` (Debian/Ubuntu-only);
-  Fedora `/usr/share/edk2/ovmf/`, Arch `/usr/share/edk2-ovmf/x64/`, NixOS store.
-  `defineXML` padnie na tych distro (PACKAGING.md targetuje rpm/AUR/NixOS).
-  Wzorzec candidate-list JUŻ istnieje w [`infra/launch-vm.py`](../infra/launch-vm.py)
-  (`_OVMF_*_CANDIDATES`+`find_first`, nieużywany w install flow) + precedens
-  `_resolve_freerdp_binary`. Fix: probe candidate-list + `CROSSDESK_OVMF_CODE/VARS`
-  env override + doctor OVMF-present check. Win11 (secure=yes+smm) osobno.
+- **✅ [P1 ZROBIONE `29ccea5`+`bac8dfd`] Hardcoded ścieżki OVMF łamały non-Debian.**
+  Fix: `resolve_ovmf()` w `domain_xml.py` (env override `CROSSDESK_OVMF_CODE/VARS`
+  → Debian/Fedora/Arch candidate-list → `FileNotFoundError` z listą ścieżek);
+  `create_libvirt_domain` woła to (I/O) i przekazuje do `DomainSpec`, `build_domain_xml`
+  zostaje pure. + `check_ovmf_firmware` doctor pre-flight. 9 nowych testów.
+  **Pozostaje (P2):** Win11 (secure=yes+smm) wymaga osobnego deskryptora.
 - **[P2] mTLS guest identity nie rotuje przy reinstalacji.** `_resolve_mtls_pki`
   ([`cli/install_cmd.py`](../host/src/crossdesk_host/cli/install_cmd.py) 185-210)
   reużywa `infra/certs/pki` (default) → każda instalacja na klonie dzieli tę samą

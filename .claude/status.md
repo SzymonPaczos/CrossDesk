@@ -26,14 +26,18 @@ właściwa obietnica A7-live: instalacja sama składa działającego agenta.
    Fix: install czyści pin przy create_libvirt_domain. Adversarial Workflow (11
    agentów) złapał non-hermetyczny test w tym fixie (kasował realny dev pin) →
    naprawione autouse fixture'em (sentinel-verified).
-3. 🔲 **render-from-fresh-install NIE domknięty** — verify-creds status=1 + TOFU
-   działają, ale okno RAIL nie wstało: `LOGON_FAILED_OTHER` bo AutoLogon(LogonCount=1)
-   zostawia aktywną sesję konsoli, Win10 single-session blokuje RDP RemoteApp jako
-   ten sam user (A4/A6 działały bo po reboocie). Reboot dla wyczyszczenia sesji
-   **zawiesił świeżego gościa na firmware** (install-ISO wciąż boot-order-1); eject
-   ISO + destroy+start odzyskało do lock screena, ale po agresywnych resetach agent
-   przestał wracać (Win repair). Render PIPELINE udowodniony (A4/A6). Diagnoza +
-   fix-plany → `backlog.md` P0/P1 „A7-live install-path findings".
+3. ✅ **render-from-fresh-install DOMKNIĘTY** (`0bccb73` + druga pristine reinstall).
+   Root cause: AutoLogon(LogonCount=1) zostawia aktywną sesję konsoli, Win10
+   single-session blokuje RDP RemoteApp jako ten sam user → `LOGON_FAILED_OTHER`.
+   Fix: order-21 `shutdown /r` na końcu FirstLogonCommands (OS-initiated reboot —
+   czysty, w przeciwieństwie do ACPI który zawieszał gościa). **LIVE-VERIFIED na
+   drugiej pristine reinstalacji:** install → agent Hello #1 (~11min) → order-21
+   auto-reboot → agent Hello #2 reconnect (~100s, konsola wyczyszczona) →
+   `crossdesk launch notepad` → verify-creds status=1 → RAIL → **Notepad renderuje
+   jako natywne okno Linuksa** (`'Bez tytułu — Notatnik'` 1426×782, WM_CLASS
+   RAIL/crossdesk-notepad, `workdir:Z:\` + `/drive:CrossDesk,$HOME` whole-$HOME live).
+   Uwaga: pierwszy launch tuż po reconnectcie ściga się z verify-creds (retry po
+   settle renderuje) — bounded post-install-wait (backlog) by to wygładził.
 
 **Adversarial audyt (11 agentów) — 6 potwierdzonych defektów** (backlog.md P0):
 najważniejszy **[P0-latentny] `hard_destroy` → REINSTALACJA Windows** (auto-recovery

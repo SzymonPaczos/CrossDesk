@@ -9,6 +9,26 @@ prac — `history/completed-work.md`.
 
 ---
 
+## 🎉 MILESTONE — pełny stack end-to-end na realnym HW (2026-07-01, Linux+KVM)
+
+Cały łańcuch CrossDeska zweryfikowany na żywo na `windows-guest`:
+**host daemon (tcp:50051, mTLS) → guest NT-service agent (`CrossDeskAgent`,
+LocalSystem, session 0) → verify-credentials (realny `LogonUserW`) → FreeRDP
+RAIL render**. `crossdesk launch notepad` (ścieżka zarządzana) →
+`verify_credentials_resolved status=1` → spawn RAIL z `workdir:Z:\` +
+`/drive:CrossDesk,$HOME` (whole-$HOME) → Notepad jako natywne okno Linuksa.
+
+**A4 (NT-service agent) zamknięte** — usługa: (1) łączy się (Hello/READY,
+3 plany), (2) przeżywa RDP disconnect (session-0 persist), (3) przeżywa
+hard reset (start=auto → auto-reconnect ~32s). Dowody: `/tmp/cd-evidence/`.
+Także live: A5-live Stage A Save-dialog (whole-$HOME) + bug drive_map
+reg-quote naprawiony (12cae84). Odkrycie: install z 1 cze zostawił usługę
+zarejestrowaną, ale binary+env brak (stary autounattend); obecny robi to OK.
+Bring-up: daemon `CROSSDESK_CONFIG__TRANSPORT__BIND_KIND=tcp`; agent-usługa
+przez FixAgent.cmd (elevated, desktop-mode bo RemoteApp nie pokaże UAC).
+
+---
+
 ## Usability push (2026-06-02/03, branch `feat/usability-shared-fs`) — CLI/TUI/GUI + filesystem + any-app + window icons
 
 Wszystko gate-green (mypy --strict 121, host suite 859+, cargo check/clippy).

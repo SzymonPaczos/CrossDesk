@@ -255,6 +255,60 @@ def _step_build_tools_iso(args: argparse.Namespace) -> None:
     print(_("    built tools ISO at {path} (locale {loc})").format(path=output, loc=locale))
 
 
+# --------------------------------------------------------------------------
+# FreeRDP TOFU pin hygiene
+# --------------------------------------------------------------------------
+# The managed launch path spawns FreeRDP with /cert:tofu (trust-on-first-use;
+# see display/rail_command.py), which pins the guest's self-signed RDP cert
+# under ~/.config/freerdp/server/<host>_<port>.pem. A reinstall rotates that
+# cert, so a stale pin then reads as a cert *change* — and a daemon-spawned
+# FreeRDP has no stdin to answer the "trust the new cert?" prompt, so every
+# managed launch fails with ERRCONNECT_TLS_CONNECT_FAILED. Clearing the pin
+# when we (re)create the guest lets TOFU re-pin the fresh cert cleanly while
+# keeping change-detection for steady-state launches. Verified live 2026-07-01
+# (A7-live): a reinstall's rotated cert deadlocked `crossdesk launch` until the
+# stale pin was removed. host:port mirror the RAIL spawn (localhost:3389).
+_RDP_TOFU_HOST = "localhost"
+_RDP_TOFU_PORT = 3389
+
+
+def _freerdp_config_dir() -> Path:
+    """FreeRDP's per-user config home (``$XDG_CONFIG_HOME/freerdp`` or
+    ``~/.config/freerdp``). A function so tests can redirect it."""
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg) if xdg else Path.home() / ".config"
+    return base / "freerdp"
+
+
+def _clear_guest_rdp_tofu_pin(
+    host: str = _RDP_TOFU_HOST, port: int = _RDP_TOFU_PORT
+) -> None:
+    """Drop any stale FreeRDP TOFU pin for the guest's RDP endpoint so a
+    reinstall's rotated self-signed cert is trusted-on-first-use again (see the
+    note above). Idempotent — a missing pin is a silent no-op."""
+    cfg = _freerdp_config_dir()
+    pin = cfg / "server" / f"{host}_{port}.pem"
+    try:
+        pin.unlink()
+        print(
+            _(
+                "    cleared stale FreeRDP cert pin for {h}:{p} (guest cert rotated)"
+            ).format(h=host, p=port)
+        )
+    except FileNotFoundError:
+        pass  # first install on this host, or already cleared
+    # FreeRDP's alternate line-per-host store; prune only the guest's entry.
+    known = cfg / "known_hosts2"
+    if known.is_file():
+        try:
+            lines = known.read_text(encoding="utf-8").splitlines(keepends=True)
+        except OSError:
+            return
+        kept = [ln for ln in lines if not ln.startswith(f"{host} {port} ")]
+        if len(kept) != len(lines):
+            known.write_text("".join(kept), encoding="utf-8")
+
+
 # Linux keycode for ENTER + boot-assist burst tuning (see _boot_from_cd).
 _KEY_ENTER = 28
 _BOOT_KEY_PRESSES = 12
@@ -333,6 +387,11 @@ def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
     except RuntimeError as exc:
         raise _StepFailed(str(exc)) from exc
     print(_("    defined + started libvirt domain {name}").format(name=_DOMAIN_NAME))
+    # The redefined guest reinstalls Windows, which mints a fresh self-signed
+    # RDP cert; forget the old TOFU pin now so the first managed launch after
+    # this install re-pins cleanly instead of deadlocking on the cert-change
+    # prompt (see _clear_guest_rdp_tofu_pin).
+    _clear_guest_rdp_tofu_pin()
     _boot_from_cd(ctl)
 
 

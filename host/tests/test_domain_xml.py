@@ -199,3 +199,78 @@ def test_persistent_share_duplicate_tag_rejected() -> None:
                 persistent_shares=(("dup", "/home/u/a"), ("dup", "/home/u/b")),
             )
         )
+
+
+def test_build_honours_explicit_ovmf_paths() -> None:
+    # A caller-resolved (cross-distro) firmware pair overrides the default.
+    root = _xml()  # default has no ovmf_code → Debian/Ubuntu fallback
+    assert root.find("os/loader").text == "/usr/share/OVMF/OVMF_CODE_4M.fd"  # type: ignore[union-attr]
+    spec = DomainSpec(
+        name="windows-guest",
+        disk_path=Path("/d.qcow2"),
+        windows_iso=Path("/w.iso"),
+        tools_iso=Path("/t.iso"),
+        ovmf_code="/usr/share/edk2/ovmf/OVMF_CODE.fd",
+        ovmf_vars="/usr/share/edk2/ovmf/OVMF_VARS.fd",
+    )
+    root2 = ET.fromstring(build_domain_xml(spec))
+    assert root2.find("os/loader").text == "/usr/share/edk2/ovmf/OVMF_CODE.fd"  # type: ignore[union-attr]
+    assert root2.find("os/nvram").get("template") == "/usr/share/edk2/ovmf/OVMF_VARS.fd"  # type: ignore[union-attr]
+
+
+def test_resolve_ovmf_env_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from crossdesk_host.installer import domain_xml
+
+    code = tmp_path / "code.fd"
+    varss = tmp_path / "vars.fd"
+    code.write_bytes(b"c")
+    varss.write_bytes(b"v")
+    monkeypatch.setenv("CROSSDESK_OVMF_CODE", str(code))
+    monkeypatch.setenv("CROSSDESK_OVMF_VARS", str(varss))
+    assert domain_xml.resolve_ovmf() == (str(code), str(varss))
+
+
+def test_resolve_ovmf_env_override_missing_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from crossdesk_host.installer import domain_xml
+
+    monkeypatch.setenv("CROSSDESK_OVMF_CODE", str(tmp_path / "nope.fd"))
+    monkeypatch.delenv("CROSSDESK_OVMF_VARS", raising=False)
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        domain_xml.resolve_ovmf()
+
+
+def test_resolve_ovmf_candidate_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # No env override → first existing candidate wins (simulate Fedora: only
+    # the 2nd candidate exists).
+    from crossdesk_host.installer import domain_xml
+
+    monkeypatch.delenv("CROSSDESK_OVMF_CODE", raising=False)
+    monkeypatch.delenv("CROSSDESK_OVMF_VARS", raising=False)
+    code = tmp_path / "edk2_code.fd"
+    varss = tmp_path / "edk2_vars.fd"
+    code.write_bytes(b"c")
+    varss.write_bytes(b"v")
+    monkeypatch.setattr(
+        domain_xml, "_OVMF_CODE_CANDIDATES", ("/nonexistent/code.fd", str(code))
+    )
+    monkeypatch.setattr(
+        domain_xml, "_OVMF_VARS_CANDIDATES", ("/nonexistent/vars.fd", str(varss))
+    )
+    assert domain_xml.resolve_ovmf() == (str(code), str(varss))
+
+
+def test_resolve_ovmf_none_present_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    from crossdesk_host.installer import domain_xml
+
+    monkeypatch.delenv("CROSSDESK_OVMF_CODE", raising=False)
+    monkeypatch.delenv("CROSSDESK_OVMF_VARS", raising=False)
+    monkeypatch.setattr(domain_xml, "_OVMF_CODE_CANDIDATES", ("/nonexistent/code.fd",))
+    monkeypatch.setattr(domain_xml, "_OVMF_VARS_CANDIDATES", ("/nonexistent/vars.fd",))
+    with pytest.raises(FileNotFoundError, match="ovmf"):
+        domain_xml.resolve_ovmf()

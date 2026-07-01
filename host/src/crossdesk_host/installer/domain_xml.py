@@ -16,6 +16,7 @@ the unattended install.
 
 from __future__ import annotations
 
+import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,6 +25,64 @@ from typing import Tuple
 # qemu's hard-coded host CID for AF_VSOCK is 2; the guest is assigned a
 # distinct CID here (3 by convention, matching infra/launch-vm.py).
 _DEFAULT_GUEST_CID = 3
+
+# OVMF (UEFI) firmware descriptor paths differ by distro. The plain
+# (non-Secure-Boot, non-.ms) split-firmware build is required: libvirt's
+# `firmware='efi'` auto-select grabbed the Secure Boot / AMD-SEV variants and
+# left a fresh install at UEFI "No bootable option" (A7-live 2026-07-01). The
+# Debian/Ubuntu path is first (the box we validate on); Fedora/RHEL/Arch
+# follow. PACKAGING.md targets rpm/AUR/NixOS, so a single hardcoded path would
+# break `defineXML` on every non-Debian host. Mirrors infra/launch-vm.py.
+_OVMF_CODE_CANDIDATES = (
+    "/usr/share/OVMF/OVMF_CODE_4M.fd",  # Ubuntu/Debian
+    "/usr/share/OVMF/OVMF_CODE.fd",
+    "/usr/share/edk2/ovmf/OVMF_CODE.fd",  # Fedora/RHEL
+    "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd",  # Arch (edk2-ovmf)
+    "/usr/share/ovmf/x64/OVMF_CODE.fd",  # Arch (ovmf)
+)
+_OVMF_VARS_CANDIDATES = (
+    "/usr/share/OVMF/OVMF_VARS_4M.fd",
+    "/usr/share/OVMF/OVMF_VARS.fd",
+    "/usr/share/edk2/ovmf/OVMF_VARS.fd",
+    "/usr/share/edk2-ovmf/x64/OVMF_VARS.fd",
+    "/usr/share/ovmf/x64/OVMF_VARS.fd",
+)
+# build_domain_xml stays a pure formatter (no I/O); these are its fallback
+# defaults when the caller doesn't resolve a real path. The install path calls
+# resolve_ovmf() (below) to pick a host-correct pair and fail loudly if absent.
+_DEFAULT_OVMF_CODE = _OVMF_CODE_CANDIDATES[0]
+_DEFAULT_OVMF_VARS = _OVMF_VARS_CANDIDATES[0]
+
+
+def resolve_ovmf() -> Tuple[str, str]:
+    """Return ``(code_path, vars_template)`` for the plain OVMF firmware on this
+    host: ``$CROSSDESK_OVMF_CODE`` / ``$CROSSDESK_OVMF_VARS`` if set, else the
+    first existing distro candidate. Raises :class:`FileNotFoundError` naming
+    the searched paths so a missing-firmware install fails with a fixable
+    message instead of an opaque libvirt ``defineXML`` error.
+
+    Does filesystem I/O — call it in the install path and pass the result into
+    :class:`DomainSpec`, keeping :func:`build_domain_xml` pure.
+    """
+
+    def _pick(env: str, candidates: Tuple[str, ...], what: str) -> str:
+        override = os.environ.get(env)
+        if override:
+            if Path(override).is_file():
+                return override
+            raise FileNotFoundError(f"{env}={override!r} does not exist")
+        for c in candidates:
+            if Path(c).is_file():
+                return c
+        raise FileNotFoundError(
+            f"OVMF {what} not found — install the 'ovmf'/'edk2-ovmf' package or set "
+            f"{env}. Searched: {', '.join(candidates)}"
+        )
+
+    return (
+        _pick("CROSSDESK_OVMF_CODE", _OVMF_CODE_CANDIDATES, "firmware (CODE)"),
+        _pick("CROSSDESK_OVMF_VARS", _OVMF_VARS_CANDIDATES, "vars template"),
+    )
 
 # libvirt's qemu-commandline passthrough namespace. Used for the user-net
 # NIC + host→guest RDP hostfwd: libvirt's native <portForward> needs the
@@ -43,6 +102,11 @@ class DomainSpec:
     vcpus: int = 4
     vsock_cid: int = _DEFAULT_GUEST_CID
     emulator: str = "/usr/bin/qemu-system-x86_64"
+    ovmf_code: str = ""
+    """Plain OVMF CODE descriptor path. Empty → the Debian/Ubuntu default; the
+    install path fills it via :func:`resolve_ovmf` so non-Debian hosts work."""
+    ovmf_vars: str = ""
+    """OVMF VARS template path. Empty → the Debian/Ubuntu default (see above)."""
     vsock_enabled: bool = True
     """Include the AF_VSOCK device. Disabled when ``/dev/vhost-vsock`` is
     not accessible to the qemu:///session process (a udev-rule / permission
@@ -112,8 +176,10 @@ def build_domain_xml(spec: DomainSpec) -> str:
     ET.SubElement(os_el, "type", {"arch": "x86_64", "machine": "q35"}).text = "hvm"
     ET.SubElement(
         os_el, "loader", {"readonly": "yes", "type": "pflash"}
-    ).text = "/usr/share/OVMF/OVMF_CODE_4M.fd"
-    ET.SubElement(os_el, "nvram", {"template": "/usr/share/OVMF/OVMF_VARS_4M.fd"})
+    ).text = spec.ovmf_code or _DEFAULT_OVMF_CODE
+    ET.SubElement(
+        os_el, "nvram", {"template": spec.ovmf_vars or _DEFAULT_OVMF_VARS}
+    )
     # Boot order is set per-device below (<boot order=.../>), not here:
     # with UEFI + multiple SATA devices the global <os><boot> form left
     # OVMF with "no bootable option" — per-device order is reliable.

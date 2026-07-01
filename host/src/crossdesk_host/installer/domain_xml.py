@@ -100,8 +100,20 @@ def build_domain_xml(spec: DomainSpec) -> str:
     # firmware='efi' lets libvirt pick the OVMF descriptor and manage the
     # per-domain nvram copy. Win10 does not require Secure Boot, so plain
     # UEFI is enough (Win11 would need <loader secure='yes'> + smm).
-    os_el = ET.SubElement(domain, "os", {"firmware": "efi"})
+    # Pin the plain (non-Secure-Boot) OVMF explicitly. Letting libvirt
+    # auto-select via `firmware='efi'` picked the Secure Boot descriptor
+    # (OVMF_CODE_4M.ms.fd, secure='yes'); a `<firmware><feature
+    # secure-boot=no></firmware>` constraint instead matched the stateless
+    # AMD-SEV build — both left a fresh install at UEFI "No bootable option"
+    # (verified live 2026-07-01, A7-live). Win10 needs neither, so name the
+    # plain OVMF directly; libvirt derives the per-domain nvram from the
+    # template.
+    os_el = ET.SubElement(domain, "os")
     ET.SubElement(os_el, "type", {"arch": "x86_64", "machine": "q35"}).text = "hvm"
+    ET.SubElement(
+        os_el, "loader", {"readonly": "yes", "type": "pflash"}
+    ).text = "/usr/share/OVMF/OVMF_CODE_4M.fd"
+    ET.SubElement(os_el, "nvram", {"template": "/usr/share/OVMF/OVMF_VARS_4M.fd"})
     # Boot order is set per-device below (<boot order=.../>), not here:
     # with UEFI + multiple SATA devices the global <os><boot> form left
     # OVMF with "no bootable option" — per-device order is reliable.

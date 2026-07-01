@@ -35,8 +35,16 @@ def test_well_formed_kvm_domain() -> None:
 def test_uefi_and_per_device_boot_order() -> None:
     root = _xml()
     os_el = root.find("os")
-    assert os_el is not None and os_el.get("firmware") == "efi"
+    assert os_el is not None
     assert os_el.findtext("type") == "hvm"
+    # Plain (non-Secure-Boot) OVMF pinned explicitly: libvirt's `firmware='efi'`
+    # auto-selection picked Secure Boot / AMD-SEV builds that left a fresh
+    # install at UEFI "No bootable option" (verified live 2026-07-01).
+    loader = os_el.find("loader")
+    assert loader is not None and loader.text == "/usr/share/OVMF/OVMF_CODE_4M.fd"
+    assert loader.get("secure") != "yes"
+    nvram = os_el.find("nvram")
+    assert nvram is not None and nvram.get("template") == "/usr/share/OVMF/OVMF_VARS_4M.fd"
     # Boot order is per-device (UEFI + multi-SATA): Windows ISO first, disk
     # second, tools ISO not bootable. The global <os><boot> form is gone.
     assert os_el.findall("boot") == []

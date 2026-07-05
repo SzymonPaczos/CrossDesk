@@ -385,11 +385,14 @@ Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
   steady-state XML — `windows-guest` zdefiniowany z `dumpxml`: disk `sda` boot
   order 1, oba CD-ROM ejected (brak `<source>`). (Kontekst: stało się to przy
   odtwarzaniu domeny po incydencie — patrz `needs-owner.md` „Eyeball" 2026-07-05;
-  dysk Windows nietknięty.) **ZOSTAJE (box-gated, = A3 + zamyka MVP #6):** (a)
-  wpiąć realny `LibvirtController` do daemona (`daemon.py:126` twardo mock,
-  Phase-3 dev-default) → to AKTYWUJE finalize na pierwszym Hello; (b) pełny
-  live-verify: `virsh start` po redefinicji bootuje DYSK (nie ISO) + agent
-  reconnect. Mapa w `backlog.md` P0 „A7-live install-path findings".
+  dysk Windows nietknięty.) **A3-SEAM ZROBIONY (`30579a6`):** daemon nie jest
+  już twardo mock — `LibvirtConfig.backend = mock|real` (default mock,
+  `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real`); `real` napędza `qemu:///session`
+  i aktywuje `on_session_ready` finalize + realne recovery. **ZOSTAJE (box-gated,
+  zamyka MVP #6):** pełny live-verify na **wiernej** domenie — daemon
+  `backend=real` + świeży install (NIE incydentowa restore: ma świeży nvram bez
+  wpisu boot) → agent Hello → finalize → `destroy`+`create` bootuje DYSK (nie ISO)
+  + agent reconnect ≤90s. Mapa w `backlog.md` P0 „A7-live install-path findings".
 - **Resilience & observability (public-beta)** — branch `feat/resilience-logging`
   (z `main`, NIE merged). **Shipped + przetestowane** (bramki: mypy --strict 122,
   ruff src czysto, host suite 842+): (1) **monitoring FreeRDP** —

@@ -31,10 +31,17 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   `install.state.json`) + retry przy błędzie libvirt. Daemon wpina hook TYLKO dla
   realnego kontrolera (mock zamarkowałby krok „done" bez realnej redefinicji =
   maskowanie data-loss). 14 testów, cała suita zielona.
-- 🔲 **ZOSTAJE (box-gated, = A3 + live)**: (a) wpiąć realny `LibvirtController`
-  do daemona (dziś twardo mock, `daemon.py:126`) — to aktywuje `on_session_ready`
-  finalize; (b) live-verify na realnym libvirt, że po redefinicji destroy+create
-  bootuje dysk (nie ISO). Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
+- ✅ **A3-seam ZROBIONY (host-side, `30579a6`)**: backend libvirt daemona jest
+  config-selectable — `LibvirtConfig.backend = mock|real` (default mock,
+  zachowanie niezmienione) + `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real`. Ustawienie
+  `real` na boxie napędza `qemu:///session` i AKTYWUJE `on_session_ready` finalize
+  + realne recovery heartbeatu (`_assert_suspend_protection` dalej fail-close bez
+  D-Bus listenera). 4 testy. Koniec „daemon twardo mock".
+- 🔲 **ZOSTAJE (box-gated, = live-verify P0)**: uruchomić daemon z `backend=real`
+  na **wiernej** domenie (świeży install, nie moja incydentowa restore — ta ma
+  świeży nvram bez wpisu boot, co zafałszowałoby test bootu) → agent Hello →
+  finalize redefiniuje do steady-state → `destroy`+`create` bootuje DYSK (nie ISO)
+  → agent reconnect ≤90s. Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 

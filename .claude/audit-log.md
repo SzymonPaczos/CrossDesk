@@ -2,6 +2,150 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-07-05
+
+**Git:** `5d87d2d` on `main`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 126 files)
+- pytest collected: 971
+- bandit medium/high: 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 16
+- gui cargo-deny issues: 4
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 244
+- #[test] annotations (rust): 84
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-02 (3d ago)
+- META decisions (status: aktywna): 7
+- ADR DEC-NNNN total: 17
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-05-31 (35d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Warstwa głęboka (osąd agenta)
+
+Metoda: 3 równoległe agenty (bezpieczeństwo+decyzje / slop+backend /
+testy+architektura+dead-code); kluczowe *nowe* znaleziska zweryfikowane
+ręcznie greppem+odczytem (event-loop subprocess, puste pakiety, brak
+timeoutu, drift). Statyczna warstwa wzorowa (ruff/mypy/bandit/clippy/
+cargo-audit = 0; cargo-deny spadł 24→16 guest, 15→4 gui; 0 TODO w src).
+
+**Ogólna ocena:** zdrowy, zdyscyplinowany projekt. Rdzeń produktu
+zweryfikowany na żywo (A7-live: świeży `crossdesk install` → agent
+auto-online → Notepad/Paint jako natywne okna Linuksa, zero ręcznych
+kroków). Bezpieczeństwo: 0 P0/P1 — per-frame AuthContext na wszystkich
+3 planes, mTLS `require_client_auth`, tokeny kryptograficzne
+(uuid4/secrets), abstrakcje respektowane, brak sekretów w git, decyzje
+(No-Docker / No-polling / whole-$HOME) niezłamane. Slop niski, Manager
+GUI ma uczciwe empty-state.
+
+**P0 (standing — nie nowe, ale otwarte i blokujące):**
+- **`hard_destroy` → REINSTALACJA Windows / utrata danych — BLOKUJE A3.**
+  Install-ISO jest `boot order=1` przez całe życie VM; heartbeat-FSM
+  auto-recovery robi `destroy()`+`create()` → bootuje install-ISO →
+  autounattend reinstaluje Windows na dysku, bez człowieka. Latentny dziś
+  (daemon=mock-libvirt). Realny `LibvirtController` NIE MOŻE wejść do
+  lifecycle zanim nie wyląduje steady-state-XML finalize (eject ISO,
+  disk boot=1, flaga „installed"). `backlog.md` P0 + `needs-owner.md`.
+
+**P1 (nowe w tym audycie):**
+- **Blokujący `subprocess.run` na pętli asyncio daemona.** `control.py:220`
+  woła `rail_manager.handle_rail_event()` synchronicznie w pętli async
+  `_consume_session`; ścieżka CREATED→`WindowIconStore.offer`→
+  `_refresh_caches` (`display/window_icon.py:139`) odpala 2× `subprocess.run
+  (timeout=15)` → do ~30s zamrożenia CAŁEJ pętli (heartbeat FSM, filesystem
+  plane, wszystkie streamy) przy każdym oknie z ikoną. Komentarz
+  `rail_manager.py:126` „never blocks event handling" jest fałszywy dla
+  sync subprocess. Ryzyko: distortion timingu heartbeat-FSM → false-positive
+  recovery. Fix: `asyncio.to_thread`/`run_in_executor`. (Pokrewne, mniejsze:
+  `SubprocessNotifier.notify` `subprocess.run(timeout=2.0)` z heartbeat/rail
+  na pętli.)
+- **Brak negatywnych testów mTLS-handshake (named critical path).** Każdy
+  test z `require_client_auth=True` pokrywa tylko happy-path; brak testu
+  odrzucenia cert untrusted/wrong-CA/expired ani hostname-mismatch na
+  warstwie TLS. Fingerprint-pinning (app-layer) pokryty. Znany w
+  `backlog.md` Tech-debt; podniesiony do P1 bo audit.md §4 nazywa to
+  MUST-cover.
+
+**P2 (nowe):**
+- `update_mime_database` (`integrations/mime.py:120`) `subprocess.run` **bez
+  `timeout=`** → potencjalny wieczny hang (łamie backend.md „infinite hangs
+  are bugs"; kontrast: `window_icon.py:139` ma timeout=15).
+- Dwa martwe puste pakiety: `virtiofs/__init__.py` + `wayland/__init__.py`
+  (0 bajtów, 0 importerów) — do usunięcia; nie w ignorefiles.
+- Phase-9 scaffoldy z 0 prod-callerami, nie w ignorefiles: `recovery/`
+  (`bundle`/`snapshot`; `ExportDiagnosticBundle` zwraca `zip_payload=b""`
+  zamiast wołać `export_bundle`), `catalog/ratings.py` + `catalog/user_apps.py`
+  (`ListApps` używa inline hardcoded listy). Wire albo dodać do manifestu.
+- GUI install-wizard ma fejkowy silnik postępu (`wizard/progress.rs`
+  `INSTALL_STEPS` hardcoded + `ProgressView.qml` Timer, nie woła `host/`).
+  Udokumentowany jako mock w `gui/README.md`, ALE `ignorefiles.md`
+  „Security / placeholder UI" mówi „(none currently)" → manifest drift.
+  Eskaluje do P1 jeśli GUI kiedyś prezentowane jako funkcjonalne.
+- `.claude/architecture.md` drift: „Just-in-time VirtioFS… no permanent
+  home-dir mount" (`:25`) i „No permanent host-dir exposure to the guest"
+  (`:62`) sprzeczne z shipowanym default whole-$HOME R/W (DEC-0018/
+  DEC-META-007). architecture.md jest agent-editable → fix; `:62` mirroruje
+  `GOALS.md` (boundary — tylko flaga).
+
+**P2 (potwierdzone znane / nity):**
+- fs-mount mocki (`fs-mount/src/flush.rs` `mock_generate_release_ack`→1024,
+  `mock_generate_lock_report`→0 handles) wołane BEZ `#[cfg(feature=mock)]`
+  z realnego filesystem-plane agenta (`agent-svc/src/filesystem.rs`) →
+  placeholder trafia do prod-builda. Phase-5, ale schować za feature.
+  (backlog Tech-debt — stan bez zmian.)
+- AuthContext `traceparent` (proto) bez wzmianki w THREAT_MODEL — advisory,
+  non-security-bearing (`auth.py` traktuje malformed jako non-fatal); 1 linia
+  do THREAT_MODEL.
+- Znane/tracked (nie do naprawy tu): AGENTS.md „Repository layout" 5 vs 22
+  podkatalogi (boundary), autopause↔LifecycleCoordinator duplikat kolejności
+  suspend („merge when third caller arrives").
+
+**Testy:** krytyczne ścieżki (AuthValidator rejection ×3 planes, FSM
+transitions z backoff, `test_smoke_inprocess` real-agent boundary) mocne
+i asertywne; jedyna realna luka = negatywny mTLS-handshake (P1 wyżej).
+Skips wszystkie uzasadnione (env/HW-gated), 0 xfail, 0 `assert True`.
+
+**Decyzja właściciela:** czeka na akceptację listy → pozycje do
+`backlog.md`.
+
+---
+
 ## Audyt 2026-06-12
 
 **Git:** `8f266bb` on `feat/usability-shared-fs`

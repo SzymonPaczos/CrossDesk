@@ -19,8 +19,9 @@ app discovery, packaging) is in progress and not yet hardware-verified
 end-to-end. Bring your own Windows ISO (`--iso-path`); auto-download is
 not implemented. See
 [ROADMAP.md](ROADMAP.md) for phase definitions,
-[docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) for the v0.1.0
-week-by-week, and [docs/GUI_PLAN.md](docs/GUI_PLAN.md) for v1.0
+[docs/MVP_SCOPE.md](docs/MVP_SCOPE.md) for what ships in v0.1.0
+(`docs/EXECUTION_PLAN.md` is the frozen original week-by-week), and
+[docs/GUI_PLAN.md](docs/GUI_PLAN.md) for v1.0
 scope. Post-1.0 ideas live in
 [docs/POST_1_0_IDEAS.md](docs/POST_1_0_IDEAS.md).
 

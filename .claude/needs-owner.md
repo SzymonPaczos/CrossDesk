@@ -67,6 +67,11 @@ resumes. Resolving one = either you author the boundary edit, or you reply
   DEC-0018 update; the architecture.md FS-drift the audit found is downstream of
   this (its Non-goals restate GOALS.md), so architecture.md was left untouched
   and follows once you sign off §5.
+- [ ] **`AGENTS.md` — retire WORK_LOG ceremony + add PLAN.md (tracking
+  simplification 2026-07-05).** Agent-editable side already applied; AGENTS.md
+  (boundary) drafted as §6. Say "apply".
+- [ ] **`docs/MVP_SCOPE.md` — reality fixes.** #3 JIT→Stage B (self-contradiction),
+  #7 dead macOS matrix, stale timeline. Drafted as §7. Say "apply".
 
 ## Boundary drafts — pending owner (2026-07-05)
 
@@ -100,6 +105,57 @@ whole-$HOME share and the per-file-vanishing mount is the post-1.0 Stage C mode.
 (5d) **Closing line** (~95) "per-frame authentication and JIT filesystem." —
 same call: "JIT filesystem" is Stage C; either keep as vision or reword to
 "per-frame authentication and an opt-in staged filesystem share."
+
+### §6 — `AGENTS.md`: retire the WORK_LOG ceremony + add PLAN.md (tracking simplification 2026-07-05)
+
+Owner retired the WORK_LOG START/END ceremony (solo owner + one agent). The
+agent-editable side is done (WORK_LOG.md banner, `rules/general.md`, `CLAUDE.md`,
+`loop-spec.md`, `status.md`, `backlog.md`, memory). `AGENTS.md` is a boundary
+file, so these edits are drafted for your sign-off — say "apply" and I land them:
+
+- **"Agent workflow" steps 6, 10–13** — delete the WORK_LOG START/END push-to-main
+  steps. New shape: pull → read `PLAN.md` → pick top item → branch → implement →
+  gates green → merge (→ push if PUSH=ON). No WORK_LOG commits.
+- **"File boundaries"** — remove the `WORK_LOG.md` "only file an agent may push to
+  main" exception line (no longer used).
+- **Navigation table + "What to read first"** — add a top row: **`PLAN.md` — the
+  single v0.1.0 board (what to do next)**; demote `.claude/backlog.md` to
+  "post-MVP parking". Point "how does an agent pick a task" at `PLAN.md` instead
+  of `EXECUTION_PLAN.md`.
+- **"Repository layout" drift** (separate long-standing item): lists 5 subdirs
+  under `host/src/crossdesk_host/`, actual = 22. Fix while in the file.
+
+### §7 — `docs/MVP_SCOPE.md`: reality fixes (audit 2026-07-05)
+
+Three drifts, boundary file → your sign-off. Drafts:
+
+(7a) **Acceptance criterion #3 self-contradiction.** In-scope (lines 30-33) says
+Stage B (persistent whole-$HOME) is the v0.1.0 floor per DEC-0018; acceptance #3
+(lines 108-110) still requires a **JIT** mount "detached after the file is
+closed" (= Stage C, moved post-1.0). CURRENT #3:
+
+    3. Right-clicking a `.txt` file in a file manager and choosing "Open with
+       Notepad" opens the file in Notepad through a JIT VirtioFS mount; the
+       mount is detached after the file is closed.
+
+PROPOSED #3:
+
+    3. With file sharing enabled, a Windows app can open and save files under
+       the configured share (v0.1.0 default: the whole `$HOME` via persistent
+       virtio-fs, Stage B / DEC-0018); a `.txt` opened via "Open with Notepad"
+       lands in the running Notepad. (JIT per-file mount/detach = Stage C, post-1.0.)
+
+(7b) **Acceptance criterion #7 — dead macOS matrix.** Mac was vacuumed
+(Mac→Ubuntu move). CURRENT: "CI is green on macOS + Ubuntu matrix; cross-compiled
+`agent.exe` builds." PROPOSED: "CI is green on the Linux (Ubuntu) matrix;
+cross-compiled `agent.exe` builds." (Drop macOS; keep NG1 note that Mac is
+build-correctness-only if you want it referenced.)
+
+(7c) **"Estimated timeline" (lines 146-160)** — assumes hardware not yet arrived,
+targets 2026-10/11. Hardware is live, Phases 1–4 done. PROPOSED: replace the
+week-by-week estimate with a pointer to `PLAN.md` (live board), or a one-line
+"remaining scope tracked in PLAN.md; date depends on P0 hard_destroy + live
+verification passes."
 
 ## Boundary drafts — ✅ APPLIED 2026-07-01 (owner sign-off)
 

@@ -1,4 +1,10 @@
-# Execution Plan to MVP (v0.1.0)
+# Execution Plan to MVP (v0.1.0) — ❄️ ZAMROŻONY (2026-07-05)
+
+> **Ten plan jest historyczny.** Jego week-by-week timeline zakładał, że sprzęt
+> Linux+KVM dopiero *przyjdzie* (2026-06-04) — a przyszedł, Fazy 1–4 działają na
+> żywo (A7-live 2026-07-01). Harmonogram jest martwy. **Aktualny plan „co dalej"
+> → [`PLAN.md`](../PLAN.md)** (TERAZ / NEXT / LATER + 12 kryteriów akceptacji).
+> Zostawiony jako zapis oryginalnej sekwencji; nie aktualizujemy go dalej.
 
 Today: **2026-05-23**.
 Target: **MVP-pełny-z-VirtioFS** (Phases 1–5 + supporting cross-cutting work) — see `docs/MVP_SCOPE.md` for the full scope.

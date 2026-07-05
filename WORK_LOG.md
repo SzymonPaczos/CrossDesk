@@ -1,84 +1,18 @@
-# Agent work log
+# Agent work log — ⚠️ CEREMONIAŁ WYCOFANY (2026-07-05)
 
-Append-only coordination log so parallel agents don't step on each
-other. Read this **before** picking a task. Update it **at start**
-and **at end** of work. The user reads it to know what's happening.
+Dawny protokół START/END pushowany do `main` na każdą sesję był narzędziem
+koordynacji **wielu równoległych agentów**. Projekt = właściciel + jeden agent
+(Claude), więc to był czysty narzut. **Wycofany** (decyzja właściciela 2026-07-05).
 
-## Format
+- **Co robić** → [`PLAN.md`](PLAN.md) (jedyny board v0.1.0).
+- **Stan / partiale** → [`.claude/status.md`](.claude/status.md).
+- **Co zrobiono** → `git log` + [`.claude/history/completed-work.md`](.claude/history/completed-work.md).
+- Żaden agent **nie pushuje** już START/END do `main`. Cykl pracy: gałąź →
+  gates zielone → merge (→ push, jeśli PUSH=ON).
 
-Each entry is a single line:
+Wpisy poniżej to **archiwum historyczne** — nie dopisujemy nowych.
 
-```
-[ISO-8601 timestamp] STATE · agent: <agent-id> · branch: <branch> · task: <task-keyword> · note: <one-line context>
-```
-
-States:
-
-- **START** — agent claims a task; no matching END yet.
-- **END** — agent finished (success, blocked, or aborted) — `note`
-  must say which.
-- **NOTE** — non-claim status update mid-work (rare; only for
-  long-running tasks).
-
-`agent-id` is whatever identifies the agent run (`claude-code`,
-`cursor`, `aider`, plus a session UUID or short tag if multiple
-runs are in flight on the same machine).
-
-## Protocol
-
-**Before picking a task:**
-
-1. `git pull --rebase origin main` (so you see other agents' claims).
-2. Scan "Active" below — if your planned task has an open START
-   without a matching END, **pick a different task** or wait.
-3. Scan "Recent" for context on what just landed (in case your
-   planned task depends on it).
-
-**At start:**
-
-1. Append a START entry to "Active" below.
-2. `git add WORK_LOG.md && git commit -m "chore(work-log): START
-   <task-keyword>"` on `main` directly (this single file is the
-   exception to the "no direct main commits" rule because it is
-   coordination metadata, not code).
-3. `git push origin main`. If push is rejected because someone else
-   pushed first, `git pull --rebase` and retry. If the conflict is on
-   their START entry for the same task, **pick a different task**.
-4. Then proceed to your normal feature branch and implementation work.
-
-**At end (success, failure, or blocked):**
-
-1. Move your START entry from "Active" to "Recent" and append a
-   matching END entry below it. Include the result in `note`:
-   `result: success → merged as <sha>`, `result: blocked on <thing>`,
-   `result: aborted, see <issue/conversation>`.
-2. `git commit -m "chore(work-log): END <task-keyword>"` on `main`.
-3. `git push origin main`. Same conflict-resolution as START.
-
-The push of the work-log entry happens **independently of the
-feature branch's merge** — START is pushed at the beginning, END is
-pushed at the end, regardless of whether the feature branch itself
-has merged. This is the only file an agent may push to `main` without
-explicit user instruction; everything else still requires the user
-to say "merge".
-
-## Single-machine concurrency
-
-If two agent sessions run on the same machine sharing the same
-working tree, they see the same file system but may interleave reads
-and writes. The git-push race protocol above resolves cleanly when
-both push to origin. If neither pushes (e.g., user is running both
-locally without internet), they should at minimum both
-`cat WORK_LOG.md` before adding their entry, and prefer separate
-branches so file contents don't clobber.
-
-If the user explicitly wants two agents on the same task (rare —
-e.g., two angles on a hard problem), the agents should use different
-branch names and the user merges by hand later.
-
-## Active
-
-## Recent
+## Recent (archiwum)
 
 - [2026-07-05 16:33] START · agent: claude-code · branch: (audit-fixes) · task: audit-2026-07-05-remediation · note: Owner said "kontynuuj" after the 2026-07-05 weekly audit. Fixing the hardware-free ratchet: P1 event-loop-blocking subprocess on the RAIL icon path (offload `_refresh_caches` off the asyncio loop), P2-d `update_mime_database` missing timeout, P2 hygiene (delete dead virtiofs/+wayland/ empty packages, refresh ignorefiles.md for GUI wizard + Phase-9 scaffolds, fix architecture.md whole-$HOME FS drift). One item per branch, gates green, PUSH=ON. NOT touching boundary files. P0 hard_destroy→reinstall + negative mTLS-handshake tests reported for owner sequencing, not done in this batch.
 - [2026-07-05 17:05] END · agent: claude-code · branch: (audit-fixes) → main · task: audit-2026-07-05-remediation · note: result: success → 2026-07-05 weekly audit done (report in audit-log.md; static layer spotless — ruff/mypy-strict/bandit/clippy/cargo-audit=0) + owner-approved hardware-free ratchet merged+pushed to origin/main (3666bc6). Landed: (1) P1 `fix(display)` offload icon-cache subprocess off the daemon asyncio loop (7cc339a) — control.py dispatched handle_rail_event inline, CREATED→_refresh_caches ran 2× subprocess.run(timeout=15) blocking the whole loop (heartbeat FSM + all gRPC streams) up to ~30s/window; now run_in_executor when a loop runs, sync fallback otherwise; +2 tests (offload-onto-worker-thread, inline fallback); false "never blocks" comment corrected. (2) P2-d `fix(integrations)` timeout=15 on update_mime_database + broaden guard to (OSError,SubprocessError) (3a8fdef); new test_mime.py (3 tests). (3) P2 `chore(dead-code)` delete empty virtiofs/+wayland/ packages (0 importers; mypy src 126→124) + register GUI install-wizard mock + Phase-9 recovery/ + catalog/{ratings,user_apps}.py scaffolds in ignorefiles.md (c827cb1). ALSO unblocked pre-push: new same-day RUSTSEC-2026-0202 (cxx 1.0.194 let_cxx_string! unsound) — bumping cxx→1.0.196 broke the cxx-qt 0.7.3 ABI link (undefined cxxbridge1$194$ symbols at cargo test), macro unused → ignored in gui/.cargo/audit.toml + gui/deny.toml with re-eval trigger (68bb23e). Gates green throughout: ruff 0, mypy --strict 124 clean, full host suite 969 passed/7 skipped, cargo audit/deny clean. NOT done (reported for owner sequencing): P0 hard_destroy→Windows-reinstall data-loss (blocks A3), P1 negative mTLS-handshake tests, and a NEW boundary finding — GOALS.md G4/line64/95 still say "no full-$HOME exposure" but DEC-0018 shipped whole-$HOME default → GOALS.md boundary drift (architecture.md FS lines left untouched because they restate GOALS.md; owner updates GOALS.md, architecture.md follows). Final origin/main: 3666bc6.

@@ -8,6 +8,8 @@ load.
 
 ## Load these files
 
+- @PLAN.md — **jedyny board „co dalej" do v0.1.0** (TERAZ / NEXT /
+  LATER + 12 kryteriów akceptacji). Zaczynaj tu.
 - @AGENTS.md — project navigation, coding rules, agent workflow,
   file boundaries.
 - @.claude/rules/general.md — universal prohibitions, commit
@@ -21,11 +23,14 @@ load.
 - @.claude/architecture.md — stack snapshot (timestamp bumped by
   pre-commit hook so it lands in the commit, not as drift).
 - @.claude/ignorefiles.md — dead code / generated artifacts manifest.
-- @.claude/backlog.md — jedyne źródło otwartej pracy (P0/P1/P2 +
-  pending decisions + blocked).
+- @.claude/backlog.md — post-MVP / parking (NIE board MVP — to jest
+  PLAN.md). Długi ogon + kontekst techniczny.
 - @.claude/status.md — bieżące breakages / partial implementations.
-- @WORK_LOG.md — live "who's working on what" ledger; START/END
-  protocol is in AGENTS.md "Agent workflow".
+- @.claude/needs-owner.md — zaparkowane decyzje właściciela + drafty
+  boundary (czeka na podpis).
+
+WORK_LOG.md ceremony jest **wycofany** (2026-07-05) — nie ładuj, nie
+dopisuj START/END. Historia: `git log` + `history/completed-work.md`.
 
 ## Audit reminder
 

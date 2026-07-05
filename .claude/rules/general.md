@@ -66,28 +66,21 @@ is also using, unless the owner explicitly asked for shared work.
   either everything ships together or you cherry-pick with
   conflicts. Separate branches = separate diffs = clean review.
 
-The full multi-agent workflow (WORK_LOG START/END entries pushed
-directly to `main`, conflict resolution, etc.) is in
-[AGENTS.md](../../AGENTS.md) "Agent workflow" steps 6–13.
+Branch-per-agent still applies whenever more than one session runs at
+once (parallel Claude runs, worktrees).
 
-## Coordination protocol
+## Coordination protocol — WORK_LOG ceremony RETIRED (2026-07-05)
 
-`WORK_LOG.md` (not `.claude/active-work.md`) is the canonical
-ledger of "who is working on what right now":
+The old `WORK_LOG.md` START/END ledger (pushed to `main` per session) was
+multi-agent coordination. Project = owner + one agent → retired. No agent
+pushes START/END to `main` anymore.
 
-1. **Before first `Edit`/`Write`** in a session, read the "Active"
-   section of `WORK_LOG.md`. If your planned scope overlaps an open
-   START entry, pick a different task or ping the owner.
-2. **At session start**, append a START entry per the format in
-   `WORK_LOG.md` "Format". Commit and push directly to `main`
-   (this single file is the documented exception to no-direct-main
-   pushes).
-3. **At session end** (success, blocked, or aborted), move the
-   START entry to "Recent" and append a matching END entry with
-   `result: success → merged as <sha>` / `result: blocked on …` /
-   `result: aborted, …`.
-4. **Stale entries (>24h with no progress).** Don't unilaterally
-   delete another agent's entry — ask the owner first.
+- **What to do** → [`PLAN.md`](../../PLAN.md) (the single v0.1.0 board).
+- **State / breakages** → [`.claude/status.md`](../status.md).
+- **What shipped** → `git log` + [`.claude/history/completed-work.md`](../history/completed-work.md).
+
+If two sessions ever run at once, still use separate branches (above) and
+say so to the owner; the heavy push-to-main ledger isn't coming back.
 
 ## Don't
 

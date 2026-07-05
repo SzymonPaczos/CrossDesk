@@ -17,6 +17,11 @@ sees and that vanishes the moment Word is done with them.
 The cost of running a Windows app is the cost of running a VM —
 nothing more — and the user never has to think about the VM.
 
+> **v0.1.0 reality:** file sharing is opt-in (default off); when on, the
+> default scope is a persistent share of the whole `$HOME` (Stage B,
+> DEC-0018). The per-file mount that "vanishes the moment Word is done"
+> above is the eventual Stage C tight-isolation mode (post-1.0).
+
 ## Primary goals
 
 | # | Goal | Measurable when |
@@ -24,7 +29,7 @@ nothing more — and the user never has to think about the VM.
 | G1 | Run any Windows desktop application as a native Linux window. | RAIL window class matches the WM's grouping; Alt-Tab treats it like any native app. |
 | G2 | Onboarding from zero install to first app launched in ≤2 minutes user-attended time. | `time crossdesk install && crossdesk launch notepad` returns successfully; wall-clock can be 15-25 min unattended. |
 | G3 | Run the host as a regular user — no daemon root, no privileged container. | `ps -eo user,comm \| grep crossdesk` shows the user, never root. |
-| G4 | Treat the Windows VM as a strict trust boundary; per-frame authentication, no full-`$HOME` exposure. | See `docs/THREAT_MODEL.md`. Enforced by per-frame `AuthContext` + JIT VirtioFS. |
+| G4 | Treat the Windows VM as a strict trust boundary; per-frame authentication; file sharing opt-in (default off). | See `docs/THREAT_MODEL.md`. Enforced by per-frame `AuthContext`. When sharing is on, the v0.1.0 default scope is the whole `$HOME` (DEC-0018); `documents`/`custom` narrow it; Stage C JIT-per-file is the eventual tight-isolation mode. |
 | G5 | Survive the long tail: VM crashes, network changes, suspend/resume, partial installs all recover deterministically. | Adaptive heartbeat FSM (Phase 3) walks PROBING → SOFT_RECOVERY → HARD_DESTROY without data loss. |
 
 ## Non-goals
@@ -61,7 +66,7 @@ under N1 (performance budgets).
 |-----------|----|------------|
 | `qemu:///session` user libvirt | WinApps Docker mode | No privileged daemon, direct `$WAYLAND_DISPLAY` access, no sudo install step |
 | `AF_VSOCK` + mTLS + per-frame `AuthContext` | WinApps RDP-over-TCP | Skips the network stack; replay defense independent of TLS |
-| Just-in-time VirtioFS | WinApps `\\tsclient\home` | Per-file mounts, not whole-`$HOME` exposure; detached after `ReleaseAck` |
+| Opt-in staged file share | WinApps always-on `\\tsclient\home` | Sharing is opt-in (default off) and stage-able; Stage C JIT-per-file (mount only the opened file, detach after `ReleaseAck`) is the eventual tight-isolation mode. WinApps' mount is always-on and whole-`$HOME`. |
 | Type-checked async | WinApps 1993-line bash | Compile-time correctness, testability, refactor safety |
 | Zero-touch `autounattend.xml` bootstrap | virt-manager + manual install | Reproducible from-zero VM rebuild |
 | Heartbeat FSM with explicit recovery states | WinApps "exit and retry" | Survives transient stalls; surfaces hard failures |
@@ -92,6 +97,7 @@ forwarder for Linux desktops. Closest neighbors:
   relevant to our user.
 - **Direct virt-manager + RDP** — what advanced users do today by
   hand. CrossDesk is essentially "this, automated, with per-frame
-  authentication and JIT filesystem."
+  authentication and an opt-in staged filesystem share (Stage B today,
+  Stage C JIT per-file post-1.0)."
 
 Full landscape in `docs/COMPETITION.md`.

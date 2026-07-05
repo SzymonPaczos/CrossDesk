@@ -105,17 +105,19 @@ A v0.1.0 release happens when **all of the following are true**:
    user-attended time (per N1.7).
 2. `crossdesk launch notepad` produces a native Linux window within
    ≤3 s p50 (per N1.1a).
-3. Right-clicking a `.txt` file in a file manager and choosing
-   "Open with Notepad" opens the file in Notepad through a JIT
-   VirtioFS mount; the mount is detached after the file is closed.
+3. With file sharing enabled, a Windows app can open and save files
+   under the configured share (v0.1.0 default: the whole `$HOME` via
+   persistent virtio-fs, Stage B / DEC-0018); a `.txt` opened via
+   "Open with Notepad" lands in the running Notepad. (JIT per-file
+   mount/detach = Stage C, post-1.0.)
 4. Heartbeat round-trip is <20 ms p50 (per N1.2).
 5. Suspending the host laptop with the VM running, then resuming,
    leaves the VM working with no false-positive HARD_DESTROY (per
    `docs/LIFECYCLE.md` strategy).
 6. Killing the VM (`virsh destroy` while running) and re-running
    `crossdesk launch notepad` recovers within ≤90 s (per N1.6a).
-7. CI is green on macOS + Ubuntu matrix; cross-compiled `agent.exe`
-   builds.
+7. CI is green on the Linux (Ubuntu) matrix; cross-compiled
+   `agent.exe` builds. (Mac is build-correctness-only, per NG1.)
 8. Performance microbenchmarks pass against committed baselines.
 9. `crossdesk doctor` returns 0 on a properly configured host;
    surfaces clear errors on misconfigured hosts.
@@ -145,16 +147,10 @@ If any of those fail, it's not MVP yet. If all pass, ship v0.1.0.
 
 ## Estimated timeline
 
-Detailed week-by-week in `docs/EXECUTION_PLAN.md`. High level:
-
-- ~4 weeks: Mac vacuum work (cross-platform scaffold, observability,
-  Phase 2 polish)
-- ~3-4 weeks: Phase 3 FSM (after Linux+KVM hardware arrives)
-- ~5-6 weeks: Phase 4 RAIL
-- ~3-4 weeks: install pipeline + crossdesk install end-to-end
-- ~3-4 weeks: Phase 5 VirtioFS
-- ~2-3 weeks: integration + polish + i18n + doctor + uninstall
-
-Total: ~5-6 months from 2026-05-09 → MVP target around
-**2026-10 / 2026-11**, depending on hardware-arrival date and
-whether categories run in parallel.
+The original week-by-week estimate (in `docs/EXECUTION_PLAN.md`, now
+frozen) assumed Linux+KVM hardware had not yet arrived. It has: Phases
+1–4 are verified live (A7-live, 2026-07). **Remaining scope + current
+front live in [`PLAN.md`](../PLAN.md)** (the single v0.1.0 board). The
+ship date now depends on the P0 `hard_destroy` steady-state fix (blocks
+acceptance #6) plus the live-verification passes tracked in `PLAN.md`,
+not on a fixed week count.

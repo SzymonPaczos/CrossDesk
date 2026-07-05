@@ -23,16 +23,17 @@ Phase 2 (transport) in progress. Phases 3–5 not started. See
 | What does CrossDesk *do*? | `README.md` + `docs/GOALS.md` |
 | What must it do, how well? | `docs/REQUIREMENTS.md` |
 | What's in MVP v0.1.0? | `docs/MVP_SCOPE.md` |
-| What's the week-by-week plan to MVP? | `docs/EXECUTION_PLAN.md` |
+| **What's left to v0.1.0 / what to do next?** | **`PLAN.md`** (the single board) |
+| What's the week-by-week plan to MVP? | `docs/EXECUTION_PLAN.md` (frozen — see `PLAN.md`) |
 | Why this stack? | `docs/TECH_STACK.md` |
 | What does the architecture look like? | `docs/GOALS.md` (vision) + `docs/TECH_STACK.md` (components) |
 | How does distribution + updates look? | `docs/DISTRIBUTION.md` (visual) → `docs/PACKAGING.md` (deep-dive) |
 | What's the security model? | `docs/THREAT_MODEL.md` |
-| What's the roadmap? | `ROADMAP.md` (phases) + `docs/EXECUTION_PLAN.md` (sequenced) + `.claude/backlog.md` (action items) |
+| What's the roadmap? | `ROADMAP.md` (phases) + `PLAN.md` (remaining v0.1.0 work) + `.claude/backlog.md` (post-MVP parking) |
 | Why X over Y? | `docs/DECISIONS.md` (ADRs `DEC-NNNN`) |
 | What does the competition look like? | `docs/COMPETITION.md` + `docs/COMPARISON_WINAPPS.md` |
 | Coding rules? | The "Coding rules" section below |
-| How does an agent pick a task? | The "Agent workflow" section below |
+| How does an agent pick a task? | `PLAN.md` (TERAZ / NEXT) + the "Agent workflow" section below |
 | What can an agent change? | The "File boundaries" section below |
 | Anything in `third_party/`? | `third_party/winapps/` — vendored for reference, AGPLv3, do not copy verbatim |
 
@@ -43,8 +44,7 @@ the repo as a reference template). Auto-loaded by Claude Code via
 `CLAUDE.md`:
 
 - [.claude/rules/general.md](.claude/rules/general.md) — universal
-  prohibitions, Conventional Commits, branch-per-agent rule,
-  pointer to the `WORK_LOG.md` coordination protocol.
+  prohibitions, Conventional Commits, branch-per-agent rule.
 - [.claude/rules/backend.md](.claude/rules/backend.md) — Python
   (`host/**`) + Rust (`guest/**`) path-specific rules; proto-first
   RPC pattern; secrets / mTLS guidance.
@@ -99,12 +99,23 @@ crossdesk/
 │   ├── pyproject.toml
 │   ├── conftest.py
 │   ├── build_proto.py
-│   ├── src/crossdesk_host/
+│   ├── src/crossdesk_host/   # 22 subpackages; key ones:
 │   │   ├── ipc/              # gRPC servicers (control, heartbeat, filesystem, auth)
-│   │   ├── display/          # RAIL spawning (Phase 4)
+│   │   ├── display/          # RAIL spawning + window icons (Phase 4)
 │   │   ├── watchdog/         # heartbeat FSM (Phase 3)
-│   │   ├── proto/            # generated proto stubs (regenerated via build_proto.py)
-│   │   └── installer/        # crossdesk install engine (planned)
+│   │   ├── libvirt_ctl/      # LibvirtController abstraction (real / mock)
+│   │   ├── filesystem_ctl/   # FilesystemController abstraction
+│   │   ├── transport/        # AF_VSOCK / TCP mTLS transport (real / mock)
+│   │   ├── lifecycle/        # suspend/resume coordinator, notifications
+│   │   ├── cli/              # crossdesk CLI subcommands
+│   │   ├── doctor/           # pre-flight diagnostics
+│   │   ├── installer/        # crossdesk install engine + PKI + state
+│   │   ├── config/           # typed config schema (peripherals, transport…)
+│   │   ├── observability/    # structlog + trace context + OTLP
+│   │   ├── abstractions/     # Protocol seams (libvirt, transport, freerdp…)
+│   │   ├── proto/            # generated proto stubs (regen via build_proto.py)
+│   │   └── … catalog, freerdp, integrations, jit_mount, recovery,
+│   │       utils (recovery + catalog scaffolds: see .claude/ignorefiles.md)
 │   └── tests/
 │
 ├── guest/                    # Rust NT service workspace
@@ -188,59 +199,35 @@ cd guest && cargo build              # tonic regenerates guest stubs as part of 
 
 When the user asks an agent to "work on the next task":
 
-1. **`git pull --rebase origin main`** — see what other agents have
-   already done or claimed.
-2. **Read `WORK_LOG.md`** — scan "Active" entries. If your planned
-   task is claimed by another agent (open START with no END), pick
-   a different task. Scan "Recent" for relevant context that just
-   landed.
-3. **Find the current week** in `docs/EXECUTION_PLAN.md` (compare
-   today's date to the week ranges).
-4. **Pick the highest-priority unfinished item** in that week's
-   "Items" list. P0 before P1 before P2.
-5. **Cross-reference `.claude/backlog.md`** for additional context on
-   the item (specific files to touch, dependencies, acceptance
-   criteria). Historical `FOLLOWUPS:NNN` line refs in source code
-   resolve against `.claude/history/2026-05-23-followups-archive.md`
+1. **`git pull --rebase origin main`.**
+2. **Read [`PLAN.md`](PLAN.md)** — the single v0.1.0 board. Pick the
+   current **TERAZ** front, or the top **NEXT** item. (`.claude/backlog.md`
+   is post-MVP parking, *not* the board.)
+3. **Cross-reference** `.claude/status.md` (partials / known issues)
+   and `.claude/needs-owner.md` (parked decisions) for context.
+   Historical `FOLLOWUPS:NNN` refs in source resolve against
+   `.claude/history/2026-05-23-followups-archive.md`
    (see [DEC-META-004](.claude/rules/decisions.md)).
-6. **Append a START entry to `WORK_LOG.md`** "Active" section, then
-   commit + push that one file directly to `main`. This is the only
-   exception to the no-direct-main-push rule — see `WORK_LOG.md`
-   "Protocol" for full rules and conflict resolution. If push is
-   rejected because another agent claimed the same task, pick a
-   different task.
-7. **Create a short-named feature branch:** `feat/<task-keyword>`
-   (e.g., `feat/transport-abstraction`, `feat/structlog-config`).
-8. **Implement** the item against its acceptance criteria. Stay
-   scoped — don't bundle unrelated refactors.
-9. **Commit** on the feature branch with Conventional Commits.
-   Reference the `.claude/backlog.md` section keyword (e.g.,
-   `backlog: peripherals P1 audio`) in the commit message body so the
-   linkage is searchable.
-10. **Wait for the user to explicitly tell you to merge** before
-    merging to `main`. Do not push the feature branch to origin or
-    open PRs unless instructed.
-11. **When the user says "merge"**: `git checkout main && git merge
-    --no-ff <branch> -m "Merge branch '<branch>'"`. Then `git push
-    origin main` only if the user says so. Delete the local branch
-    (`git branch -d`) after merge.
-12. **Update `docs/EXECUTION_PLAN.md`**: mark the item ✅ in this
-    week's items list. If you discovered new work, add a one-line
-    entry to `.claude/backlog.md` under the appropriate P-section.
-    Closed items move to `.claude/history/completed-work.md` (append-
-    only summary; granular trace stays in `WORK_LOG.md` "Recent").
-13. **Move your `WORK_LOG.md` START entry to "Recent" and append a
-    matching END entry**. Commit + push directly to main (same
-    exception as step 6).
+4. **Create a short-named feature branch** from a fresh `main`:
+   `feat/<topic>` / `fix/<topic>` / `chore/<topic>` / `docs/<topic>`.
+5. **Implement** against acceptance criteria. Stay scoped — don't
+   bundle unrelated refactors.
+6. **Commit** with Conventional Commits. Keep gates green; never
+   `--no-verify`.
+7. **Merge** when the user says "merge" — or, if the loop's **PUSH**
+   toggle is ON (see `.claude/loop-spec.md`), merge + push immediately
+   after green gates. `git checkout main && git merge --no-ff <branch>`,
+   then `git branch -d <branch>`; push if authorized.
+8. **Update [`PLAN.md`](PLAN.md)** (mark done / move the front) and
+   `.claude/status.md` if a partial changed. A closed larger block gets
+   one line in `.claude/history/completed-work.md`.
 
-The user's preference is **local merges only for code**, no GitHub
-PRs, no GitHub Issues. The exception is `WORK_LOG.md` — its START/END
-entries are pushed directly so parallel agents see them in real
-time. The only sources of truth for "what to do" are
-`docs/EXECUTION_PLAN.md` (this week's work) and `.claude/backlog.md`
-(everything queued); the source of truth for "what's happening right
-now" is `WORK_LOG.md`; the source of truth for bieżące breakages /
-partial implementations is `.claude/status.md`.
+**Sources of truth:** `PLAN.md` = what to do (v0.1.0). `.claude/status.md`
+= current state / breakages. `git log` + `.claude/history/completed-work.md`
+= what shipped. The old `WORK_LOG.md` START/END ceremony (per-session
+ledger pushed to `main`) is **retired (2026-07-05)** — solo owner + one
+agent didn't need multi-agent coordination. Local merges only for code;
+no GitHub PRs / Issues.
 
 ## File boundaries
 
@@ -251,20 +238,21 @@ Agents may freely modify:
 - Tests: anywhere under `host/tests/`, `guest/**/tests/`, etc.
 - Build configs: `host/pyproject.toml`, `guest/Cargo.toml`,
   `gui/Cargo.toml`, lockfiles.
-- `.claude/backlog.md` — for marking items complete or adding
-  discovered work. Don't restructure the file without instruction.
+- `PLAN.md` — the v0.1.0 board: mark items done, move the TERAZ front,
+  update per-criterion status.
+- `.claude/backlog.md` — post-MVP parking: adding discovered post-MVP
+  work. Don't restructure without instruction.
 - `.claude/status.md` — for refreshing known-issues / partial
   implementations as they're shipped or change state.
+- `.claude/needs-owner.md` — parking parked owner decisions + boundary
+  drafts (draft only; never apply a boundary edit unilaterally).
 - `.claude/history/completed-work.md` — append-only; add a summary
   line when closing a phase / larger block of work.
 - `.claude/audit-log.md` — `.claude/audit.sh` prepends sections;
   agents append narrative review during weekly audit.
-- `docs/EXECUTION_PLAN.md` — for marking items ✅ as completed and
-  for schedule updates after the user reviews.
-- `WORK_LOG.md` — START / END entries per the protocol in step 6
-  and step 13 of "Agent workflow". This file is the only one an
-  agent may push directly to `main` without explicit user merge
-  instruction.
+
+`docs/EXECUTION_PLAN.md` is frozen and `WORK_LOG.md`'s START/END ceremony
+is retired (2026-07-05) — neither is edited anymore.
 
 Agents must NOT modify without explicit instruction:
 
@@ -306,16 +294,16 @@ the rule files under `.claude/rules/` for you. Read this file
 (`AGENTS.md`) for project specifics, then in order:
 
 1. This file.
-2. `README.md` — pitch.
-3. `docs/GOALS.md` — what we're trying to do.
-4. `docs/MVP_SCOPE.md` — what's in v0.1.0.
-5. `docs/EXECUTION_PLAN.md` — the week-by-week sequence.
+2. **`PLAN.md`** — the single v0.1.0 board (what to do next).
+3. `README.md` — pitch.
+4. `docs/GOALS.md` — what we're trying to do.
+5. `docs/MVP_SCOPE.md` — what's in v0.1.0.
 6. `docs/TECH_STACK.md` — components and stack rationale.
 7. `docs/THREAT_MODEL.md` — what we're defending against.
-8. `.claude/backlog.md` — what's queued, prioritized (folded from
-   the old FOLLOWUPS.md; archive at
+8. `.claude/status.md` — bieżące breakages / partial implementations.
+9. `.claude/backlog.md` — post-MVP parking (folded from the old
+   FOLLOWUPS.md; archive at
    `.claude/history/2026-05-23-followups-archive.md`).
-9. `.claude/status.md` — bieżące breakages / partial implementations.
 
 For any specific question, the navigation table at the top of this
 file should point you at the right doc.

@@ -329,6 +329,58 @@ def test_resolve_input_missing_returns_none(
     assert out is None
 
 
+# _resolve_tools_inputs: the aggregator the install actually calls. Simulate a
+# distro-package layout (no in-repo files; everything under
+# /usr/share/crossdesk) — the contract the AUR/deb/rpm PKGBUILD relies on.
+def _no_repo_no_env(monkeypatch: pytest.MonkeyPatch, empty: Path) -> None:
+    for env in ("CROSSDESK_AGENT_EXE", "CROSSDESK_PUBLISHER_CA", "CROSSDESK_AUTOUNATTEND"):
+        monkeypatch.delenv(env, raising=False)
+    # Point the in-repo root at a nonexistent dir so only the packaged copies
+    # (CROSSDESK_DATA_DIR) can satisfy the lookup — the real deb/AUR situation.
+    monkeypatch.setattr(install_cmd, "_repo_root", lambda: empty)
+
+
+def test_resolve_tools_inputs_from_packaged_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _no_repo_no_env(monkeypatch, tmp_path / "norepo")
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    for name in ("agent.exe", "publisher-root-ca.crt", "autounattend.xml"):
+        (pkg / name).write_bytes(b"x")
+    monkeypatch.setenv("CROSSDESK_DATA_DIR", str(pkg))
+
+    agent, ca, autounattend = install_cmd._resolve_tools_inputs()
+    assert agent == pkg / "agent.exe"
+    assert ca == pkg / "publisher-root-ca.crt"
+    assert autounattend == pkg / "autounattend.xml"
+
+
+@pytest.mark.parametrize(
+    "present,missing_match",
+    [
+        ((), "agent.exe"),
+        (("agent.exe",), "publisher CA"),
+        (("agent.exe", "publisher-root-ca.crt"), "autounattend.xml"),
+    ],
+)
+def test_resolve_tools_inputs_missing_raises_named_error(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    present: tuple[str, ...],
+    missing_match: str,
+) -> None:
+    _no_repo_no_env(monkeypatch, tmp_path / "norepo")
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    for name in present:
+        (pkg / name).write_bytes(b"x")
+    monkeypatch.setenv("CROSSDESK_DATA_DIR", str(pkg))
+
+    with pytest.raises(install_cmd._StepFailed, match=missing_match):
+        install_cmd._resolve_tools_inputs()
+
+
 def _freerdp_cfg(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     cfg = tmp_path / "freerdp"
     monkeypatch.setattr(install_cmd, "_freerdp_config_dir", lambda: cfg)

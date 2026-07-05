@@ -382,10 +382,15 @@ wykrywał/logował/notyfikował.
   `check_qemu_version`, `check_config_dir_writable`; `--gpu` flag wired
   to GPU_CHECKS. Remaining: wiring as pre-step for `crossdesk install`
   + free disk check. `[~PARTIAL]`
-- **`crossdesk uninstall` — clean removal.** `virsh destroy` +
-  `virsh undefine --remove-all-storage`, każdy `crossdesk-*.desktop`,
-  cached ISO, install state. `--keep-config` preserves `vm.toml`;
-  `--force` skips confirmation. Critical for trust.
+- **`crossdesk uninstall` — clean removal.** `[~PARTIAL 2026-07-05 `8261a35`]**
+  Domena (`undefine`: destroy-if-running + `undefineFlags(NVRAM)`),
+  `crossdesk-*.desktop`, cached ISO, install state (+ VM disk), config
+  (`--keep-config` zachowuje `vm.toml`) — **kod kompletny + testy**. Świadomie
+  BEZ `--remove-all-storage`: nasz dysk znika z state-dir, a flaga próbowałaby
+  skasować file-backed CD-ROM źródła (w tym ISO Windowsa usera). **Zostaje:**
+  (a) live-verify pełnego usunięcia na realnym libvirt (Phase 2); (b) `--force`
+  + confirm prompt (dziś brak potwierdzenia — `--dry-run` jest jedynym
+  bezpiecznikiem; dodać interaktywny confirm gate'owany `--force`).
 - **`crossdesk logs --component guest` — guest gRPC log pull.** Host
   log sources shipped (journalctl + JSONL + libvirt + FreeRDP); guest
   jest P2 stub ("not yet implemented"). Wire gRPC stream tail. `[~PARTIAL]`

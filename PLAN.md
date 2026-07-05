@@ -80,7 +80,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 7 | CI green macOS + Ubuntu; `agent.exe` cross-compile | ⚠️ boundary | `agent.exe` ✅, Ubuntu CI ✅. „macOS matrix" martwe (Mac zvacuumowany) — re-def do podpisu (needs-owner §7) |
 | 8 | microbench pass vs baselines | 🔲 box | harness gotowy; realne liczby |
 | 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live / 🔲 | rozbudowany; live-verify pełnego przebiegu |
-| 10 | `uninstall` czyste usunięcie | 🔨 / 🔲 | CLI gotowy; live-verify (domena + .desktop + ISO) |
+| 10 | `uninstall` czyste usunięcie | 🔲 box | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Zostaje live-verify pełnego usunięcia + opcjonalny `--force`/confirm (backlog) |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 

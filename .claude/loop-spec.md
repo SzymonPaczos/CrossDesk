@@ -13,37 +13,46 @@ Canonical context the loop re-reads each iteration: this file (for the
 kept only for the 🟢/🔵 environment tags), [`needs-owner.md`](needs-owner.md),
 and `status.md`.
 
-## Per-iteration algorithm
+## Per-iteration algorithm — two phases
 
-1. **Sync.** `git pull --rebase` if a remote is in play; re-read the
-   context files above.
-2. **Select** the highest-priority queue item that is UNBLOCKED *for this
-   environment*:
-   - 🟠 owner-gated / 👁 eyeball → never implement; if it's top priority,
-     **draft + park** (see Parking) and skip.
-   - 🔵 needs-box → skip unless running on the Proxmox/KVM box.
-   - pick the first 🟢 (any host) or 🔵 (box only) item.
-3. **Branch** `feat|fix|chore/<topic>` from `main`.
-4. **Implement**, scoped to that item only. No bundled refactors.
-5. **Gate — all green, never `--no-verify`:**
-   - host: `ruff check src/ tests/`; `mypy --strict src/`; `pytest`
-     (signal-method timeout). The *only* acceptable red is the known
-     order-dependent `test_transport_mock` — and only if it passes solo.
+**Phase 1 first: land every host-side / code item you can. Phase 2 (live
+verify on the VM) runs only once Phase 1 is exhausted** (owner: "live verify
+gdy uznasz że skończyłaś wszystko co mogłaś"). Rationale: code work is
+deterministic and gate-checked; live-verify is flaky + destructive, so batch
+it at the end rather than interleave.
+
+### Phase 1 — code (repeat until no code item remains)
+
+1. **Sync.** `git pull --rebase origin main`; re-read PLAN.md + status.md +
+   needs-owner.md.
+2. **Select** the top UNBLOCKED item: PLAN.md **TERAZ** front first, then
+   **NEXT** top-down. Take the *host-side / testable* part of it now; defer
+   its 🔲 live-verify to Phase 2.
+   - 🟠 owner-gated / boundary → **draft + park** to needs-owner.md, skip.
+3. **Branch** `feat|fix|chore/<topic>` from fresh `main`. One item, no
+   drive-by refactors.
+4. **Implement + Gate — all green, never `--no-verify`:**
+   - host: `ruff check src/ tests/`; `mypy --strict src/`; `pytest`.
    - guest/gui if touched: `cargo check` + `cargo test --features
      agent-svc/mock` + `cargo clippy -- -D warnings`.
-   - if gates won't go green after a fair attempt: **park the item** with
-     the failure, never merge red.
-6. **Commit** (Conventional Commits + the `Co-Authored-By` trailer).
-7. **Merge** `--no-ff` into `main` locally; delete the branch. **Do NOT
-   push** (owner pushes) unless the push toggle below is ON.
-8. **Live-verify** (box only, when applicable): exercise the change on a
-   real VM; capture evidence (log / screenshot). If correctness depends on
-   human judgement (UX, "does it look right"), park to `needs-owner.md`
-   under Eyeball.
-9. **Record.** Update the Work queue (mark ✅ / add discovered work),
-   `status.md`, and append one line to the Loop log.
-10. **Repeat.** STOP when no unblocked item remains for this environment →
-    emit the batched needs-owner summary.
+   - won't go green after a fair try → **park with the failure**, never merge red.
+5. **Commit** (Conventional Commits + `Co-Authored-By` trailer; **no backticks
+   in `-m`** — the shell command-substitutes them). **Merge** `--no-ff` into
+   `main`, delete the branch, **push** (PUSH=ON).
+6. **Record.** Update PLAN.md (mark done / move the TERAZ front) + status.md.
+   Append one line to the Loop log. **No WORK_LOG** (ceremony retired).
+7. **Repeat** until no host-side item remains, or the bound trips.
+
+### Phase 2 — live verify on the box (once Phase 1 is exhausted)
+
+8. For each 🔲 item whose code landed, exercise it on a real VM and capture
+   evidence (log / screenshot to `/tmp/cd-evidence/`). Full box autonomy —
+   `snapshot create` before a destructive step is prudent but not required.
+9. If correctness needs human judgement (Save-dialog lands right, window looks
+   right, install-not-frozen, BSOD) → capture the screenshot and **park to
+   needs-owner.md "Eyeball"**; don't self-certify a subjective call.
+10. **STOP** when the bound trips or nothing unblocked remains → emit a batched
+    needs-owner summary (decisions to make, eyeball evidence to review).
 
 ## Parking (owner-gated / eyeball)
 
@@ -55,87 +64,48 @@ queue item ⏸, and move on. Boundary files (draft-and-park, never edit):
 
 ## Guardrails
 
-- Never `--no-verify`; never push unless the toggle says so; never edit
-  boundary files.
+- Never `--no-verify`; never edit boundary files (draft → needs-owner).
 - One item per branch; no drive-by refactors.
-- **Bounds:** stop + report after a per-run token ceiling or N=8 merged
-  items, whichever first. Don't run unbounded.
-- **VM ops** (box only): `snapshot create` before risky steps. The
-  data-loss invariant (real `LibvirtController` refuses to start without
-  the suspend listener) is already enforced in `daemon.py`.
-- If unsure whether something is owner-gated → treat it as owner-gated and
-  park.
+- **Bounds:** stop + report after a per-run token ceiling or **N=6 merged
+  items**, whichever first. Don't run unbounded.
+- **VM ops:** full autonomy on this box (owner: "może robić co chce na tym
+  komputerze") — spin up / tear down / reinstall VMs freely, including
+  `windows-guest`. `snapshot create` before a destructive step is prudent
+  (the host has reset under load); not a hard gate.
+- If unsure whether something is owner-gated → treat it as owner-gated and park.
 
-## Toggles (owner sets these)
+## Toggles (owner set these 2026-07-05)
 
-- **PUSH:** `ON` — owner present on the live box (2026-06-29); loop pushes its
-  own merges to `origin/main` after green gates.
-- **ENV:** `box` — running on the live Linux+KVM box (TUF FX505DT; `windows-guest`
-  VM live). Both 🟢 and 🔵 items are in play.
+- **PUSH = ON** — loop pushes its own merges to `origin/main` after green gates.
+- **ENV = box** — the live Linux+KVM box (TUF FX505DT; `windows-guest` live).
+- **VM = full autonomy** — may reinstall / destroy any VM on this box.
+- **LIVE-VERIFY = deferred** — Phase 2 only, after Phase 1 is exhausted.
+- **EYEBALL = park** — capture evidence, park subjective sign-offs to needs-owner.
+- **BOUND = 6 merged items** or the token ceiling, whichever first.
 
-## Work queue (v0.1.0)
+### Pre-decided owner calls (in effect — loop does NOT re-ask)
 
-Tags: 🟢 hardware-free (any host) · 🔵 needs-box · 🟠 owner-gated · 👁 eyeball.
-Priority top-to-bottom within each tier.
+- **FreeRDP RDP cert policy = `ignore`** for the localhost / SLIRP path (our own
+  guest, no MITM surface; real trust = mTLS gRPC + Windows cred). Loop may switch
+  `rail_command.py` `cert_policy` default `tofu`→`ignore`; the matching
+  `THREAT_MODEL` row is a boundary draft.
+- **`agent.exe` code-signing = self-signed** publisher root CA for beta (already
+  built); document "unsigned-to-the-world" honestly. Not a blocker.
+- **Security §3c honesty** (THREAT_MODEL transport TCP-vs-AF_VSOCK + real
+  LogonUserW residual-risk + VERSIONING capability promotion) is a **go/no-go
+  gate for calling anything "beta"**, NOT a loop blocker — loop drafts it, owner
+  authors/signs before the beta cut.
 
-### 🟢 Hardware-free (loop does these now)
-1. **A2b — per-install PKI.** Install step mints a unique CA + guest leaf
-   per install (today it reads one static shared dev keypair). `host/`
-   installer + `generate_mtls` integration. P0 security.
-2. **README ISO honesty.** Drop the false "auto-download Win11 ISO" claim →
-   "bring your own ISO via `--iso-path`"; fix the status banner. (README is
-   not a boundary file. The matching `REQUIREMENTS.md` F-marker re-baseline
-   is 🟠 — park it.)
-3. ✅ **B — diagnostics/logging.** Opt-in telemetry/crash-report path
-   (host-side, default OFF); turn install/CLI failures into actionable
-   recovery messages instead of raw tracebacks. *(2026-06-29: CLI
-   last-resort handler + redacted opt-in crash report; i18n .pot regen
-   deferred — gettext absent on box.)*
-4. ✅ **A5-host — FS Stage B host-side.** `<filesystem driver='virtiofs'>` +
-   memfd shared-memory in `domain_xml.py`; typed config for exposure scope.
-   *(2026-06-29: virtio-fs domain device + memfd + scope home|documents|custom,
-   default **whole $HOME** per owner confirmation. install_cmd wiring + the
-   User Shell Folders redirect for virtio-fs land with A5-live.)* Live mount
-   is 🔵.
-5. ✅ **A7-logic — install idempotency.** Atomic state file; clean up a
-   half-created libvirt domain on failure; wire `doctor` pre-flight. Real
-   install execution is 🔵. *(2026-06-29: persist last_error + re-run doctor
-   on resume; the atomic state / domain cleanup were already in place.)*
-6. ✅ **D — packaging scaffolding.** Bundle `agent.exe` into the wheel /
-   PKGBUILD `build()`; fix `flake.nix` missing runtime deps. Signing + repo
-   domain are 🟠. *(2026-06-29: `_resolve_tools_inputs` packaged
-   `/usr/share/crossdesk` fallback + AUR cross-builds/installs agent.exe;
-   flake.nix deps were already fixed overnight.)*
-7. ✅ **A1-config — CI runner wiring.** Self-hosted runner workflow YAML +
-   re-enable CI auto-triggers. Runner stand-up itself is 🔵 (Proxmox).
-   *(2026-06-29: linux-kvm-smoke wired to `[self-hosted, linux, kvm]`; CI
-   auto-triggers were re-enabled overnight.)*
+## Board — see PLAN.md
 
-### 🔵 Needs the box (loop does these on Proxmox)
-- **A3** enable the real `LibvirtController` + lifecycle FSM recovery live
-  (gated on A2 — done).
-- **A4** NT-service agent live (survives window-close/disconnect/reboot) +
-  `sc failure` auto-restart; answer the session-0 cross-session
-  `LogonUserW` token question.
-- **A5-live** virtio-fs mount verify (WinFSP + VirtioFsSvc); Save dialog
-  lands in the Linux folder.
-- **A6-live** a second non-Notepad app renders; peripherals e2e
-  (audio/clipboard/printer) on the NT-service agent.
-- **A7-live** the 7-step install actually drives an install; `uninstall` +
-  `doctor` live.
-- **A1-standup** self-hosted runner on Proxmox; `linux-kvm-smoke` real.
-- **M5** burn-in matrix (≥2 Windows × ≥2 distro × cycles) + real N1
-  measurements.
-
-### 🟠 Owner-gated (loop drafts → `needs-owner.md`, never applies)
-MVP_SCOPE #3 rebalance · THREAT_MODEL edits · proto edits (discovery RPC) ·
-code-signing strategy · repo domain · ISO/licensing legal stance · FS
-exposure default · semver label · REQUIREMENTS F-marker re-baseline ·
-final go/no-go.
-
-### 👁 Eyeball (loop captures evidence → owner judges)
-Save-dialog folder correctness · window appearance · install-not-frozen
-UX · guest BSOD / failure UX.
+The former Work queue lived here; it is **superseded by [`PLAN.md`](../PLAN.md)**
+(TERAZ / NEXT / LATER + the 12 acceptance criteria with live status). The loop
+reads PLAN.md, not this section. Remaining **owner-gated** items (draft →
+needs-owner, never apply): proto edits (app-discovery RPC) · repo-hosting domain
+· REQUIREMENTS F-marker re-baseline · remaining THREAT_MODEL / VERSIONING honesty
+· final go/no-go. FS-exposure default, semver label, MVP_SCOPE #3, FreeRDP cert,
+and code-signing are already decided (Pre-decided calls above + `docs/DECISIONS.md`
+DEC-0018).
 
 ## Loop log
 

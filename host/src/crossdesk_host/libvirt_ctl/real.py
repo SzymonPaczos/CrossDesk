@@ -179,6 +179,31 @@ class RealLibvirtController(LibvirtController):
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"shutdown failed: {exc}") from exc
 
+    def undefine(self) -> None:
+        import libvirt
+
+        conn = self._connect()
+        try:
+            domain = conn.lookupByName(self.domain_name)
+        except libvirt.libvirtError:
+            # Idempotent: nothing to remove (already gone / never installed).
+            logger.info("undefine: domain %s not found, nothing to do", self.domain_name)
+            return
+        try:
+            if domain.isActive():
+                logger.warning("undefine: virsh destroy %s", self.domain_name)
+                domain.destroy()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"destroy before undefine failed: {exc}") from exc
+        # UNDEFINE_NVRAM drops the per-domain UEFI nvram (mirrors the cleanup in
+        # define_and_start). No REMOVE_ALL_STORAGE — see the Protocol docstring:
+        # our disk is removed with the state dir, and it would risk the user's ISO.
+        logger.warning("undefine: virsh undefine %s", self.domain_name)
+        try:
+            domain.undefineFlags(libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"undefine failed: {exc}") from exc
+
     def is_running(self) -> bool:
         import libvirt
 

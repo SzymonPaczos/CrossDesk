@@ -326,6 +326,41 @@ class DaemonConfig(BaseModel):
         return tuple(sorted(v))
 
 
+class LibvirtConfig(BaseModel):
+    """Which libvirt controller backend the daemon drives.
+
+    Default ``mock`` (in-memory, no side effects) is the safe dev/CI default:
+    the daemon manages no real VM (matching the historical hard-coded
+    ``daemon.py`` dev-default). Set ``real`` on a Linux+KVM host to drive the
+    actual ``qemu:///session`` domain — that is what activates the post-install
+    steady-state finalize (``installer.steady_state``) and the heartbeat FSM's
+    real recovery actions.
+
+    ``real`` additionally requires the host-suspend listener: the daemon
+    fail-closes (``_assert_suspend_protection``) rather than risk a host sleep
+    escalating the heartbeat FSM to ``virsh destroy``.
+
+    Spike a single bring-up without editing config via
+    ``CROSSDESK_CONFIG__LIBVIRT__BACKEND=real``.
+    """
+
+    model_config = _FROZEN_MODEL_CONFIG
+
+    backend: str = "mock"
+    """``mock`` (default, no real VM) or ``real`` (drive qemu:///session)."""
+
+    domain_name: str = "windows-guest"
+    """Libvirt domain the real controller looks up; matches the name
+    ``crossdesk install`` defines."""
+
+    @field_validator("backend")
+    @classmethod
+    def _backend_known(cls, v: str) -> str:
+        if v not in {"mock", "real"}:
+            raise ValueError(f"libvirt.backend must be mock|real, got {v!r}")
+        return v
+
+
 class ObservabilityConfig(BaseModel):
     """Logging / telemetry policy. Every form of off-machine transmission
     is opt-in and OFF by default — CrossDesk ships no telemetry backend.
@@ -354,6 +389,7 @@ class CrossdeskConfig(BaseModel):
     heartbeat: HeartbeatConfig = Field(default_factory=HeartbeatConfig)
     peripherals: PeripheralsConfig = Field(default_factory=PeripheralsConfig)
     daemon: DaemonConfig = Field(default_factory=DaemonConfig)
+    libvirt: LibvirtConfig = Field(default_factory=LibvirtConfig)
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
 
 

@@ -8,4 +8,11 @@
 ignore = [
     # rustls-pemfile unmaintained as of 2025-08; pulled in via tonic 0.12.
     "RUSTSEC-2025-0134",
+    # cxx 1.0.194 `let_cxx_string!` unsound (uninitialized value; 2026-07-05).
+    # We do NOT use that macro (grep-clean across gui/crates). cxx arrives
+    # transitively via cxx-qt-lib/cxx-qt 0.7.3, whose generated bridge is
+    # ABI-version-locked to this exact cxx — bumping cxx to 1.0.196 breaks
+    # the cxx-qt link (undefined `cxxbridge1$194$…` symbols). Re-evaluate on
+    # the next cxx-qt release that supports a patched cxx.
+    "RUSTSEC-2026-0202",
 ]

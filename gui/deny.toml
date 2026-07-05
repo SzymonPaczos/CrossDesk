@@ -35,6 +35,13 @@ ignore = [
     # through tonic, so the entry is harmless if unmatched (warn-only
     # cargo-deny output, not a hard fail).
     "RUSTSEC-2025-0134",
+    # cxx 1.0.194 `let_cxx_string!` unsound (uninitialized value; RustSec
+    # 2026-07-05). The macro is unused in gui/crates (grep-clean). cxx is a
+    # transitive dep of cxx-qt-lib/cxx-qt 0.7.3, whose codegen is ABI-locked
+    # to this cxx version — bumping cxx to the patched 1.0.196 breaks the
+    # cxx-qt link (undefined `cxxbridge1$194$…` symbols at `cargo test`).
+    # Re-evaluate when cxx-qt ships a release compatible with a fixed cxx.
+    "RUSTSEC-2026-0202",
 ]
 
 # -----------------------------------------------------------------------

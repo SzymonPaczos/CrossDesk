@@ -55,6 +55,21 @@ resumes. Resolving one = either you author the boundary edit, or you reply
   (daemon uses mock-libvirt) but **A3 must not wire the real LibvirtController
   into lifecycle until the steady-state-XML finalize lands.** Not a boundary
   edit — flagged so it's on the go/no-go radar.
+- [ ] **▶ GREENLIGHT the P0 live-verify (the #1 remaining release blocker).**
+  Everything host-side is now in place: the steady-state finalize is wired
+  (`9ac1da1`), the daemon can drive real libvirt via
+  `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real` (`30579a6`). The last step is a
+  *faithful* live run — daemon `backend=real` + a **fresh install** → agent
+  Hello → finalize redefines to steady-state → `virsh destroy`+`create` boots
+  the **disk** (not the ISO) → agent reconnects ≤90s. Closes #6, unblocks A3.
+  **The catch:** it wants a fresh install, which **wipes the current milestone
+  Windows install** (`crossdesk-win.qcow2`; a 30 GB `…milestone-bak.qcow2`
+  backup exists). My incident-restored domain has a fresh nvram (no boot entry)
+  so it's not a faithful vehicle. I have box autonomy but I'm **holding on the
+  destructive install for your nod** given (a) the valuable existing install
+  and (b) the recent accidental-undefine incident (Eyeball below). *Say go and
+  I run it next iteration; or say "use the existing disk" and I'll attempt a
+  boot-once-to-seed-nvram path instead.*
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
 - [x] **`docs/GOALS.md` whole-$HOME alignment — APPLIED 2026-07-05** (owner
   "apply"). §5 landed: G4 row, advantages row, Vision annotation, closing line.

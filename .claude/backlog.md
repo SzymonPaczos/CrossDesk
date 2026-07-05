@@ -575,10 +575,17 @@ wykrywał/logował/notyfikował.
   `agent-svc/src/filesystem.rs:98` (bez `#[cfg(feature)]`). Phase-5 stub
   (zob. `status.md`), ale brak cfg-gate = placeholder trafia do
   prod-builda. Schować za `mock` feature jak reszta. (audyt 2026-05-31)
-- **mTLS failure-mode testy.** `AuthValidator` pokrywa rejection paths,
-  ale brak dedykowanych testów cert-pinning / hostname-validation failure.
-  `test_smoke_inprocess.py` to happy-path + trace. (audyt 2026-05-31,
-  rekomendacja krytyka)
+- **~~mTLS failure-mode testy~~ — ZWERYFIKOWANE JAKO ZROBIONE (2026-07-05).**
+  Item z audytu 2026-05-31 jest **nieaktualny**: dedykowane testy failure-mode
+  istnieją i pokrywają krytyczną ścieżkę mTLS/auth. `test_mtls_handshake.py`
+  napędza **realny** handshake gRPC po loopbacku i asertuje odrzucenie na
+  warstwie TLS dla: brak cert klienta, cert podpisany złym/niezaufanym CA, cert
+  wygasły (nigdy nie dochodzą do dispatchu). `test_auth_validator.py` (unit)
+  pokrywa cert-pinning (fingerprint mismatch), brak cert, malformed PEM,
+  sequence-regression/skip-forward, concurrent streams. `test_auth_rejection_paths.py`
+  pokrywa per-plane (Control/Heartbeat/Filesystem) odrzucenia. `test_security_edges.py`
+  dokłada nonce/sequence edge-cases. („hostname-validation" nie jest zadaniem
+  AuthValidatora — to warstwa TLS, pokryta wrong-CA/expired w handshake teście.)
 - **AGENTS.md „Repository layout" drift.** Sekcja listuje 5 podkatalogów
   `host/src/crossdesk_host/`, faktycznie 23 (m.in. `cli/`, `doctor/`,
   `abstractions/`, `lifecycle/`, `filesystem_ctl/`…). AGENTS.md =

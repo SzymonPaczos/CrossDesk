@@ -125,11 +125,30 @@ class DomainSpec:
     consumes once the guest driver is confirmed."""
 
 
-def build_domain_xml(spec: DomainSpec) -> str:
+def build_steady_state_domain_xml(spec: DomainSpec) -> str:
+    """Post-install domain XML: boot the installed disk, install media ejected.
+
+    The install XML keeps the Windows ISO on ``<boot order='1'>`` for the VM's
+    whole life. If ``hard_destroy`` (heartbeat-FSM recovery) does destroy+create
+    against that persistent config, the guest re-boots the install ISO and
+    ``autounattend.xml`` **reinstalls Windows over the disk = data loss**. After
+    the first successful agent Hello the install must redefine the domain to this
+    steady state: disk ``<boot order='1'>`` and both CD-ROMs ejected (empty, no
+    ``<boot>``), so recovery always boots the installed disk. See
+    ``libvirt_ctl`` ``redefine_steady_state`` for the persistent-config write.
+    """
+    return build_domain_xml(spec, installed=True)
+
+
+def build_domain_xml(spec: DomainSpec, *, installed: bool = False) -> str:
     """Return the libvirt domain XML string for *spec*.
 
     Pure formatting — no I/O. ``ElementTree`` guarantees well-formed,
     attribute-escaped output (paths with ``&`` / quotes are handled).
+
+    ``installed=False`` (default) is the install-time shape: install ISO on
+    ``<boot order='1'>``, disk on ``2``. ``installed=True`` is the steady state
+    (see :func:`build_steady_state_domain_xml`): disk on ``1``, CD-ROMs ejected.
 
     Raises:
         ValueError: a ``persistent_shares`` entry has a relative ``host_dir``
@@ -197,24 +216,28 @@ def build_domain_xml(spec: DomainSpec) -> str:
     ET.SubElement(devices, "emulator").text = spec.emulator
 
     # Boot disk on SATA (DEC-0016: Windows Setup has no in-box virtio-blk).
-    # boot order 2: the (empty) disk is only bootable after Setup installs.
+    # Install-time boot order 2 (disk only bootable after Setup installs);
+    # steady state (installed) boots the disk first (order 1).
     disk = ET.SubElement(devices, "disk", {"type": "file", "device": "disk"})
     ET.SubElement(disk, "driver", {"name": "qemu", "type": "qcow2", "discard": "unmap"})
     ET.SubElement(disk, "source", {"file": str(spec.disk_path)})
     ET.SubElement(disk, "target", {"dev": "sda", "bus": "sata"})
-    ET.SubElement(disk, "boot", {"order": "2"})
+    ET.SubElement(disk, "boot", {"order": "1" if installed else "2"})
 
     # sdb = Windows install media → C: source (boot order 1); sdc = tools
     # ISO → D:, which autounattend.xml's FirstLogonCommands read (not boot).
+    # Steady state ejects both: no <source> (empty drive) and no <boot>, so
+    # recovery destroy+create can never re-run the installer over the disk.
     for dev, iso, order in (
         ("sdb", spec.windows_iso, "1"),
         ("sdc", spec.tools_iso, None),
     ):
         cd = ET.SubElement(devices, "disk", {"type": "file", "device": "cdrom"})
         ET.SubElement(cd, "driver", {"name": "qemu", "type": "raw"})
-        ET.SubElement(cd, "source", {"file": str(iso)})
+        if not installed:
+            ET.SubElement(cd, "source", {"file": str(iso)})
         ET.SubElement(cd, "target", {"dev": dev, "bus": "sata"})
-        if order is not None:
+        if order is not None and not installed:
             ET.SubElement(cd, "boot", {"order": order})
         ET.SubElement(cd, "readonly")
 

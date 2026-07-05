@@ -54,6 +54,23 @@ class LibvirtController(Protocol):
         """Forceful kill+restart: ``virsh destroy`` then ``virsh start``."""
         ...
 
+    def redefine_steady_state(self, domain_xml: str) -> None:
+        """Overwrite the PERSISTENT domain config with post-install steady-state
+        XML (installed disk on ``<boot order='1'>``, install media ejected).
+
+        Called once after the first successful agent Hello. Critical: the
+        install-time definition keeps the Windows ISO on ``<boot order='1'>``
+        for the VM's whole life, so a later ``hard_destroy`` (destroy+create)
+        would boot the installer and reinstall over the disk — data loss. This
+        rewrites the persistent definition (``defineXML`` with the live domain's
+        UUID preserved, so it updates in place instead of minting a new domain)
+        so every future ``create`` boots the installed disk. The running domain
+        is untouched until its next boot. Raises ``RuntimeError`` on libvirt
+        error. Build the XML via
+        ``installer.domain_xml.build_steady_state_domain_xml``.
+        """
+        ...
+
     def graceful_shutdown(self) -> None:
         """Polite shutdown: ``virsh shutdown`` (ACPI signal)."""
         ...

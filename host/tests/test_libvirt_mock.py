@@ -137,3 +137,30 @@ def test_fail_next_is_running_raises_then_clears() -> None:
     assert ctl.hooks.fail_next_is_running is False
     # Subsequent call succeeds.
     assert ctl.is_running() is True
+
+
+def test_redefine_steady_state_records_and_flags() -> None:
+    ctl = LibvirtControllerMock()
+    assert ctl.hooks.steady_state_applied is False
+
+    ctl.redefine_steady_state("<domain>steady</domain>")
+
+    assert ctl.hooks.redefine_steady_state_count == 1
+    assert ctl.hooks.steady_state_xml == "<domain>steady</domain>"
+    assert ctl.hooks.steady_state_applied is True
+
+
+def test_fail_next_redefine_steady_state_raises_then_clears() -> None:
+    ctl = LibvirtControllerMock()
+    ctl.hooks.fail_next_redefine_steady_state = True
+
+    with pytest.raises(
+        RuntimeError, match="mock-injected redefine_steady_state failure"
+    ):
+        ctl.redefine_steady_state("<domain/>")
+
+    assert ctl.hooks.fail_next_redefine_steady_state is False
+    # A failed redefine leaves the domain NOT-finalized so the caller retries.
+    assert ctl.hooks.steady_state_applied is False
+    ctl.redefine_steady_state("<domain/>")
+    assert ctl.hooks.steady_state_applied is True

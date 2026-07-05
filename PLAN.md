@@ -44,7 +44,10 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   live mount do odpalenia.
 - **Suspend/resume bez false HARD_DESTROY** (#5) + **recovery ≤90s** (#6) —
   live na boxie, po naprawie P0.
-- **`doctor` + `uninstall` live** (#9, #10) — kod gotowy, weryfikacja live.
+- **`uninstall` live** (#10) — kod kompletny; live-verify realnego usunięcia
+  (undefine niszczy `windows-guest` → zrobić z rozwagą / po becie).
+  `uninstall --dry-run` na realnym CLI potwierdzony (domena+pliki, exit 0).
+  (#9 `doctor` — ✅ LIVE-VERIFIED, patrz tabela.)
 - **Pomiary N1** (#2 launch, #4 heartbeat, #8 microbench) — harness gotowy,
   realne liczby na boxie.
 - **README quick-start** (#11) — realny przejazd „od zera do okna".
@@ -79,7 +82,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 6 | kill VM (`virsh destroy`) → recovery ≤90 s | ⛔ P0 | **Blokuje: `hard_destroy` reinstaluje Windows.** To jest front „TERAZ" |
 | 7 | CI green macOS + Ubuntu; `agent.exe` cross-compile | ⚠️ boundary | `agent.exe` ✅, Ubuntu CI ✅. „macOS matrix" martwe (Mac zvacuumowany) — re-def do podpisu (needs-owner §7) |
 | 8 | microbench pass vs baselines | 🔲 box | harness gotowy; realne liczby |
-| 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live / 🔲 | rozbudowany; live-verify pełnego przebiegu |
+| 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live | LIVE-VERIFIED 2026-07-05: na tym boxie `doctor` = **exit 0**, 10/10 OK (cpu_virt svm, kvm, vsock, qemu 10.2, freerdp, ovmf, libvirt, disk 135GB, config, vm_creds); zły host (`CROSSDESK_OVMF_CODE` bogus) → `ovmf [fail]` + **exit 1** |
 | 10 | `uninstall` czyste usunięcie | 🔲 box | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Zostaje live-verify pełnego usunięcia + opcjonalny `--force`/confirm (backlog) |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |

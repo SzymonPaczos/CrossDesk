@@ -7,6 +7,8 @@ write only into a tmp icon dir and never touch the real desktop/icon caches.
 
 from __future__ import annotations
 
+import asyncio
+import threading
 from pathlib import Path
 from typing import List, Tuple
 
@@ -97,3 +99,44 @@ def test_most_recent_launch_wins(
     s.expect("excel", "Excel")  # second launch overwrites the first
     assert s.offer(_PNG) == "excel"
     assert calls[0]["app_id"] == "excel"
+
+
+def test_refresh_caches_offloaded_off_the_event_loop(
+    store: Tuple[WindowIconStore, List[dict]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """On the daemon's asyncio loop the cache-tool subprocesses must run on a
+    worker thread, not inline — otherwise a window-create stalls the loop
+    (heartbeat FSM + every gRPC stream) for up to ~30s."""
+    s, _ = store
+    # Make the cache tools "present" so _run_cache_refresh reaches subprocess.run.
+    monkeypatch.setattr(window_icon.shutil, "which", lambda name: f"/usr/bin/{name}")
+    main_thread = threading.get_ident()
+    ran_on: List[int] = []
+    monkeypatch.setattr(
+        window_icon.subprocess,
+        "run",
+        lambda argv, **kw: ran_on.append(threading.get_ident()),
+    )
+
+    async def drive() -> None:
+        fut = s._refresh_caches()
+        assert fut is not None  # offloaded → returns the executor future
+        await fut
+
+    asyncio.run(drive())
+    assert ran_on, "cache tools should have been invoked"
+    assert all(tid != main_thread for tid in ran_on)  # never on the loop thread
+
+
+def test_refresh_caches_runs_inline_without_a_loop(
+    store: Tuple[WindowIconStore, List[dict]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Outside an event loop (CLI / tests) it runs synchronously, no future."""
+    s, _ = store
+    monkeypatch.setattr(window_icon.shutil, "which", lambda name: f"/usr/bin/{name}")
+    calls: List[Tuple[str, ...]] = []
+    monkeypatch.setattr(
+        window_icon.subprocess, "run", lambda argv, **kw: calls.append(tuple(argv))
+    )
+    assert s._refresh_caches() is None
+    assert calls  # both cache tools invoked inline

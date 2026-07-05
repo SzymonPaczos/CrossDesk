@@ -122,7 +122,9 @@ class RailManager:
         )
         # Hand the freshly-extracted .exe icon to the icon store, which matches
         # it to the launch that just happened and applies it to that app's
-        # .desktop / icon theme (best-effort; never blocks event handling).
+        # .desktop / icon theme. Best-effort; the icon-cache subprocesses are
+        # offloaded to a worker thread (window_icon._refresh_caches) so this
+        # never blocks the daemon event loop.
         if self._icon_store is not None and event.icon_png:
             self._icon_store.offer(bytes(event.icon_png))
 

@@ -36,13 +36,14 @@ icon must never block a launch or a window event.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import shutil
 import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from crossdesk_host.integrations import mime
 
@@ -122,16 +123,33 @@ class WindowIconStore:
         mime.install_app(app_id=app_id, display_name=display_name, icon=icon_name)
         self._refresh_caches()
 
-    def _refresh_caches(self) -> None:
+    def _refresh_caches(self) -> Optional["asyncio.Future[None]"]:
         """Nudge the icon-theme + desktop caches so the new icon shows without
         a re-login. Best-effort — many desktops pick up files directly, and the
-        tools may be absent."""
+        tools may be absent.
+
+        The cache tools (``gtk-update-icon-cache`` / ``update-desktop-database``)
+        can each block for up to 15s. This runs on the RAIL CREATED path, which
+        the daemon dispatches synchronously on its asyncio loop — so when a loop
+        is running the subprocesses are offloaded to a worker thread (returning
+        the fire-and-forget future) to keep the heartbeat FSM and every gRPC
+        stream responsive. Outside a loop (CLI / tests) it runs inline."""
         hicolor_root = self._icon_dir.parent.parent  # …/icons/hicolor
         applications = Path.home() / ".local" / "share" / "applications"
-        for argv in (
+        argvs = [
             ["gtk-update-icon-cache", "-f", "-t", str(hicolor_root)],
             ["update-desktop-database", str(applications)],
-        ):
+        ]
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._run_cache_refresh(argvs)
+            return None
+        return loop.run_in_executor(None, self._run_cache_refresh, argvs)
+
+    @staticmethod
+    def _run_cache_refresh(argvs: List[List[str]]) -> None:
+        for argv in argvs:
             exe = shutil.which(argv[0])
             if exe is None:
                 continue

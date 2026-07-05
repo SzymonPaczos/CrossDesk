@@ -6,6 +6,7 @@ checking but constructing it raises if ``libvirt`` is not installed.
 from __future__ import annotations
 
 import logging
+import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING, Sequence
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
@@ -14,6 +15,27 @@ if TYPE_CHECKING:
     import libvirt as _libvirt_t
 
 logger = logging.getLogger(__name__)
+
+
+def _with_domain_uuid(domain_xml: str, uuid: str) -> str:
+    """Return *domain_xml* with a ``<uuid>`` child of ``<domain>`` set to *uuid*.
+
+    Inserted right after ``<name>`` if absent (libvirt's canonical ordering),
+    replaced if already present. Pure string→string so ``redefine_steady_state``
+    can preserve the live domain's identity (making ``defineXML`` an in-place
+    update, not a new domain) and stay unit-testable without libvirt.
+    """
+    root = ET.fromstring(domain_xml)
+    existing = root.find("uuid")
+    if existing is not None:
+        existing.text = uuid
+        return ET.tostring(root, encoding="unicode")
+    uuid_el = ET.Element("uuid")
+    uuid_el.text = uuid
+    name_el = root.find("name")
+    insert_at = list(root).index(name_el) + 1 if name_el is not None else 0
+    root.insert(insert_at, uuid_el)
+    return ET.tostring(root, encoding="unicode")
 
 
 class RealLibvirtController(LibvirtController):
@@ -105,6 +127,35 @@ class RealLibvirtController(LibvirtController):
             domain.create()
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"start after destroy failed: {exc}") from exc
+
+    def redefine_steady_state(self, domain_xml: str) -> None:
+        import libvirt
+
+        domain = self._domain()
+        try:
+            uuid = domain.UUIDString()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"read domain uuid failed: {exc}") from exc
+        # defineXML matches by <name>; without the live UUID libvirt would
+        # reject (name exists with a different uuid) or mint a new domain.
+        # Inject the existing UUID so this UPDATES the persistent config in
+        # place. The running domain keeps its install-time definition until its
+        # next boot — a later hard_destroy's create() then boots the installed
+        # disk instead of re-running the installer.
+        xml_with_uuid = _with_domain_uuid(domain_xml, uuid)
+        conn = self._connect()
+        logger.warning(
+            "redefine_steady_state: defineXML (eject media, disk boot=1) for %s",
+            self.domain_name,
+        )
+        try:
+            dom = conn.defineXML(xml_with_uuid)
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(
+                f"redefine_steady_state defineXML failed: {exc}"
+            ) from exc
+        if dom is None:
+            raise RuntimeError("redefine_steady_state defineXML returned None")
 
     def send_key(self, keycodes: Sequence[int]) -> None:
         import libvirt

@@ -14,15 +14,21 @@ nigdzie indziej. Reszta to: [`status.md`](.claude/status.md) (znane problemy),
 
 ## TERAZ (jeden front)
 
-**→ P0 `hard_destroy` steady-state XML.** Domena trzyma install-ISO na
-`boot order=1` przez całe życie; recovery (`destroy`+`create`) bootuje install-ISO
-→ autounattend **reinstaluje Windows na dysku = utrata danych**. Dziś latentne
-(daemon = mock-libvirt), ale blokuje: kryterium akceptacji **#6** (kill VM →
-recovery) **oraz** wpięcie realnego `LibvirtController` do lifecycle (A3).
-Naprawa: po pierwszym Hello redefiniuj domenę do steady-state (eject oba CD,
-disk `boot=1`, przetrwa destroy+create) + flaga „installed". Mechanizm
-(builder + `redefine_steady_state`) jest czysto testowalny na mocku; live-wiring
-+ weryfikacja = na tym boxie. Mapa i szczegóły: [`status.md`](.claude/status.md).
+**→ P0 `hard_destroy` steady-state XML** — blokuje akceptację **#6** (kill VM →
+recovery) i wpięcie realnego `LibvirtController` do lifecycle (A3). Problem:
+domena trzyma install-ISO na `boot order=1` przez całe życie; recovery
+(`destroy`+`create`) bootuje install-ISO → autounattend **reinstaluje Windows na
+dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
+
+- ✅ **Mechanizm ZROBIONY (testowalny, host-side)**: `build_steady_state_domain_xml`
+  (disk `boot=1`, oba CD ejected) + `redefine_steady_state` na Protocol/real/mock
+  (real: `defineXML` z zachowaniem UUID żywej domeny, box-gated; czysty helper
+  `_with_domain_uuid` przetestowany). 38 testów.
+- 🔲 **ZOSTAJE (box-gated)**: wpiąć finalize po pierwszym Hello (bounded
+  post-install-wait → `redefine_steady_state` + persist flag „steady_state") w
+  `install_cmd` / control READY hook, + live-verify na realnym libvirt, że
+  destroy+create po redefinicji bootuje dysk (nie ISO). Dopiero to zamyka #6 i
+  odblokowuje A3. Szczegóły: [`status.md`](.claude/status.md).
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 

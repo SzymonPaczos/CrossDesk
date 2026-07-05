@@ -32,10 +32,16 @@ class MockHooks:
     fail_next_detach_virtiofs: bool = False
     fail_next_is_running: bool = False
     fail_next_define_and_start: bool = False
+    fail_next_redefine_steady_state: bool = False
 
     hard_destroy_count: int = 0
     define_and_start_count: int = 0
     defined_xml: Optional[str] = None
+    redefine_steady_state_count: int = 0
+    steady_state_xml: Optional[str] = None
+    steady_state_applied: bool = False
+    """Set once ``redefine_steady_state`` runs — the idempotency signal the
+    install finalize checks so it doesn't re-redefine on every Hello."""
     graceful_shutdown_count: int = 0
     suspend_count: int = 0
     resume_count: int = 0
@@ -110,6 +116,15 @@ class LibvirtControllerMock(LibvirtController):
         # mirror that so subsequent is_running() observations agree.
         self.hooks.running = True
         self.hooks.shutdown_polls_remaining = 0
+
+    def redefine_steady_state(self, domain_xml: str) -> None:
+        if self.hooks.fail_next_redefine_steady_state:
+            self.hooks.fail_next_redefine_steady_state = False
+            raise RuntimeError("mock-injected redefine_steady_state failure")
+        logger.info("[LIBVIRT MOCK] redefine_steady_state: %s", self.domain_name)
+        self.hooks.steady_state_xml = domain_xml
+        self.hooks.redefine_steady_state_count += 1
+        self.hooks.steady_state_applied = True
 
     def graceful_shutdown(self) -> None:
         if self.hooks.fail_next_graceful_shutdown:

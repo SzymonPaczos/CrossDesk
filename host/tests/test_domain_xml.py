@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml
+from crossdesk_host.installer.domain_xml import (
+    DomainSpec,
+    build_domain_xml,
+    build_steady_state_domain_xml,
+)
 
 
 def _xml(**kw: object) -> ET.Element:
@@ -71,6 +75,62 @@ def test_disk_is_sata_with_two_cdroms() -> None:
     assert devices == ["disk", "cdrom", "cdrom"]
     sources = [d.find("source").get("file") for d in disks]  # type: ignore[union-attr]
     assert sources == ["/var/lib/crossdesk/win.qcow2", "/iso/Win10.iso", "/iso/tools.iso"]
+
+
+def _steady_root() -> ET.Element:
+    spec = DomainSpec(
+        name="windows-guest",
+        disk_path=Path("/var/lib/crossdesk/win.qcow2"),
+        windows_iso=Path("/iso/Win10.iso"),
+        tools_iso=Path("/iso/tools.iso"),
+    )
+    return ET.fromstring(build_steady_state_domain_xml(spec))
+
+
+def test_steady_state_boots_disk_only() -> None:
+    """Post-install steady state: the installed disk boots first (order 1) and
+    it is the ONLY device with a boot order — recovery destroy+create can never
+    re-run the installer (the data-loss path)."""
+    root = _steady_root()
+    disks = root.findall("devices/disk")
+    disk = next(d for d in disks if d.find("target").get("dev") == "sda")  # type: ignore[union-attr]
+    assert disk.find("boot").get("order") == "1"  # type: ignore[union-attr]
+    boot_devs = [
+        d.find("target").get("dev")  # type: ignore[union-attr]
+        for d in disks
+        if d.find("boot") is not None
+    ]
+    assert boot_devs == ["sda"]  # nothing else is bootable
+
+
+def test_steady_state_ejects_both_cdroms() -> None:
+    """Both CD-ROM drives stay present but empty (no <source>) — install +
+    tools ISOs are ejected, so no installable media remains in the domain."""
+    root = _steady_root()
+    cdroms = [d for d in root.findall("devices/disk") if d.get("device") == "cdrom"]
+    assert len(cdroms) == 2
+    for cd in cdroms:
+        assert cd.find("source") is None  # ejected: empty drive
+        assert cd.find("boot") is None  # not bootable
+
+
+def test_install_shape_is_the_default() -> None:
+    """installed=False (the default) is byte-for-byte the install shape: the
+    Windows ISO boots first, the disk second."""
+    spec = DomainSpec(
+        name="windows-guest",
+        disk_path=Path("/var/lib/crossdesk/win.qcow2"),
+        windows_iso=Path("/iso/Win10.iso"),
+        tools_iso=Path("/iso/tools.iso"),
+    )
+    assert build_domain_xml(spec) == build_domain_xml(spec, installed=False)
+    root = ET.fromstring(build_domain_xml(spec))
+    disks = root.findall("devices/disk")
+    disk = next(d for d in disks if d.find("target").get("dev") == "sda")  # type: ignore[union-attr]
+    assert disk.find("boot").get("order") == "2"  # type: ignore[union-attr]
+    win = next(d for d in disks if d.find("target").get("dev") == "sdb")  # type: ignore[union-attr]
+    assert win.find("source").get("file") == "/iso/Win10.iso"  # type: ignore[union-attr]
+    assert win.find("boot").get("order") == "1"  # type: ignore[union-attr]
 
 
 def test_vsock_tpm_balloon_present() -> None:

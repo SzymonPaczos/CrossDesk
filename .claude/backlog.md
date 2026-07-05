@@ -42,8 +42,12 @@ drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflo
   latentny (daemon używa mock-libvirt); **A3 NIE MOŻE wpiąć realnego
   `LibvirtController` do lifecycle dopóki to nie naprawione.** Fix: po pierwszym
   Hello redefiniuj domenę do steady-state (eject oba CD, disk `boot order=1`,
-  `updateDeviceFlags`+`AFFECT_CONFIG` by przeżyło destroy+create) + persist flag
+  `defineXML` z zachowaniem UUID by przeżyło destroy+create) + persist flag
   „installed" w `install.state.json`.
+  **[MECHANIZM shipped 2026-07-05]** `build_steady_state_domain_xml` +
+  `redefine_steady_state` (Protocol/real/mock) + testy gotowe; ZOSTAJE tylko
+  wpięcie finalize po Hello + live-verify (box-gated). Front w
+  [`PLAN.md`](../PLAN.md) TERAZ; stan w [`status.md`](status.md) Partial.
 - **[P1] Brak post-install wait — `_step_run_autounattend` deklaruje sukces gdy
   domena tylko `is_running()`.** ([`cli/install_cmd.py`](../host/src/crossdesk_host/cli/install_cmd.py)
   398-411; `install_agent_service`/`post_install_tweaks` = no-op printy). Host

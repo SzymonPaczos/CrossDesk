@@ -26,9 +26,36 @@ def add_subparser(sub: "argparse._SubParsersAction[argparse.ArgumentParser]") ->
     p = sub.add_parser("uninstall", help="Remove CrossDesk")
     p.add_argument("--keep-config", action="store_true", help="Preserve vm.toml")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip the confirmation prompt (for scripts)",
+    )
+
+
+def _confirm_destructive() -> bool:
+    """Ask before an irreversible wipe. Returns True only on an explicit yes.
+
+    Uninstall destroys the VM and deletes the mTLS keys + vm.toml under
+    ``~/.config/crossdesk`` — losing vm.toml means losing access to the Windows
+    install. A non-interactive stdin (EOF) counts as "no" so a piped run never
+    wipes without ``--force``.
+    """
+    print(_("This destroys the CrossDesk VM and deletes its disk, install"))
+    print(_("state, and config (mTLS keys + vm.toml unless --keep-config)."))
+    try:
+        answer = input(_("Proceed? [y/N] ")).strip().lower()
+    except (EOFError, OSError):
+        # No readable stdin (piped, closed, redirected from /dev/null): never
+        # read that as consent — require --force for a non-interactive wipe.
+        return False
+    return answer in ("y", "yes")
 
 
 def run(args: argparse.Namespace) -> int:
+    if not args.dry_run and not args.force and not _confirm_destructive():
+        print(_("uninstall aborted."))
+        return 0
     report = uninstall(
         keep_config=args.keep_config,
         dry_run=args.dry_run,

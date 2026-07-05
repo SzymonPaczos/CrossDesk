@@ -146,8 +146,16 @@ def test_uninstall_keep_config_preserves_vm_toml(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    # Inject a mock controller so the domain-teardown never touches the real
+    # qemu:///session (a unit test must never destroy a developer's live VM).
+    from crossdesk_host.cli import uninstall_cmd
+    from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
+
+    monkeypatch.setattr(uninstall_cmd, "_resolve_libvirt_ctl", LibvirtControllerMock)
     main(["vm", "credentials", "set", "--username", "u", "--password", "p"])
-    rc = main(["uninstall", "--keep-config"])
+    # --force: exercise the real removal path non-interactively (the confirm
+    # prompt would otherwise abort under captured stdin).
+    rc = main(["uninstall", "--keep-config", "--force"])
     assert rc == 0
     assert (tmp_path / ".config" / "crossdesk" / "vm.toml").exists()
 

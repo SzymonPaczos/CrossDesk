@@ -4,8 +4,9 @@ Bieżące breakages / partial implementations. Jedna pozycja = jedna linia
 opisu (max ~2 linie kontekstu). Naprawa lub świadome zostawienie:
 flag w [`backlog.md`](backlog.md).
 
-Pełne plany prac — `docs/EXECUTION_PLAN.md`. Archiwum zamkniętych
-prac — `history/completed-work.md`.
+> **Co robić dalej → [`PLAN.md`](../PLAN.md)** (jedyny board v0.1.0). Ten plik =
+> *stan* (co zepsute / partial), nie *plan*. Archiwum: `history/completed-work.md`.
+> `docs/EXECUTION_PLAN.md` zamrożony (patrz PLAN.md).
 
 ---
 
@@ -314,18 +315,28 @@ prefiksu `||` (alias vs ścieżka → RAIL_EXEC_E_FILE_NOT_FOUND).
 
 ---
 
-## Hardware-gated (czeka na Linux+KVM box)
+## Gating — 3 realne klasy (box JEST żywy, 2026-07)
 
-- **`agent.exe` real Windows verification** — `LogonUserW`,
-  `LibvirtFilesystemController`, RAIL window icon extraction
-  (ExtractIconExW), wszystkie peryferia, GPU passthrough acceptance.
-  Code shipped; runtime correctness niezweryfikowana bez sprzętu.
-- **End-to-end install flow** — `crossdesk install` 7-step state
-  machine: `generate_credentials` działa, reszta zwraca "hardware-gated"
-  i exit 1. `--dry-run` przebiega zielony bez sprzętu.
-- **VM acceptance testów (perf, Office, GPU smoke)** — workflow
-  `linux-kvm-smoke` w `.github/workflows/ci.yml` jest no-op
-  placeholderem dopóki self-hosted runner nie dojdzie.
+Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
+(`windows-guest`) jest żywy → rozbite na trzy klasy. Front pracy: [`PLAN.md`](../PLAN.md).
+
+**✅ ZWERYFIKOWANE NA ŻYWO** (było „unverified" — milestone'y wyżej w tym pliku to potwierdzają):
+- `agent.exe` real Windows: **`LogonUserW`** (`verify_credentials_resolved status=1`),
+  RAIL window-icon extraction (notepad.exe 256×256), NT-service agent (A4:
+  disconnect+reboot survive), end-to-end install (A7-live: 7-step drove real
+  install, agent auto-online). RAIL render Notepad+Paint jako natywne okna.
+
+**🔲 WYKONALNE NA TYM BOXIE** (było blokowane brakiem boxa — teraz „do odpalenia", nie „zablokowane"):
+- real `LibvirtController`/`LibvirtDomainEventSource` live (**gated na P0
+  hard_destroy** — patrz PLAN.md TERAZ), `LibvirtFilesystemController` /
+  VirtioFS Stage B mount, suspend/resume live, perf/heartbeat pomiary N1,
+  `doctor`/`uninstall` live-verify, sleep/wake sync, hibernation resume (+ADR).
+
+**🔧 GENUINE HARDWARE** (potrzebują sprzętu, którego ten laptop NIE ma — zostają gated na KONKRETNYM sprzęcie):
+- GPU passthrough acceptance (Tier 1/2 — passthrough-capable multi-GPU host),
+  Looking Glass (GPU), peripherals e2e (część wymaga fizycznych urządzeń),
+  multi-monitor RAIL (2+ monitory), self-hosted `linux-kvm-smoke` runner
+  (Proxmox/dedykowany — dziś no-op placeholder w `ci.yml`).
 
 ## Świadome zaślepki (`🚧 mock` / Phase deferred)
 

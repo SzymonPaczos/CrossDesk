@@ -1,10 +1,12 @@
-# Backlog
+# Backlog — post-MVP / kiedyś (parking)
 
-Jedyne źródło otwartej pracy. Pełne plany faz —
-[`docs/EXECUTION_PLAN.md`](../docs/EXECUTION_PLAN.md) (this-week granular)
-+ [`ROADMAP.md`](../ROADMAP.md) (phases). Bieżące breakages —
-[`status.md`](status.md). Archiwum zamkniętych prac —
-[`history/completed-work.md`](history/completed-work.md).
+> **To NIE jest board „co dalej".** Droga do v0.1.0 → [`PLAN.md`](../PLAN.md)
+> (jedyny board MVP). Ten plik = długi ogon pozycji **poza** v0.1.0 + kontekst
+> techniczny. Jak szukasz co robić teraz — nie tu. Stan / partiale —
+> [`status.md`](status.md). Archiwum — [`history/completed-work.md`](history/completed-work.md).
+
+Pozycje realnie należące do v0.1.0 (P0 hard_destroy, FS Stage B, doctor/uninstall
+live, pomiary N1, M5, packaging test) żyją w `PLAN.md`; tu zostają jako kontekst.
 
 > Sfoldowany z FOLLOWUPS.md (1260 linii) 2026-05-23 — archiwum:
 > [`history/2026-05-23-followups-archive.md`](history/2026-05-23-followups-archive.md).
@@ -12,10 +14,12 @@ Jedyne źródło otwartej pracy. Pełne plany faz —
 > archiwum (decyzja [DEC-META-004](rules/decisions.md)).
 
 **Konwencja:** jedna pozycja = jedna linia opisu + (opcjonalnie) jedna
-linia kontekstu. Cross-refs do `docs/` / kodu obowiązkowe.
-**Priorytety:** P0 = krytyczne / blokuje rozwój, P1 = ważne, P2 =
-nice-to-have. **Status:** `[HW]` = hardware-gated; `[~PARTIAL]` =
-częściowo shipped (reszta w [`status.md`](status.md)).
+linia kontekstu. **Priorytety** tu są *względne w obrębie post-MVP*.
+**Marker `[HW]`** (box jest żywy od 2026-07) = **genuine hardware, którego ten
+box NIE ma**: GPU passthrough, Looking Glass, multi-monitor (2+ ekrany),
+self-hosted CI runner. Rzeczy „tylko odpalić na tym boxie" (real libvirt,
+VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT.
+`[~PARTIAL]` = częściowo shipped (reszta w [`status.md`](status.md)).
 
 ---
 
@@ -616,9 +620,15 @@ Wymaga zgody na touch boundary plików per `AGENTS.md` "File boundaries"
 
 ## Zablokowane
 
-- **Self-hosted Linux+KVM CI runner** — gated on user acquiring Linux
-  machine. Status update gdy hardware acquisition changes (per
-  AGENTS.md reminders).
-- **Wszystkie `[HW]` pozycje powyżej** — czekają na ten sam blocker
-  (Linux+KVM box). Migawka aktualnego stanu — `status.md` "Hardware-
-  gated".
+> **Główny blocker („brak Linux+KVM boxa") ZNIKNĄŁ 2026-07** — box jest żywy,
+> Fazy 1–4 zweryfikowane na żywo. To co zostało „zablokowane" to teraz tylko
+> pozycje na **genuine hardware, którego ten box nie ma** (klasa C w
+> [`status.md`](status.md) „Gating"):
+
+- **Self-hosted `linux-kvm-smoke` CI runner** — potrzebny Proxmox/dedykowany
+  runner (nie ten laptop-dev-box).
+- **GPU passthrough / Looking Glass** — passthrough-capable multi-GPU host.
+- **Multi-monitor RAIL** — 2+ fizyczne ekrany.
+
+Wszystko inne oznaczone `[HW]` wyżej, co wymaga tylko *tego* boxa (real libvirt,
+VirtioFS, perf, suspend/resume), jest **odblokowane** — patrz `PLAN.md` NEXT.

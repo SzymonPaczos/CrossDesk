@@ -7,9 +7,11 @@ or the live box. This file is the prompt the loop runs every iteration —
 identical on the Mac (hardware-free items only) and the Proxmox box
 (hardware-free + live items).
 
-Canonical context the loop re-reads each iteration: this file, the
-**Work queue** below, [`needs-owner.md`](needs-owner.md), `backlog.md`,
-`status.md`, and memory `v010_release_plan`.
+Canonical context the loop re-reads each iteration: this file (for the
+*algorithm + guardrails*), **[`PLAN.md`](../PLAN.md) for what to work on**
+(the single v0.1.0 board — it supersedes the "Work queue" section below,
+kept only for the 🟢/🔵 environment tags), [`needs-owner.md`](needs-owner.md),
+and `status.md`.
 
 ## Per-iteration algorithm
 

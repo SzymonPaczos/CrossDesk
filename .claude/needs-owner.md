@@ -58,6 +58,48 @@ resumes. Resolving one = either you author the boundary edit, or you reply
   into lifecycle until the steady-state-XML finalize lands.** Not a boundary
   edit — flagged so it's on the go/no-go radar.
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
+- [ ] **`docs/GOALS.md` whole-$HOME alignment (audit 2026-07-05).** DEC-0018 +
+  THREAT_MODEL/MVP_SCOPE/DECISIONS shipped whole-$HOME as the Stage-B default
+  (opt-in, default off), but `docs/GOALS.md` still asserts "no full-$HOME
+  exposure" / "per-file mounts" as the model in **four** places (G4, the Vision
+  para, the advantages row, the closing line). GOALS.md is a boundary file →
+  your call. Draft §5 below. This is the last vision-doc that didn't get the
+  DEC-0018 update; the architecture.md FS-drift the audit found is downstream of
+  this (its Non-goals restate GOALS.md), so architecture.md was left untouched
+  and follows once you sign off §5.
+
+## Boundary drafts — pending owner (2026-07-05)
+
+### §5 — `docs/GOALS.md` whole-$HOME reality alignment
+
+The factual claims (G4, advantages row) are now wrong for the shipped default;
+the Vision para + closing line are aspirational (Stage C JIT-per-file) — your
+call whether to keep them as the north-star or annotate. Recommended: fix the
+two factual rows, annotate the aspirational ones.
+
+(5a) **G4** — CURRENT:
+
+    | G4 | Treat the Windows VM as a strict trust boundary; per-frame authentication, no full-`$HOME` exposure. | See `docs/THREAT_MODEL.md`. Enforced by per-frame `AuthContext` + JIT VirtioFS. |
+
+PROPOSED:
+
+    | G4 | Treat the Windows VM as a strict trust boundary; per-frame authentication; file sharing opt-in (default off). | See `docs/THREAT_MODEL.md`. Enforced by per-frame `AuthContext`. When sharing is on, the v0.1.0 default scope is the whole `$HOME` (DEC-0018); `documents`/`custom` narrow it; Stage C JIT-per-file is the eventual tight-isolation mode. |
+
+(5b) **Advantages row** (line ~64) — CURRENT:
+
+    | Just-in-time VirtioFS | WinApps `\\tsclient\home` | Per-file mounts, not whole-`$HOME` exposure; detached after `ReleaseAck` |
+
+PROPOSED:
+
+    | Opt-in staged file share | WinApps always-on `\\tsclient\home` | Sharing is opt-in (default off) and stage-able; Stage C JIT-per-file (mount only the opened file, detach after `ReleaseAck`) is the eventual tight-isolation mode. WinApps' mount is always-on and whole-$HOME. |
+
+(5c) **Vision para** (lines ~14-15) — aspirational (Stage C). Owner style call:
+keep as north-star, or append a one-liner that the v0.1.0 default is an opt-in
+whole-$HOME share and the per-file-vanishing mount is the post-1.0 Stage C mode.
+
+(5d) **Closing line** (~95) "per-frame authentication and JIT filesystem." —
+same call: "JIT filesystem" is Stage C; either keep as vision or reword to
+"per-frame authentication and an opt-in staged filesystem share."
 
 ## Boundary drafts — ✅ APPLIED 2026-07-01 (owner sign-off)
 

@@ -9,6 +9,29 @@ import grpc
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _no_real_libvirt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Slam the real-libvirt connection choke point shut for the whole suite.
+
+    Every ``RealLibvirtController`` operation funnels through ``_connect``; a
+    CLI test that reached it once undefined a developer's live ``windows-guest``
+    domain (the disk survived, the definition didn't). No default test should
+    touch ``qemu:///session`` — the backend rule gates integration tests behind
+    a marker — so make any accidental real connection fail loudly instead of
+    mutating the host. A test that genuinely needs a live session re-patches
+    ``_connect`` itself; the ones that stub or replace the class are unaffected.
+    """
+    from crossdesk_host.libvirt_ctl import real
+
+    def _blocked(self: "real.RealLibvirtController") -> Any:
+        raise RuntimeError(
+            "test reached real libvirt (RealLibvirtController._connect) — inject "
+            "a LibvirtControllerMock instead of touching qemu:///session"
+        )
+
+    monkeypatch.setattr(real.RealLibvirtController, "_connect", _blocked)
+
+
 class AbortError(Exception):
     """Raised by FakeServicerContext.abort to mimic gRPC's stream-killing behavior.
 

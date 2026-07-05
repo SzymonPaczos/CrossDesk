@@ -35,6 +35,7 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         supported_features: Optional[List[str]] = None,
         verify_coordinator: Optional[VerifyCoordinator] = None,
         on_agent_version: Optional[Callable[[str], None]] = None,
+        on_session_ready: Optional[Callable[[], None]] = None,
     ) -> None:
         self.auth_validator = auth_validator
         self.rail_manager = rail_manager if rail_manager is not None else RailManager()
@@ -50,6 +51,12 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
         # StatusFrame.agent_version fresh without the servicer needing to
         # import the management module.
         self.on_agent_version = on_agent_version
+        # Fired each time a handshake reaches READY. The daemon hooks this to
+        # run the post-install steady-state finalize (redefine the domain so a
+        # later hard_destroy can't reboot the install ISO — see
+        # installer.steady_state). Idempotent + retrying on the callee side, so
+        # firing on every reconnect is fine.
+        self.on_session_ready = on_session_ready
 
     async def _handle_hello(
         self,
@@ -210,6 +217,8 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                 logger.info("Session state: READY")
                 if self.verify_coordinator is not None:
                     self.verify_coordinator.register_session(outbound)
+                if self.on_session_ready is not None:
+                    self.on_session_ready()
                 return "READY"
             return state
 

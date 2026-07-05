@@ -39,6 +39,7 @@ from crossdesk_host.display.rail_supervisor import RailSupervisor  # noqa: E402
 from crossdesk_host.display.window_icon import WindowIconStore  # noqa: E402
 from crossdesk_host.filesystem_ctl.real import LibvirtFilesystemController  # noqa: E402
 from crossdesk_host.freerdp.real import RealFreeRDPInvocation  # noqa: E402
+from crossdesk_host.installer.steady_state import finalize_steady_state  # noqa: E402
 from crossdesk_host.ipc.auth import AuthValidator  # noqa: E402
 from crossdesk_host.ipc.control import ControlServiceServicer  # noqa: E402
 from crossdesk_host.ipc.filesystem import FilesystemServiceServicer  # noqa: E402
@@ -162,12 +163,26 @@ async def main() -> None:
     def _store_agent_version(version: str) -> None:
         mgmt_state.agent_version = version
 
+    # Post-install steady-state finalize: on the first agent Hello, redefine
+    # the persistent domain so a later hard_destroy can't reboot the install
+    # ISO and reinstall over the disk (installer.steady_state). It rewrites the
+    # REAL domain via defineXML — running it against the mock would mark the
+    # step done without redefining anything, masking the data-loss path once
+    # the real controller lands. So only wire it when the controller is real.
+    def _finalize_steady_state() -> None:
+        finalize_steady_state(libvirt_ctl)
+
+    on_session_ready = (
+        None if isinstance(libvirt_ctl, LibvirtControllerMock) else _finalize_steady_state
+    )
+
     control_pb2_grpc.add_ControlServiceServicer_to_server(
         ControlServiceServicer(
             auth_validator,
             rail_manager=rail_manager,
             verify_coordinator=verify_coordinator,
             on_agent_version=_store_agent_version,
+            on_session_ready=on_session_ready,
         ),
         server,
     )

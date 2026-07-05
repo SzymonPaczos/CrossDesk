@@ -24,6 +24,7 @@ from crossdesk_host.doctor.checks import DEFAULT_CHECKS, Status
 from crossdesk_host.i18n import _
 from crossdesk_host.installer import credentials, pki, state, tools_iso
 from crossdesk_host.installer.domain_xml import DomainSpec, build_domain_xml, resolve_ovmf
+from crossdesk_host.installer.steady_state import persist_steady_state_xml
 
 # Domain name the daemon's LibvirtController also defaults to, so the
 # domain `crossdesk install` defines is the one the daemon manages.
@@ -397,6 +398,11 @@ def _step_create_libvirt_domain(args: argparse.Namespace) -> None:
     except RuntimeError as exc:
         raise _StepFailed(str(exc)) from exc
     print(_("    defined + started libvirt domain {name}").format(name=_DOMAIN_NAME))
+    # Persist the steady-state XML (installed disk boot=1, install media
+    # ejected) so the daemon can redefine the domain to it on the first agent
+    # Hello. Without that redefine a later hard_destroy re-boots the install
+    # ISO and reinstalls over the disk = data loss (installer.steady_state).
+    persist_steady_state_xml(spec)
     # The redefined guest reinstalls Windows, which mints a fresh self-signed
     # RDP cert; forget the old TOFU pin now so the first managed launch after
     # this install re-pins cleanly instead of deadlocking on the cert-change

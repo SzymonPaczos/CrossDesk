@@ -77,13 +77,16 @@ async def _drive(
     *,
     rail_manager: RailManager | None = None,
     auth_raises: Exception | None = None,
+    on_session_ready=None,
 ):
     """Run OpenSession against a scripted client frame sequence and collect outputs."""
     auth_validator = MagicMock()
     auth_validator.verify_auth_context = AsyncMock()
     if auth_raises is not None:
         auth_validator.verify_auth_context.side_effect = auth_raises
-    servicer = ControlServiceServicer(auth_validator, rail_manager=rail_manager)
+    servicer = ControlServiceServicer(
+        auth_validator, rail_manager=rail_manager, on_session_ready=on_session_ready
+    )
     ctx = FakeServicerContext()
     out: List[control_pb2.ServerFrame] = []
     try:
@@ -113,6 +116,19 @@ async def test_first_frame_other_than_hello_aborts_failed_precondition() -> None
     assert ctx.aborted
     assert ctx.abort_code == grpc.StatusCode.FAILED_PRECONDITION
     assert out == []
+
+
+async def test_on_session_ready_fires_when_handshake_reaches_ready() -> None:
+    # The daemon hooks this to run the post-install steady-state finalize.
+    ready = MagicMock()
+    await _drive([_hello()], on_session_ready=ready)
+    ready.assert_called_once_with()
+
+
+async def test_on_session_ready_not_fired_without_a_valid_hello() -> None:
+    ready = MagicMock()
+    await _drive([_launch()], on_session_ready=ready)  # aborts before READY
+    ready.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

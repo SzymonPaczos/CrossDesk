@@ -24,11 +24,17 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   (disk `boot=1`, oba CD ejected) + `redefine_steady_state` na Protocol/real/mock
   (real: `defineXML` z zachowaniem UUID żywej domeny, box-gated; czysty helper
   `_with_domain_uuid` przetestowany). 38 testów.
-- 🔲 **ZOSTAJE (box-gated)**: wpiąć finalize po pierwszym Hello (bounded
-  post-install-wait → `redefine_steady_state` + persist flag „steady_state") w
-  `install_cmd` / control READY hook, + live-verify na realnym libvirt, że
-  destroy+create po redefinicji bootuje dysk (nie ISO). Dopiero to zamyka #6 i
-  odblokowuje A3. Szczegóły: [`status.md`](.claude/status.md).
+- ✅ **Finalize WPIĘTY (host-side, `9ac1da1`)**: `installer/steady_state.py`
+  (`persist_steady_state_xml` przy `create_libvirt_domain` + idempotentny
+  `finalize_steady_state`) + `ControlServiceServicer.on_session_ready` hook
+  odpalany na pierwszym Hello. Idempotent (krok „steady_state" w
+  `install.state.json`) + retry przy błędzie libvirt. Daemon wpina hook TYLKO dla
+  realnego kontrolera (mock zamarkowałby krok „done" bez realnej redefinicji =
+  maskowanie data-loss). 14 testów, cała suita zielona.
+- 🔲 **ZOSTAJE (box-gated, = A3 + live)**: (a) wpiąć realny `LibvirtController`
+  do daemona (dziś twardo mock, `daemon.py:126`) — to aktywuje `on_session_ready`
+  finalize; (b) live-verify na realnym libvirt, że po redefinicji destroy+create
+  bootuje dysk (nie ISO). Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 

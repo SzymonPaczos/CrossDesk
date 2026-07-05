@@ -363,23 +363,28 @@ Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
 
 ## Partial — kod shipped, podłączenia / pokrycie brakujące
 
-- **P0 `hard_destroy` steady-state — MECHANIZM shipped, live-wiring box-gated
-  (2026-07-05).** Fix ścieżki data-loss (recovery destroy+create bootuje
-  install-ISO → reinstal). **Zrobione (host-side, przetestowane):**
-  `installer/domain_xml.py::build_steady_state_domain_xml` (disk `boot=1`, oba
-  CD-ROM ejected — `installed` flag na `build_domain_xml`, default niezmieniony);
-  `LibvirtController.redefine_steady_state` na Protocol + `real.py` (`defineXML`
-  z wstrzyknięciem UUID żywej domeny przez czysty helper `_with_domain_uuid` →
-  update-in-place, nie nowa domena) + `mock.py` (hooks `redefine_steady_state_count`
-  / `steady_state_xml` / `steady_state_applied` + fail-injection). 13 nowych
-  testów (domain_xml boot/eject, mock, helper). **ZOSTAJE (box-gated, otwiera
-  A3 + zamyka MVP #6):** (a) wpiąć finalize po pierwszym Hello — bounded
-  post-install-wait → `redefine_steady_state(build_steady_state_domain_xml(spec))`
-  + persist „steady_state" step w `install.state.json` (idempotent na
-  `steady_state_applied`); hook = control READY (control.py:209, wymaga wstrzyknięcia
-  callbacka/libvirt_ctl per daemon) albo first-HEALTHY w heartbeat (już ma
-  `libvirt_ctl`). (b) live-verify na realnym libvirt: po redefinicji destroy+create
-  bootuje dysk, nie ISO. Mapa w `backlog.md` P0 „A7-live install-path findings".
+- **P0 `hard_destroy` steady-state — MECHANIZM + FINALIZE WPIĘTY (host-side),
+  aktywacja realnego kontrolera box-gated (2026-07-05).** Fix ścieżki data-loss
+  (recovery destroy+create bootuje install-ISO → reinstal). **Zrobione (host-side,
+  przetestowane):** `installer/domain_xml.py::build_steady_state_domain_xml` (disk
+  `boot=1`, oba CD-ROM ejected — `installed` flag na `build_domain_xml`, default
+  niezmieniony); `LibvirtController.redefine_steady_state` na Protocol + `real.py`
+  (`defineXML` z wstrzyknięciem UUID żywej domeny przez `_with_domain_uuid` →
+  update-in-place) + `mock.py` (hooks). **+ Finalize wpięty (`9ac1da1`):**
+  `installer/steady_state.py` — `persist_steady_state_xml(spec)` woła się przy
+  `create_libvirt_domain` (zapisuje `steady-state.xml` obok `install.state.json`);
+  `finalize_steady_state(ctl)` idempotentny (krok „steady_state" w
+  `install.state.json`, no-op po sukcesie, retry przy błędzie libvirt, „absent"
+  gdy brak XML). `ControlServiceServicer.on_session_ready` hook odpala finalize na
+  pierwszym Hello (control READY). Daemon wpina hook **tylko dla realnego
+  kontrolera** (`isinstance mock → None`): finalize na mocku zamarkowałby krok
+  „done" bez realnej redefinicji = zamaskowanie data-loss aż A3 wepnie realny
+  kontroler. 14 nowych testów (finalize idempotent/retry/absent/unreadable +
+  control on_session_ready fires/nie-fires). **ZOSTAJE (box-gated, = A3 + zamyka
+  MVP #6):** (a) wpiąć realny `LibvirtController` do daemona (`daemon.py:126`
+  twardo mock, Phase-3 dev-default) → to AKTYWUJE finalize na pierwszym Hello;
+  (b) live-verify na realnym libvirt: po redefinicji destroy+create bootuje dysk,
+  nie ISO. Mapa w `backlog.md` P0 „A7-live install-path findings".
 - **Resilience & observability (public-beta)** — branch `feat/resilience-logging`
   (z `main`, NIE merged). **Shipped + przetestowane** (bramki: mypy --strict 122,
   ruff src czysto, host suite 842+): (1) **monitoring FreeRDP** —

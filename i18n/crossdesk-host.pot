@@ -493,15 +493,31 @@ msgstr ""
 msgid "histograms"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:38
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:44
+msgid "This destroys the CrossDesk VM and deletes its disk, install"
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:45
+msgid "state, and config (mTLS keys + vm.toml unless --keep-config)."
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:47
+msgid "Proceed? [y/N] "
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:57
+msgid "uninstall aborted."
+msgstr ""
+
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:65
 msgid "removed:"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:42
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:69
 msgid "skipped:"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:46
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:73
 msgid "failed:"
 msgstr ""
 

@@ -388,7 +388,11 @@ Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
   dysk Windows nietknięty.) **A3-SEAM ZROBIONY (`30579a6`):** daemon nie jest
   już twardo mock — `LibvirtConfig.backend = mock|real` (default mock,
   `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real`); `real` napędza `qemu:///session`
-  i aktywuje `on_session_ready` finalize + realne recovery. **ZOSTAJE (box-gated,
+  i aktywuje `on_session_ready` finalize + realne recovery. **A3-SEAM
+  LIVE-SMOKE-VERIFIED (2026-07-06, non-destrukcyjnie):** daemon `backend=real`
+  wstał na boxie — D-Bus suspend listener subscribed → „Server is running" →
+  graceful shutdown; `windows-guest` nietknięty (libvirt niewołany przy starcie),
+  brak linii mocka. Strona daemona P0 udowodniona gotowa. **ZOSTAJE (box-gated,
   zamyka MVP #6):** pełny live-verify na **wiernej** domenie — daemon
   `backend=real` + świeży install (NIE incydentowa restore: ma świeży nvram bez
   wpisu boot) → agent Hello → finalize → `destroy`+`create` bootuje DYSK (nie ISO)

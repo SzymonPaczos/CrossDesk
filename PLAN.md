@@ -37,11 +37,17 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   `real` na boxie napędza `qemu:///session` i AKTYWUJE `on_session_ready` finalize
   + realne recovery heartbeatu (`_assert_suspend_protection` dalej fail-close bez
   D-Bus listenera). 4 testy. Koniec „daemon twardo mock".
-- 🔲 **ZOSTAJE (box-gated, = live-verify P0)**: uruchomić daemon z `backend=real`
-  na **wiernej** domenie (świeży install, nie moja incydentowa restore — ta ma
-  świeży nvram bez wpisu boot, co zafałszowałoby test bootu) → agent Hello →
-  finalize redefiniuje do steady-state → `destroy`+`create` bootuje DYSK (nie ISO)
-  → agent reconnect ≤90s. Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
+- ✅ **A3-seam LIVE-SMOKE-VERIFIED (box, 2026-07-05)**: daemon z `backend=real` +
+  `bind_kind=tcp` wstał czysto na boxie — D-Bus suspend listener `subscribed`
+  (`_assert_suspend_protection` przeszło z realnym kontrolerem) → „Server is
+  running". Non-destrukcyjnie (libvirt nietykany przy starcie; `windows-guest`
+  bez zmian; graceful shutdown). **Strona daemona P0 jest udowodniona gotowa.**
+- 🔲 **ZOSTAJE (box-gated, = live-verify P0 — tylko cykl install→finalize)**:
+  na **wiernej** domenie (świeży install, nie incydentowa restore z pustym nvram)
+  → agent Hello → finalize redefiniuje do steady-state → `destroy`+`create`
+  bootuje DYSK (nie ISO) → agent reconnect ≤90s. Zostaje TYLKO ten destrukcyjny
+  cykl (czeka na greenlight właściciela — [`needs-owner.md`](.claude/needs-owner.md)).
+  Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 

@@ -33,8 +33,13 @@ class MockHooks:
     fail_next_is_running: bool = False
     fail_next_define_and_start: bool = False
     fail_next_redefine_steady_state: bool = False
+    fail_next_undefine: bool = False
 
     hard_destroy_count: int = 0
+    undefine_count: int = 0
+    undefined: bool = False
+    """Set once ``undefine`` runs — the signal ``crossdesk uninstall`` tore the
+    domain down."""
     define_and_start_count: int = 0
     defined_xml: Optional[str] = None
     redefine_steady_state_count: int = 0
@@ -125,6 +130,17 @@ class LibvirtControllerMock(LibvirtController):
         self.hooks.steady_state_xml = domain_xml
         self.hooks.redefine_steady_state_count += 1
         self.hooks.steady_state_applied = True
+
+    def undefine(self) -> None:
+        if self.hooks.fail_next_undefine:
+            self.hooks.fail_next_undefine = False
+            raise RuntimeError("mock-injected undefine failure")
+        logger.warning(
+            "[LIBVIRT MOCK] undefine: virsh destroy + undefine %s", self.domain_name
+        )
+        self.hooks.undefine_count += 1
+        self.hooks.running = False
+        self.hooks.undefined = True
 
     def graceful_shutdown(self) -> None:
         if self.hooks.fail_next_graceful_shutdown:

@@ -75,6 +75,20 @@ class LibvirtController(Protocol):
         """Polite shutdown: ``virsh shutdown`` (ACPI signal)."""
         ...
 
+    def undefine(self) -> None:
+        """Tear the domain down completely: destroy it if running, then remove
+        its persistent definition (and per-domain UEFI nvram).
+
+        Used by ``crossdesk uninstall``. Idempotent — a no-op if the domain
+        doesn't exist (already removed / never installed). Deliberately does
+        *not* pass ``REMOVE_ALL_STORAGE``: the install disk is a plain file the
+        uninstall removes with the rest of the state directory, and
+        ``REMOVE_ALL_STORAGE`` would also try to delete the file-backed CD-ROM
+        sources — including the user's own Windows ISO. Raises ``RuntimeError``
+        on a libvirt error other than "domain not found".
+        """
+        ...
+
     def is_running(self) -> bool:
         """Return ``True`` if the domain is currently in a running state.
 

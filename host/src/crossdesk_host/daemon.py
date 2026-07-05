@@ -123,7 +123,19 @@ async def main() -> None:
     host_key = cfg.paths.host_key.read_bytes()
 
     auth_validator = AuthValidator()
-    libvirt_ctl = LibvirtControllerMock()
+    # Backend is config-selectable (default mock, unchanged dev behaviour). Set
+    # libvirt.backend = "real" (or CROSSDESK_CONFIG__LIBVIRT__BACKEND=real) on a
+    # Linux+KVM host to drive the real qemu:///session domain — that also
+    # activates the steady-state finalize + real heartbeat recovery below.
+    # RealLibvirtController is imported lazily so a dev host without
+    # libvirt-python still imports the daemon module.
+    libvirt_ctl: LibvirtController
+    if cfg.libvirt.backend == "real":
+        from crossdesk_host.libvirt_ctl.real import RealLibvirtController
+
+        libvirt_ctl = RealLibvirtController(domain_name=cfg.libvirt.domain_name)
+    else:
+        libvirt_ctl = LibvirtControllerMock()
     mgmt_state = MgmtState()
 
     # Shared RAIL launch backend. The control servicer registers the live

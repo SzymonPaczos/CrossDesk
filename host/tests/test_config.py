@@ -22,6 +22,7 @@ import pytest
 from crossdesk_host.config import (
     CrossdeskConfig,
     HeartbeatConfig,
+    LibvirtConfig,
     PathsConfig,
     PeripheralsConfig,
     TransportConfig,
@@ -158,6 +159,32 @@ def test_bind_kind_env_override(tmp_path: Path) -> None:
 def test_negative_timeout_rejected() -> None:
     with pytest.raises(ValueError, match="timeouts"):
         TransportConfig(rpc_timeout_seconds=-1.0)
+
+
+def test_libvirt_backend_defaults_to_mock() -> None:
+    cfg = CrossdeskConfig()
+    assert cfg.libvirt.backend == "mock"
+    assert cfg.libvirt.domain_name == "windows-guest"
+
+
+def test_libvirt_backend_accepts_real() -> None:
+    assert LibvirtConfig(backend="real").backend == "real"
+
+
+def test_libvirt_backend_rejects_unknown() -> None:
+    with pytest.raises(ValueError, match="libvirt.backend"):
+        LibvirtConfig(backend="qemu")
+
+
+def test_libvirt_backend_env_override(tmp_path: Path) -> None:
+    toml = tmp_path / "config.toml"
+    toml.write_text("[transport]\nvsock_port = 50051\n")
+    cfg = load_from_toml(
+        toml, env={"CROSSDESK_CONFIG__LIBVIRT__BACKEND": "real"}
+    )
+    assert cfg.libvirt.backend == "real"
+    # Untouched sections keep defaults.
+    assert cfg.transport.vsock_port == 50051
 
 
 def test_ewma_alpha_outside_unit_interval_rejected() -> None:

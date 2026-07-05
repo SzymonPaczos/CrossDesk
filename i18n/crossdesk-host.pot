@@ -493,15 +493,15 @@ msgstr ""
 msgid "histograms"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:20
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:38
 msgid "removed:"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:24
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:42
 msgid "skipped:"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/uninstall_cmd.py:28
+#: host/src/crossdesk_host/cli/uninstall_cmd.py:46
 msgid "failed:"
 msgstr ""
 

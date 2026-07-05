@@ -31,24 +31,22 @@ resumes. Resolving one = either you author the boundary edit, or you reply
 - [ ] **REQUIREMENTS F-marker re-baseline.** F1.1/F2.1/F5.1 are marked ❌
   but work live; F6.1 (JIT VirtioFS) is genuinely not built. Boundary file
   → owner approves the re-mark.
-- [ ] **Code-signing strategy for `agent.exe`.** Sigstore vs the
-  self-signed osslsigncode that's implemented vs EV. Blocks release
-  packaging. *Rec:* self-signed publisher root CA installed into the guest
-  (already built) for beta; document "unsigned-to-the-world" honestly.
+- [x] **Code-signing strategy for `agent.exe` — DECIDED 2026-07-05: self-signed
+  for beta.** Self-signed publisher root CA installed into the guest (already
+  built); document "unsigned-to-the-world" honestly. Not a release blocker. EV /
+  Sigstore revisited post-beta if distribution demands it.
 - [ ] **Repo-hosting domain (deb/rpm).** Open since 2026-05-07. Blocks the
   apt/dnf repos in milestone D.
 - [ ] **ISO acquisition + Windows licensing stance.** *Rec:* "bring your
   own ISO + your own license" in README/wizard (drop auto-download); state
   the licensing/legal expectation plainly to a Linux-forum audience.
-- [ ] **FreeRDP RDP cert policy — `tofu` vs `ignore`.** Shipped fix
-  (`2ab10d1`) clears the stale TOFU pin on reinstall (keeps change-detection
-  for steady-state). But a daemon-spawned FreeRDP has NO stdin, so ANY future
-  cert rotation (Windows update, expiry) still deadlocks the launch on an
-  unanswerable prompt. The RDP endpoint is `localhost:3389` SLIRP-forwarded to
-  OUR OWN guest (no MITM surface; real trust = mTLS gRPC + Windows cred).
-  *Rec:* switch `rail_command.py` `cert_policy` default `tofu`→`ignore` for the
-  localhost path — robust against all rotations. Touches security posture →
-  likely a `docs/THREAT_MODEL.md` row (boundary). Owner call.
+- [x] **FreeRDP RDP cert policy — DECIDED 2026-07-05: `ignore`.** A daemon-spawned
+  FreeRDP has no stdin, so any cert rotation (Windows update, expiry) deadlocks
+  the launch on an unanswerable TOFU prompt. The RDP endpoint is `localhost:3389`
+  SLIRP-forwarded to OUR OWN guest (no MITM surface; real trust = mTLS gRPC +
+  Windows cred). Loop may switch `rail_command.py` `cert_policy` default
+  `tofu`→`ignore` for the localhost path. The matching `docs/THREAT_MODEL.md`
+  row is a boundary draft (owner authors).
 - [ ] **A7-live adversarial-audit findings (2026-07-01).** 6 confirmed defects
   in `backlog.md` P0 "A7-live install-path findings". The one needing owner
   awareness: **[P0-latent] `hard_destroy` → Windows REINSTALL / data-loss** —

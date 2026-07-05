@@ -380,11 +380,16 @@ Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
   kontrolera** (`isinstance mock → None`): finalize na mocku zamarkowałby krok
   „done" bez realnej redefinicji = zamaskowanie data-loss aż A3 wepnie realny
   kontroler. 14 nowych testów (finalize idempotent/retry/absent/unreadable +
-  control on_session_ready fires/nie-fires). **ZOSTAJE (box-gated, = A3 + zamyka
-  MVP #6):** (a) wpiąć realny `LibvirtController` do daemona (`daemon.py:126`
-  twardo mock, Phase-3 dev-default) → to AKTYWUJE finalize na pierwszym Hello;
-  (b) live-verify na realnym libvirt: po redefinicji destroy+create bootuje dysk,
-  nie ISO. Mapa w `backlog.md` P0 „A7-live install-path findings".
+  control on_session_ready fires/nie-fires). **CZĘŚCIOWO LIVE-VERIFIED
+  (2026-07-05):** realny `defineXML` na `qemu:///session` ZAAKCEPTOWAŁ
+  steady-state XML — `windows-guest` zdefiniowany z `dumpxml`: disk `sda` boot
+  order 1, oba CD-ROM ejected (brak `<source>`). (Kontekst: stało się to przy
+  odtwarzaniu domeny po incydencie — patrz `needs-owner.md` „Eyeball" 2026-07-05;
+  dysk Windows nietknięty.) **ZOSTAJE (box-gated, = A3 + zamyka MVP #6):** (a)
+  wpiąć realny `LibvirtController` do daemona (`daemon.py:126` twardo mock,
+  Phase-3 dev-default) → to AKTYWUJE finalize na pierwszym Hello; (b) pełny
+  live-verify: `virsh start` po redefinicji bootuje DYSK (nie ISO) + agent
+  reconnect. Mapa w `backlog.md` P0 „A7-live install-path findings".
 - **Resilience & observability (public-beta)** — branch `feat/resilience-logging`
   (z `main`, NIE merged). **Shipped + przetestowane** (bramki: mypy --strict 122,
   ruff src czysto, host suite 842+): (1) **monitoring FreeRDP** —

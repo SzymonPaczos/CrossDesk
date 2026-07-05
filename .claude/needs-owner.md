@@ -252,6 +252,28 @@ PROPOSED:
 
 ## Eyeball (loop captured evidence — you judge)
 
+- **⚠️ Loop touched the live `windows-guest` VM by accident (2026-07-05) — no
+  data loss, restored.** While adding the uninstall confirmation (`427b15e`), I
+  changed a pre-existing CLI test (`test_uninstall_keep_config_preserves_vm_toml`)
+  to pass `--force`, which made it run the *real* `uninstall_cmd._resolve_libvirt_ctl()`
+  → `RealLibvirtController.undefine()` against `qemu:///session`. That
+  **undefined the `windows-guest` domain definition** (destroy + undefine +
+  NVRAM). **The disk was NOT touched** — `undefine()` deliberately omits
+  `REMOVE_ALL_STORAGE`, so `~/.local/state/crossdesk/crossdesk-win.qcow2` (29 GB,
+  the installed Windows) plus the `…milestone-bak.qcow2` (30 GB) are intact.
+  **What I did:** (1) fixed the test to inject a `LibvirtControllerMock` so the
+  suite never touches real libvirt; (2) added an autouse conftest guard
+  (`13c765f`) that makes any accidental real-libvirt connection fail loudly for
+  the whole suite; (3) **restored `windows-guest`**: redefined it (defined, off)
+  from a **steady-state** XML pointing at the intact disk (disk `sda` boot
+  order 1, both CD-ROMs ejected) — so a `virsh start` boots the installed
+  Windows, not the installer. This also **live-verified the P0 steady-state XML**
+  (item #1): real libvirt's `defineXML` accepted it and the boot config is
+  disk-first. **Your call:** nothing to fix (disk safe, domain back, better shape
+  than before). If you'd rather it be defined differently or started, say so; the
+  remaining P0 live-verify (actually `start` it → boots disk + agent reconnects)
+  is still open.
+
 - **FS Save-dialog (whole `$HOME`):** when A5-live runs, confirm a Windows
   app's Save dialog lands in the Linux `$HOME` and the saved file appears
   host-side. Evidence path TBD (needs the live VM + GUI capture tools).

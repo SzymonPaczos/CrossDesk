@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-07-05 17:41:21
+**Last Updated:** 2026-07-05 19:25:22
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in
@@ -22,8 +22,10 @@
   `AuthContext` (peer fingerprint + nonce + monotonic seq).
 - **Display:** FreeRDP RAIL — one host process per registered app,
   rendering as a native Wayland or X11 window.
-- **Storage:** Just-in-time VirtioFS hot-plug per opened file; no
-  permanent home-dir mount.
+- **Storage:** opt-in file share (default off). Stage A = FreeRDP
+  `/drive:` (rdpdr) redirect; Stage B = persistent virtio-fs share,
+  default the whole `$HOME` (DEC-0018). Stage C JIT-per-file
+  hot-plug/detach is post-1.0.
 
 ## Top-level layout
 
@@ -59,4 +61,6 @@ Restated from `docs/GOALS.md` (read it for the full list):
 
 - No Docker (per `docs/DECISIONS.md` DEC-0003).
 - No polling — async streams both directions.
-- No permanent host-dir exposure to the guest.
+- File sharing is opt-in (default off); when on, the v0.1.0 default
+  scope is the whole `$HOME` (DEC-0018). Stage C JIT-per-file is the
+  eventual tight-isolation mode.

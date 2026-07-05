@@ -58,20 +58,15 @@ resumes. Resolving one = either you author the boundary edit, or you reply
   into lifecycle until the steady-state-XML finalize lands.** Not a boundary
   edit — flagged so it's on the go/no-go radar.
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
-- [ ] **`docs/GOALS.md` whole-$HOME alignment (audit 2026-07-05).** DEC-0018 +
-  THREAT_MODEL/MVP_SCOPE/DECISIONS shipped whole-$HOME as the Stage-B default
-  (opt-in, default off), but `docs/GOALS.md` still asserts "no full-$HOME
-  exposure" / "per-file mounts" as the model in **four** places (G4, the Vision
-  para, the advantages row, the closing line). GOALS.md is a boundary file →
-  your call. Draft §5 below. This is the last vision-doc that didn't get the
-  DEC-0018 update; the architecture.md FS-drift the audit found is downstream of
-  this (its Non-goals restate GOALS.md), so architecture.md was left untouched
-  and follows once you sign off §5.
-- [ ] **`AGENTS.md` — retire WORK_LOG ceremony + add PLAN.md (tracking
-  simplification 2026-07-05).** Agent-editable side already applied; AGENTS.md
-  (boundary) drafted as §6. Say "apply".
-- [ ] **`docs/MVP_SCOPE.md` — reality fixes.** #3 JIT→Stage B (self-contradiction),
-  #7 dead macOS matrix, stale timeline. Drafted as §7. Say "apply".
+- [x] **`docs/GOALS.md` whole-$HOME alignment — APPLIED 2026-07-05** (owner
+  "apply"). §5 landed: G4 row, advantages row, Vision annotation, closing line.
+  `.claude/architecture.md` FS-drift (Storage + Non-goals) fixed in the same pass.
+- [x] **`AGENTS.md` — WORK_LOG ceremony retired + PLAN.md added — APPLIED
+  2026-07-05** (owner "apply"). §6 landed: Agent-workflow rewritten (no
+  START/END push), File-boundaries updated, nav table + What-to-read-first add
+  PLAN.md, Repository-layout host tree refreshed (5→22 subpackages).
+- [x] **`docs/MVP_SCOPE.md` reality fixes — APPLIED 2026-07-05** (owner "apply").
+  §7 landed: #3 JIT→Stage B, #7 macOS→Linux, timeline → PLAN.md pointer.
 
 ## Boundary drafts — pending owner (2026-07-05)
 

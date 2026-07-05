@@ -121,8 +121,11 @@ def update_mime_database(*, applications_dir: Optional[Path] = None) -> None:
             ["update-desktop-database", target],
             check=False,
             capture_output=True,
+            timeout=15,
         )
-    except FileNotFoundError:
+    except (OSError, subprocess.SubprocessError):
+        # Best-effort desktop integration: tool absent (FileNotFoundError) or a
+        # hung/slow run (TimeoutExpired) must not hang or crash the caller.
         pass
 
 

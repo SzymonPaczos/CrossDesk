@@ -228,7 +228,13 @@ def _prepare_autounattend(src: Path, locale: str, password: str, dest_dir: Path)
         text = text.replace(_DEFAULT_LOCALE, locale)
     text = text.replace("__CROSSDESK_PASSWORD__", escape(password))
     out = dest_dir / "autounattend.prepared.xml"
-    out.write_text(text, encoding="utf-8")
+    # Born 0600: this copy carries the real account password. Create it
+    # owner-only rather than write-then-chmod (no world-readable window),
+    # and fchmod repairs a looser pre-existing copy in the state dir.
+    fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        os.fchmod(fd, 0o600)
+        fh.write(text)
     return out
 
 

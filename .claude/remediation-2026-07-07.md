@@ -663,7 +663,7 @@ Execution loop tracking. Each checkbox is ticked in its own branch (merges
 with the work, no direct commits to main).
 
 - [x] branch 1 — fix/rdp-secret-logging (P1-1)
-- [ ] branch 2 — fix/secret-file-perms (P1-2, P2-1)
+- [x] branch 2 — fix/secret-file-perms (P1-2, P2-1)
 - [ ] branch 3 — fix/libvirt-loop-deadlines (P1-3)
 - [ ] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
 - [ ] branch 5 — fix/icon-png-validation (P2-2)

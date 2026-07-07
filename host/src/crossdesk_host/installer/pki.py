@@ -22,6 +22,7 @@ are written ``0600``, certificates ``0644``.
 from __future__ import annotations
 
 import datetime
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -74,14 +75,17 @@ def _rsa() -> rsa.RSAPrivateKey:
 
 
 def _write_key(path: Path, key: rsa.RSAPrivateKey) -> None:
-    path.write_bytes(
-        key.private_bytes(
-            serialization.Encoding.PEM,
-            serialization.PrivateFormat.TraditionalOpenSSL,
-            serialization.NoEncryption(),
-        )
+    pem = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.TraditionalOpenSSL,
+        serialization.NoEncryption(),
     )
-    path.chmod(0o600)
+    # Born 0600 — no write-then-chmod window where the private key is
+    # world-readable. fchmod repairs a looser pre-existing file.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "wb") as fh:
+        os.fchmod(fd, 0o600)
+        fh.write(pem)
 
 
 def _write_cert(path: Path, cert: x509.Certificate) -> None:

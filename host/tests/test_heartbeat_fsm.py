@@ -48,8 +48,15 @@ async def _drive(
     """Run HeartbeatService.Channel against a scripted tick sequence."""
 
     iter_ticks = iter(ticks)
+    real_wait_for = asyncio.wait_for
 
     async def fake_wait_for(awaitable, timeout: float):
+        # libvirt_call() offloads recovery actions via run_in_executor and
+        # wraps the resulting Future in asyncio.wait_for. Those awaitables are
+        # Futures, not coroutines — run them for real (the fake controller is
+        # instant) instead of consuming a scripted ping/pong tick.
+        if not asyncio.iscoroutine(awaitable):
+            return await real_wait_for(awaitable, timeout)
         # We don't actually await the underlying request_iterator — the script
         # decides what each tick produces.
         try:
@@ -255,8 +262,13 @@ async def test_hard_destroy_fires_forced_stop_notification(
     from crossdesk_host.lifecycle.notifications import RecordingNotifier
 
     iter_ticks = iter([asyncio.TimeoutError] * 11)
+    real_wait_for = asyncio.wait_for
 
     async def fake_wait_for(awaitable, timeout):
+        # libvirt_call() offloads hard_destroy via run_in_executor; that
+        # awaitable is a Future — run it for real, don't consume a tick.
+        if not asyncio.iscoroutine(awaitable):
+            return await real_wait_for(awaitable, timeout)
         try:
             tick = next(iter_ticks)
         except StopIteration:
@@ -299,8 +311,13 @@ async def test_soft_recovery_does_not_fire_forced_stop_notification(
     from crossdesk_host.lifecycle.notifications import RecordingNotifier
 
     iter_ticks = iter([asyncio.TimeoutError] * 6 + [StopAsyncIteration])
+    real_wait_for = asyncio.wait_for
 
     async def fake_wait_for(awaitable, timeout):
+        # libvirt_call() offloads graceful_shutdown via run_in_executor; that
+        # awaitable is a Future — run it for real, don't consume a tick.
+        if not asyncio.iscoroutine(awaitable):
+            return await real_wait_for(awaitable, timeout)
         try:
             tick = next(iter_ticks)
         except StopIteration:

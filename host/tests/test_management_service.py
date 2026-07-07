@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import io
 import json
+import time
 from pathlib import Path
 from typing import Iterator
 from unittest.mock import MagicMock
@@ -142,6 +143,27 @@ async def test_hard_destroy_failure_returns_detail(context: MagicMock) -> None:
     response = await servicer.HardDestroy(mgmt_pb2.Empty(), context)
     assert not response.ok
     assert "hard_destroy" in response.detail
+
+
+async def test_hard_destroy_timeout_returns_ok_false(
+    context: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A hung libvirt hard_destroy is deadline-bounded, not a loop hang."""
+    import crossdesk_host.ipc.management as mgmt
+
+    real_libvirt_call = mgmt.libvirt_call
+
+    async def fast(fn, *, timeout: float = 0.05):  # type: ignore[no-untyped-def]
+        return await real_libvirt_call(fn, timeout=0.05)
+
+    monkeypatch.setattr(mgmt, "libvirt_call", fast)
+
+    libvirt = MagicMock()
+    libvirt.hard_destroy.side_effect = lambda: time.sleep(0.5)
+    servicer = ManagementServiceServicer(MgmtState(fsm=HeartbeatFsm()), libvirt)
+    response = await servicer.HardDestroy(mgmt_pb2.Empty(), context)
+    assert response.ok is False
+    assert "timed out" in response.detail
 
 
 async def test_rotate_credentials_writes_new_password(

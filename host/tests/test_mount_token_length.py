@@ -60,7 +60,7 @@ def _frame_for(kind: str, token: bytes) -> filesystem_pb2.ShareGuestFrame:
 
 @pytest.mark.parametrize("kind", ["mount_result", "lock_report", "release_ack"])
 @pytest.mark.parametrize("length", [0, 1, 16, 31, 33, 64])
-def test_wrong_length_token_is_dropped(
+async def test_wrong_length_token_is_dropped(
     servicer: FilesystemServiceServicer, kind: str, length: int
 ) -> None:
     """For each of the three frame types and each rejection-worthy
@@ -72,7 +72,7 @@ def test_wrong_length_token_is_dropped(
     pre_attached = set(servicer.filesystem_ctl.list_active_shares())
     pre_detach_calls = len(servicer.filesystem_ctl.hooks.detached_ids)
 
-    servicer._process_guest_frame(_frame_for(kind, token))
+    await servicer._process_guest_frame(_frame_for(kind, token))
 
     # mount_result side-effect would set active_shares — confirm it didn't.
     if kind == "mount_result":
@@ -86,11 +86,11 @@ def test_wrong_length_token_is_dropped(
     assert set(servicer.filesystem_ctl.list_active_shares()) == pre_attached
 
 
-def test_exact_32_byte_mount_result_records_share(
+async def test_exact_32_byte_mount_result_records_share(
     servicer: FilesystemServiceServicer,
 ) -> None:
     token = b"\x00" * MOUNT_TOKEN_LEN
-    servicer._process_guest_frame(_frame_for("mount_result", token))
+    await servicer._process_guest_frame(_frame_for("mount_result", token))
     assert servicer.active_shares["share-mt"] == "MOUNTED"
 
 

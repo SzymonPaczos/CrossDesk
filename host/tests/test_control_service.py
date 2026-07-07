@@ -7,10 +7,13 @@ incoming frame goes through AuthValidator before payload dispatch.
 
 from __future__ import annotations
 
+import logging
+import time
 from typing import AsyncIterator, List
 from unittest.mock import AsyncMock, MagicMock
 
 import grpc
+import pytest
 
 from crossdesk_host.display.rail_manager import RailManager
 from crossdesk_host.ipc.control import ControlServiceServicer
@@ -129,6 +132,32 @@ async def test_on_session_ready_not_fired_without_a_valid_hello() -> None:
     ready = MagicMock()
     await _drive([_launch()], on_session_ready=ready)  # aborts before READY
     ready.assert_not_called()
+
+
+async def test_on_session_ready_timeout_does_not_block_ready(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A hung finalize hook must not stall the handshake: it is offloaded with
+    a deadline, and on timeout the session still reaches READY (finalize
+    retries on the next Hello)."""
+    import crossdesk_host.ipc.control as control_mod
+
+    real_libvirt_call = control_mod.libvirt_call
+
+    async def fast(fn, *, timeout: float = 0.05):  # type: ignore[no-untyped-def]
+        return await real_libvirt_call(fn, timeout=0.05)
+
+    monkeypatch.setattr(control_mod, "libvirt_call", fast)
+
+    def slow_hook() -> None:
+        time.sleep(0.3)
+
+    with caplog.at_level(logging.WARNING, logger="crossdesk_host.ipc.control"):
+        out, _, _ = await _drive([_hello()], on_session_ready=slow_hook)
+
+    # READY was still reached — the accept frame was emitted.
+    assert any(sf.WhichOneof("payload") == "accept" for sf in out)
+    assert any("on_session_ready timed out" in r.getMessage() for r in caplog.records)
 
 
 # ---------------------------------------------------------------------------

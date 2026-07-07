@@ -133,8 +133,13 @@ async def _drive(
     coroutines passed to ``asyncio.create_task`` for inspection."""
     iter_ticks = iter(ticks)
     spawned: List[Coroutine[Any, Any, None]] = []
+    real_wait_for = asyncio.wait_for
 
     async def fake_wait_for(awaitable: Any, timeout: float) -> Any:
+        # libvirt_call() recovery offloads are Futures, not coroutines — run
+        # them for real rather than consuming a scripted ping/pong tick.
+        if not asyncio.iscoroutine(awaitable):
+            return await real_wait_for(awaitable, timeout)
         try:
             tick = next(iter_ticks)
         except StopIteration:

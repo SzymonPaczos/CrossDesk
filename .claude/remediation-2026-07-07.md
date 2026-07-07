@@ -664,7 +664,7 @@ with the work, no direct commits to main).
 
 - [x] branch 1 — fix/rdp-secret-logging (P1-1)
 - [x] branch 2 — fix/secret-file-perms (P1-2, P2-1)
-- [ ] branch 3 — fix/libvirt-loop-deadlines (P1-3)
+- [x] branch 3 — fix/libvirt-loop-deadlines (P1-3)
 - [ ] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
 - [ ] branch 5 — fix/icon-png-validation (P2-2)
 - [ ] branch 6 — chore/ci-fork-gate (P2-3)
@@ -682,3 +682,24 @@ with the work, no direct commits to main).
   enforced gate = ruff + mypy --strict + pytest (pre-push hook). This loop
   uses those as the merge gate, keeps its own edited files clean, and does
   NOT reformat the 85 pre-existing files (out of scope for every branch).
+- **Branch 2 — i18n `.pot` resync folded in.** Editing `install_cmd.py` (holds
+  gettext `_()` strings) shifted line numbers, so the pre-push i18n gate
+  required regenerating `i18n/crossdesk-host.pot` (pure `#:` source-location
+  updates, 0 msgid changes). Folded into the branch-2 commit via
+  `scripts/i18n.sh extract`. The premature first merge (pushed → i18n gate
+  failed) was unwound non-destructively (`git branch -f`) and re-merged.
+- **Branch 3 — `_process_guest_frame` made async (mechanical adaptation).**
+  The plan's `filesystem.py:110` snippet used `await libvirt_call(...)`, which
+  requires an async method — but `_process_guest_frame` was synchronous. Made
+  it `async` (bounds the ReleaseAck `detach_share`), updated its one prod
+  caller (`ShareChannel.consume_incoming`) and 9 direct test callers
+  (test_filesystem_service, test_mount_token_length) to `await`. No behavior
+  change beyond bounding the detach.
+- **Branch 3 — heartbeat test harnesses updated.** Routing recovery dispatch
+  through `libvirt_call` (→ `asyncio.wait_for`) collided with the heartbeat
+  tests' global `asyncio.wait_for` monkeypatch. Fixed the 4 `fake_wait_for`
+  doubles to delegate the executor Future (non-coroutine) to the real
+  `wait_for`, so only the ping/pong coroutine consumes a scripted tick.
+- **Branch 3 — filesystem `attach_share` kept single-line** (103 chars,
+  ruff-clean) so the new audit.sh ratchet grep (line-based) sees `libvirt_call`
+  on the same line; black-88 would wrap it, but ruff-120 is the real standard.

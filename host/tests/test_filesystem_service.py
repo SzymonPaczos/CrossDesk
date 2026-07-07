@@ -43,7 +43,7 @@ def _auth() -> common_pb2.AuthContext:
 # ---------------------------------------------------------------------------
 
 
-def test_mount_result_status_mounted_marks_share_active(
+async def test_mount_result_status_mounted_marks_share_active(
     servicer: FilesystemServiceServicer,
 ) -> None:
     frame = filesystem_pb2.ShareGuestFrame(
@@ -54,11 +54,11 @@ def test_mount_result_status_mounted_marks_share_active(
             mount_token=_TOKEN,
         ),
     )
-    servicer._process_guest_frame(frame)
+    await servicer._process_guest_frame(frame)
     assert servicer.active_shares["share-1"] == "MOUNTED"
 
 
-def test_mount_result_failure_does_not_register_share(
+async def test_mount_result_failure_does_not_register_share(
     servicer: FilesystemServiceServicer,
 ) -> None:
     """A failed mount (drive letter taken, permission denied, etc.) must NOT
@@ -76,7 +76,7 @@ def test_mount_result_failure_does_not_register_share(
                 mount_token=_TOKEN,
             ),
         )
-        servicer._process_guest_frame(frame)
+        await servicer._process_guest_frame(frame)
         assert f"share-{failed_status}" not in servicer.active_shares
 
 
@@ -85,7 +85,7 @@ def test_mount_result_failure_does_not_register_share(
 # ---------------------------------------------------------------------------
 
 
-def test_release_ack_triggers_detach_and_removes_share(
+async def test_release_ack_triggers_detach_and_removes_share(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     """ROADMAP Phase 5 happy path: ReleaseAck → libvirt detach + state cleanup."""
@@ -95,13 +95,13 @@ def test_release_ack_triggers_detach_and_removes_share(
         auth=_auth(),
         release_ack=filesystem_pb2.ReleaseAck(share_id="s1", mount_token=_TOKEN),
     )
-    servicer._process_guest_frame(ack)
+    await servicer._process_guest_frame(ack)
 
     fs_ctl.detach_share.assert_called_once_with("s1")
     assert "s1" not in servicer.active_shares
 
 
-def test_release_ack_for_unknown_share_still_detaches(
+async def test_release_ack_for_unknown_share_still_detaches(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     """Defense-in-depth: if Guest reports release for a share we don't track,
@@ -111,7 +111,7 @@ def test_release_ack_for_unknown_share_still_detaches(
         auth=_auth(),
         release_ack=filesystem_pb2.ReleaseAck(share_id="ghost", mount_token=_TOKEN),
     )
-    servicer._process_guest_frame(ack)
+    await servicer._process_guest_frame(ack)
 
     fs_ctl.detach_share.assert_called_once_with("ghost")
 
@@ -121,7 +121,7 @@ def test_release_ack_for_unknown_share_still_detaches(
 # ---------------------------------------------------------------------------
 
 
-def test_lock_report_does_not_mutate_state(
+async def test_lock_report_does_not_mutate_state(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     servicer.active_shares["s1"] = "MOUNTED"
@@ -135,13 +135,13 @@ def test_lock_report_does_not_mutate_state(
             mount_token=_TOKEN,
         ),
     )
-    servicer._process_guest_frame(rep)
+    await servicer._process_guest_frame(rep)
 
     assert servicer.active_shares == {"s1": "MOUNTED"}
     fs_ctl.detach_share.assert_not_called()
 
 
-def test_incident_logs_at_error_level(
+async def test_incident_logs_at_error_level(
     servicer: FilesystemServiceServicer,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -154,7 +154,7 @@ def test_incident_logs_at_error_level(
         ),
     )
     with caplog.at_level(logging.ERROR):
-        servicer._process_guest_frame(inc)
+        await servicer._process_guest_frame(inc)
 
     assert any(
         "Incident" in rec.message and rec.levelno == logging.ERROR
@@ -231,7 +231,7 @@ async def test_trigger_mount_rejects_traversal(
 
 
 @pytest.mark.parametrize("bad_token", [b"", b"\x00" * 31, b"\x00" * 33, b"\x00" * 4096])
-def test_release_ack_rejected_when_mount_token_length_invalid(
+async def test_release_ack_rejected_when_mount_token_length_invalid(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock, bad_token: bytes
 ) -> None:
     """A malicious or buggy Guest could otherwise stamp every frame with a
@@ -242,7 +242,7 @@ def test_release_ack_rejected_when_mount_token_length_invalid(
         auth=_auth(),
         release_ack=filesystem_pb2.ReleaseAck(share_id="s1", mount_token=bad_token),
     )
-    servicer._process_guest_frame(ack)
+    await servicer._process_guest_frame(ack)
 
     fs_ctl.detach_share.assert_not_called()
     assert servicer.active_shares == {"s1": "MOUNTED"}

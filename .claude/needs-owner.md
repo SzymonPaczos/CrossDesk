@@ -295,4 +295,11 @@ PROPOSED:
 
 ## Resolved
 
-(move decided items here with the outcome + date)
+- [x] **Audit-2026-07-07 boundary drafts B-1 + B-2 — APPLIED 2026-07-07**
+  (owner signed "apply" interactively during remediation planning; drafts
+  lived in `.claude/remediation-2026-07-07.md` §3, never parked here).
+  B-1: `AGENTS.md:102` "22 subpackages" → **20** (measured, `__pycache__`
+  excluded). B-2: `docs/REQUIREMENTS.md` gained **F4.4** (`transport.
+  bind_kind`), **F4.5** (`libvirt.backend`), **F6.4** (`shared_folder_*`,
+  DEC-0018) — owner chose markers **🔄 for all three** (honest ✅ flips ride
+  the open "F-marker re-baseline" item above, one batch).

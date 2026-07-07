@@ -65,6 +65,14 @@ Status legend per requirement: ✅ implemented · 🔄 in progress ·
 - F4.3 🔄 — Reject any frame failing `AuthContext` validation —
   fingerprint, nonce, or sequence mismatch — with no payload
   processing.
+- F4.4 🔄 — Transport bind seam: `transport.bind_kind = auto | tcp |
+  vsock` (default `auto`). `tcp` binds `127.0.0.1` only (DEC-0017
+  dev/bring-up path; no external listener); `vsock` is the production
+  target.
+- F4.5 🔄 — Daemon libvirt backend seam: `libvirt.backend = mock |
+  real` (default `mock`). `real` drives `qemu:///session` and
+  activates the post-install steady-state finalize and real heartbeat
+  recovery.
 
 ### F5. Recovery & observability (Phase 3 + follow-ups)
 
@@ -82,6 +90,11 @@ Status legend per requirement: ✅ implemented · 🔄 in progress ·
   `ReleaseAck`.
 - F6.2 ❌ — Mount path leaks no other host directories to the guest.
 - F6.3 ❌ — Path traversal blocked at the filesystem service.
+- F6.4 🔄 — Opt-in shared folder (Stage A/B, DEC-0018):
+  `shared_folder_enabled` (default off), `shared_folder_scope = home |
+  documents | custom` (default `home` when enabled),
+  `shared_folder_path`, `shared_folder_drive_letter` (D–Z, default Z),
+  `shared_folder_redirect_documents` / `_redirect_desktop`.
 
 ### F7. Credentials
 

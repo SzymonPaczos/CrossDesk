@@ -9,6 +9,7 @@ from google.protobuf.duration_pb2 import Duration
 
 from crossdesk_host.abstractions.filesystem import FilesystemController
 from crossdesk_host.ipc.auth import AuthValidator
+from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.proto.crossdesk.v1 import filesystem_pb2, filesystem_pb2_grpc
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
                 # Per-frame validation: without this, ShareChannel would let any peer
                 # holding a TLS handshake push MountResult/ReleaseAck and detach shares.
                 await self.auth_validator.verify_auth_context(context, frame.auth)
-                self._process_guest_frame(frame)
+                await self._process_guest_frame(frame)
 
         consumer_task = asyncio.create_task(consume_incoming())
 
@@ -71,11 +72,14 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
                 await consumer_task
             logger.info(f"[{peer_identity}] Filesystem channel closed")
 
-    def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:
+    async def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:
         """Dispatch a single Guest-side frame to its state-mutation path.
 
         Extracted from the nested consume_incoming coroutine so unit tests can
         drive it directly without instantiating a full bidi gRPC stream.
+
+        Async because the ReleaseAck path detaches a virtiofs share, a blocking
+        libvirt call that must be offloaded off the event loop with a deadline.
         """
         payload_type = frame.WhichOneof("payload")
 
@@ -107,7 +111,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             logger.info(
                 f"[Filesystem] ReleaseAck received for share {ack.share_id}. Detaching..."
             )
-            self.filesystem_ctl.detach_share(ack.share_id)
+            await libvirt_call(lambda: self.filesystem_ctl.detach_share(ack.share_id))
 
             if ack.share_id in self.active_shares:
                 del self.active_shares[ack.share_id]
@@ -160,7 +164,7 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             share_id,
         )
 
-        self.filesystem_ctl.attach_share(share_id, str(validated.canonical))
+        await libvirt_call(lambda: self.filesystem_ctl.attach_share(share_id, str(validated.canonical)))
         self.active_shares[share_id] = "ATTACHED"
 
         # 32-byte random token bound to this share. Real deployments rotate

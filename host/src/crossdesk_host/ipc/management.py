@@ -50,6 +50,7 @@ from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
 from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
+from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.observability import child_span_scope
 from crossdesk_host.observability.log import get_logger
@@ -524,12 +525,17 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 if self.coordinator is not None:
                     self.coordinator.on_prepare_for_sleep()
                 else:
-                    self.libvirt_ctl.suspend()
+                    await libvirt_call(self.libvirt_ctl.suspend)
                 self.state.append_activity(
                     mgmt_pb2.RecentActivity.Kind.KIND_SUSPEND, "Manual suspend"
                 )
                 logger.info("rpc_end", method="Suspend")
                 return mgmt_pb2.ActionAck(ok=True)
+            except asyncio.TimeoutError:
+                logger.info("rpc_end_early", method="Suspend", reason="libvirt_timeout")
+                return mgmt_pb2.ActionAck(
+                    ok=False, detail="libvirt call timed out after 30s"
+                )
             except Exception as exc:
                 logger.info("rpc_end_early", method="Suspend", reason="libvirt_error")
                 return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
@@ -543,12 +549,17 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 if self.coordinator is not None:
                     self.coordinator.on_resumed()
                 else:
-                    self.libvirt_ctl.resume()
+                    await libvirt_call(self.libvirt_ctl.resume)
                 self.state.append_activity(
                     mgmt_pb2.RecentActivity.Kind.KIND_RESUME, "Manual resume"
                 )
                 logger.info("rpc_end", method="Resume")
                 return mgmt_pb2.ActionAck(ok=True)
+            except asyncio.TimeoutError:
+                logger.info("rpc_end_early", method="Resume", reason="libvirt_timeout")
+                return mgmt_pb2.ActionAck(
+                    ok=False, detail="libvirt call timed out after 30s"
+                )
             except Exception as exc:
                 logger.info("rpc_end_early", method="Resume", reason="libvirt_error")
                 return mgmt_pb2.ActionAck(ok=False, detail=str(exc))
@@ -559,7 +570,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         with child_span_scope():
             logger.info("rpc_start", method="HardDestroy")
             try:
-                self.libvirt_ctl.hard_destroy()
+                await libvirt_call(self.libvirt_ctl.hard_destroy)
                 self.state.last_hard_destroy = datetime.now(timezone.utc)
                 self.state.append_activity(
                     mgmt_pb2.RecentActivity.Kind.KIND_HARD_DESTROY,
@@ -567,6 +578,15 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 )
                 logger.info("rpc_end", method="HardDestroy")
                 return mgmt_pb2.ActionAck(ok=True)
+            except asyncio.TimeoutError:
+                logger.info(
+                    "rpc_end_early",
+                    method="HardDestroy",
+                    reason="libvirt_timeout",
+                )
+                return mgmt_pb2.ActionAck(
+                    ok=False, detail="libvirt call timed out after 30s"
+                )
             except Exception as exc:
                 logger.info(
                     "rpc_end_early",

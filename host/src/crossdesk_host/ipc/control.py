@@ -12,6 +12,7 @@ from crossdesk_host.ipc.version_negotiation import (
     is_compatible,
     negotiate_features,
 )
+from crossdesk_host.libvirt_ctl import LIBVIRT_OP_TIMEOUT_SECONDS, libvirt_call
 from crossdesk_host.proto.crossdesk.v1 import control_pb2, control_pb2_grpc
 
 logger = logging.getLogger(__name__)
@@ -218,7 +219,17 @@ class ControlServiceServicer(control_pb2_grpc.ControlServiceServicer):
                 if self.verify_coordinator is not None:
                     self.verify_coordinator.register_session(outbound)
                 if self.on_session_ready is not None:
-                    self.on_session_ready()
+                    # Offload the (blocking) steady-state finalize to a thread
+                    # with a deadline so a hung libvirt can't stall the loop;
+                    # keep it BEFORE returning READY to preserve ordering.
+                    try:
+                        await libvirt_call(self.on_session_ready)
+                    except asyncio.TimeoutError:
+                        logger.warning(
+                            "on_session_ready timed out after %.0fs; finalize "
+                            "left unmarked — it will retry on the next Hello",
+                            LIBVIRT_OP_TIMEOUT_SECONDS,
+                        )
                 return "READY"
             return state
 

@@ -78,6 +78,12 @@ if [ -d host ]; then
   else
     add "- bandit: n/a"
   fi
+  # Ratchet (audit 2026-07-07 / P1-3): every blocking libvirt/filesystem call
+  # reachable from a gRPC servicer must go through libvirt_call() (executor +
+  # deadline). A direct invocation on the same line as no libvirt_call() is a
+  # regression — the bound-method/lambda args passed TO libvirt_call don't match.
+  LIBVIRT_DIRECT="$(grep -rn 'self\.\(libvirt_ctl\|filesystem_ctl\)\.[a-z_]*(' host/src/crossdesk_host/ipc/ 2>/dev/null | grep -vc 'libvirt_call' || true)"
+  add "- servicer direct blocking libvirt/fs calls (want 0): ${LIBVIRT_DIRECT:-0}"
 else
   add "- host/ missing"
 fi

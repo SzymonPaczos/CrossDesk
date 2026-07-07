@@ -28,6 +28,7 @@ from google.protobuf import duration_pb2
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 from crossdesk_host.ipc.auth import AuthValidator
+from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle.error_notifications import notify_forced_stop
 from crossdesk_host.lifecycle.notifications import Notifier
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2, heartbeat_pb2_grpc
@@ -253,13 +254,16 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
             tracker.healthy_left_at_ns = None
             tracker.recovery_armed_during_outage = False
 
-    def _dispatch_recovery_action(self, out: TickOutput) -> bool:
+    async def _dispatch_recovery_action(self, out: TickOutput) -> bool:
         """Execute the FSM's prescribed recovery action.
 
         Returns ``True`` when the caller should break out of the channel
         loop (HARD_DESTROY recycles the domain; the current Channel
         terminates and the agent will reconnect when the new domain
         boots).
+
+        The blocking libvirt calls run in a thread with a deadline so a
+        hung domain can't stall the event loop.
         """
         if out.recovery_action == RecoveryAction.RECOVERY_ACTION_GRACEFUL_SHUTDOWN:
             logger.warning(
@@ -267,11 +271,20 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 out.soft_attempts,
                 out.next_action_after_seconds,
             )
-            self.libvirt_ctl.graceful_shutdown()
+            try:
+                await libvirt_call(self.libvirt_ctl.graceful_shutdown)
+            except asyncio.TimeoutError:
+                logger.warning("heartbeat_graceful_shutdown_timeout")
+                # The FSM escalates on continued misses — self-healing.
             return False
         if out.recovery_action == RecoveryAction.RECOVERY_ACTION_HARD_DESTROY:
             logger.critical("heartbeat_hard_destroy_dispatched")
-            self.libvirt_ctl.hard_destroy()
+            try:
+                await libvirt_call(self.libvirt_ctl.hard_destroy)
+            except asyncio.TimeoutError:
+                logger.critical("heartbeat_hard_destroy_timeout")
+                # Domain state unknown; break the channel anyway so the next
+                # channel's FSM re-evaluates from scratch.
             if self.notifier is not None:
                 notify_forced_stop(
                     self.notifier,
@@ -347,7 +360,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                         profile_update=self._build_profile(out)
                     )
 
-                if self._dispatch_recovery_action(out):
+                if await self._dispatch_recovery_action(out):
                     break
 
                 seq += 1

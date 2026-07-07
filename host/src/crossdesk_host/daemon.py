@@ -11,6 +11,7 @@ daemon does not reload on SIGHUP — restart instead.
 import asyncio
 import os
 import signal
+import threading
 from typing import Optional
 
 # Configure structured logging FIRST — before importing any module that
@@ -181,8 +182,19 @@ async def main() -> None:
     # REAL domain via defineXML — running it against the mock would mark the
     # step done without redefining anything, masking the data-loss path once
     # the real controller lands. So only wire it when the controller is real.
+    # on_session_ready now runs in a thread (control offloads it via
+    # libvirt_call), so two concurrent Hellos could enter finalize at once.
+    # A non-blocking lock makes it single-flight; finalize is idempotent, so a
+    # skipped concurrent run just retries on the next Hello.
+    _finalize_once = threading.Lock()
+
     def _finalize_steady_state() -> None:
-        finalize_steady_state(libvirt_ctl)
+        if not _finalize_once.acquire(blocking=False):
+            return
+        try:
+            finalize_steady_state(libvirt_ctl)
+        finally:
+            _finalize_once.release()
 
     on_session_ready = (
         None if isinstance(libvirt_ctl, LibvirtControllerMock) else _finalize_steady_state

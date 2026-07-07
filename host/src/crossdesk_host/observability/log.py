@@ -49,7 +49,16 @@ class _RotatingFileWriter:
         self._lock = threading.Lock()
         path.parent.mkdir(parents=True, exist_ok=True)
         self._size = path.stat().st_size if path.exists() else 0
-        self._fh = path.open("a", encoding="utf-8")
+        # Repair a pre-existing looser file to 0600 first, then keep every
+        # (re)open owner-only: the daemon log carries operational detail and
+        # must never be world-readable.
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+        self._fh = open(
+            path, "a", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)
+        )
 
     def write(self, s: str) -> int:
         data_len = len(s.encode("utf-8"))
@@ -78,7 +87,9 @@ class _RotatingFileWriter:
                 os.replace(self._path, backup)
             except OSError:
                 pass
-        self._fh = self._path.open("w", encoding="utf-8")
+        self._fh = open(
+            self._path, "w", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)
+        )
         self._size = 0
 
 

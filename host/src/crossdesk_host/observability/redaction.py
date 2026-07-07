@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, MutableMapping
+from typing import Any, MutableMapping, Sequence
 
 # Mandatory schema fields are always allowed; the wider allow-list
 # below covers business fields. Keep this set tight — every entry is
@@ -98,10 +98,35 @@ _FORBIDDEN_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"secret",
         r"\btoken\b",  # `mount_token` is sensitive too — see hex caveat below
         r"clipboard_content",
+        # FreeRDP credential flags — backstop for any future call site that
+        # logs a raw argv (or a traceback carrying one). Negative lookahead
+        # lets the already-redacted form pass without re-triggering.
+        r"/p:(?!<redacted>)\S",
+        r"/pth:(?!<redacted>)\S",
     )
 )
 
 _ENV_STRICT = "CROSSDESK_STRICT_LOG"
+
+# FreeRDP passes credentials as ``/p:<password>`` (password) and
+# ``/pth:<hash>`` (pass-the-hash). A managed launch builds an argv that
+# carries them, so any log site touching that argv must scrub the values.
+_ARGV_SECRET_FLAGS = ("/p:", "/pth:")
+_ARGV_REDACTED = "<redacted>"
+
+
+def redact_secret_flags(argv: Sequence[str]) -> list[str]:
+    """Mask FreeRDP credential flag values (``/p:`` password, ``/pth:``
+    pass-the-hash) in an argv, element-wise. The flag prefix is kept so the
+    log line still shows the shape of the command, only the value is gone."""
+    out: list[str] = []
+    for arg in argv:
+        for flag in _ARGV_SECRET_FLAGS:
+            if arg.startswith(flag):
+                arg = flag + _ARGV_REDACTED
+                break
+        out.append(arg)
+    return out
 
 
 class RedactionViolation(RuntimeError):

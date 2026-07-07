@@ -17,8 +17,13 @@ from crossdesk_host.observability import (
     RedactionViolation,
     configure_logging,
     get_logger,
+    mask_sensitive,
+    redact_secret_flags,
 )
-from crossdesk_host.observability.redaction import redaction_processor
+from crossdesk_host.observability.redaction import (
+    _value_contains_forbidden,
+    redaction_processor,
+)
 
 
 def _emit(buf: io.StringIO, **fields: object) -> str:
@@ -96,3 +101,31 @@ def test_processor_handles_list_value(
     event = {"event": "x", "value": ["clean", "secret-thing", "clean2"]}
     with pytest.raises(RedactionViolation):
         redaction_processor(None, "info", event)
+
+
+def test_redact_secret_flags_masks_credential_values() -> None:
+    argv = ["/v:host", "/u:user", "/p:hunter2", "/pth:abcd", "/cert:tofu"]
+    out = redact_secret_flags(argv)
+    assert out == [
+        "/v:host",
+        "/u:user",
+        "/p:<redacted>",
+        "/pth:<redacted>",
+        "/cert:tofu",
+    ]
+
+
+def test_forbidden_pattern_matches_raw_but_not_redacted_credential() -> None:
+    # The raw credential forms hit the backstop patterns...
+    assert _value_contains_forbidden("/p:hunter2") is not None
+    assert _value_contains_forbidden("/pth:abcd") is not None
+    # ...but the already-redacted form must pass, else logging the scrubbed
+    # argv would itself raise in strict mode (negative lookahead).
+    assert _value_contains_forbidden("/p:<redacted>") is None
+    assert _value_contains_forbidden("/pth:<redacted>") is None
+
+
+def test_mask_sensitive_masks_credential_flag_line() -> None:
+    masked = mask_sensitive("cmd /p:hunter2 x\n")
+    assert "hunter2" not in masked
+    assert masked == "<redacted: sensitive content>\n"

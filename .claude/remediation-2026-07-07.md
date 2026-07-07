@@ -654,3 +654,31 @@ Under **F6 (Filesystem)**:
 **Summary: 9 branches (4 security-first), ~6–9 loop iterations; 2
 needs-owner drafts — both owner-signed and APPLIED 2026-07-07; 3 parked
 with explicit triggers; 1 won't-do.**
+
+---
+
+## Progress
+
+Execution loop tracking. Each checkbox is ticked in its own branch (merges
+with the work, no direct commits to main).
+
+- [x] branch 1 — fix/rdp-secret-logging (P1-1)
+- [ ] branch 2 — fix/secret-file-perms (P1-2, P2-1)
+- [ ] branch 3 — fix/libvirt-loop-deadlines (P1-3)
+- [ ] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
+- [ ] branch 5 — fix/icon-png-validation (P2-2)
+- [ ] branch 6 — chore/ci-fork-gate (P2-3)
+- [ ] branch 7 — chore/gui-stale-advisory (P2-14)
+- [ ] branch 8 — fix/uninstall-dir-source (P2-12)
+- [ ] branch 9 — docs/audit-tracking-sweep (P2-5, P2-6, P2-7, P2-9)
+
+### Execution notes (deviations / environment findings)
+
+- **Black-drift (environment, pre-existing, not caused by this loop):** the
+  venv's `black` is 26.5.1 with default line-length 88, but the project's
+  real formatting standard is 120 (ruff `line-length = 120`); neither git
+  hook nor CI runs black, so `black --check src tests` is structurally red on
+  `main` (85 pre-existing files, pure 88-vs-120 wrapping drift). True
+  enforced gate = ruff + mypy --strict + pytest (pre-push hook). This loop
+  uses those as the merge gate, keeps its own edited files clean, and does
+  NOT reformat the 85 pre-existing files (out of scope for every branch).

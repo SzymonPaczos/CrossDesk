@@ -665,7 +665,7 @@ with the work, no direct commits to main).
 - [x] branch 1 — fix/rdp-secret-logging (P1-1)
 - [x] branch 2 — fix/secret-file-perms (P1-2, P2-1)
 - [x] branch 3 — fix/libvirt-loop-deadlines (P1-3)
-- [ ] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
+- [x] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
 - [ ] branch 5 — fix/icon-png-validation (P2-2)
 - [ ] branch 6 — chore/ci-fork-gate (P2-3)
 - [ ] branch 7 — chore/gui-stale-advisory (P2-14)
@@ -703,3 +703,9 @@ with the work, no direct commits to main).
 - **Branch 3 — filesystem `attach_share` kept single-line** (103 chars,
   ruff-clean) so the new audit.sh ratchet grep (line-based) sees `libvirt_call`
   on the same line; black-88 would wrap it, but ruff-120 is the real standard.
+- **Branch 4 — `Config` → `CrossdeskConfig`.** The plan's helper signature,
+  test, and Verify referenced `crossdesk_host.config.Config`, which does not
+  exist — the top-level config type is `CrossdeskConfig` (no-arg constructible,
+  defaults to `libvirt.backend="mock"`). Used `CrossdeskConfig` throughout
+  (mechanical rename). The single-flight hook test lives here (branch 3's
+  closure was inline/untested), per the plan's "one home for this test" note.

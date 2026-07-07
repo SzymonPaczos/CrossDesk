@@ -9,6 +9,13 @@ Per-task plik raportu sesji — `.claude/history/YYYY-MM-DD-temat.md`.
 
 ## Audytowe sweepy
 
+- **2026-07-07** — Remediation of the 2026-07-07 audit — 14 findings fixed
+  across 9 branches (security-first: RDP-secret redaction + 0600 secret files
+  + libvirt loop deadlines + backend-select logging, then icon validation,
+  CI fork gate, stale advisory, uninstall dir single-source, docs sweep), 3
+  parked with triggers (C-1 PKGBUILD pin, C-2 marker-gated live-libvirt test,
+  C-3 coordinator offload), 1 declined (D-1 historical i18n commit subjects).
+  Plan: [remediation-2026-07-07.md](../remediation-2026-07-07.md).
 - **2026-05-20** — Senior engineering audit (Slop Score 27/100). 14 hot
   issues + fix plan. Plik: [2026-05-20-audit-senior.md](2026-05-20-audit-senior.md) +
   [2026-05-20-audit-fix-plan.md](2026-05-20-audit-fix-plan.md).

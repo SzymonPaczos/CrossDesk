@@ -670,7 +670,7 @@ with the work, no direct commits to main).
 - [x] branch 6 — chore/ci-fork-gate (P2-3)
 - [x] branch 7 — chore/gui-stale-advisory (P2-14)
 - [x] branch 8 — fix/uninstall-dir-source (P2-12)
-- [ ] branch 9 — docs/audit-tracking-sweep (P2-5, P2-6, P2-7, P2-9)
+- [x] branch 9 — docs/audit-tracking-sweep (P2-5, P2-6, P2-7, P2-9)
 
 ### Execution notes (deviations / environment findings)
 
@@ -688,6 +688,9 @@ with the work, no direct commits to main).
   updates, 0 msgid changes). Folded into the branch-2 commit via
   `scripts/i18n.sh extract`. The premature first merge (pushed → i18n gate
   failed) was unwound non-destructively (`git branch -f`) and re-merged.
+  **Branch 8 hit the same thing** (its `install_cmd.py` import shifted lines)
+  and was folded identically. Note for future `cli/` edits: run
+  `scripts/i18n.sh extract` inside the branch before merging.
 - **Branch 3 — `_process_guest_frame` made async (mechanical adaptation).**
   The plan's `filesystem.py:110` snippet used `await libvirt_call(...)`, which
   requires an async method — but `_process_guest_frame` was synchronous. Made

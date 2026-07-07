@@ -88,6 +88,13 @@ drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflo
   `10.0.2.2:50051` (SLIRP-only, brak port-conflict detekcji). Większość świadoma
   per DEC-0017 single-VM; warte: `--force`/confirm guard przed clobber + port-conflict
   doctor check.
+- **[C-2, audyt 2026-07-07 P2-8] Marker-gated `RealLibvirtController`
+  destructive-path integration test.** Trigger: owner greenlight P0 live-verify
+  (needs-owner ▶). Wtedy: pytest marker `live_libvirt` (deselected by default)
+  pokrywający `define_and_start` → `redefine_steady_state` → `hard_destroy` →
+  `undefine` na jednorazowej throwaway domenie (NIGDY `windows-guest`), odpalany
+  w cyklu live-verify → kryt. #6 staje się regression-guarded. Dziś
+  `test_libvirt_real.py` pokrywa tylko czysty `_with_domain_uuid`.
 
 ### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
 - **Etap A: litera dysku `Z:` + redirect Dokumenty.** `[~PARTIAL 2026-06-12]`
@@ -249,6 +256,10 @@ Strategia: [`docs/PACKAGING.md`](../docs/PACKAGING.md). ADR DEC-0008.
   openSUSE OBS. RPM signing via OBS lub self-hosted key.
 - **Sigstore signing dla `agent.exe`.** Wired do release CI. Public
   verification key on download page. Documented w install docs.
+- **[C-1, audyt 2026-07-07 P2-4] PKGBUILD `sha256sums=('SKIP')` → pin.**
+  Trigger: PIERWSZY tagowany release tarball (kryt. #12 packaging test). Wtedy:
+  `updpkgsums` przeciw opublikowanemu tarballowi + regen `.SRCINFO`; dodać pin
+  do release checklist. Dopóki tarball nie istnieje — nie ma czego hashować.
 
 ### Lifecycle: power, suspend/resume, autostart
 - **VM autostart on login (opt-in).** `crossdesk install --autostart`
@@ -388,9 +399,9 @@ wykrywał/logował/notyfikował.
   (`--keep-config` zachowuje `vm.toml`) — **kod kompletny + testy**. Świadomie
   BEZ `--remove-all-storage`: nasz dysk znika z state-dir, a flaga próbowałaby
   skasować file-backed CD-ROM źródła (w tym ISO Windowsa usera). **Zostaje:**
-  (a) live-verify pełnego usunięcia na realnym libvirt (Phase 2); (b) `--force`
-  + confirm prompt (dziś brak potwierdzenia — `--dry-run` jest jedynym
-  bezpiecznikiem; dodać interaktywny confirm gate'owany `--force`).
+  (a) live-verify pełnego usunięcia na realnym libvirt (Phase 2); (b) ✅ shipped
+  `427b15e` — interaktywny confirm (EOF-safe: piped stdin = „nie"), `--force`
+  pomija; `--dry-run` bez zmian.
 - **`crossdesk logs --component guest` — guest gRPC log pull.** Host
   log sources shipped (journalctl + JSONL + libvirt + FreeRDP); guest
   jest P2 stub ("not yet implemented"). Wire gRPC stream tail. `[~PARTIAL]`
@@ -565,6 +576,13 @@ wykrywał/logował/notyfikował.
   abstraction layer.
 
 ### Tech debt
+- **[C-3, planning-addendum audytu 2026-07-07] `lifecycle/coordinator.py`
+  suspend/resume blokuje event-loop.** `suspend()`/`resume()` (dawniej
+  `:139,162`) blokują na ścieżce D-Bus PrepareForSleep + delegacji z mgmt.
+  Świadomie WYŁĄCZONE z branch 3 (deadline-bound libvirt) bo coordinator
+  mutuje stan FSM (`fsm_group`) — offload do wątku wymaga projektu
+  thread-safety, nie mechanicznego owinięcia w `libvirt_call`. Trigger: przed
+  live-verify suspend/resume (#5) na `backend=real`.
 - **`// type: ignore[override]` ergonomics watch.** Bidirectional gRPC
   servicers ominęto przez `AsyncIterator`. Jeśli grpc-stubs bump narrows
   parent signature, override może resurface; eyes on

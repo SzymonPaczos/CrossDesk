@@ -96,7 +96,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 7 | CI green macOS + Ubuntu; `agent.exe` cross-compile | ⚠️ boundary | `agent.exe` ✅, Ubuntu CI ✅. „macOS matrix" martwe (Mac zvacuumowany) — re-def do podpisu (needs-owner §7) |
 | 8 | microbench pass vs baselines | 🔲 box | harness gotowy; realne liczby |
 | 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live | LIVE-VERIFIED 2026-07-05: na tym boxie `doctor` = **exit 0**, 10/10 OK (cpu_virt svm, kvm, vsock, qemu 10.2, freerdp, ovmf, libvirt, disk 135GB, config, vm_creds); zły host (`CROSSDESK_OVMF_CODE` bogus) → `ovmf [fail]` + **exit 1** |
-| 10 | `uninstall` czyste usunięcie | 🔲 box | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Zostaje live-verify pełnego usunięcia + opcjonalny `--force`/confirm (backlog) |
+| 10 | `uninstall` czyste usunięcie | 🔲 box | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Zostaje live-verify pełnego usunięcia (confirm-prompt + `--force` shipped `427b15e`) |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 

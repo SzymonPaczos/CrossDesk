@@ -12,7 +12,7 @@ import asyncio
 import os
 import signal
 import threading
-from typing import Optional
+from typing import Callable, Optional
 
 # Configure structured logging FIRST — before importing any module that
 # captures `structlog.get_logger(...)` (or stdlib logging) at import
@@ -35,6 +35,7 @@ except ImportError:
     systemd_daemon = None
 
 from crossdesk_host.abstractions.libvirt import LibvirtController  # noqa: E402
+from crossdesk_host.config import CrossdeskConfig  # noqa: E402
 from crossdesk_host.display.rail_manager import RailManager  # noqa: E402
 from crossdesk_host.display.rail_supervisor import RailSupervisor  # noqa: E402
 from crossdesk_host.display.window_icon import WindowIconStore  # noqa: E402
@@ -98,6 +99,55 @@ def _assert_suspend_protection(
     )
 
 
+def _make_finalize_hook(ctl: LibvirtController) -> Callable[[], None]:
+    """Return the single-flight post-install steady-state finalize hook.
+
+    ``on_session_ready`` runs in a thread (control offloads it via
+    ``libvirt_call``), so two concurrent Hellos could enter finalize at once;
+    a non-blocking lock makes it single-flight. Finalize is idempotent — a
+    skipped concurrent run just retries on the next Hello.
+    """
+    finalize_once = threading.Lock()
+
+    def _finalize_steady_state() -> None:
+        if not finalize_once.acquire(blocking=False):
+            return
+        try:
+            finalize_steady_state(ctl)
+        finally:
+            finalize_once.release()
+
+    return _finalize_steady_state
+
+
+def select_libvirt_backend(
+    cfg: CrossdeskConfig,
+) -> tuple[LibvirtController, Optional[Callable[[], None]]]:
+    """Instantiate the configured libvirt controller and, for the REAL backend
+    only, the on-first-Hello steady-state finalize hook.
+
+    The mock gets no hook: running finalize against it would mark the step
+    done without redefining anything, masking the P0 data-loss path once the
+    real controller lands. ``RealLibvirtController`` is imported lazily so a
+    dev host without libvirt-python still imports the daemon module.
+    """
+    if cfg.libvirt.backend == "real":
+        from crossdesk_host.libvirt_ctl.real import RealLibvirtController
+
+        ctl: LibvirtController = RealLibvirtController(
+            domain_name=cfg.libvirt.domain_name
+        )
+        logger.info(
+            "libvirt_backend_selected",
+            kind="real",
+            domain_name=cfg.libvirt.domain_name,
+        )
+        return ctl, _make_finalize_hook(ctl)
+    # mock = lifecycle actions are no-ops; recovery cannot touch a real VM.
+    logger.warning("libvirt_backend_selected", kind="mock")
+    return LibvirtControllerMock(), None
+
+
 async def main() -> None:
     """Run the daemon until the asyncio loop is cancelled.
 
@@ -127,16 +177,9 @@ async def main() -> None:
     # Backend is config-selectable (default mock, unchanged dev behaviour). Set
     # libvirt.backend = "real" (or CROSSDESK_CONFIG__LIBVIRT__BACKEND=real) on a
     # Linux+KVM host to drive the real qemu:///session domain — that also
-    # activates the steady-state finalize + real heartbeat recovery below.
-    # RealLibvirtController is imported lazily so a dev host without
-    # libvirt-python still imports the daemon module.
-    libvirt_ctl: LibvirtController
-    if cfg.libvirt.backend == "real":
-        from crossdesk_host.libvirt_ctl.real import RealLibvirtController
-
-        libvirt_ctl = RealLibvirtController(domain_name=cfg.libvirt.domain_name)
-    else:
-        libvirt_ctl = LibvirtControllerMock()
+    # activates the steady-state finalize (on the first Hello) + real heartbeat
+    # recovery. select_libvirt_backend logs which backend was chosen.
+    libvirt_ctl, on_session_ready = select_libvirt_backend(cfg)
     mgmt_state = MgmtState()
 
     # Shared RAIL launch backend. The control servicer registers the live
@@ -176,30 +219,8 @@ async def main() -> None:
     def _store_agent_version(version: str) -> None:
         mgmt_state.agent_version = version
 
-    # Post-install steady-state finalize: on the first agent Hello, redefine
-    # the persistent domain so a later hard_destroy can't reboot the install
-    # ISO and reinstall over the disk (installer.steady_state). It rewrites the
-    # REAL domain via defineXML — running it against the mock would mark the
-    # step done without redefining anything, masking the data-loss path once
-    # the real controller lands. So only wire it when the controller is real.
-    # on_session_ready now runs in a thread (control offloads it via
-    # libvirt_call), so two concurrent Hellos could enter finalize at once.
-    # A non-blocking lock makes it single-flight; finalize is idempotent, so a
-    # skipped concurrent run just retries on the next Hello.
-    _finalize_once = threading.Lock()
-
-    def _finalize_steady_state() -> None:
-        if not _finalize_once.acquire(blocking=False):
-            return
-        try:
-            finalize_steady_state(libvirt_ctl)
-        finally:
-            _finalize_once.release()
-
-    on_session_ready = (
-        None if isinstance(libvirt_ctl, LibvirtControllerMock) else _finalize_steady_state
-    )
-
+    # on_session_ready (the post-install steady-state finalize hook, real
+    # backend only) was resolved above by select_libvirt_backend.
     control_pb2_grpc.add_ControlServiceServicer_to_server(
         ControlServiceServicer(
             auth_validator,

@@ -307,7 +307,12 @@ jobs:
     # labeled PR's job simply queues — it never blocks the other checks. Once
     # the runner is permanently online, add `github.event_name == 'push'` to
     # the `if:` below to also smoke every push to main.
-    if: contains(github.event.pull_request.labels.*.name, 'hardware-smoke')
+    # Same-repo guard: a fork PR must NEVER reach the self-hosted runner (it
+    # would run untrusted PR code on our hardware) even if a collaborator
+    # mislabels it — the head repo must be this repo (pwn-request guard).
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'hardware-smoke') &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux, kvm]
     timeout-minutes: 45
     defaults:

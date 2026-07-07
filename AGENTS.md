@@ -99,7 +99,7 @@ crossdesk/
 │   ├── pyproject.toml
 │   ├── conftest.py
 │   ├── build_proto.py
-│   ├── src/crossdesk_host/   # 22 subpackages; key ones:
+│   ├── src/crossdesk_host/   # 20 subpackages; key ones:
 │   │   ├── ipc/              # gRPC servicers (control, heartbeat, filesystem, auth)
 │   │   ├── display/          # RAIL spawning + window icons (Phase 4)
 │   │   ├── watchdog/         # heartbeat FSM (Phase 3)

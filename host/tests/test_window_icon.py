@@ -71,6 +71,29 @@ def test_empty_icon_is_ignored(store: Tuple[WindowIconStore, List[dict]]) -> Non
     assert s.offer(_PNG) == "notepad"
 
 
+def test_non_png_icon_rejected_preserves_expectation(
+    store: Tuple[WindowIconStore, List[dict]]
+) -> None:
+    s, calls = store
+    s.expect("notepad", "Notepad")
+    # An MZ (PE/exe) header is not a PNG — reject at the boundary, write nothing.
+    assert s.offer(b"MZ\x90\x00\x03\x00\x00\x00") is None
+    assert calls == []
+    # Validation runs before the pending lookup, so the expectation survives a
+    # bogus offer and the real icon still lands.
+    assert s.offer(_PNG) == "notepad"
+
+
+def test_oversize_icon_rejected(store: Tuple[WindowIconStore, List[dict]]) -> None:
+    s, calls = store
+    s.expect("notepad", "Notepad")
+    huge = window_icon._PNG_MAGIC + b"\x00" * (1 << 20)  # magic ok, but > 1 MiB
+    assert s.offer(huge) is None
+    assert calls == []
+    # A valid-sized icon still applies afterwards.
+    assert s.offer(_PNG) == "notepad"
+
+
 def test_expectation_consumed_after_one_offer(
     store: Tuple[WindowIconStore, List[dict]]
 ) -> None:

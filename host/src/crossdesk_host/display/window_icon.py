@@ -58,6 +58,12 @@ _DEFAULT_ICON_DIR = Path.home() / ".local" / "share" / "icons" / "hicolor" / "25
 # stale expectation that grabs an unrelated later window's icon.
 _EXPECT_TTL_SECONDS = 60.0
 
+# The icon bytes are guest-controlled — validate them at this boundary before
+# they reach the icon theme / gdk-pixbuf. Signature + size cap only: we are not
+# a decoder, this is defense-in-depth against a malformed/oversized payload.
+_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+_MAX_ICON_BYTES = 1 << 20  # 1 MiB; real 256×256 extractions run ~72 KiB
+
 
 @dataclass
 class _Pending:
@@ -98,6 +104,15 @@ class WindowIconStore:
         ``app_id`` the icon was applied to, or ``None`` (empty icon, no/expired
         expectation, or a write failure)."""
         if not icon_png:
+            return None
+        # Validate BEFORE the pending lookup so a bogus icon doesn't consume a
+        # valid expectation (the real icon can still arrive after it).
+        if not icon_png.startswith(_PNG_MAGIC) or len(icon_png) > _MAX_ICON_BYTES:
+            logger.warning(
+                "rejected window icon: %d bytes, header %s",
+                len(icon_png),
+                icon_png[:8].hex(),
+            )
             return None
         pending = self._pending
         if pending is None or (self._now() - pending.at) > _EXPECT_TTL_SECONDS:

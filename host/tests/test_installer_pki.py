@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import stat
 from pathlib import Path
 
@@ -36,6 +37,20 @@ def test_private_keys_are_0600(tmp_path: Path) -> None:
     pki = generate_install_pki(tmp_path)
     for key in (pki.host_key, pki.guest_key):
         assert stat.S_IMODE(key.stat().st_mode) == 0o600, key
+
+
+def test_keys_owner_only_regardless_of_umask(tmp_path: Path) -> None:
+    # os.open forces 0600 at creation — a permissive umask must not widen the
+    # private keys. Certs stay 0644 (public material, explicit chmod).
+    old = os.umask(0o000)
+    try:
+        pki = ensure_install_pki(tmp_path)
+    finally:
+        os.umask(old)
+    for key in (pki.host_key, pki.guest_key):
+        assert stat.S_IMODE(key.stat().st_mode) == 0o600, key
+    for cert in (pki.ca_cert, pki.host_cert, pki.guest_cert):
+        assert stat.S_IMODE(cert.stat().st_mode) == 0o644, cert
 
 
 def test_common_names_are_pinned(tmp_path: Path) -> None:

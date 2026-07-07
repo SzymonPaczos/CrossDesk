@@ -237,141 +237,141 @@ msgstr ""
 msgid "    minted a unique per-install mTLS PKI under {dir}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:256
+#: host/src/crossdesk_host/cli/install_cmd.py:262
 #, python-brace-format
 msgid "    built tools ISO at {path} (locale {loc})"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:296
+#: host/src/crossdesk_host/cli/install_cmd.py:302
 #, python-brace-format
 msgid "    cleared stale FreeRDP cert pin for {h}:{p} (guest cert rotated)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:331
+#: host/src/crossdesk_host/cli/install_cmd.py:337
 msgid "    clearing the installer's 'press any key to boot' prompt"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:340
+#: host/src/crossdesk_host/cli/install_cmd.py:346
 msgid "Windows ISO missing — pass --iso-path"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:345
+#: host/src/crossdesk_host/cli/install_cmd.py:351
 #, python-brace-format
 msgid "tools ISO not found at {p} (build_tools_iso first)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:357
+#: host/src/crossdesk_host/cli/install_cmd.py:363
 msgid "qemu-img not found — install qemu-utils"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:360
+#: host/src/crossdesk_host/cli/install_cmd.py:366
 #, python-brace-format
 msgid "qemu-img create failed: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:362
+#: host/src/crossdesk_host/cli/install_cmd.py:368
 #, python-brace-format
 msgid "    created {gb} GB disk at {p}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:371
+#: host/src/crossdesk_host/cli/install_cmd.py:377
 msgid "    note: /dev/vhost-vsock not accessible — omitting vsock device"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:374
+#: host/src/crossdesk_host/cli/install_cmd.py:380
 msgid "    (Windows installs fine; the agent's vsock link needs a udev"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:376
+#: host/src/crossdesk_host/cli/install_cmd.py:382
 msgid "    rule granting access — see DEC-0017. Install proceeds.)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:400
+#: host/src/crossdesk_host/cli/install_cmd.py:406
 #, python-brace-format
 msgid "    defined + started libvirt domain {name}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:420
+#: host/src/crossdesk_host/cli/install_cmd.py:426
 msgid "domain is not running after start"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:423
+#: host/src/crossdesk_host/cli/install_cmd.py:429
 msgid "    Windows is installing unattended (~20-40 min)."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:424
+#: host/src/crossdesk_host/cli/install_cmd.py:430
 msgid "    Watch it: virt-viewer / a VNC client to the domain's VNC port."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:425
+#: host/src/crossdesk_host/cli/install_cmd.py:431
 msgid "    Setup + agent install run from autounattend.xml; the agent"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:426
+#: host/src/crossdesk_host/cli/install_cmd.py:432
 msgid "    registers itself with the host when setup completes."
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:433
+#: host/src/crossdesk_host/cli/install_cmd.py:439
 msgid "    delegated to in-guest autounattend"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:437
+#: host/src/crossdesk_host/cli/install_cmd.py:443
 msgid "    install initiated. When Windows finishes and the agent"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:438
+#: host/src/crossdesk_host/cli/install_cmd.py:444
 msgid "    connects, launch an app: crossdesk launch notepad"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:490
+#: host/src/crossdesk_host/cli/install_cmd.py:496
 #, python-brace-format
 msgid "crossdesk install (state at {path})"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:492
+#: host/src/crossdesk_host/cli/install_cmd.py:498
 msgid "dry-run mode: no libvirt or network calls"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:495
+#: host/src/crossdesk_host/cli/install_cmd.py:501
 #, python-brace-format
 msgid "  last attempt stopped: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:505
+#: host/src/crossdesk_host/cli/install_cmd.py:511
 msgid "all steps already done; nothing to do"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:510
+#: host/src/crossdesk_host/cli/install_cmd.py:516
 #, python-brace-format
 msgid "  ✓ {step} (already done)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:512
+#: host/src/crossdesk_host/cli/install_cmd.py:518
 #, python-brace-format
 msgid "  → {step}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:521
+#: host/src/crossdesk_host/cli/install_cmd.py:527
 #, python-brace-format
 msgid "    {step}: hardware-gated; not implemented in --no-hardware mode"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:527
+#: host/src/crossdesk_host/cli/install_cmd.py:533
 #, python-brace-format
 msgid "{step}: hardware-gated (needs a booted Windows VM)"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:532
+#: host/src/crossdesk_host/cli/install_cmd.py:538
 #, python-brace-format
 msgid "    {step}: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:533
+#: host/src/crossdesk_host/cli/install_cmd.py:539
 #, python-brace-format
 msgid "{step}: {err}"
 msgstr ""
 
-#: host/src/crossdesk_host/cli/install_cmd.py:539
+#: host/src/crossdesk_host/cli/install_cmd.py:545
 msgid "install pipeline complete (Windows continues installing in the guest)"
 msgstr ""
 

@@ -147,6 +147,27 @@ def test_prepare_autounattend_default_locale_keeps_language_fills_password(tmp_p
     assert "secret" in text and "__CROSSDESK_PASSWORD__" not in text
 
 
+def test_prepare_autounattend_is_owner_only(tmp_path: Path) -> None:
+    src = tmp_path / "autounattend.xml"
+    src.write_text("<x><Value>__CROSSDESK_PASSWORD__</Value></x>")
+    out = install_cmd._prepare_autounattend(src, "en-US", "s3cret", tmp_path)
+    assert out.stat().st_mode & 0o777 == 0o600
+    assert "s3cret" in out.read_text()
+
+
+def test_prepare_autounattend_repairs_preexisting_loose_perms(tmp_path: Path) -> None:
+    src = tmp_path / "autounattend.xml"
+    src.write_text("<x><Value>__CROSSDESK_PASSWORD__</Value></x>")
+    # A stale, world-readable copy from an earlier run must be repaired.
+    stale = tmp_path / "autounattend.prepared.xml"
+    stale.write_text("old world-readable content")
+    stale.chmod(0o644)
+    out = install_cmd._prepare_autounattend(src, "en-US", "s3cret", tmp_path)
+    assert out == stale
+    assert out.stat().st_mode & 0o777 == 0o600
+    assert "old world-readable content" not in out.read_text()
+
+
 def test_download_iso_requires_iso_path(monkeypatch: pytest.MonkeyPatch, _state_in_tmp: Path) -> None:
     _ok_doctor(monkeypatch)
     rc = install_cmd.run(_args(iso_path=None))  # no --iso-path → Fido not wired

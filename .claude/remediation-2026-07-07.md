@@ -667,7 +667,7 @@ with the work, no direct commits to main).
 - [x] branch 3 — fix/libvirt-loop-deadlines (P1-3)
 - [x] branch 4 — fix/daemon-backend-select (P1-4, P1-5)
 - [x] branch 5 — fix/icon-png-validation (P2-2)
-- [ ] branch 6 — chore/ci-fork-gate (P2-3)
+- [x] branch 6 — chore/ci-fork-gate (P2-3)
 - [ ] branch 7 — chore/gui-stale-advisory (P2-14)
 - [ ] branch 8 — fix/uninstall-dir-source (P2-12)
 - [ ] branch 9 — docs/audit-tracking-sweep (P2-5, P2-6, P2-7, P2-9)

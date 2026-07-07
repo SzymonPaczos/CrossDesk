@@ -26,6 +26,7 @@ from crossdesk_host.observability.redaction import (
     ALLOWED_FIELDS,
     RedactionViolation,
     mask_sensitive,
+    redact_secret_flags,
 )
 from crossdesk_host.observability.trace_ctx import (
     TraceContext,
@@ -62,5 +63,6 @@ __all__ = [
     "mask_sensitive",
     "metadata_pair",
     "parse_traceparent",
+    "redact_secret_flags",
     "report_exception",
 ]

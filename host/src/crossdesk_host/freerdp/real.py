@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import IO, Optional, Sequence
 
 from crossdesk_host.abstractions.freerdp import FreeRDPInvocation, RailSession
+from crossdesk_host.observability import redact_secret_flags
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +131,12 @@ class RealFreeRDPInvocation(FreeRDPInvocation):
 
     def spawn_rail(self, argv: list[str], log_label: str = "") -> RailSession:
         full_argv = _resolve_freerdp_binary() + argv
-        logger.info("spawning FreeRDP RAIL session: %s", " ".join(full_argv))
+        # Scrub the credential flags (/p:, /pth:) before logging — the argv
+        # in memory (RailSession.argv) keeps the real values for the spawn.
+        logger.info(
+            "spawning FreeRDP RAIL session: %s",
+            " ".join(redact_secret_flags(full_argv)),
+        )
         log_file: Optional[IO[bytes]] = None
         log_path: Optional[Path] = None
         if log_label:
@@ -140,7 +146,11 @@ class RealFreeRDPInvocation(FreeRDPInvocation):
                 # Append so re-launching the same app keeps history; the
                 # rotation of these files is left to the size cap a future
                 # caller can add — FreeRDP output per session is small.
-                log_file = log_path.open("ab")
+                # 0600 at creation: the capture may echo a FreeRDP banner
+                # carrying connection details, so keep it owner-only.
+                log_file = open(
+                    log_path, "ab", opener=lambda p, f: os.open(p, f, 0o600)
+                )
             except OSError as exc:
                 # Capture is best-effort: if we can't open the file, spawn
                 # anyway with inherited stderr rather than block the launch.

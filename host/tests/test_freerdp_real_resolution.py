@@ -9,6 +9,7 @@ tests.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -120,3 +121,25 @@ def test_env_pin_takes_precedence_over_candidates(
     argv = freerdp_real._resolve_freerdp_binary()
 
     assert argv == ["/usr/bin/xfreerdp3"]
+
+
+def test_spawn_rail_redacts_credentials_in_log(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The managed-launch log line must never carry the raw ``/p:`` password;
+    the in-memory argv (used for the actual spawn) keeps the real value.
+
+    Uses ``/bin/true`` as the FreeRDP binary — it exits 0 immediately, so the
+    spawn is hermetic and no ``log_label`` means no capture file is written."""
+    monkeypatch.setenv("CROSSDESK_FREERDP_BIN", "/bin/true")
+    inv = freerdp_real.RealFreeRDPInvocation()
+    with caplog.at_level(logging.INFO, logger="crossdesk_host.freerdp.real"):
+        session = inv.spawn_rail(["/v:h:1", "/p:hunter2"])
+    # Reap the /bin/true child so no zombie lingers after the test.
+    inv._processes[session.pid].proc.wait(timeout=5)
+
+    messages = [r.getMessage() for r in caplog.records]
+    assert all("hunter2" not in m for m in messages)
+    assert any("/p:<redacted>" in m for m in messages)
+    # The real password survives in memory for the spawn itself.
+    assert "/p:hunter2" in session.argv

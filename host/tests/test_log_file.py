@@ -69,3 +69,37 @@ def test_rotating_writer_survives_unwritable(tmp_path: Path) -> None:
     writer.write("second line also over the cap\n")
     writer.flush()
     assert path.exists()
+
+
+def test_log_file_created_owner_only(tmp_path: Path) -> None:
+    # The daemon log can carry operational detail — it must be born 0600,
+    # never world-readable.
+    log_file = tmp_path / "logs" / "host.jsonl"
+    buf = io.StringIO()
+    configure_logging(stream=buf, log_file=log_file)
+    get_logger("host.tests.perms").info("perm_event")
+    assert log_file.exists()
+    assert log_file.stat().st_mode & 0o777 == 0o600
+
+
+def test_rotating_writer_both_files_owner_only(tmp_path: Path) -> None:
+    path = tmp_path / "r.log"
+    writer = _RotatingFileWriter(path, max_bytes=100, backups=1)
+    for i in range(12):
+        writer.write(f"line-{i:02d}-padding\n")
+    writer.flush()
+    backup = path.with_name("r.log.1")
+    assert backup.exists(), "expected a rotated .1 backup"
+    # Both the live file (reopened "w") and the os.replace'd backup are 0600.
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert backup.stat().st_mode & 0o777 == 0o600
+
+
+def test_rotating_writer_repairs_preexisting_loose_perms(tmp_path: Path) -> None:
+    # A log file left behind at 0644 by an older build is chmod-repaired on
+    # the next daemon start.
+    path = tmp_path / "pre.log"
+    path.write_text("stale\n")
+    path.chmod(0o644)
+    _RotatingFileWriter(path, max_bytes=1000, backups=1)
+    assert path.stat().st_mode & 0o777 == 0o600

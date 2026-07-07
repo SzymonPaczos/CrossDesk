@@ -55,16 +55,24 @@ opposite of what an operator wants when their setting "doesn't seem
 to apply"."""
 
 
-def _user_config_dir() -> Path:
-    return Path.home() / ".config" / "crossdesk"
+# XDG base-directory derivations for CrossDesk's per-user dirs. Public + single
+# source of truth so callers (uninstall, installer.state) don't re-derive them.
+# ``home`` defaults to ``Path.home()`` resolved at CALL time so tests that
+# monkeypatch HOME (and packaged installs) see the redirected path.
+def user_config_dir(home: Optional[Path] = None) -> Path:
+    return (home or Path.home()) / ".config" / "crossdesk"
 
 
-def _user_state_dir() -> Path:
-    return Path.home() / ".local" / "state" / "crossdesk"
+def user_state_dir(home: Optional[Path] = None) -> Path:
+    return (home or Path.home()) / ".local" / "state" / "crossdesk"
 
 
-def _user_data_dir() -> Path:
-    return Path.home() / ".local" / "share" / "crossdesk"
+def user_data_dir(home: Optional[Path] = None) -> Path:
+    return (home or Path.home()) / ".local" / "share" / "crossdesk"
+
+
+def user_cache_dir(home: Optional[Path] = None) -> Path:
+    return (home or Path.home()) / ".cache" / "crossdesk"
 
 
 def _repo_pki_dir() -> Path:
@@ -90,13 +98,13 @@ class PathsConfig(BaseModel):
 
     model_config = _FROZEN_MODEL_CONFIG
 
-    config_dir: Path = Field(default_factory=_user_config_dir)
+    config_dir: Path = Field(default_factory=user_config_dir)
     """Where ``vm.toml``, ``settings.toml``, ``keyring.toml`` live."""
 
-    state_dir: Path = Field(default_factory=_user_state_dir)
+    state_dir: Path = Field(default_factory=user_state_dir)
     """Where ``install.state.json`` and ``recovery/`` live."""
 
-    data_dir: Path = Field(default_factory=_user_data_dir)
+    data_dir: Path = Field(default_factory=user_data_dir)
     """Where the user-app catalog and ratings live."""
 
     pki_dir: Path = Field(default_factory=_repo_pki_dir)
@@ -399,7 +407,7 @@ def default_config_path() -> Path:
     Resolved at call time so tests that monkey-patch ``HOME`` see the
     redirected path (mirrors ``installer.credentials._default_path``).
     """
-    return Path.home() / ".config" / "crossdesk" / "config.toml"
+    return user_config_dir() / "config.toml"
 
 
 _ENV_PREFIX = "CROSSDESK_CONFIG__"

@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
+from crossdesk_host.config import user_cache_dir, user_config_dir, user_state_dir
 
 
 @dataclass
@@ -103,20 +104,20 @@ def uninstall(
         "desktop_files",
     )
     _rm_path(
-        h / ".cache" / "crossdesk",
+        user_cache_dir(h),
         dry_run,
         report,
         "iso_cache",
     )
     _rm_path(
-        h / ".local" / "state" / "crossdesk",
+        user_state_dir(h),
         dry_run,
         report,
         "install_state",
     )
     if not keep_config:
         _rm_path(
-            h / ".config" / "crossdesk",
+            user_config_dir(h),
             dry_run,
             report,
             "config",

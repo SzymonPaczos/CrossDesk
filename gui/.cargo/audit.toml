@@ -1,13 +1,12 @@
-# cargo-audit configuration. Mirrors guest/deny.toml's [advisories.ignore].
+# cargo-audit configuration for the gui workspace.
 #
-# Re-evaluate every time we bump tonic — the rustls-pemfile dep is
-# transitive and will drop once tonic migrates to rustls-pki-types
-# PemObject (no API change for us).
+# Deliberately diverges from guest/deny.toml: the gui workspace pulls
+# Qt6/cxx-qt, not tonic, so it has NO rustls-pemfile transitive dep and does
+# NOT ignore RUSTSEC-2025-0134 (that entry never matched here). Re-evaluate
+# the cxx ignore when cxx-qt ships a release compatible with a patched cxx.
 
 [advisories]
 ignore = [
-    # rustls-pemfile unmaintained as of 2025-08; pulled in via tonic 0.12.
-    "RUSTSEC-2025-0134",
     # cxx 1.0.194 `let_cxx_string!` unsound (uninitialized value; 2026-07-05).
     # We do NOT use that macro (grep-clean across gui/crates). cxx arrives
     # transitively via cxx-qt-lib/cxx-qt 0.7.3, whose generated bridge is

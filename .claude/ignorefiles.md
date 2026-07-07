@@ -1,6 +1,6 @@
 # Dead Code / Generated / Reference Manifest
 
-**Last Updated:** 2026-07-07 22:44:32
+**Last Updated:** 2026-07-07 22:57:55
 
 > Files agents should **not** read or analyze unless the task is
 > explicitly to clean them up or modify the generator. The
@@ -55,6 +55,6 @@ referenced in older PRs or notes but no longer exist.)
 |------|--------|-------|
 | `host/src/crossdesk_host/installer/iso_downloader.py` (`ScrapeBackend` Protocol) | Phase 5 placeholder. Protocol + `fetch()` orchestrator committed for cache + sha256 unit tests, but no `HttpScrapeBackend` exists yet. Vulture / "0 production callers" audits should ignore this until Phase 5 wires the wizard's download step. | 2026-05-20 |
 | `host/src/crossdesk_host/watchdog/sleep_sync.py` | Phase 7 stub — logs only; real systemd-sync wiring deferred until lifecycle FSM lands its full suspend/resume protocol. | 2026-05-20 |
-| `host/src/crossdesk_host/integrations/notifications.py::DBusNotifier._send_sync` | Phase 7 stub — body is literal `_ = (...)` no-op. `DBusNotifier.notify` exists as the shaped API; the actual `dbus-next` call lands when daemon integration subscribes to recovery events from the Status stream. SubprocessNotifier is the production path today. | 2026-05-23 |
 | `host/src/crossdesk_host/recovery/` (`bundle.py`, `snapshot.py`) | Phase 9 scaffold — `export_bundle` / `capture_snapshot` have 0 production callers (imported only by `test_recovery.py`). The `ExportDiagnosticBundle` RPC returns `zip_payload=b""` (`ipc/management.py`, "Phase 9 Week 37 wires the actual zip generation") instead of calling `export_bundle`; `HARD_DESTROY` never calls `capture_snapshot`. "0 production callers" audits should ignore until Phase 9 wires it. | 2026-07-05 |
 | `host/src/crossdesk_host/catalog/ratings.py` + `catalog/user_apps.py` | Phase 9 scaffold — `load_ratings`/`blended_rating`/`load_user_apps`/`save_user_app` have 0 production callers (tested-only). `ListApps` builds `compatibility_stars` from a hardcoded inline list (`ipc/management.py`), not from `ratings.py`. Dead-code audits should ignore until the ratings/user-app surfaces are wired. | 2026-07-05 |
+| `host/src/crossdesk_host/installer/drive_map.py` | Etap A host-side logon-script generator shipped but unwired (0 production callers, tested-only). Live findings flipped the mechanism (Run-key path dead; MPR `/persistent:yes` restore is the lever); wiring waits on the one-time-trigger decision — see `status.md` Etap A. Dead-code audits should ignore until it's wired. | 2026-07-07 |

@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-07-07 22:44:32
+**Last Updated:** 2026-07-07 22:57:55
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in
@@ -19,7 +19,9 @@
 - **Guest (Windows NT):** Rust NT service; `windows-rs`; tonic gRPC
   client; RAIL window-event bridge.
 - **Transport:** gRPC over `AF_VSOCK` with mTLS, plus per-frame
-  `AuthContext` (peer fingerprint + nonce + monotonic seq).
+  `AuthContext` (peer fingerprint + nonce + monotonic seq). Bind seam:
+  `transport.bind_kind = auto | tcp | vsock` (DEC-0017 dev path — every live
+  milestone so far ran `tcp` loopback via SLIRP).
 - **Display:** FreeRDP RAIL — one host process per registered app,
   rendering as a native Wayland or X11 window.
 - **Storage:** opt-in file share (default off). Stage A = FreeRDP

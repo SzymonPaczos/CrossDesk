@@ -26,7 +26,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-_DEFAULT_CACHE_DIR = Path.home() / ".cache" / "crossdesk" / "iso"
+from crossdesk_host.config import user_cache_dir
+
+_DEFAULT_CACHE_DIR = user_cache_dir() / "iso"
 
 
 @dataclass(frozen=True)

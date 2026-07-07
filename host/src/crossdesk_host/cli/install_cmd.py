@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
+from crossdesk_host.config import user_config_dir
 from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import DEFAULT_CHECKS, Status
 from crossdesk_host.i18n import _
@@ -180,7 +181,7 @@ def _install_pki_dir() -> Path:
     """Per-install mTLS PKI home: ``$CROSSDESK_PKI_DIR`` or
     ``~/.config/crossdesk/pki``."""
     env = os.environ.get("CROSSDESK_PKI_DIR")
-    return Path(env) if env else Path.home() / ".config" / "crossdesk" / "pki"
+    return Path(env) if env else user_config_dir() / "pki"
 
 
 def _resolve_mtls_pki() -> tuple[Path, Path, Path]:

@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
 
+from crossdesk_host.config import user_state_dir
 from crossdesk_host.utils import atomic_write
 
 _SCHEMA_VERSION = 1
@@ -31,8 +32,9 @@ _SCHEMA_VERSION = 1
 def _default_state_file() -> Path:
     # Resolve at call time, not at import — tests monkey-patch ``HOME`` and
     # expect the new value to take effect; baking ``Path.home()`` into a
-    # module constant would freeze the path at first import.
-    return Path.home() / ".local" / "state" / "crossdesk" / "install.state.json"
+    # module constant would freeze the path at first import. Single source of
+    # truth for the state dir lives in ``crossdesk_host.config``.
+    return user_state_dir() / "install.state.json"
 
 
 @dataclass

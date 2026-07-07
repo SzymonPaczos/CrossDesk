@@ -669,7 +669,7 @@ with the work, no direct commits to main).
 - [x] branch 5 — fix/icon-png-validation (P2-2)
 - [x] branch 6 — chore/ci-fork-gate (P2-3)
 - [x] branch 7 — chore/gui-stale-advisory (P2-14)
-- [ ] branch 8 — fix/uninstall-dir-source (P2-12)
+- [x] branch 8 — fix/uninstall-dir-source (P2-12)
 - [ ] branch 9 — docs/audit-tracking-sweep (P2-5, P2-6, P2-7, P2-9)
 
 ### Execution notes (deviations / environment findings)
@@ -709,3 +709,13 @@ with the work, no direct commits to main).
   defaults to `libvirt.backend="mock"`). Used `CrossdeskConfig` throughout
   (mechanical rename). The single-flight hook test lives here (branch 3's
   closure was inline/untested), per the plan's "one home for this test" note.
+- **Branch 8 — `user_cache_dir` added; literal sweep scoped to 2 of 12.** The
+  plan named 4 public helpers but only 3 private ones existed (config/state/
+  data); added `user_cache_dir` fresh. `default_state_file` is already public
+  (wraps the private `_default_state_file`, whose body now uses `user_state_dir`).
+  Sweep did the 2 pure one-line swaps the plan named (`iso_downloader` cache,
+  `install_cmd._install_pki_dir`). LEFT (out of P2-12 scope, distinct
+  subsystems — not swapped): `installer/credentials.py` (vm.toml),
+  `installer/settings.py` (settings.toml), `integrations/keyring/file_backend.py`
+  (keyring.toml), `doctor/checks.py`, `recovery/{snapshot,bundle}.py`,
+  `catalog/{ratings,user_apps}.py`, `freerdp/real.py` (logs), `cli/logs_cmd.py`.

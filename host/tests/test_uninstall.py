@@ -56,6 +56,23 @@ def test_full_uninstall(tmp_path: Path) -> None:
     assert not report.failed
 
 
+def test_uninstall_targets_match_config_derivations(tmp_path: Path) -> None:
+    """The dirs uninstall targets must be exactly the config helpers' outputs —
+    pins the single-source-of-truth, killing any future divergence."""
+    from crossdesk_host.config import (
+        user_cache_dir,
+        user_config_dir,
+        user_state_dir,
+    )
+
+    _seed(tmp_path)
+    report = uninstall(home=tmp_path, dry_run=True, keep_config=False)
+    joined = "\n".join(report.removed + report.skipped)
+    assert str(user_cache_dir(tmp_path)) in joined
+    assert str(user_state_dir(tmp_path)) in joined
+    assert str(user_config_dir(tmp_path)) in joined
+
+
 def test_keep_config_preserves_vm_toml(tmp_path: Path) -> None:
     _seed(tmp_path)
     uninstall(home=tmp_path, keep_config=True)

@@ -2,6 +2,182 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-07-06
+
+**Git:** `13df5d1` on `main`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 125 files)
+- pytest collected: 1014
+- bandit medium/high: 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 16
+- gui cargo-deny issues: 3
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 249
+- #[test] annotations (rust): 84
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-06 (0d ago)
+- META decisions (status: aktywna): 7
+- ADR DEC-NNNN total: 17
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-06-12 (24d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Warstwa głęboka (agent, 2026-07-07)
+
+Okno: `bf38110..13df5d1` (2026-06-12 → 2026-07-05, ~114 commitów pętli
+autonomicznej). Cztery równoległe przeglądy (bezpieczeństwo / slop+dead-code /
+testy / architektura+decyzje); wszystkie P1 zweryfikowane ręcznie w aktualnych
+plikach przed raportem.
+
+**Zgodność z decyzjami: CZYSTA.** No-polling zweryfikowane per-site (wszystkie
+`while True:` event/stream-driven; jedyny sleep-poll to zatwierdzony
+DEC-META-006 `_tail_file`). Proto nietknięte. Wszystkie edycje boundary files
+(`7d8720b`, `34bc3d3`) pokryte zapisanymi podpisami właściciela w
+`needs-owner.md`. Seam libvirt szczelny (`import libvirt` tylko w
+`libvirt_ctl/real.py`); mock-importy w prod tylko na whiteliście. Brak Dockera,
+brak leafów certów w git.
+
+**Suita testowa:** 1013 passed / 1 uzasadniony skip / 0 fail (44,5 s).
+Hermetyczność istotnie poprawiona w oknie: guard anti-real-libvirt (`13c765f`)
+zweryfikowany jako szczelny (autouse, jedyny choke-point `_connect`), izolacja
+FreeRDP-config i peripherals-config domknięta. Negatywne testy mTLS
+(`test_mtls_handshake.py`) napędzają realny handshake TLS z poprawnym
+dyskryminatorem (UNAVAILABLE ≠ UNIMPLEMENTED) — wzorcowe. Testy finalize
+kodują kontrakt anti-data-loss (retry zostawia krok nieoznaczony).
+
+**cargo-deny (16 guest + 3 gui):** wyłącznie `warning[duplicate]` (zdublowane
+wersje transitive crates) + 1 `advisory-not-detected` (stale ignore, P2 niżej).
+Nie-security.
+
+**Skille/MCP (§8):** brak `~/DevProjects/claude-toolkit` na tym boxie (nic do
+synchronizacji); brak `.mcp.json`. Bez zmian.
+
+#### P0 — brak
+
+#### P1 (5)
+
+1. **[SEC] Hasło VM w plaintext w logu daemona.**
+   `freerdp/real.py:133` loguje pełny argv FreeRDP (z `/p:<hasło>` z
+   `rail_command.py:139`) na INFO → tee do rotującego pliku
+   `~/.local/state/crossdesk/logs/` (0644). Redakcja
+   (`observability/redaction.py`) jest value-blind (matchuje nazwy kluczy
+   `password|secret|token`, nie wartości) → nie łapie. Lokalne konto czyta log →
+   RDP na `localhost:3389` → pełna kontrola guesta (+ whole-$HOME share =
+   `~/.ssh`). Obala 0600-ochronę `vm.toml`. (Linia logu sprzed okna —
+   `986d523` 2026-05-07 — ale sweep `a211087` deklarował pokrycie security,
+   które ta dziura falsyfikuje.) Fix: redakcja `/p:...` przed logiem +
+   rozważyć 0600 na pliku logu.
+2. **[SEC] `autounattend.prepared.xml` z realnym hasłem world-readable.**
+   `cli/install_cmd.py:229-231` — `write_text()` bez 0600, plik trwa w
+   state-dir. Kontrast: `vm.toml` 0600 z repair-path, tools ISO 0600 przez
+   `mkstemp` — ta jedna kopia sekretu odstaje. Fix: `os.open(..., 0o600)`.
+3. **[SEC] Blokujące wywołania libvirt na event-loopie bez deadline'u.**
+   `ipc/control.py:220-221` (`on_session_ready()` w async handlerze) →
+   `finalize_steady_state` → `real.py` `defineXML`/`_connect`; analogicznie
+   `ipc/heartbeat.py:274` `hard_destroy()`. Uzbrojone dopiero przez A3 seam
+   (`30579a6` + `9ac1da1`). Zwisający libvirtd przy pierwszym Hello = zamrożony
+   cały daemon (3 plany + heartbeat + D-Bus listener), bez timeoutu. Łamie
+   `.claude/rules/backend.md` („libvirt event-loop deadlines — pick one").
+   Fix: `run_in_executor` + `asyncio.wait_for` wokół każdego wywołania real
+   controllera osiągalnego z servicerów.
+4. **[SLOP] Daemon nie loguje wybranego backendu libvirt przy starcie.**
+   `daemon.py:131-138` — selekcja mock/real bez żadnej linii logu; jedyny ślad
+   mocka to per-operacyjne `[LIBVIRT MOCK]` — czyli dopiero przy zdarzeniu
+   lifecycle, dokładnie wtedy gdy rozróżnienie mock/real decyduje o losie VM.
+   Fix: 1 linia `logger.info` przy selekcji (warning dla mocka).
+5. **[TESTY] Gałąź mock→`on_session_ready=None` bez testu.**
+   `daemon.py:186-189` — guard „finalize na mocku maskowałby data-loss" (P0
+   z PLAN.md) egzekwowany wyłącznie inline w `serve()`; refactor mógłby go
+   cicho odwrócić i żadna bramka tego nie złapie. Fix: wyciągnąć selekcję do
+   testowalnego helpera + 2 testy (mock→None, real→finalize).
+
+#### P2 (14)
+
+1. **[SEC]** PKI write-then-chmod race — `installer/pki.py:76-84`: klucz
+   istnieje z umask-perms między `write_bytes` a `chmod(0o600)`. Fix:
+   `os.open` z 0600 od razu.
+2. **[SEC]** Guest-controlled `icon_png` zapisywane bez walidacji do icon
+   theme (`display/window_icon.py` `offer`/`_apply`) — powierzchnia ataku na
+   host-side dekodery obrazów (gdk-pixbuf itd.). Defense-in-depth: sygnatura
+   PNG + cap rozmiaru.
+3. **[SEC]** `linux-kvm-smoke` (ci.yml) — label-gate bez guardu same-repo →
+   pwn-request na self-hosted runner. Dziś teoretyczne (runner nie istnieje);
+   przed postawieniem dodać `head.repo.full_name == github.repository`.
+4. **[SEC]** PKGBUILD `sha256sums=('SKIP')` — tarball bez integralności
+   buduje `agent.exe` trafiający do każdego guesta. Pin przy release.
+5. **[SLOP]** Stale wpis w `ignorefiles.md`: `DBusNotifier._send_sync` nie
+   jest już no-opem (realny `dbus_next` call) — wpis do usunięcia/aktualizacji.
+6. **[SLOP]** `installer/drive_map.py` — 0 production callers (tylko testy),
+   nieza rejestrowany w `ignorefiles.md` → przyszłe audyty będą re-flagować.
+   Zarejestrować albo wpiąć.
+7. **[SLOP]** Drift PLAN.md (#10) + backlog.md: twierdzą, że uninstall
+   `--force`/confirm „zostaje" — a jest shipped (`427b15e`,
+   `cli/uninstall_cmd.py:30-56`).
+8. **[TESTY]** Brak marker-gated testu integracyjnego dla destrukcyjnych
+   ścieżek `RealLibvirtController` (box-gated; live-verify dziś wyłącznie
+   manualny — dodać przy P0 live-cycle, żeby #6 zostało regression-guarded).
+9. **[ARCH]** `architecture.md` „Transport: gRPC over AF_VSOCK" — brak
+   wzmianki o shipped seamie `bind_kind=auto|tcp|vsock` (wszystkie żywe
+   milestone'y szły po tcp).
+10. **[ARCH]** AGENTS.md „22 subpackages" vs realne 20 (boundary → owner).
+11. **[ARCH]** REQUIREMENTS.md nie dokumentuje `bind_kind` /
+    `libvirt.backend` / `shared_folder_*` (wzorzec new-config wymaga wpisu;
+    boundary → draft do needs-owner).
+12. **[ARCH]** `uninstall.py:111-115` ręcznie deriwuje state/config-dir
+    zamiast `installer/state.py::default_state_file()` — dwie niezależne
+    derywacje tej samej ścieżki.
+13. **[ARCH]** 2 commity `i18n:` poza Conventional Commits (`chore(i18n):`).
+14. **[DEPS]** Stale ignore `RUSTSEC-2026-0202` w `gui/.cargo/audit.toml`
+    (`advisory-not-detected`) — do usunięcia.
+
+**Obserwacje bez akcji:** `_keepalive()` striplikowany w 3 plikach lifecycle
+(dokładnie na progu reguły „wait for the fourth"); `logs_cmd.py:610` 1 Hz
+queue-wakeup w `--follow` (pre-window, powierzchnia DEC-META-006); duplikaty
+cargo-deny (transitive, kosmetyka).
+
+**Werdykt:** 114 commitów pętli bez ani jednego P0 i bez złamania decyzji;
+hermetyczność testów netto lepsza niż przed oknem. Wspólny wątek P1:
+hasło VM chronione w 1 z 3 miejsc spoczynku, a świeżo uzbrojona ścieżka
+real-libvirt nie ma jeszcze dyscypliny deadline'ów, której wymagają własne
+reguły projektu. Decyzja właściciela: co naprawiamy.
+
+---
+
 ## Audyt 2026-07-05
 
 **Git:** `5d87d2d` on `main`

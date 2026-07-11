@@ -54,6 +54,28 @@ punkty wymagają Twojego podpisu:
   `git mv WORK_LOG.md .claude/history/2026-07-05-work-log.md` — czysty
   root, git pamięta. Powiedz „przenieś", a wykonam.
 
+## §8 — Audyt 2026-07-12: AGENTS.md security-sweep claim + fala workflow (P1)
+
+`AGENTS.md:64-69` (boundary) twierdzi, że security sweep „always runs in CI
+via `.github/workflows/security.yml` on every push, every PR, and weekly on
+Mondays" — realny YAML to `on: workflow_dispatch` **only** (billing-freeze
+2026-05-20). Repo jest dziś publiczne (Actions darmowe). Podpisz jedną opcję:
+
+- **(a) REKOMENDOWANE:** przywracam triggery `push` + `pull_request` +
+  `schedule` (poniedziałki) w `security.yml` → AGENTS.md staje się prawdziwe
+  bez edycji boundary.
+- **(b)** zostaje manual-only → AGENTS.md PROPOSED: „…lives in
+  `.github/workflows/security.yml`; **manual-only (`workflow_dispatch`)**
+  since the 2026-05-20 Actions billing freeze — run it before releases and
+  after security-relevant changes."
+
+Do tej samej decyzji: **sign-off na całą falę zmian `.github/workflows/**`**
+z backlogu P1 „CI / supply chain 2026-07-12" (SHA-pinning third-party +
+semgrep image, top-level `permissions:` w ci/compat-matrix,
+`persist-credentials: false`, `dependabot.yml`) — zmiany workflowów traktujemy
+jak security code (`ci-cd.md` §2 pkt 5), więc nie wykonuję ich bez podpisu.
+Powiedz „wykonaj (a) + falę" a zrobię całość jedną gałęzią z review.
+
 ## Still open (boundary-file edits / owner calls)
 
 - [ ] **Proto edit — app-discovery RPC.** `ListDiscoveredApps` /

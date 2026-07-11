@@ -17,6 +17,26 @@ export PATH="$PATH:$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin"
 echo "🔍 pre-push: security review"
 echo "─────────────────────────────────────────────"
 
+# === Audit freshness preflight (report-only per rules-as-gates.md §3;
+#     ratchet to blocking = owner decision, parked in needs-owner.md) ======
+AUDIT_LOG="$REPO_ROOT/.claude/audit-log.md"
+if [ -f "$AUDIT_LOG" ]; then
+    LAST_AUDIT="$(grep -m1 -oE '^## Audyt [0-9]{4}-[0-9]{2}-[0-9]{2}' "$AUDIT_LOG" \
+        | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)"
+    if [ -n "$LAST_AUDIT" ]; then
+        # GNU date (Linux) first, BSD date (macOS) fallback.
+        LAST_EPOCH="$(date -d "$LAST_AUDIT" +%s 2>/dev/null \
+            || date -j -f '%Y-%m-%d' "$LAST_AUDIT" +%s 2>/dev/null || echo 0)"
+        if [ "$LAST_EPOCH" -gt 0 ]; then
+            AGE_DAYS=$(( ($(date +%s) - LAST_EPOCH) / 86400 ))
+            if [ "$AGE_DAYS" -gt 7 ]; then
+                echo "⚠️  WARN: ostatni audyt ($LAST_AUDIT, ${AGE_DAYS} dni temu) ma >7 dni."
+                echo "    Uruchom skill weekly-audit (.claude/rules/audit.md)."
+            fi
+        fi
+    fi
+fi
+
 DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
     | sed 's@^refs/remotes/origin/@@' || echo main)"
 

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MSG_FILE="$1"
+SUBJECT="$(head -n 1 "$MSG_FILE")"
+
+case "$SUBJECT" in
+  Merge\ *|Revert\ *|fixup!*|squash!*) exit 0 ;;
+esac
+
+if ! printf '%s\n' "$SUBJECT" | grep -qE '^(feat|fix|docs|test|refactor|chore|ci|build|perf|style)(\([^)]+\))?!?: .+'; then
+  echo "ERROR: subject nie jest Conventional Commit" >&2
+  exit 1
+fi
+
+# Tryb raportowy: WARN zamiast ERROR. Ratchet do blokady = decyzja właściciela.
+# AI-Contribution celowo nieoznaczane (decisions.md D-006 w claude-toolkit).
+warned=0
+for field in Intent Task-Ref Gates; do
+  value="$(sed -nE "s/^${field}:[[:space:]]*(.*)$/\1/p" "$MSG_FILE" | head -n 1)"
+  if [ -z "$value" ] || [[ "$value" == *'<'*'>'* ]] \
+    || printf '%s\n' "$value" | grep -qiE '^(TODO|TBD|PLACEHOLDER)([[:space:]]|$)'; then
+    echo "WARN: brak lub placeholder w '${field}:' — wzór: .gitmessage" >&2
+    warned=1
+  fi
+done
+
+if [ "$warned" -eq 1 ]; then
+  echo "WARN: commit przyjęty bez pełnego provenance (tryb raportowy) — zob. change-provenance.md" >&2
+fi
+exit 0

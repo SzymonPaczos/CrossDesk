@@ -23,6 +23,17 @@ VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT
 
 ---
 
+## Inbox — zapisane automatycznie, do sklasyfikowania
+
+<!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,
+gdy priorytet jest niejasny (reguła „zapisz najpierw" w rules/general.md,
+adopcja 2026-07-12). Praca v0.1.0 → PLAN.md, nie tu. Najpierw deduplikuj.
+Zapis ≠ zgoda na implementację. Pusto = nic nieoczekującego. -->
+
+_(pusto)_
+
+---
+
 ## P0
 
 ### A7-live install-path findings (żywa reinstalacja + adversarial audyt 11-agent, 2026-07-01)
@@ -162,6 +173,49 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 ---
 
 ## P1
+
+### CI / supply chain — fala z audytu 2026-07-12 (zmiany `.github/workflows/**` = sign-off właściciela, needs-owner §8)
+- **[P1] `security.yml` jest manual-only, dokumentacja twierdzi „always runs".**
+  Realny trigger: `on: workflow_dispatch` (billing-freeze 2026-05-20);
+  `AGENTS.md:64-69` obiecuje every push / every PR / weekly-Monday. Repo jest
+  od tego czasu PUBLICZNE (Actions darmowe) → rekomendacja: przywrócić
+  `push`+`pull_request`+`schedule` i AGENTS.md zostaje prawdziwe (albo (b)
+  poprawić AGENTS.md — boundary, draft w `needs-owner.md` §8). Do tego czasu
+  sweep odpalać ręcznie przed release/po zmianach security.
+- **[P1, Red Team HIGH 2026-07-12] SHA-pinning third-party — amplifikacja w
+  release/sign.** `release.yml` job `build-agent` odpala
+  `dtolnay/rust-toolchain@stable` (ruchomy branch) PRZED `cargo build ... -p
+  agent-svc`; wynik (`agent-unsigned`) job `sign-agent` podpisuje PRAWDZIWYM
+  certem publishera (sekret `CROSSDESK_SIGNING_PFX_BASE64`) → `publish-release`
+  dołącza do release. Kompromitacja taga `stable` = podpisany-przez-nas malware
+  do end-userów (human klika Publish po przejrzeniu LISTY assetów, nie
+  zawartości .exe). Ten sam brak pinu: `bufbuild/buf-setup-action@v1`,
+  `gitleaks/gitleaks-action@v2`, `image: semgrep/semgrep` (bez digestu),
+  `rust-toolchain@stable` ×5 łącznie. Wbrew WŁASNEJ konwencji (`release.yml:29`
+  „third-party Actions are SHA-pinned" — dryf komentarz↔YAML) i
+  `.claude/rules/ci-cd.md` §2. zizmor 2026-07-12: 40× `unpinned-uses` [High].
+  **Fix:** SHA-pin wszystkich third-party (+ digest semgrep); lint w CI
+  failujący gdy `uses:` third-party ≠ `owner/repo@<40-hex>`; rozważyć
+  `actions/attest-build-provenance` + `cargo build --locked` w release.
+  **Trigger:** przed PIERWSZYM tagowanym release (kryt. #12) — dziś release nie
+  odpalał, więc latentne. First-party `actions/*`/`github/*` @vN = świadoma
+  konwencja projektu (osobna decyzja właściciela).
+- **[P1, Red Team LOW 2026-07-12] pre-push secret-gate bypass przez
+  word-splitting.** `.githooks/pre-push` iteruje `for f in $CHANGED_FILES`
+  (niecytowane) — nazwa pliku ze spacją (`secret .py`) lub globem rozpada się na
+  tokeny, `[ -f "$f" ]` je odrzuca → plik z realnym hardcoded secretem NIE jest
+  skanowany (gdy gitleaks nieobecny = jedyna bramka). Gate-evasion, nie RCE.
+  **Fix:** `git diff -z … | while IFS= read -r -d '' f` + `set -f` (noglob);
+  test regresyjny z plikiem o nazwie ze spacją zawierającym `api_key="AKIA…"`
+  → pre-push exit≠0.
+- **[P1] Brak dependency bota.** Zero dependabot/renovate → pinowane akcje i
+  crates/pip nie dostają aktualizacji (`ci-cd.md` §2-3: bot z cooldownem
+  3–7 dni, security bez cooldownu). Włączyć ekosystemy: cargo (guest+gui),
+  github-actions, pip (host). (DEC-META-005 odrzucała kopiowanie
+  `renovate.json` WinAppsów — nie posiadanie własnego bota.)
+- **[P2, ta sama fala] Top-level `permissions:` w `ci.yml` i
+  `compat-matrix.yml`** (zizmor excessive-permissions ×10; security/release
+  już mają) + `persist-credentials: false` na checkoutach (artipacked ×17).
 
 ### Display & forwarding
 - **RAIL window icons — native high-res Windows icons on Linux windows.**
@@ -433,6 +487,35 @@ wykrywał/logował/notyfikował.
 ---
 
 ## P2
+
+### Porządkowe z audytu 2026-07-12
+- **[P2] `SECURITY.md`** — repo publiczne bez kanału disclosure (skill §12).
+  Krótki plik: kanał zgłoszeń, wspierane wersje (pre-release: tylko `main`),
+  kto triage'uje. Publikacja = decyzja właściciela (public-facing).
+- **[P2] `status.md` kłamie o branchach.** `feat/resilience-logging` i Etap A
+  `feat/fs-drive-letter` opisane „NIE merged", a ich kod JEST w main
+  (`rail_supervisor.py` @ `0f31d52`, `drive_map.py` @ `688b2a7`). Odświeżyć
+  sekcje; przy okazji skasować ~19 stale gałęzi na origin (maj–czerwiec,
+  zmergowane) — po weryfikacji `git branch -r --no-merged`.
+- **[P2] Wiszące referencje do `handoff.md`** w backlog.md/status.md — plik
+  nie jest trackowany (lokalny na boxie); plany §2.7/§2.8 przenieść do
+  `.claude/task-briefs/` lub `history/`, referencje poprawić.
+- **[P2] Host bez lockfile'a Pythona** — CI i box resolvują zależności świeżo
+  (`pip install -e`); `ci-cd.md` §3 chce zamrożonego locka. Decyzja
+  kierunkowa: uv (`uv.lock` + `--locked` w CI) vs pip-tools.
+- **[P2] `libvirt_call` na współdzielonym default executorze**
+  (`libvirt_ctl/aio.py:29` — Security Review 2026-07-12, NOTE) — dedykowany
+  `ThreadPoolExecutor` + test saturacji puli (N>pool_size zawieszonych
+  wywołań nie głodzi innych `run_in_executor`).
+- **[P2] `zizmor` nieobecny lokalnie i w CI** — zainstalować na boxie (audyt
+  statyczny; dziś odpalony jednorazowo przez `uvx`) i rozważyć job w
+  `security.yml`.
+- **[NOTE] pre-commit bumpuje timestampy `architecture.md`/`ignorefiles.md`
+  przy każdym commicie** — toolkit 2026-07-11 (NEW-PROJECT §8.2) uznaje
+  timestamp-bump za kłamiący sygnał świeżości (git log wystarcza). Świadoma
+  decyzja z maja (opcja b) — utrzymać albo wyłączyć: właściciel.
+- **[NOTE] SHA w starych wpisach audit-log nie rozwiązują się** po rewrite
+  historii 2026-07-07 (np. `13df5d1` z wpisu 07-06) — historyczne, bez akcji.
 
 ### Display
 - **Per-frame display latency benchmark.** Add do microbench harness:

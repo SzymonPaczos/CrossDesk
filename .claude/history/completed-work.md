@@ -15,7 +15,7 @@ Per-task plik raportu sesji — `.claude/history/YYYY-MM-DD-temat.md`.
   CI fork gate, stale advisory, uninstall dir single-source, docs sweep), 3
   parked with triggers (C-1 PKGBUILD pin, C-2 marker-gated live-libvirt test,
   C-3 coordinator offload), 1 declined (D-1 historical i18n commit subjects).
-  Plan: [remediation-2026-07-07.md](../remediation-2026-07-07.md).
+  Plan: [2026-07-07-remediation.md](2026-07-07-remediation.md).
 - **2026-05-20** — Senior engineering audit (Slop Score 27/100). 14 hot
   issues + fix plan. Plik: [2026-05-20-audit-senior.md](2026-05-20-audit-senior.md) +
   [2026-05-20-audit-fix-plan.md](2026-05-20-audit-fix-plan.md).

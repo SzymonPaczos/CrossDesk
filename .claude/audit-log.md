@@ -2,6 +2,148 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-07-12
+
+**Git:** `7b66676` on `chore/toolkit-adoption`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 126 files)
+- pytest collected: 1040
+- bandit medium/high: 0
+- servicer direct blocking libvirt/fs calls (want 0): 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 16
+- gui cargo-deny issues: 2
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf lint findings: 0
+- buf format diff lines: 0
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint warnings: 0
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 233
+- #[test] annotations (rust): 84
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-12 (0d ago)
+- META decisions (status: aktywna): 8
+- ADR DEC-NNNN total: 17
+
+**Security**
+
+- gitleaks worktree findings: 0
+
+**Cadence**
+
+- previous audit: 2026-07-05 (7d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Warstwa głęboka (agent, 2026-07-12)
+
+Pierwszy audyt po adopcji fali toolkitu 2026-07-11 (DEC-META-008). Wykonany na
+macOS dev-box — live-checki boxa Linux+KVM (real libvirt, VirtioFS, perf)
+niedostępne, więc warstwa statyczna jest host-side-only (co i tak pokrywa cały
+stack: Python/Rust/proto/QML/sec). Deep-layer pełna: Security Reviewer +
+Red Team w niezależnych, read-only kontekstach z master-definicji.
+
+```text
+AUDITED_REVISION: 7b6667681780bf014737039bbe6bb4b33272a033
+DIFF_RANGE_OR_SCOPE: f6a8574..HEAD (poprzedni udokumentowany audyt 2026-07-07;
+  wpis „2026-07-06" nagłówkuje SHA 13df5d1 nierozwiązywalny po rewrite historii
+  2026-07-07 — patrz NOTE niżej). 62 pliki: kod prod = host/ Python + CI/hooks/
+  docs, zero zmian guest/ Rust.
+PREVIOUS_AUDIT: 2026-07-06 (audit.sh) / deep-layer 2026-07-07
+TOOLS: audit.sh (ruff 0 / mypy --strict 0 across 126 / pytest 1040 collected /
+  bandit med+high 0 / cargo check+clippy 0 / buf 0 / qmllint 0 / gitleaks
+  worktree 0); zizmor (uvx, 86 findings: 42 High / 26 Med — supply-chain
+  workflowów); semgrep dostępny lokalnie; agent Security Reviewer + Red Team.
+EXCLUSIONS_OR_NA: live libvirt/VirtioFS/perf/suspend (box-gated, nie ten mac);
+  zizmor niezainstalowany na stałe (odpalony przez uvx jednorazowo).
+THREAT_MODEL_VERSION: docs/THREAT_MODEL.md @ HEAD (bez zmian w oknie).
+SECURITY_REVIEW: PASS (1× NOTE — libvirt_call default executor; brak
+  CRITICAL/HIGH/MEDIUM). Zmiany kodu w oknie = wyłącznie hardening obronny
+  (deadline libvirt, walidacja guest-input na granicy WindowIconStore, sekrety
+  born-0600, redakcja `/p:`, pwn-request guard w ci.yml).
+RED_TEAM: FINDINGS (1× HIGH: mutowalne tagi third-party w ścieżce release/sign
+  → podpisany malware do userów, latentne do 1. release; 1× LOW: pre-push
+  secret-gate bypass przez word-splitting). Guard self-hosted KVM (4ad3d21)
+  potwierdzony szczelny; zero pull_request_target; brak expression injection
+  z tekstu PR; brak cache/reusable-workflow surface.
+BACKLOG_WRITE: recorded — P1 „CI / supply chain 2026-07-12" (security.yml
+  manual-only vs AGENTS.md claim, SHA-pinning+Red-Team-HIGH, dependency bot,
+  pre-push word-split bypass), P2 (SECURITY.md, status.md branch-drift, handoff
+  refs, python lockfile, libvirt_call executor, zizmor, timestamp-bump NOTE);
+  needs-owner §8 (AGENTS.md claim + workflow-wave sign-off) + 5 pkt DEC-META-008.
+```
+
+**Zgodność z decyzjami: CZYSTA.** No-Docker (brak Dockerfile/compose);
+No-polling (0 nowych `while True` w oknie; DEC-META-006 `_tail_file` jedyny
+wyjątek); proto nietknięte; seam libvirt szczelny (`import libvirt` tylko w
+`libvirt_ctl/real.py`); brak leaf-certów w git (`infra/certs/` = tylko
+`generate_mtls.sh`); brak atrybucji AI od rewrite'u 2026-07-07 (D-006 trzyma).
+DEC-META-008 (ta adopcja) spójny — nowe rule-files dolinkowane, hooki
+przetestowane, role audytowe skonkretyzowane.
+
+**Slop / dead-code:** bez nowych. Świadome `🚧 mock` / Phase-deferred stuby
+udokumentowane w `ignorefiles.md` + `status.md` (drive_map, iso_downloader
+ScrapeBackend, recovery/, catalog ratings, fs-mount mocks) — nadal uzasadnione.
+
+**Drift:** `status.md` opisuje `feat/resilience-logging` i Etap A
+`feat/fs-drive-letter` jako „NIE merged", a kod JEST w main (`rail_supervisor.py`
+@ `0f31d52`, `drive_map.py` @ `688b2a7`) → P2. `AGENTS.md` security-sweep claim
+rozjeżdża się z manual-only `security.yml` → needs-owner §8.
+
+#### P0 — brak
+
+#### P1 (4 grupy → backlog „CI / supply chain 2026-07-12")
+1. **[Red Team HIGH]** mutowalne tagi third-party w release/sign (podpisany
+   malware; latentne do 1. tagowanego release).
+2. **[SEC/docs]** `security.yml` manual-only, AGENTS.md twierdzi „always runs".
+3. **[supply-chain]** brak SHA-pinu third-party (zizmor 42 High) + brak
+   dependency bota.
+4. **[Red Team LOW]** pre-push secret-gate word-splitting bypass.
+
+#### P2 (porządkowe → backlog + status.md refresh)
+SECURITY.md (repo publiczne bez disclosure); status.md branch-drift; wiszące
+`handoff.md` refs; host bez python-lockfile; `libvirt_call` współdzielony
+executor (NOTE Security Review); zizmor nie w CI; top-level `permissions:` +
+`persist-credentials:false` (zizmor Med).
+
+#### NOTE
+- pre-commit bumpuje `Last Updated:` w architecture/ignorefiles — toolkit
+  2026-07-11 uznaje to za kłamiący sygnał świeżości; świadoma decyzja opcja(b)
+  z maja, do potwierdzenia.
+- Stare SHA w audit-log (np. `13df5d1`) nie rozwiązują się po rewrite historii
+  2026-07-07 — historyczne, bez akcji.
+
+**Skille/MCP (§5+§7):** `weekly-audit` zaktualizowany do mastera 2026-07-11 w
+ramach TEJ adopcji; role `security-reviewer`/`red-team` skopiowane. Brak
+`.mcp.json` (bez zmian). Dalsza synchronizacja masterów = osobny Builder-commit
+(Krok 5 skilla), nie część tego read-only audytu.
+
+---
+
 ## Audyt 2026-07-06
 
 **Git:** `13df5d1` on `main`

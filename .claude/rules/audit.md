@@ -14,6 +14,16 @@ Audyt **nie naprawia nic sam.** Właściciel decyduje.
    sekcję `## Audyt YYYY-MM-DD` na górę `.claude/audit-log.md`.
 2. **Głęboka** — agent ocenia (~20-40 min), zgodnie z procedurą poniżej.
 
+> **Od 2026-07-12 (DEC-META-008):** procedura kanoniczna to skill
+> `.claude/skills/weekly-audit/SKILL.md` (master toolkitu 2026-07-11).
+> Dodaje: **Krok 0** (SAST + linter workflowów + Security Reviewer z
+> `.claude/agents/security-reviewer.md` w niezależnym kontekście; Red
+> Team miesięcznie / risk-triggered), punkty głębokie **8–13** (gate'y,
+> supply chain, delivery, provenance zmian, vulnerability response,
+> jedna derywacja stanu) i **obowiązkowy nagłówek raportu**
+> (AUDITED_REVISION / TOOLS / SECURITY_REVIEW / …). Sekcje 1–8 poniżej
+> pozostają CrossDesk-owym uszczegółowieniem punktów 1–7 skilla.
+
 ## Procedura (warstwa głęboka)
 
 ### 1. Bezpieczeństwo

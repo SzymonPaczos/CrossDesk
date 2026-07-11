@@ -1,0 +1,5 @@
+<type>(<scope>): <result>
+
+Intent: <what and why; normalized from the accepted conversation/task>
+Task-Ref: <TASK-ID | issue/PR URL | direct-conversation YYYY-MM-DD>
+Gates: <commands/check URLs + pass/fail>

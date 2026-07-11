@@ -22,6 +22,38 @@ resumes. Resolving one = either you author the boundary edit, or you reply
 - [x] **Semver label = `0.1.0-alpha`.** Owner confirmed (2026-06-29). Apply
   when the release/versioning surfaces are touched.
 
+## Z adopcji toolkitu 2026-07-12 — do decyzji (DEC-META-008)
+
+Adopcja fali toolkitu 2026-07-11 wykonana (polecenie właściciela
+2026-07-12; szczegóły w `rules/decisions.md` DEC-META-008). Cztery
+punkty wymagają Twojego podpisu:
+
+- [ ] **D-007 — profil CI: potwierdź hybrydowy.** Stan faktyczny: hosted
+  GitHub Actions (repo publiczne — `ci.yml`, `security.yml`, `release.yml`)
+  + local-first mirror (pre-push lustrzy pipeline). *Rec:* potwierdź
+  hybrydę jako formalną odpowiedź D-007; dopiszę status do DEC-META-008.
+- [ ] **Ratchet trybu raportowego → blokada.** Dwa nowe gate'y działają
+  jako WARN: (a) trailery `Intent`/`Task-Ref`/`Gates` w `commit-msg`,
+  (b) preflight świeżości audytu (>7 dni) w `pre-push`. Konwencja
+  (`change-provenance.md` §5, `rules-as-gates.md` §3) przewiduje 1–2
+  tygodnie trybu raportowego, potem decyzja o blokadzie. *Zapytam
+  ponownie ~2026-07-26.*
+- [ ] **Polityka atrybucji AI (kadencja miesięczna, pierwsza: 2026-07-12).**
+  Zaktualizowany skill audytu każe raz w miesiącu ponawiać pytanie: czy
+  chcesz włączyć oznaczanie udziału AI w commitach
+  (`AI-Contribution: none|assisted|generated`)? Dziś obowiązuje D-006 =
+  **bez atrybucji** (spójne z rewrite'em historii 2026-07-07). Odpowiedź
+  (także „nie zmieniamy") zapiszę w `rules/decisions.md` z datą.
+- [ ] **Hook `UserPromptSubmit` maksymalizacji promptów (§9.3).** *Rec:*
+  NIE wdrażać — wstrzykiwane co prompt przypomnienie „czekaj na zielone
+  światło" koliduje z autonomiczną pętlą (`loop-spec.md`) i trybem
+  „merge po zielonych bramkach". Jeśli wolisz mieć — powiedz, dodam do
+  `settings.json`.
+- [ ] **`WORK_LOG.md` — archiwizacja.** DEC-META-003 (plik w roocie)
+  oznaczona jako wycofana (ceremonia umarła 2026-07-05). *Rec:*
+  `git mv WORK_LOG.md .claude/history/2026-07-05-work-log.md` — czysty
+  root, git pamięta. Powiedz „przenieś", a wykonam.
+
 ## Still open (boundary-file edits / owner calls)
 
 - [ ] **Proto edit — app-discovery RPC.** `ListDiscoveredApps` /
@@ -297,7 +329,7 @@ PROPOSED:
 
 - [x] **Audit-2026-07-07 boundary drafts B-1 + B-2 — APPLIED 2026-07-07**
   (owner signed "apply" interactively during remediation planning; drafts
-  lived in `.claude/remediation-2026-07-07.md` §3, never parked here).
+  lived in `.claude/history/2026-07-07-remediation.md` §3, never parked here).
   B-1: `AGENTS.md:102` "22 subpackages" → **20** (measured, `__pycache__`
   excluded). B-2: `docs/REQUIREMENTS.md` gained **F4.4** (`transport.
   bind_kind`), **F4.5** (`libvirt.backend`), **F6.4** (`shared_folder_*`,

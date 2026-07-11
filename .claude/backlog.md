@@ -23,6 +23,17 @@ VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT
 
 ---
 
+## Inbox — zapisane automatycznie, do sklasyfikowania
+
+<!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,
+gdy priorytet jest niejasny (reguła „zapisz najpierw" w rules/general.md,
+adopcja 2026-07-12). Praca v0.1.0 → PLAN.md, nie tu. Najpierw deduplikuj.
+Zapis ≠ zgoda na implementację. Pusto = nic nieoczekującego. -->
+
+_(pusto)_
+
+---
+
 ## P0
 
 ### A7-live install-path findings (żywa reinstalacja + adversarial audyt 11-agent, 2026-07-01)

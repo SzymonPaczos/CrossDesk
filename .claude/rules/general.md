@@ -41,13 +41,25 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
 ## Communication & work
 
 - **Conventional Commits** (`feat:`, `fix:`, `chore:`, `refactor:`,
-  `docs:`, `test:`, `style:`). The pre-push hook does not enforce
-  format, but reviewers do.
+  `docs:`, `test:`, `style:`). Enforced (blocking on subject format)
+  by the `commit-msg` hook since 2026-07-12.
+- **Change provenance** (adopted 2026-07-12, DEC-META-008): a
+  non-trivial commit's body carries `Intent`, `Task-Ref` and `Gates`
+  trailers per [`change-provenance.md`](change-provenance.md); template
+  in `.gitmessage`. Currently report-mode — the `commit-msg` hook WARNs
+  on missing trailers, does not block. No AI attribution
+  (`Co-Authored-By` / `AI-Contribution`) per toolkit D-006.
+- **Write it down first, then continue.** Any non-trivial task
+  discovered outside the current scope goes onto the board
+  IMMEDIATELY — v0.1.0 work to [`PLAN.md`](../../PLAN.md), post-MVP to
+  [`backlog.md`](../backlog.md) (unclear priority → its `Inbox`
+  section) — without waiting for the owner to ask. Deduplicate first.
+  Recording a task is not permission to start it.
 - **Terse engineering tone.** Diff > narrative. Avoid trailing
   summaries when the user already sees the diff.
 - **Stage long tasks.** Break a multi-hour task into 3–5 stages,
-  `/clear` between stages, persist intermediate state to
-  `WORK_LOG.md` notes or `.claude/backlog.md` items.
+  `/clear` between stages, persist intermediate state to `PLAN.md` /
+  `.claude/backlog.md` items (WORK_LOG.md ceremony retired 2026-07-05).
 - **Language: English.** Code, comments, commit messages, and
   in-repo docs are English. UI strings ship as English plus Polish
   via `docs/I18N.md` (gettext + Qt `tr`).

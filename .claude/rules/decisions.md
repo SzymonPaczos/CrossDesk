@@ -49,7 +49,8 @@ proto, transport, packaging, GPU passthrough itd.). Ten plik
 
 ## DEC-META-003 — `WORK_LOG.md` pozostaje w roocie
 
-**Data:** 2026-05-23 · **Status:** aktywna
+**Data:** 2026-05-23 · **Status:** wycofana (2026-07-12; bezprzedmiotowa
+od 2026-07-05)
 
 `WORK_LOG.md` (koordynacja multi-agent START/END) pozostaje w roocie
 repo, nie jest przenoszony do `.claude/active-work.md` ani do
@@ -61,8 +62,13 @@ plik pushowany bezpośrednio do `main` (jedyny wyjątek od no-direct-main).
 Przeniesienie wymusiłoby zmianę protocolu i conflict resolution dla
 agentów już używających ścieżki w roocie. Trade-off zaakceptowany.
 
-**Jak stosować:** Audyt nie raportuje WORK_LOG.md jako odstępstwa
-§9.9 (już udokumentowane tutaj).
+**Wycofanie:** właściciel wycofał całą ceremonię WORK_LOG START/END
+2026-07-05 (solo owner + jeden agent; zob. `rules/general.md`
+"Coordination protocol"), więc uzasadnienie (workflow steps 6/13)
+przestało istnieć. Plik zostaje w roocie jako zamrożony artefakt;
+ewentualna archiwizacja do `history/` = decyzja właściciela
+(zaparkowane w `needs-owner.md`). Audyt nadal nie raportuje samego
+pliku jako odstępstwa §9.9.
 
 ## DEC-META-004 — Inline `FOLLOWUPS:NNN` w kodzie zostają niezmienione
 
@@ -151,3 +157,55 @@ traktuje jako out-of-scope.
 
 **Jak stosować:** Audyt nie raportuje whole-`$HOME` jako naruszenia
 DEC-META-005; zgodność sprawdza przeciw DEC-0018 + DEC-META-007.
+
+## DEC-META-008 — Adopcja fali toolkitu 2026-07-11 (CI/CD, provenance, gate'y, role audytowe)
+
+**Data:** 2026-07-12 · **Status:** aktywna
+
+Re-adopcja delty względem `claude-toolkit` (stan `main` 2026-07-11,
+`ADOPT.md`; polecenie właściciela 2026-07-12). Zaadoptowane:
+
+- **Konwencje → `.claude/rules/`** (kopie masterów): `ci-cd.md`
+  (baseline CI/CD + supply chain), `rules-as-gates.md`,
+  `change-provenance.md`. Dolinkowane w load-liście `CLAUDE.md`.
+- **Provenance commitów:** `.gitmessage` (template) + hook
+  `.githooks/commit-msg` — subject Conventional Commits **blokująco**,
+  trailery `Intent`/`Task-Ref`/`Gates` w **trybie raportowym** (WARN;
+  ratchet do blokady = decyzja właściciela, zaparkowana). **Bez
+  atrybucji AI** (D-006 toolkitu — spójne z rewrite'em historii
+  CrossDesk 2026-07-07 i `settings.json`).
+- **Role audytowe → `.claude/agents/`:** `security-reviewer.md`
+  (skonkretyzowany sekcją CrossDesk) + `red-team.md`; wymagane przez
+  zaktualizowany skill `weekly-audit` (Security Review min. co 7 dni,
+  Red Team miesięcznie / risk-triggered).
+- **Skill `weekly-audit`** zaktualizowany do mastera 2026-07-11 (Krok 0
+  SAST/workflowy, punkty głębokie 8–13, obowiązkowy nagłówek raportu,
+  Krok 5 aktualizacja masterów).
+- **`multi-agent-delivery.md`** skopiowane do `rules/` jako referencja
+  dla ról audytowych, ale **pełny kontrakt zespołowy NIEaktywny** —
+  projekt = solo owner + jeden agent (spójnie z wycofaniem WORK_LOG
+  2026-07-05). Aktywacja pełnego zespołu = decyzja właściciela.
+- **Preflight świeżości audytu** w `.githooks/pre-push` — tryb
+  raportowy (WARN gdy ostatni `## Audyt` >7 dni). Zgodne z etapowaniem
+  `rules-as-gates.md` §3.
+
+**Świadomie NIE zaadoptowane:**
+
+- `production-operations.md` + `progressive-delivery.md` +
+  `delivery-log.md` — projekt nie ma produkcji/serwisu (desktop app,
+  pre-release). Wrócić przy pracach nad hostowanym repo pakietów
+  (deb/rpm) lub pierwszym publicznym release.
+- Hook `UserPromptSubmit` maksymalizacji promptów (§9.3) — koliduje z
+  autonomiczną pętlą (`loop-spec.md`); zaparkowane w `needs-owner.md`.
+- `active-work.md` / runtime ledger — bez równoległych Builderów zbędny;
+  reguła branch-per-agent w `general.md` pokrywa rzadkie przypadki.
+
+**D-007 (profil CI):** de facto **hybrydowy** — hosted GitHub Actions
+(repo publiczne: `ci.yml`, `security.yml`, `release.yml`) + local-first
+mirror (pre-push lustrzy pipeline). Formalne potwierdzenie właściciela
+zaparkowane w `needs-owner.md`; po podpisie dopisać tu status.
+
+**Jak stosować:** commit nietrywialnej zmiany ma trailery provenance;
+audyt przechodzi rozszerzoną checklistę skilla (w tym gate'y, supply
+chain, provenance); Security Reviewer uruchamiany przy każdym audycie
+z `.claude/agents/security-reviewer.md` w niezależnym kontekście.

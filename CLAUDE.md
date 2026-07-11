@@ -20,6 +20,14 @@ load.
   głęboka warstwa; P0/P1/P2 definitions).
 - @.claude/rules/decisions.md — META-decyzje (proces / workflow /
   layout); ADR `DEC-NNNN` żyją w `docs/DECISIONS.md`.
+- @.claude/rules/ci-cd.md — baseline CI/CD i supply chain (SHA-pinning,
+  permissions, lockfile, release provenance). Kopia z claude-toolkit
+  (adopcja 2026-07-12, DEC-META-008).
+- @.claude/rules/rules-as-gates.md — zamiana powtarzalnie łamanych reguł
+  w mechaniczne gate'y (report-mode → blokada).
+- @.claude/rules/change-provenance.md — ślad intencji w commicie
+  (`Intent` / `Task-Ref` / `Gates`, tryb raportowy WARN); bez atrybucji
+  AI (D-006). Szablon: `.gitmessage`.
 - @.claude/architecture.md — stack snapshot (timestamp bumped by
   pre-commit hook so it lands in the commit, not as drift).
 - @.claude/ignorefiles.md — dead code / generated artifacts manifest.
@@ -43,12 +51,19 @@ Sprawdź `.claude/audit-log.md` przy starcie sesji — jeśli ostatni wpis
 Hooks live under `.githooks/` and need activation after `git clone`:
 
 ```sh
-chmod +x .githooks/pre-commit .githooks/pre-push .githooks/post-commit
+chmod +x .githooks/pre-commit .githooks/pre-push .githooks/post-commit .githooks/commit-msg
 git config core.hooksPath .githooks
+git config commit.template .gitmessage
 ```
 
-The `core.hooksPath` setting is per-clone (lives in `.git/config`,
-not tracked) — it must be re-run after every fresh clone.
+The `core.hooksPath` and `commit.template` settings are per-clone (they
+live in `.git/config`, not tracked) — re-run after every fresh clone.
+
+`.claude/rules/multi-agent-delivery.md` oraz `.claude/agents/` (Security
+Reviewer, Red Team) to kopie masterów z toolkitu używane przez
+cotygodniowy audyt — pełny kontrakt zespołu multi-agent jest NIEaktywny
+(solo owner + jeden agent, DEC-META-008); nie ładuj ich do sesji poza
+audytem.
 
 ## Why this layout
 

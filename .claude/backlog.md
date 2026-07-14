@@ -200,14 +200,16 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
   **Trigger:** przed PIERWSZYM tagowanym release (kryt. #12) — dziś release nie
   odpalał, więc latentne. First-party `actions/*`/`github/*` @vN = świadoma
   konwencja projektu (osobna decyzja właściciela).
-- **[P1, Red Team LOW 2026-07-12] pre-push secret-gate bypass przez
-  word-splitting.** `.githooks/pre-push` iteruje `for f in $CHANGED_FILES`
-  (niecytowane) — nazwa pliku ze spacją (`secret .py`) lub globem rozpada się na
-  tokeny, `[ -f "$f" ]` je odrzuca → plik z realnym hardcoded secretem NIE jest
-  skanowany (gdy gitleaks nieobecny = jedyna bramka). Gate-evasion, nie RCE.
-  **Fix:** `git diff -z … | while IFS= read -r -d '' f` + `set -f` (noglob);
-  test regresyjny z plikiem o nazwie ze spacją zawierającym `api_key="AKIA…"`
-  → pre-push exit≠0.
+- **✅ [P1, Red Team LOW 2026-07-12] pre-push secret-gate bypass — ZROBIONE
+  `1b9c6f1` (2026-07-14).** `.githooks/pre-push` iterował `for f in $CHANGED_FILES`
+  (niecytowane) → nazwa ze spacją rozpadała się na tokeny, `[ -f "$f" ]` je odrzucał,
+  plik z realnym sekretem **nigdy nie był skanowany** (gdy gitleaks nieobecny = jedyna
+  bramka). Potwierdzone empirycznie: `git diff --name-only` wypisuje ścieżkę ze spacją
+  BEZ cudzysłowów. **Fix:** diff czytany NUL-delimited do tablicy + helper
+  `changed_match`; ten sam split dotykał pętli console.log/print/qmllint oraz
+  akumulatorów `SECRET_HITS`/`QML_HITS` → też tablice. 3 testy regresyjne
+  (`host/tests/test_pre_push_hook.py`), **sentinel-verified**: spaced-filename test
+  pada na starym hooku (skaner przechodzi obok pliku), przechodzi na nowym.
 - **[P1] Brak dependency bota.** Zero dependabot/renovate → pinowane akcje i
   crates/pip nie dostają aktualizacji (`ci-cd.md` §2-3: bot z cooldownem
   3–7 dni, security bez cooldownu). Włączyć ekosystemy: cargo (guest+gui),

@@ -191,6 +191,28 @@ if changed_match '^host/src/crossdesk_host/cli/|^gui/.*\.(qml|rs)$'; then
     fi
 fi
 
+# --- 0F. Workflows: zizmor (mirrors security.yml's `workflows` job) -------
+# Local mirror of the CI gate. Without it, a bad workflow only surfaces after a
+# push — which is exactly the local-vs-CI divergence that left main red for a
+# week (2fdff19). Not a silent skip when the tool is missing: say so loudly.
+if changed_match '^\.github/'; then
+    if command -v zizmor >/dev/null 2>&1; then
+        echo "🔬 zizmor (workflow static analysis) ..."
+        zizmor --no-progress --min-severity=low "$REPO_ROOT/.github/workflows/" || {
+            echo "❌ zizmor found workflow issues at low severity or above."
+            echo "   Policy lives in .github/zizmor.yml (third-party actions must"
+            echo "   be pinned to a full commit SHA)."
+            exit 1
+        }
+    else
+        echo "⚠️  WARN: .github/** changed but zizmor is not installed — the"
+        echo "    workflow gate will only run in CI. Install:"
+        echo "    python3 -m venv ~/.local/share/zizmor-venv &&"
+        echo "    ~/.local/share/zizmor-venv/bin/pip install zizmor &&"
+        echo "    ln -sf ~/.local/share/zizmor-venv/bin/zizmor ~/.local/bin/zizmor"
+    fi
+fi
+
 # === 1. Hardcoded secrets (HARD FAIL) =====================================
 echo "🔐 hardcoded secrets ..."
 SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'

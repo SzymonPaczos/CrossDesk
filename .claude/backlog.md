@@ -36,6 +36,40 @@ _(pusto)_
 
 ## P0
 
+### ⛔ BRAK DETEKTORA ŚMIERCI VM — blokuje kryt. #6 (live-verify 2026-07-14)
+**Zabity VM nie jest w ogóle zauważany przez daemona.** Odkryte przy przejeździe
+Fazy B na żywej domenie: `virsh destroy windows-guest` → 60 s obserwacji → **zero**
+linii w logu daemona, zero eskalacji FSM, domena leży wyłączona. Root cause
+zweryfikowany (nie zgadnięty):
+
+- **FSM heartbeatu tyka z `request_iterator`** strumienia gRPC
+  (`ipc/heartbeat.py`). Śmierć VM zamyka strumień → **FSM przestaje tykać i nigdy
+  nie dojdzie do HARD_DESTROY**. FSM eskaluje tylko gdy gość *żyje, ale jest
+  niezdrowy* — nie gdy zniknie.
+- **`daemon.py` nie wpina żadnego źródła zdarzeń domeny** (grep po
+  `DomainEventReactor|LibvirtDomainEventSource|domain_events|event_source`: 0 trafień).
+- **`LibvirtDomainEventSource` NIE ISTNIEJE** — `lifecycle/domain_events.py` ma tylko
+  `DomainEventReactor` + `MockDomainEventSource`. Realnego źródła nigdy nie napisano.
+
+**Co trzeba zrobić:** realne `LibvirtDomainEventSource` (libvirt event loop →
+`VIR_DOMAIN_EVENT_STOPPED`) wpięte przez `DomainEventReactor` do daemona, z akcją
+recovery.
+
+**Pułapka projektowa (ważna):** `hard_destroy()` robi `destroy()` **+** `create()`,
+a `destroy()` na **martwej** domenie rzuca `RuntimeError` (`real.py`). Recovery po
+zabiciu VM musi wołać **samo `create()`** — naiwne wpięcie `hard_destroy` do
+detektora **wywali się**.
+
+**Budżet:** zmierzony reconnect po `create()` = **105 s** przy budżecie #6 = 90 s.
+Nawet z działającym wyzwalaczem kryterium nie przechodzi. Kandydat na przyczynę:
+dysk SATA + NIC e1000e zamiast virtio (jest osobna pozycja „virtio perf").
+Alternatywa: właściciel re-definiuje budżet.
+
+**Kontekst:** naprawa P0 `hard_destroy` steady-state (data-loss) jest **ZAMKNIĘTA
+i live-verified** — recovery bootuje dysk, nośniki wyjęte, zero reinstalacji. Była
+**konieczna, ale niewystarczająca** dla #6.
+
+
 ### A7-live install-path findings (żywa reinstalacja + adversarial audyt 11-agent, 2026-07-01)
 Czysta reinstalacja na żywym KVM boxie **potwierdziła A7-live core**: świeży
 `crossdesk install` → Windows unattended → agent NT-service **auto-łączy się w

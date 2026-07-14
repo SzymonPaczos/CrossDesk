@@ -25,6 +25,7 @@ from crossdesk_host.ipc.management import ManagementServiceServicer, MgmtState
 from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 from crossdesk_host.lifecycle.notifications import RecordingNotifier
+from crossdesk_host.observability.metrics import MetricNames, Registry
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2
 from crossdesk_host.watchdog import HeartbeatFsm
 
@@ -383,3 +384,62 @@ async def test_launch_threads_workdir_into_argv(
     assert isinstance(argv, list)
     program = next(a for a in argv if a.startswith("/app:"))
     assert "workdir:Z:\\" in program
+
+
+# ---------------------------------------------------------------------------
+# Launch latency (MVP criterion #2: native window <= 3 s p50)
+# ---------------------------------------------------------------------------
+
+
+def _metered_servicer(registry: Registry) -> ManagementServiceServicer:
+    return ManagementServiceServicer(
+        MgmtState(fsm=HeartbeatFsm()),
+        LibvirtControllerMock(),
+        freerdp=MockFreeRDPInvocation(),
+        verify_coordinator=VerifyCoordinator(),
+        metrics_registry=registry,
+    )
+
+
+async def test_successful_launch_records_its_duration(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock
+) -> None:
+    """N1.1 is a p50, so the launch path has to feed a histogram.
+
+    `launch_duration_seconds` existed in MetricNames with nothing writing to it,
+    so the budget was unmeasurable through the product's own instrumentation --
+    the same gap heartbeat RTT had.
+    """
+    _patch_app_and_creds(monkeypatch)
+    registry = Registry()
+    servicer = _metered_servicer(registry)
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
+        return RailSession(pid=42)
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await servicer.Launch(mgmt_pb2.LaunchRequest(app_id="notepad"), context)
+    assert resp.ok
+
+    hist = registry.snapshot()["histograms"][MetricNames.LAUNCH_DURATION_SECONDS]
+    assert hist["count"] == 1
+    assert hist["p50"] >= 0.0
+
+
+async def test_a_rejected_launch_is_not_a_slow_launch(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock
+) -> None:
+    """A failure must not enter the histogram.
+
+    An unknown app, a dead guest or bad credentials are errors, not latency.
+    Folding them in would corrupt the p50 the budget is stated against.
+    """
+    _patch_app_and_creds(monkeypatch, app=None)
+    registry = Registry()
+    servicer = _metered_servicer(registry)
+
+    resp = await servicer.Launch(mgmt_pb2.LaunchRequest(app_id="ghost"), context)
+    assert not resp.ok
+
+    assert MetricNames.LAUNCH_DURATION_SECONDS not in registry.snapshot()["histograms"]

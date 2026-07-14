@@ -54,7 +54,7 @@ from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.observability import child_span_scope
 from crossdesk_host.observability.log import get_logger
-from crossdesk_host.observability.metrics import REGISTRY, Registry
+from crossdesk_host.observability.metrics import REGISTRY, MetricNames, Registry
 from crossdesk_host.proto.crossdesk.v1 import mgmt_pb2, mgmt_pb2_grpc
 from crossdesk_host.watchdog import HeartbeatFsm, State
 
@@ -359,10 +359,34 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
                 app_id=request.app_id,
                 file_path=request.file_path,
             )
+            started_ns = time.monotonic_ns()
             try:
-                return await self._launch(request)
+                response = await self._launch(request)
             finally:
                 logger.info("rpc_end", method="Launch")
+            if response.ok:
+                # Successful launches only. A rejected launch (unknown app, dead
+                # guest, bad credentials) is an error, not a slow launch, and
+                # folding its latency in would corrupt the p50 this is read against.
+                #
+                # NOTE what this does and does not measure. It is the HOST-SIDE
+                # cost: resolve the app, gate on the credential check, spawn
+                # FreeRDP. Measured live it is ~7.5 ms p50 — roughly 0.3% of what
+                # the user actually waits for. The window appears ~2.7 s later,
+                # and that time is FreeRDP negotiating RDP + RAIL with the guest,
+                # entirely after this RPC has returned. So this metric tells you
+                # whether the *daemon* is slow; it is NOT criterion #2, which is
+                # end-to-end to a window on screen. Measuring that in-product means
+                # correlating the launch with the agent's RailWindowEvent CREATED
+                # — a follow-up, tracked in the backlog.
+                elapsed_s = (time.monotonic_ns() - started_ns) / 1e9
+                self.metrics_registry.histogram(
+                    MetricNames.LAUNCH_DURATION_SECONDS
+                ).observe(elapsed_s)
+                logger.info(
+                    "launch_duration", app_id=request.app_id, seconds=round(elapsed_s, 3)
+                )
+            return response
 
     async def _launch(self, request: mgmt_pb2.LaunchRequest) -> mgmt_pb2.LaunchResponse:
         """Resolve the app, gate on the guest credential check, and spawn

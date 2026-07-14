@@ -14,7 +14,7 @@ import pytest
 
 from crossdesk_host.cli import install_cmd
 from crossdesk_host.doctor.checks import CheckResult, Status
-from crossdesk_host.installer import credentials, state, tools_iso
+from crossdesk_host.installer import credentials, domain_xml, state, tools_iso
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock
 
 
@@ -50,9 +50,56 @@ def _isolate_freerdp_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     return cfg
 
 
+@pytest.fixture(autouse=True)
+def _isolate_ovmf(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Resolve the UEFI firmware from fixtures instead of the real filesystem.
+
+    create_libvirt_domain calls resolve_ovmf(), which probes the distro's OVMF
+    paths for real. Without this the pipeline tests only pass on a host that
+    happens to have the `ovmf` package installed: green on the dev box, red on a
+    bare runner. main's CI failed on exactly this for a week.
+    """
+    code = tmp_path / "OVMF_CODE.fd"
+    varsfile = tmp_path / "OVMF_VARS.fd"
+    code.write_bytes(b"CODE")
+    varsfile.write_bytes(b"VARS")
+    monkeypatch.setenv("CROSSDESK_OVMF_CODE", str(code))
+    monkeypatch.setenv("CROSSDESK_OVMF_VARS", str(varsfile))
+
+
 def _ok_doctor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(install_cmd, "run_all", lambda checks: [CheckResult("kvm", Status.OK)])
     monkeypatch.setattr(install_cmd, "has_failures", lambda results: False)
+
+
+def _arrange_full_pipeline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, state_file: Path) -> Path:
+    """Stage everything the full install pipeline reads, and return the ISO."""
+    _ok_doctor(monkeypatch)
+    # No real key-send sleep in the test.
+    monkeypatch.setattr(install_cmd, "_BOOT_KEY_INTERVAL_S", 0.0)
+    iso = tmp_path / "Win10.iso"
+    iso.write_bytes(b"fake-iso")
+    monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
+    monkeypatch.setattr(credentials, "load", lambda path=None: None)
+    # Point the tools-ISO inputs at fixtures so resolution is deterministic
+    # regardless of whether agent.exe has been built on this box.
+    for env, name in (
+        ("CROSSDESK_AGENT_EXE", "agent.exe"),
+        ("CROSSDESK_PUBLISHER_CA", "ca.crt"),
+        ("CROSSDESK_AUTOUNATTEND", "autounattend.xml"),
+    ):
+        f = tmp_path / name
+        f.write_bytes(b"x")
+        monkeypatch.setenv(env, str(f))
+
+    def fake_build(**kw: Path) -> Path:
+        kw["output_iso"].write_bytes(b"ISO")
+        return kw["output_iso"]
+
+    monkeypatch.setattr(tools_iso, "build_tools_iso", fake_build)
+    # Pre-create the disk so the qemu-img subprocess is skipped in the test.
+    (state_file.parent / "crossdesk-win.qcow2").write_bytes(b"qcow")
+    return iso
 
 
 def test_dry_run_marks_every_step_done(_state_in_tmp: Path) -> None:
@@ -82,31 +129,7 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     _state_in_tmp: Path,
     _mock_libvirt: LibvirtControllerMock,
 ) -> None:
-    _ok_doctor(monkeypatch)
-    # No real key-send sleep in the test.
-    monkeypatch.setattr(install_cmd, "_BOOT_KEY_INTERVAL_S", 0.0)
-    iso = tmp_path / "Win10.iso"
-    iso.write_bytes(b"fake-iso")
-    monkeypatch.setattr(credentials, "save", lambda creds, path=None: None)
-    monkeypatch.setattr(credentials, "load", lambda path=None: None)
-    # Point the tools-ISO inputs at fixtures so resolution is deterministic
-    # regardless of whether agent.exe has been built on this box.
-    for env, name in (
-        ("CROSSDESK_AGENT_EXE", "agent.exe"),
-        ("CROSSDESK_PUBLISHER_CA", "ca.crt"),
-        ("CROSSDESK_AUTOUNATTEND", "autounattend.xml"),
-    ):
-        f = tmp_path / name
-        f.write_bytes(b"x")
-        monkeypatch.setenv(env, str(f))
-
-    def fake_build(**kw: Path) -> Path:
-        kw["output_iso"].write_bytes(b"ISO")
-        return kw["output_iso"]
-
-    monkeypatch.setattr(tools_iso, "build_tools_iso", fake_build)
-    # Pre-create the disk so the qemu-img subprocess is skipped in the test.
-    (_state_in_tmp.parent / "crossdesk-win.qcow2").write_bytes(b"qcow")
+    iso = _arrange_full_pipeline(monkeypatch, tmp_path, _state_in_tmp)
 
     rc = install_cmd.run(_args(iso_path=iso))
 
@@ -121,6 +144,24 @@ def test_full_pipeline_with_iso_defines_and_starts_domain(
     # The boot-from-CD key burst fired (ENTER, one press per iteration) so a
     # fresh unattended install clears "Press any key to boot from CD or DVD".
     assert _mock_libvirt.hooks.sent_keys == [[install_cmd._KEY_ENTER]] * install_cmd._BOOT_KEY_PRESSES
+
+
+def test_full_pipeline_does_not_need_system_ovmf(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    _state_in_tmp: Path,
+) -> None:
+    """The pipeline must not depend on the host having OVMF installed.
+
+    Emptying the distro candidate lists simulates a bare CI runner, so firmware
+    resolution can only come from the env override the autouse fixture sets. Drop
+    that fixture and this test fails the way main's CI did for a week.
+    """
+    monkeypatch.setattr(domain_xml, "_OVMF_CODE_CANDIDATES", ())
+    monkeypatch.setattr(domain_xml, "_OVMF_VARS_CANDIDATES", ())
+    iso = _arrange_full_pipeline(monkeypatch, tmp_path, _state_in_tmp)
+
+    assert install_cmd.run(_args(iso_path=iso)) == 0
 
 
 def test_prepare_autounattend_substitutes_locale_and_password(tmp_path: Path) -> None:

@@ -120,10 +120,12 @@ drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflo
   redirect shell-foldera (leniwy). **POZOSTAJE:** GUI-verify Save dialogu
   (brak xdotool/scrot w sesji — doinstaluj lub user patrzy) + wybór triggera
   one-time (A: deklaratywny `HKCU\Network` przez autounattend / B: agent-svc
-  `CreateProcessAsUser`) + wiring provisioning. Pełny stan: `handoff.md` §2.7
-  „AKTUALIZACJA MECHANIZMU" + `status.md` A1. **Bez boundary files.**
+  `CreateProcessAsUser`) + wiring provisioning. Pełny stan:
+  [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md)
+  §2.7 „AKTUALIZACJA MECHANIZMU" + `status.md` A1. **Bez boundary files.**
 - **Etap B: VirtioFS jednego folderu jako trwały dysk `Z:`** (po becie).
-  Plan: `handoff.md` §2.8. Gated: smoke-test sterownika virtio-win VirtioFS
+  Plan: [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md)
+  §2.8. Gated: smoke-test sterownika virtio-win VirtioFS
   `[HW]` + weryfikacja vhost-user/memfd na `qemu:///session` + **ADR
   właściciela + THREAT_MODEL row** **`[user-approval]`**. Provider-swap pod
   tym samym `Z:` (redirect z Etapu A bez zmian); rdpdr zostaje fallbackiem.
@@ -429,7 +431,8 @@ Budgets w [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md) §N1.
   to 3 call sites via `SubprocessNotifier` interface compatibility.
 
 ### Resilience & observability (public-beta)
-Branch `feat/resilience-logging` (z `main`, NIE merged). Pełny stan:
+✅ **ZMERGOWANE do `main`** (`0f31d52` i dalsze) — zapis „NIE merged" był
+nieprawdą, poprawiony 2026-07-14. Pełny stan:
 [`status.md`](status.md) "Resilience & observability". Z audytu/diagnozy
 2026-06-12: gdy komponent zewnętrzny pada (FreeRDP itd.), host tego nie
 wykrywał/logował/notyfikował.
@@ -497,14 +500,21 @@ wykrywał/logował/notyfikował.
 - **[P2] `SECURITY.md`** — repo publiczne bez kanału disclosure (skill §12).
   Krótki plik: kanał zgłoszeń, wspierane wersje (pre-release: tylko `main`),
   kto triage'uje. Publikacja = decyzja właściciela (public-facing).
-- **[P2] `status.md` kłamie o branchach.** `feat/resilience-logging` i Etap A
-  `feat/fs-drive-letter` opisane „NIE merged", a ich kod JEST w main
-  (`rail_supervisor.py` @ `0f31d52`, `drive_map.py` @ `688b2a7`). Odświeżyć
-  sekcje; przy okazji skasować ~19 stale gałęzi na origin (maj–czerwiec,
-  zmergowane) — po weryfikacji `git branch -r --no-merged`.
-- **[P2] Wiszące referencje do `handoff.md`** w backlog.md/status.md — plik
-  nie jest trackowany (lokalny na boxie); plany §2.7/§2.8 przenieść do
-  `.claude/task-briefs/` lub `history/`, referencje poprawić.
+- **✅ [P2] `status.md` kłamał o branchach — POPRAWIONE 2026-07-14.** Trzy
+  gałęzie (`feat/resilience-logging`, `feat/fs-drive-letter`,
+  `feat/usability-shared-fs`) opisane jako „NIE merged" **są w `main`** —
+  zweryfikowane `git merge-base --is-ancestor`, nie na oko: `e15cf2b` (workdir),
+  `0f31d52` (rail_supervisor), `1986295`+`9afb465`+`688b2a7` (Etap A),
+  `configure_logging(log_file=)` w `observability/log.py`. Wszystkie zapisy
+  poprawione w `status.md` i tutaj.
+  **⏸ Zostaje (decyzja właściciela):** skasowanie 17 zmergowanych gałęzi na
+  `origin` — akcja na współdzielonym remote, nie robię jej sam. Patrz
+  `needs-owner.md`.
+- **✅ [P2] Wiszące referencje do `handoff.md` — NAPRAWIONE 2026-07-14.** Plik był
+  nietrackowanym scratchem sesji i wypadł z drzewa (`709363b`), zostawiając
+  martwe cytaty §2.7/§2.8. Treść **odzyskana z historii** (`7f656fc`) do
+  [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md);
+  wszystkie referencje w `status.md` i `backlog.md` przepięte.
 - **[P2] Host bez lockfile'a Pythona** — CI i box resolvują zależności świeżo
   (`pip install -e`); `ci-cd.md` §3 chce zamrożonego locka. Decyzja
   kierunkowa: uv (`uv.lock` + `--locked` w CI) vs pip-tools.
@@ -722,7 +732,8 @@ Wymaga zgody na touch boundary plików per `AGENTS.md` "File boundaries"
 
 - **Kierunek systemu plików — ROZSTRZYGNIĘTE 2026-06-12: A → potem B.**
   Praca przeniesiona do P0 „Filesystem bridge — kierunek A→B" (góra pliku);
-  plan wykonawczy `handoff.md` §2.7 (Etap A) + §2.8 (Etap B). Tu zostaje
+  plan wykonawczy [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md)
+  §2.7 (Etap A) + §2.8 (Etap B). Tu zostaje
   tylko część `[user-approval]` Etapu B: **ADR + THREAT_MODEL row dla
   trwałego scoped VirtioFS mount** — owner autoryzuje gdy Etap B startuje
   (po smoke-teście sterownika virtio-win VirtioFS).

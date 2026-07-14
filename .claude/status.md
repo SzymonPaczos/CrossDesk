@@ -109,8 +109,9 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   bez wpisu w katalogu — `_spec_from_exe_path` wykrywa ścieżkę .exe i wyprowadza
   app_id/WM_CLASS z basename. Zweryfikowane host-side na żywo (ścieżka
   rozpoznana → gate verify-creds; gola na agencie odłożona).
-- **A1 — Save dialog na folderze Linuksa (`workdir:`)** (branch, NIE merged,
-  2026-06-04): gdy shared folder ON, `build_rail_argv` dostał param `workdir`
+- **A1 — Save dialog na folderze Linuksa (`workdir:`)** (✅ **ZMERGOWANE** —
+  `e15cf2b`; zapis „NIE merged" był nieprawdą, poprawiony 2026-07-14),
+  2026-06-04: gdy shared folder ON, `build_rail_argv` dostał param `workdir`
   i dodaje `workdir:\\tsclient\<share>` do klauzuli `/app:`. `_peripheral_flags`
   zwraca `(flags, workdir)`; workdir ustawiany TYLKO gdy `/drive:` realnie
   przeżywa (gard: pusta/względna ścieżka → drop drive+workdir; mkdir fail → drop).
@@ -121,9 +122,10 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   sieciowy"). Plumbing `workdir` POPRAWNY i reusable — zadziała na **literę dysku**
   (`Z:\`), nie UNC. **Kierunek systemu plików = ROZSTRZYGNIĘTE 2026-06-12:
   A (litera dysku + redirect Dokumenty) na betę → B (VirtioFS) po becie.**
-  Plan wykonawczy: `handoff.md` §2.7/§2.8 + `backlog.md` P0 „Filesystem
-  bridge". `7e36f55` (nie-zmergowany branch) realnie pogarsza default do
-  System32 → Etap A naprawia (workdir UNC→`Z:\`).
+  Plan wykonawczy: [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md)
+  §2.7/§2.8 (odzyskane z nieistniejącego już `handoff.md`) + `backlog.md` P0
+  „Filesystem bridge". `7e36f55` sam w sobie pogarszał default do System32 →
+  Etap A to naprawił (workdir UNC→`Z:\`); oba są w `main`.
   Adversarial review (10 agentów) → 2 realne defekty naprawione: (a)
   pusty/whitespace `shared_folder_path` omijał mkdir-gate (`Path("").mkdir`
   → CWD) — dodany walidator boundary (`peripherals.py model_post_init`) +
@@ -132,7 +134,8 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   warning gdy Phase-5 wepnie file-open — `backlog.md` Tech-debt.
 
 - **Etap A (FS kierunek A) — implementacja host-side + ROZSTRZYGNIĘCIE
-  MECHANIZMU na żywo (2026-06-12, branch `feat/fs-drive-letter`, NIE merged).**
+  MECHANIZMU na żywo (2026-06-12; ✅ **ZMERGOWANE** — `1986295`, `9afb465`,
+  `688b2a7`; zapis „NIE merged" był nieprawdą, poprawiony 2026-07-14).**
   Host gotowy + bramki zielone (mypy 122, ruff src+własne testy, host suite):
   - `PeripheralsConfig`: `shared_folder_drive_letter` (D-Z, default Z, walidacja
     +upper), `shared_folder_redirect_documents` (default ON),
@@ -167,7 +170,8 @@ Domyślny launch renderuje czysto (zero kanałów redirection).
   agent-svc Rust) LUB deklaratywny `HKCU\Network\Z` przez autounattend (do
   zweryfikowania że MPR odtworzy z samego wpisu rejestru bez share przy
   provisioningu); (c) ewaluacja czy redirect Documents→UNC sam wystarcza
-  (prościej niż litera+workdir). Plan zaktualizowany: `handoff.md` §2.7.
+  (prościej niż litera+workdir). Plan:
+  [`history/2026-06-12-fs-stage-ab-plan.md`](history/2026-06-12-fs-stage-ab-plan.md) §2.7.
 
 **CLI:** w pełni działa (audyt wszystkich subkomend na żywo — graceful errors,
 poprawne exit codes). **TUI:** nie istnieje (projekt = CLI + Qt GUI; nie
@@ -397,8 +401,10 @@ Stary marker „Hardware-gated (czeka na Linux+KVM box)" był przeciążony. Box
   `backend=real` + świeży install (NIE incydentowa restore: ma świeży nvram bez
   wpisu boot) → agent Hello → finalize → `destroy`+`create` bootuje DYSK (nie ISO)
   + agent reconnect ≤90s. Mapa w `backlog.md` P0 „A7-live install-path findings".
-- **Resilience & observability (public-beta)** — branch `feat/resilience-logging`
-  (z `main`, NIE merged). **Shipped + przetestowane** (bramki: mypy --strict 122,
+- **Resilience & observability (public-beta)** — ✅ **ZMERGOWANE** (`0f31d52`
+  i dalsze; `configure_logging(log_file=)` w `observability/log.py`). Zapis
+  „branch … NIE merged" był nieprawdą — poprawiony 2026-07-14.
+  **Shipped + przetestowane** (bramki: mypy --strict 122,
   ruff src czysto, host suite 842+): (1) **monitoring FreeRDP** —
   `RailSupervisor` await-uje każdy spawnowany xfreerdp (reap → koniec zombie
   `<defunct>`), klasyfikuje wyjście (terminated/clean-close = cicho; non-zero =

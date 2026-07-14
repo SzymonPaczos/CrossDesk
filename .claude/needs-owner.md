@@ -92,6 +92,14 @@ po zielonych bramkach; właściciel czyta diff post-hoc.
   exception, which is a much stronger floor). Say "keep the tags" and I'll record
   the divergence as an explicit exception in `ci-cd.md` so the audit stops
   re-raising it.
+- [ ] **Delete the 17 merged stale `origin/*` branches? (A3, 2026-07-14).** All 17
+  are fully merged into `main` (verified with `git branch -r --merged`), so they
+  carry nothing `main` doesn't already have and deleting them is recoverable by
+  re-pushing the SHA. I did **not** do it: it mutates the shared remote and you
+  never asked for it (a mass-cancel of CI runs in the same session was correctly
+  blocked for the same reason). Say "clean the branches" and I'll delete exactly
+  the merged ones and print the list first. The two unmerged ones
+  (`origin/chore/handoff-transfer`, `origin/feat/get-metrics-rpc`) stay.
 - [ ] **Proto edit — app-discovery RPC.** `ListDiscoveredApps` /
   registry-scan guest→host channel needs a `proto/**` change. *Rec:*
   approve a `RegistryScannerService` so installed apps + Start-menu/Desktop

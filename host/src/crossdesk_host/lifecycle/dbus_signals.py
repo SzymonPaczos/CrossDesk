@@ -60,19 +60,24 @@ class MockDBusSignalSource:
         self._task = asyncio.create_task(_keepalive())
         return self._task
 
-    def emit_prepare_for_sleep(self, *, starting: bool) -> None:
+    async def emit_prepare_for_sleep(self, *, starting: bool) -> None:
         """Drive the coordinator as if a real ``PrepareForSleep``
         signal arrived. ``starting=True`` for the about-to-suspend
-        signal, ``False`` for the post-wake signal."""
+        signal, ``False`` for the post-wake signal.
+
+        Awaits the full sequence, unlike the production handler, which spawns
+        the libvirt half so it never blocks the loop — a test wants the settled
+        state, not the race.
+        """
         if self._coordinator is None:
             raise RuntimeError(
                 "emit_prepare_for_sleep called before start(); "
                 "the coordinator hasn't been bound yet"
             )
         if starting:
-            self._coordinator.on_prepare_for_sleep()
+            await self._coordinator.on_prepare_for_sleep()
         else:
-            self._coordinator.on_resumed()
+            await self._coordinator.on_resumed()
 
 
 async def _keepalive() -> None:

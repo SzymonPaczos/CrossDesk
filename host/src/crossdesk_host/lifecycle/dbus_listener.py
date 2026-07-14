@@ -16,7 +16,7 @@ mistaken non-Linux call site is loud rather than silent.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine, Set
 
 from crossdesk_host.lifecycle.coordinator import LifecycleCoordinator
 from crossdesk_host.observability.log import get_logger
@@ -57,16 +57,46 @@ async def start_listener(coordinator: LifecycleCoordinator) -> asyncio.Task[None
     return asyncio.create_task(_keepalive())
 
 
+def _log_if_failed(task: "asyncio.Task[None]", phase: str) -> None:
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logger.warning("lifecycle_dbus_task_failed", phase=phase, error=str(exc))
+
+
 def _make_handler(coordinator: LifecycleCoordinator) -> Callable[[bool], None]:
+    # asyncio holds only weak references to tasks, so a suspend/resume in flight
+    # can be garbage-collected out from under us. Keep a strong ref until done.
+    background: Set["asyncio.Task[None]"] = set()
+
+    def _spawn(coro: Coroutine[Any, Any, None], phase: str) -> None:
+        task = asyncio.create_task(coro)
+        background.add(task)
+        task.add_done_callback(background.discard)
+        task.add_done_callback(lambda t: _log_if_failed(t, phase))
+
     def _on_prepare_for_sleep(starting: Any) -> None:
         # dbus-next delivers a bool; widen the annotation so the proxy
-        # signature matches without an explicit cast.
+        # signature matches without an explicit cast. It also dispatches this
+        # callback ON the event loop, so anything blocking here freezes the
+        # whole daemon.
         if bool(starting):
             logger.info("dbus_prepare_for_sleep_start")
-            coordinator.on_prepare_for_sleep()
+            # Synchronously, before this handler returns. We hold no systemd
+            # delay inhibitor, so nothing waits for us — the kernel may freeze
+            # as soon as we yield, and an FSM still ticking across the sleep
+            # escalates to HARD_DESTROY (= virsh destroy).
+            coordinator.suspend_fsms()
+            # The libvirt pause is the slow half; awaiting it inline is what
+            # used to block the loop.
+            _spawn(coordinator.pause_domain(), "suspend")
         else:
             logger.info("dbus_prepare_for_sleep_end")
-            coordinator.on_resumed()
+            # Nothing races on resume: the FSMs are parked in SUSPENDED and
+            # cannot escalate until on_resumed releases them, which it does only
+            # after libvirt is back.
+            _spawn(coordinator.on_resumed(), "resume")
 
     return _on_prepare_for_sleep
 

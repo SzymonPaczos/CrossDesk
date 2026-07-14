@@ -36,7 +36,7 @@ async def test_emit_starting_true_suspends_coordinator() -> None:
     src = MockDBusSignalSource()
     task = await src.start(coord)
 
-    src.emit_prepare_for_sleep(starting=True)
+    await src.emit_prepare_for_sleep(starting=True)
     assert coord.suspended is True
     assert libvirt.suspend.call_count == 1
     assert libvirt.resume.call_count == 0
@@ -50,8 +50,8 @@ async def test_emit_starting_false_resumes_coordinator() -> None:
     src = MockDBusSignalSource()
     task = await src.start(coord)
 
-    src.emit_prepare_for_sleep(starting=True)
-    src.emit_prepare_for_sleep(starting=False)
+    await src.emit_prepare_for_sleep(starting=True)
+    await src.emit_prepare_for_sleep(starting=False)
     assert coord.suspended is False
     assert libvirt.suspend.call_count == 1
     assert libvirt.resume.call_count == 1
@@ -67,9 +67,9 @@ async def test_scripted_suspend_cycle_pin_fsm_state() -> None:
     src = MockDBusSignalSource()
     task = await src.start(coord)
 
-    src.emit_prepare_for_sleep(starting=True)
+    await src.emit_prepare_for_sleep(starting=True)
     assert fsm.state.value == "SUSPENDED"
-    src.emit_prepare_for_sleep(starting=False)
+    await src.emit_prepare_for_sleep(starting=False)
     assert fsm.state.value == "PROBING"
 
     task.cancel()
@@ -81,8 +81,8 @@ async def test_double_suspend_is_idempotent() -> None:
     src = MockDBusSignalSource()
     task = await src.start(coord)
 
-    src.emit_prepare_for_sleep(starting=True)
-    src.emit_prepare_for_sleep(starting=True)
+    await src.emit_prepare_for_sleep(starting=True)
+    await src.emit_prepare_for_sleep(starting=True)
     assert libvirt.suspend.call_count == 1
 
     task.cancel()
@@ -94,14 +94,14 @@ async def test_resume_before_suspend_is_idempotent() -> None:
     src = MockDBusSignalSource()
     task = await src.start(coord)
 
-    src.emit_prepare_for_sleep(starting=False)
+    await src.emit_prepare_for_sleep(starting=False)
     assert coord.suspended is False
     assert libvirt.resume.call_count == 0
 
     task.cancel()
 
 
-def test_emit_before_start_raises() -> None:
+async def test_emit_before_start_raises() -> None:
     src = MockDBusSignalSource()
     with pytest.raises(RuntimeError, match="before start"):
-        src.emit_prepare_for_sleep(starting=True)
+        await src.emit_prepare_for_sleep(starting=True)

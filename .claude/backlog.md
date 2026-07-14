@@ -222,6 +222,21 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 
 ## P1
 
+### Metryka launcha nie mierzy kryterium #2 (end-to-end) — follow-up (2026-07-14)
+`launch_duration_seconds` (`472b0e8`) mierzy **host-side**: resolve + verify-creds +
+spawn FreeRDP = **7,5 ms p50**. Użytkownik czeka **2,75 s**. Czyli daemon to ~0,3%
+opóźnienia; resztę zjada FreeRDP negocjujący RDP+RAIL **po** powrocie RPC.
+**Żeby zmierzyć kryterium w produkcie**, trzeba skorelować launch z `RailWindowEvent`
+CREATED od agenta (host już go dostaje — `RailManager`). Bez tego `crossdesk metrics`
+pokazuje liczbę, która wygląda świetnie i **nie jest tym, co obiecuje kryterium**.
+
+### Ogon launcha (max 5,3 s) + brak okna przy pierwszym launchu po boocie
+Zmierzone przy #2: p50 2,748 s (PASS), ale **max 5,311 s wychodzi poza budżet 3 s**,
+a **pierwszy launch po boocie gościa nie wyprodukował okna w ogóle** (rc=0, „Launching
+Notepad…", brak okna) — to znany wyścig z verify-credentials. Kandydat: bounded
+post-boot wait zanim launch przejdzie przez bramkę.
+
+
 ### Agent nie łączy się ponownie po restarcie daemona hosta (live-verified 2026-07-14)
 **Restart daemona osierocia gościa aż do reboota VM.** Zaobserwowane przy pomiarze #4:
 daemon zrestartowany → VM **działa**, Windows **wstał** (RDP 3389 nasłuchuje), proces

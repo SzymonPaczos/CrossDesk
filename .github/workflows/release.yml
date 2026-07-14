@@ -26,10 +26,17 @@ name: Release
 #     Rotate when the leaf rotates (`./generate.sh --rotate-leaf`).
 #     See docs/CODE_SIGNING.md "CI integration" for the full procedure.
 #
-# Action pinning: third-party Actions are SHA-pinned; the comment next
-# to each `uses:` says which release the SHA corresponds to. First-
-# party `actions/*` and `github/*` keep their major-version tag (same
-# convention as ci.yml + security.yml).
+# Action pinning: every third-party Action is pinned to a full commit SHA; the
+# comment next to each `uses:` says which release (or branch) the SHA came from.
+# First-party `actions/*` and `github/*` keep their major-version tag — the
+# project's standing convention, encoded as policy in .github/zizmor.yml.
+#
+# This is load-bearing here, not hygiene. `build-agent` produces the binary that
+# `sign-agent` Authenticode-signs with the real publisher cert, so a compromised
+# movable tag on any Action in this file ships signed-by-us malware to end users.
+# `dtolnay/rust-toolchain@stable` (a movable branch ref) was exactly that hole
+# until 2026-07-14 — audit 2026-07-12, Red Team HIGH. The comment above used to
+# claim this file was pinned while it was not; it is now true.
 
 on:
   # release.yml is the ONE workflow that still auto-fires (on a semver
@@ -48,8 +55,11 @@ on:
         required: false
         default: ""
 
+# Read by default. Only publish-release writes — build-agent / sign-agent /
+# build-host-wheel handle the signing secret and must not also hold a token that
+# can push to the repo.
 permissions:
-  contents: write   # publish-release needs to create the GH release
+  contents: read
 
 # Force Node 24 for JS actions — see same comment in ci.yml.
 env:
@@ -63,7 +73,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
-      - uses: dtolnay/rust-toolchain@stable
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           targets: x86_64-pc-windows-gnu
       - name: Install MinGW cross-toolchain
@@ -108,6 +119,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
       - name: Install osslsigncode
         # Same tool the manual signer (infra/code-signing/sign-agent.sh)
         # wraps — picked because it cross-compiles cleanly to Linux/macOS,
@@ -177,6 +189,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -205,12 +218,15 @@ jobs:
     name: Publish GitHub release
     needs: [build-agent, sign-agent, build-host-wheel]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the draft release + upload its assets
     # Skip on workflow_dispatch dry-runs (no tag → no release to cut).
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
+          persist-credentials: false
       - name: Download signed agent
         uses: actions/download-artifact@v4
         with:

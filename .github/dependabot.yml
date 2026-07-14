@@ -1,0 +1,67 @@
+# Dependency updates. Without a bot, SHA-pinned Actions and the Rust/Python
+# dependency trees silently rot: pinning freezes the supply chain, so something
+# has to move it forward deliberately (.claude/rules/ci-cd.md §2-3).
+#
+# Cooldown holds ordinary releases for a few days so we don't adopt a version
+# the ecosystem is still discovering problems with. Security updates ignore the
+# cooldown by design — they ship immediately.
+#
+# Dependabot can bump a SHA-pinned Action only when the version comment sits on
+# the same line as the `uses:` (`uses: owner/repo@<sha> # v1.2.3`). That is the
+# format used across .github/workflows/. `dtolnay/rust-toolchain` is the
+# exception: it ships branches (`stable`), not semver tags, so its pin is bumped
+# by hand — check it during the weekly audit.
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 5
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "cargo"
+    directory: "/guest"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 5
+    groups:
+      guest-minor-patch:
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "cargo"
+    directory: "/gui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 5
+    groups:
+      gui-minor-patch:
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "pip"
+    directory: "/host"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 5
+    groups:
+      host-minor-patch:
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"

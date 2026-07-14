@@ -174,32 +174,29 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 
 ## P1
 
-### CI / supply chain — fala z audytu 2026-07-12 (zmiany `.github/workflows/**` = sign-off właściciela, needs-owner §8)
-- **[P1] `security.yml` jest manual-only, dokumentacja twierdzi „always runs".**
-  Realny trigger: `on: workflow_dispatch` (billing-freeze 2026-05-20);
-  `AGENTS.md:64-69` obiecuje every push / every PR / weekly-Monday. Repo jest
-  od tego czasu PUBLICZNE (Actions darmowe) → rekomendacja: przywrócić
-  `push`+`pull_request`+`schedule` i AGENTS.md zostaje prawdziwe (albo (b)
-  poprawić AGENTS.md — boundary, draft w `needs-owner.md` §8). Do tego czasu
-  sweep odpalać ręcznie przed release/po zmianach security.
-- **[P1, Red Team HIGH 2026-07-12] SHA-pinning third-party — amplifikacja w
-  release/sign.** `release.yml` job `build-agent` odpala
-  `dtolnay/rust-toolchain@stable` (ruchomy branch) PRZED `cargo build ... -p
-  agent-svc`; wynik (`agent-unsigned`) job `sign-agent` podpisuje PRAWDZIWYM
-  certem publishera (sekret `CROSSDESK_SIGNING_PFX_BASE64`) → `publish-release`
-  dołącza do release. Kompromitacja taga `stable` = podpisany-przez-nas malware
-  do end-userów (human klika Publish po przejrzeniu LISTY assetów, nie
-  zawartości .exe). Ten sam brak pinu: `bufbuild/buf-setup-action@v1`,
-  `gitleaks/gitleaks-action@v2`, `image: semgrep/semgrep` (bez digestu),
-  `rust-toolchain@stable` ×5 łącznie. Wbrew WŁASNEJ konwencji (`release.yml:29`
-  „third-party Actions are SHA-pinned" — dryf komentarz↔YAML) i
-  `.claude/rules/ci-cd.md` §2. zizmor 2026-07-12: 40× `unpinned-uses` [High].
-  **Fix:** SHA-pin wszystkich third-party (+ digest semgrep); lint w CI
-  failujący gdy `uses:` third-party ≠ `owner/repo@<40-hex>`; rozważyć
-  `actions/attest-build-provenance` + `cargo build --locked` w release.
-  **Trigger:** przed PIERWSZYM tagowanym release (kryt. #12) — dziś release nie
-  odpalał, więc latentne. First-party `actions/*`/`github/*` @vN = świadoma
-  konwencja projektu (osobna decyzja właściciela).
+### CI / supply chain — fala z audytu 2026-07-12 (✅ ZROBIONA `05653c7`, 2026-07-14)
+Sign-off właściciela 2026-07-14 („wykonaj falę + merge"); `.github/**` przestało
+być boundary dla pętli (`loop-spec.md` toggles). **zizmor: 86 findings (42 High)
+→ 16 (0 High / 0 Medium / 0 Low, 3 informational).**
+- **✅ [P1] `security.yml` manual-only vs dokumentacja — ZROBIONE.** Przywrócone
+  triggery `push` + `pull_request` + `schedule` (pn 06:17 UTC) → `AGENTS.md:64-69`
+  („runs on every push, every PR, and weekly on Mondays") stało się **prawdziwe
+  bez edycji boundary** (opcja (a) z needs-owner §8). Repo publiczne = Actions
+  darmowe, więc powód billing-freeze'u 2026-05-20 odpadł.
+- **✅ [P1, Red Team HIGH] SHA-pinning third-party — ZROBIONE.** Wszystkie 4
+  third-party przypięte do 40-hex SHA: `dtolnay/rust-toolchain` ×5 →
+  `4be7066…c30` (branch `stable`), `bufbuild/buf-setup-action` → `a47c93e…a99`
+  (v1.50.0), `gitleaks/gitleaks-action` → `ff98106…0c7` (v2.3.9),
+  `softprops/action-gh-release` był już przypięty. `image: semgrep/semgrep` →
+  digest `sha256:59fbed…66e`. Naprawiony też **dryf komentarz↔YAML**:
+  `release.yml` twierdził, że jest przypięty, gdy nie był. Konwencja
+  („third-party = hash, first-party = tag") jest teraz **maszynowo sprawdzalna**
+  w `.github/zizmor.yml` — bez niej `--no-config` pokazuje **33 High**.
+  ⏸ **Zostaje decyzja właściciela:** czy zratchetować także first-party
+  (`actions/*`, `github/*`) do hash-pinu, czego chce `ci-cd.md` §2 — to te 33
+  findings. Zaparkowane w `needs-owner.md`.
+  Nie zrobione (świadomie, poza zakresem fali): `actions/attest-build-provenance`
+  + `cargo build --locked` w release — trigger: przed pierwszym tagowanym release.
 - **✅ [P1, Red Team LOW 2026-07-12] pre-push secret-gate bypass — ZROBIONE
   `1b9c6f1` (2026-07-14).** `.githooks/pre-push` iterował `for f in $CHANGED_FILES`
   (niecytowane) → nazwa ze spacją rozpadała się na tokeny, `[ -f "$f" ]` je odrzucał,
@@ -210,14 +207,20 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
   akumulatorów `SECRET_HITS`/`QML_HITS` → też tablice. 3 testy regresyjne
   (`host/tests/test_pre_push_hook.py`), **sentinel-verified**: spaced-filename test
   pada na starym hooku (skaner przechodzi obok pliku), przechodzi na nowym.
-- **[P1] Brak dependency bota.** Zero dependabot/renovate → pinowane akcje i
-  crates/pip nie dostają aktualizacji (`ci-cd.md` §2-3: bot z cooldownem
-  3–7 dni, security bez cooldownu). Włączyć ekosystemy: cargo (guest+gui),
-  github-actions, pip (host). (DEC-META-005 odrzucała kopiowanie
-  `renovate.json` WinAppsów — nie posiadanie własnego bota.)
-- **[P2, ta sama fala] Top-level `permissions:` w `ci.yml` i
-  `compat-matrix.yml`** (zizmor excessive-permissions ×10; security/release
-  już mają) + `persist-credentials: false` na checkoutach (artipacked ×17).
+- **✅ [P1] Brak dependency bota — ZROBIONE.** `.github/dependabot.yml`: 4
+  ekosystemy (github-actions, cargo ×2 guest+gui, pip host), tygodniowo (pn),
+  cooldown 5 dni, minor/patch grupowane, majory osobno; security-updates omijają
+  cooldown z definicji. **Uwaga:** `dtolnay/rust-toolchain` NIE będzie bumpowany
+  automatycznie — repo publikuje branche (`stable`), nie tagi semver, a dependabot
+  potrzebuje wersji w komentarzu przy `uses:`. Pin bumpować ręcznie (udokumentowane
+  w nagłówku `dependabot.yml`; warto sprawdzać przy cotygodniowym audycie).
+- **✅ [P2, ta sama fala] Top-level `permissions:` + `persist-credentials` —
+  ZROBIONE.** `contents: read` na górze `ci.yml`, `compat-matrix.yml`,
+  `security.yml`, `release.yml`; `persist-credentials: false` na **wszystkich 13**
+  checkoutach (artipacked → 0). Przy okazji odwrócono dwa złamane least-privilege:
+  `security.yml` dawał `security-events: write` **wszystkim** 5 jobom (teraz tylko
+  dwa uploadujące SARIF), a `release.yml` dawał `contents: write` jobowi
+  trzymającemu sekret podpisujący (teraz tylko `publish-release`).
 
 ### Display & forwarding
 - **RAIL window icons — native high-res Windows icons on Linux windows.**
@@ -509,6 +512,11 @@ wykrywał/logował/notyfikował.
   (`libvirt_ctl/aio.py:29` — Security Review 2026-07-12, NOTE) — dedykowany
   `ThreadPoolExecutor` + test saturacji puli (N>pool_size zawieszonych
   wywołań nie głodzi innych `run_in_executor`).
+- **[~PARTIAL 2026-07-14] `zizmor` — zainstalowany na boxie, brakuje joba w CI.**
+  Izolowany venv (`~/.local/share/zizmor-venv`, symlink `~/.local/bin/zizmor`,
+  wersja 1.27.0) + konfiguracja `.github/zizmor.yml` (polityka pinowania).
+  Jest realną bramką lokalną (użyty do zamknięcia fali `05653c7`). **Zostaje:**
+  job w `security.yml` = item A6 w `loop-spec.md`. Poniższy oryginalny opis:
 - **[P2] `zizmor` nieobecny lokalnie i w CI** — zainstalować na boxie (audyt
   statyczny; dziś odpalony jednorazowo przez `uvx`) i rozważyć job w
   `security.yml`.

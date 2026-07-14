@@ -74,6 +74,24 @@ po zielonych bramkach; właściciel czyta diff post-hoc.
 
 ## Still open (boundary-file edits / owner calls)
 
+- [ ] **Ratchet: hash-pin GitHub's OWN actions too? (surfaced by A2, `05653c7`).**
+  The wave pinned every **third-party** action to a SHA (that was your sign-off's
+  scope) and encoded the convention in `.github/zizmor.yml`: `actions/*` and
+  `github/*` may stay on a major tag, everything else must hash-pin. That policy
+  is doing real work — running zizmor with `--no-config` reports **33 High**
+  findings, all of them first-party actions on `@v4` / `@v5` / `@v3`.
+  `.claude/rules/ci-cd.md` §2 (the convention we adopted from the toolkit) says
+  to pin these too: *"Każde zewnętrzne `uses:` przypnij do pełnego 40-znakowego
+  commit SHA, **również akcje GitHub**."* So today the repo knowingly diverges
+  from its own rule for 13 `uses:` lines.
+  *Rec:* **do it** — a compromised `actions/checkout@v4` tag is not more far-fetched
+  than a compromised `dtolnay/rust-toolchain@stable`, and dependabot keeps SHA pins
+  fresh as long as the version comment stays on the line. Cost: a noisier diff and
+  13 more pins to bump. Say "pin first-party" and the loop lands it + flips the
+  zizmor policy to a blanket `hash-pin` (then the gate is 0 findings with **no**
+  exception, which is a much stronger floor). Say "keep the tags" and I'll record
+  the divergence as an explicit exception in `ci-cd.md` so the audit stops
+  re-raising it.
 - [ ] **Proto edit — app-discovery RPC.** `ListDiscoveredApps` /
   registry-scan guest→host channel needs a `proto/**` change. *Rec:*
   approve a `RegistryScannerService` so installed apps + Start-menu/Desktop

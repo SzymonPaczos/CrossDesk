@@ -31,6 +31,7 @@ from crossdesk_host.ipc.auth import AuthValidator
 from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle.error_notifications import notify_forced_stop
 from crossdesk_host.lifecycle.notifications import Notifier
+from crossdesk_host.observability.metrics import REGISTRY, MetricNames, Registry
 from crossdesk_host.proto.crossdesk.v1 import heartbeat_pb2, heartbeat_pb2_grpc
 from crossdesk_host.watchdog import (
     FsmConfig,
@@ -97,6 +98,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         pong_timeout_seconds: float = 2.0,
         boot_probe: Optional[BootProbe] = None,
         notifier: Optional[Notifier] = None,
+        metrics: Optional[Registry] = None,
     ) -> None:
         self.auth_validator = auth_validator
         self.libvirt_ctl = libvirt_ctl
@@ -105,6 +107,9 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         self.pong_timeout_seconds = pong_timeout_seconds
         self.boot_probe = boot_probe
         self.notifier = notifier
+        # Defaults to the process-wide registry the management GetMetrics RPC
+        # serves; tests inject a fresh one to avoid cross-test pollution.
+        self.metrics = metrics or REGISTRY
         # Active per-Channel FSMs. AutopauseController / LifecycleCoordinator
         # call :meth:`suspend` / :meth:`resume` here to propagate to every
         # in-flight channel — a freshly-paused VM stops sending heartbeats,
@@ -205,9 +210,18 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
 
         await self.auth_validator.verify_auth_context(context, guest_frame.auth)
         if guest_frame.WhichOneof("payload") == "pong":
+            rtt_ns = time.monotonic_ns() - start_ns
+            # The FSM folds this into an EWMA, which is the right input for
+            # *deciding* liveness but throws the distribution away. Criterion N1.4
+            # is stated as a p50, so the raw sample goes into the histogram too --
+            # otherwise `crossdesk metrics` reports "no metrics registered" and the
+            # budget is unmeasurable through the product's own instrumentation.
+            self.metrics.histogram(MetricNames.HEARTBEAT_RTT_SECONDS).observe(
+                rtt_ns / 1e9
+            )
             return TickInput(
                 pong_received=True,
-                rtt_ns=time.monotonic_ns() - start_ns,
+                rtt_ns=rtt_ns,
             )
         logger.info(
             "heartbeat_unexpected_payload kind=%s",

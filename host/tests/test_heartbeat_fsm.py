@@ -21,6 +21,7 @@ import pytest
 
 from crossdesk_host.ipc import heartbeat as heartbeat_module
 from crossdesk_host.ipc.heartbeat import HeartbeatServiceServicer
+from crossdesk_host.observability.metrics import MetricNames, Registry
 from crossdesk_host.proto.crossdesk.v1 import common_pb2, heartbeat_pb2
 from tests.conftest import FakeServicerContext
 
@@ -44,6 +45,7 @@ async def _drive(
     ticks: List[Tick],
     libvirt_ctl: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
+    metrics: "Registry | None" = None,
 ) -> None:
     """Run HeartbeatService.Channel against a scripted tick sequence."""
 
@@ -80,7 +82,7 @@ async def _drive(
 
     auth_validator = MagicMock()
     auth_validator.verify_auth_context = AsyncMock()
-    servicer = HeartbeatServiceServicer(auth_validator, libvirt_ctl)
+    servicer = HeartbeatServiceServicer(auth_validator, libvirt_ctl, metrics=metrics)
 
     async def empty_request_iterator() -> AsyncIterator[heartbeat_pb2.GuestFrame]:
         # Real iterator is never read because fake_wait_for short-circuits.
@@ -417,3 +419,52 @@ async def test_no_warning_when_hard_destroy_fires(
         "missed_prepare_for_sleep" in rec.message for rec in caplog.records
     )
 
+
+
+# ---------------------------------------------------------------------------
+# RTT histogram (MVP criterion #4: heartbeat RTT p50 < 20 ms)
+# ---------------------------------------------------------------------------
+
+
+async def test_pong_rtt_is_recorded_as_a_histogram(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Every pong's round-trip time must reach the metrics registry.
+
+    The FSM folds RTT into an EWMA, which is the right input for *deciding*
+    liveness but discards the distribution. Criterion N1.4 is stated as a p50, and
+    before this the name `heartbeat_rtt_seconds` existed in MetricNames with
+    nothing writing to it -- `crossdesk metrics` answered "no metrics registered",
+    so the budget was unmeasurable through the product's own instrumentation.
+    """
+    registry = Registry()
+    libvirt_ctl = MagicMock()
+
+    await _drive(
+        [_pong(1), _pong(2), _pong(3), StopAsyncIteration],
+        libvirt_ctl,
+        monkeypatch,
+        metrics=registry,
+    )
+
+    hists = registry.snapshot()["histograms"]
+    assert MetricNames.HEARTBEAT_RTT_SECONDS in hists, "the RTT histogram was never fed"
+    rtt = hists[MetricNames.HEARTBEAT_RTT_SECONDS]
+    assert rtt["count"] == 3, "one sample per pong"
+    assert rtt["p50"] >= 0.0
+    assert rtt["max"] < 60.0, "an in-process pong cannot take a minute"
+
+
+async def test_a_missed_pong_records_no_rtt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A timeout has no round trip to measure — it must not poison the p50."""
+    registry = Registry()
+
+    await _drive(
+        [asyncio.TimeoutError, _pong(1), StopAsyncIteration],
+        MagicMock(),
+        monkeypatch,
+        metrics=registry,
+    )
+
+    rtt = registry.snapshot()["histograms"][MetricNames.HEARTBEAT_RTT_SECONDS]
+    assert rtt["count"] == 1, "only the pong is a sample; the miss is not a 0 ms RTT"

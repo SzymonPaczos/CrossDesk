@@ -52,6 +52,7 @@ from crossdesk_host.ipc.management import (  # noqa: E402
     mgmt_socket_path,
 )
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator  # noqa: E402
+from crossdesk_host.libvirt_ctl import shutdown_libvirt_executor  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
 from crossdesk_host.lifecycle.coordinator import LifecycleCoordinator  # noqa: E402
 from crossdesk_host.lifecycle.dbus_listener import start_listener  # noqa: E402
@@ -321,3 +322,6 @@ async def main() -> None:
         await rail_supervisor.shutdown_all()
         await server.stop(grace=2.0)
         await mgmt_server.stop(grace=2.0)
+        # Drop queued libvirt work without joining threads: one parked inside a
+        # wedged libvirt C call would otherwise hold shutdown open forever.
+        shutdown_libvirt_executor()

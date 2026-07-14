@@ -1,11 +1,9 @@
 """LifecycleCoordinator — orchestrates host suspend/resume against the
 heartbeat FSM and the libvirt domain.
 
-Pure synchronous logic. The Linux-only D-Bus listener
-(``.dbus_listener``) calls these methods on
-``org.freedesktop.login1.Manager.PrepareForSleep`` (and the matching
-resume) signals; tests call them directly to exercise the suspend path
-without needing a real session bus.
+The Linux-only D-Bus listener (``.dbus_listener``) drives this on
+``org.freedesktop.login1.Manager.PrepareForSleep`` (and the matching resume)
+signals; the management ``Suspend`` / ``Resume`` RPCs drive it too.
 
 Ordering matters and is documented in
 ``docs/LIFECYCLE.md``: on suspend we move every registered FSM into
@@ -13,6 +11,27 @@ SUSPENDED *before* asking libvirt to pause the domain — otherwise a
 stalled heartbeat across the pause could trip false-positive
 HARD_DESTROY. On resume we go libvirt-first so the guest is actually
 running when FSMs leave SUSPENDED into the PROBING grace window.
+
+**The two halves cost wildly different amounts of time, and that shapes the
+API.** Moving the FSMs is pure Python and instant. Pausing the domain is a
+blocking libvirt C call that can take seconds against a slow storage backend and
+forever against a wedged libvirtd. The D-Bus signal handler runs *on the event
+loop* (dbus-next dispatches it there), so doing both inline froze the entire
+daemon — heartbeats, gRPC, everything — at precisely the moment the host was
+going to sleep. Hence the split:
+
+* :meth:`suspend_fsms` stays **synchronous**. It is the actual data-loss
+  protection, and we hold no systemd delay inhibitor (that is still a Phase-7
+  stub in ``watchdog/sleep_sync.py``), so nothing is waiting for us: the kernel
+  can freeze the moment the handler yields. This has to land before the freeze,
+  not on some later loop iteration.
+* the libvirt half is **offloaded and deadline-bound** through ``libvirt_call``,
+  so a slow pause costs latency instead of a frozen daemon.
+* :meth:`on_prepare_for_sleep` / :meth:`on_resumed` compose the two in the
+  correct order for callers that can await.
+
+Resume needs no such care: the FSMs sit parked in SUSPENDED and cannot escalate
+until we release them, so the whole sequence can run off the loop.
 
 Hibernation detection (FOLLOWUPS:696): on every suspend we stamp
 ``time.time()`` (wall) plus ``time.monotonic()``; on resume we compare
@@ -32,6 +51,7 @@ import time
 from typing import Callable, List, Optional, Protocol
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
+from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle.error_notifications import (
     notify_suspend_resume_failed,
 )
@@ -127,7 +147,19 @@ class LifecycleCoordinator:
         """
         self._hibernation_hooks.append(hook)
 
-    def on_prepare_for_sleep(self) -> None:
+    def suspend_fsms(self) -> None:
+        """Move every registered FSM into SUSPENDED. Synchronous, on purpose.
+
+        This is the half that must never be deferred: an FSM still ticking
+        across the host's sleep piles up missed pongs and escalates to
+        HARD_DESTROY, which on the real controller is ``virsh destroy`` — the VM
+        and everything unsaved in it, gone. Since the daemon holds no systemd
+        delay inhibitor, the kernel is free to freeze as soon as the D-Bus
+        handler yields, so this runs *inside* the handler rather than in a task.
+
+        Idempotent: ``HeartbeatFsm.suspend`` is, and the servicer tracks its own
+        flag, so a repeated PrepareForSleep is harmless.
+        """
         if self._suspended:
             return
         logger.info("lifecycle_suspend_begin", fsms=len(self._registered_fsms))
@@ -135,14 +167,21 @@ class LifecycleCoordinator:
             fsm.suspend()
         if self._fsm_group is not None:
             self._fsm_group.suspend()
+
+    async def pause_domain(self) -> None:
+        """Pause the domain off the event loop, bounded by a deadline.
+
+        Call :meth:`suspend_fsms` first — see the module's ordering contract.
+        """
+        if self._suspended:
+            return
         try:
-            self.libvirt_ctl.suspend()
+            await libvirt_call(self.libvirt_ctl.suspend)
         except Exception as exc:
-            # FSMs already moved into SUSPENDED above; libvirt-side
-            # failure means the host went to sleep with the VM
-            # technically still running. Surface to the user; the
-            # daemon must still see the exception so its supervisor
-            # can react.
+            # FSMs already moved into SUSPENDED; libvirt-side failure means the
+            # host went to sleep with the VM technically still running. Surface
+            # to the user; the caller must still see the exception so its
+            # supervisor can react.
             if self.notifier is not None:
                 notify_suspend_resume_failed(
                     self.notifier,
@@ -154,12 +193,19 @@ class LifecycleCoordinator:
         self._suspend_monotonic_s = time.monotonic()
         logger.info("lifecycle_suspend_complete")
 
-    def on_resumed(self) -> None:
+    async def on_prepare_for_sleep(self) -> None:
+        """FSMs into SUSPENDED, then pause the domain — for callers that await."""
+        if self._suspended:
+            return
+        self.suspend_fsms()
+        await self.pause_domain()
+
+    async def on_resumed(self) -> None:
         if not self._suspended:
             return
         logger.info("lifecycle_resume_begin")
         try:
-            self.libvirt_ctl.resume()
+            await libvirt_call(self.libvirt_ctl.resume)
         except Exception as exc:
             if self.notifier is not None:
                 notify_suspend_resume_failed(

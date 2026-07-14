@@ -523,7 +523,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             logger.info("rpc_start", method="Suspend")
             try:
                 if self.coordinator is not None:
-                    self.coordinator.on_prepare_for_sleep()
+                    await self.coordinator.on_prepare_for_sleep()
                 else:
                     await libvirt_call(self.libvirt_ctl.suspend)
                 self.state.append_activity(
@@ -547,7 +547,7 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             logger.info("rpc_start", method="Resume")
             try:
                 if self.coordinator is not None:
-                    self.coordinator.on_resumed()
+                    await self.coordinator.on_resumed()
                 else:
                     await libvirt_call(self.libvirt_ctl.resume)
                 self.state.append_activity(

@@ -97,7 +97,7 @@ jobs:
           cp guest/target/x86_64-pc-windows-gnu/release/agent.exe \
              artifact/CrossDeskAgent.exe
       - name: Upload unsigned binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agent-unsigned
           path: artifact/CrossDeskAgent.exe
@@ -168,7 +168,7 @@ jobs:
           echo "::warning::CrossDeskAgent.exe will be published UNSIGNED — set CROSSDESK_SIGNING_PFX_BASE64 before tagging the next release."
           echo "signed=false" >> "$GITHUB_OUTPUT"
       - name: Upload (possibly-signed) binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agent-final
           path: artifact/CrossDeskAgent.exe
@@ -207,7 +207,7 @@ jobs:
           mkdir -p dist
           python -m build --wheel --outdir dist host/
       - name: Upload wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: host-wheel
           path: dist/*.whl

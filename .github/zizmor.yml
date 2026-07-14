@@ -1,0 +1,23 @@
+# zizmor policy — https://docs.zizmor.sh/configuration/
+#
+# Pinning convention, made machine-checkable rather than left in prose:
+#
+#   * Third-party Actions MUST be pinned to a full commit SHA. This is not
+#     hygiene — release.yml's `build-agent` feeds the binary that `sign-agent`
+#     Authenticode-signs with the real publisher cert, so a compromised movable
+#     tag on a third-party Action ships signed-by-us malware. (Audit 2026-07-12,
+#     Red Team HIGH: `dtolnay/rust-toolchain@stable` was exactly that.)
+#
+#   * GitHub's own `actions/*` and `github/*` stay on their major-version tag.
+#     That is the project's standing convention; `.claude/rules/ci-cd.md` §2
+#     would have us hash-pin these too, and ratcheting to that is parked for the
+#     owner in `.claude/needs-owner.md`. Encoding it here means the gate reports
+#     zero findings when the tree matches the convention, so a *new* unpinned
+#     third-party action shows up as signal instead of drowning in noise.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        actions/*: ref-pin
+        github/*: ref-pin
+        "*": hash-pin

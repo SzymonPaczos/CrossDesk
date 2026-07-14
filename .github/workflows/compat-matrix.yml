@@ -22,6 +22,11 @@ on:
   # cutting a release to verify N-1 compatibility.
   workflow_dispatch:
 
+# Least privilege by default — this job only reads the repo (its `git worktree`
+# and `git tag --list` work against the local clone, not the remote).
+permissions:
+  contents: read
+
 # Force Node 24 for JS actions — see same comment in ci.yml.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -35,6 +40,7 @@ jobs:
         with:
           # Need full history to find the previous tag.
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Discover previous minor tag
         id: prev-tag
@@ -81,7 +87,7 @@ jobs:
 
       - name: Set up Rust toolchain
         if: steps.prev-tag.outputs.found == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
 
       - name: Check out previous tag's guest workspace into a sibling dir
         if: steps.prev-tag.outputs.found == 'true'

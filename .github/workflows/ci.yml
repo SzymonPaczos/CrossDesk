@@ -14,6 +14,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Least privilege by default. Without this, every job inherits the repository's
+# default workflow permissions, which may be read-write. Jobs that need more opt
+# in explicitly (see `microbench`, which posts a PR comment).
+permissions:
+  contents: read
+
 # concurrency still useful for the manual-dispatch case (e.g. user
 # kicks "Run workflow" twice in quick succession), even though the
 # main push-burst use case is gone.
@@ -52,6 +58,8 @@ jobs:
         working-directory: host
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -115,7 +123,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           targets: x86_64-pc-windows-gnu
           components: clippy
@@ -147,7 +157,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
       - name: Install Qt6
         run: |
           sudo apt-get update
@@ -183,8 +195,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install buf
-        uses: bufbuild/buf-setup-action@v1
+        uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
       - name: buf lint
         working-directory: proto
         # Rules codified in proto/buf.yaml (STANDARD minus COMMENT_*).
@@ -206,6 +220,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -259,6 +275,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -320,6 +338,8 @@ jobs:
         working-directory: host
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: KVM + libvirt preflight
         run: |
           test -e /dev/kvm || { echo "::error::self-hosted runner is missing /dev/kvm"; exit 1; }

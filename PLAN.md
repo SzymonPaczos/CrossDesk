@@ -5,10 +5,16 @@ nigdzie indziej. Reszta to: [`status.md`](.claude/status.md) (znane problemy),
 [`needs-owner.md`](.claude/needs-owner.md) (czeka na Twoją decyzję),
 [`backlog.md`](.claude/backlog.md) (post-MVP / kiedyś — NIE do v0.1.0).
 
-> Aktualizacja: 2026-07-05. Sprzęt (Linux+KVM box, `windows-guest`) jest żywy —
+> Aktualizacja: 2026-07-14. Sprzęt (Linux+KVM box, `windows-guest`) jest żywy —
 > Fazy 1–4 działają end-to-end na żywo (install → agent → NT-service → RAIL
 > render Notepada i Painta jako natywne okna Linuksa, FS Stage A). Do v0.1.0
 > zostało wąsko.
+>
+> **2026-07-14 — właściciel otworzył dwie bramki:** (1) destrukcyjny cykl P0
+> (świeży install → finalize → destroy+create) jest **AUTORYZOWANY**; (2) fala
+> CI/supply-chain (`.github/**`) jest **AUTORYZOWANA** do wykonania i merge'a.
+> Kolejność pracy i pełna kolejka: [`loop-spec.md`](.claude/loop-spec.md)
+> (Faza A: kod/CI → Faza B: destrukcyjny cykl → Faza C: live na świeżym gościu).
 
 ---
 
@@ -42,12 +48,15 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   (`_assert_suspend_protection` przeszło z realnym kontrolerem) → „Server is
   running". Non-destrukcyjnie (libvirt nietykany przy starcie; `windows-guest`
   bez zmian; graceful shutdown). **Strona daemona P0 jest udowodniona gotowa.**
-- 🔲 **ZOSTAJE (box-gated, = live-verify P0 — tylko cykl install→finalize)**:
+- ▶ **GREENLIT 2026-07-14 — destrukcyjny cykl AUTORYZOWANY (ostatni krok P0)**:
   na **wiernej** domenie (świeży install, nie incydentowa restore z pustym nvram)
   → agent Hello → finalize redefiniuje do steady-state → `destroy`+`create`
-  bootuje DYSK (nie ISO) → agent reconnect ≤90s. Zostaje TYLKO ten destrukcyjny
-  cykl (czeka na greenlight właściciela — [`needs-owner.md`](.claude/needs-owner.md)).
-  Dopiero to zamyka #6. Szczegóły: [`status.md`](.claude/status.md).
+  bootuje DYSK (nie ISO) → agent reconnect ≤90s. Dopiero to zamyka **#6**.
+  Cykl jest sekwencją Fazy B w [`loop-spec.md`](.claude/loop-spec.md) i przy okazji
+  zamyka **#10** (`uninstall --force` = pierwszy krok) oraz re-weryfikuje **#1**
+  (świeży install). **Siatka bezpieczeństwa:** backup milestone'u wyniesiony
+  2026-07-14 do `~/crossdesk-backups/` — `uninstall()` robi `rmtree` całego
+  state-diru (`uninstall.py:112`) i skasowałby go razem z instalacją.
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 
@@ -92,15 +101,19 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 3 | `.txt` → Open with Notepad → **JIT** mount, detach po zamknięciu | ⚠️ boundary / 🔲 | DEC-0018: MVP-floor = **Stage B** (persistent), nie JIT. Kryterium przeczy in-scope — re-def do podpisu (needs-owner §7). Stage B mount: 🔲 box |
 | 4 | heartbeat RTT <20 ms p50 | 🔲 box | FSM gotowy; realny pomiar na boxie |
 | 5 | suspend/resume bez false HARD_DESTROY | 🔲 box | LifecycleCoordinator gotowy; live-verify |
-| 6 | kill VM (`virsh destroy`) → recovery ≤90 s | ⛔ P0 | **Blokuje: `hard_destroy` reinstaluje Windows.** To jest front „TERAZ" |
+| 6 | kill VM (`virsh destroy`) → recovery ≤90 s | 🔲 box ▶ | Mechanizm + finalize + A3-seam: host-side ✅ (`9ac1da1`, `30579a6`). **Greenlight 2026-07-14** → zostaje sam destrukcyjny cykl (loop-spec Faza B). Ostatni realny blocker |
 | 7 | CI green macOS + Ubuntu; `agent.exe` cross-compile | ⚠️ boundary | `agent.exe` ✅, Ubuntu CI ✅. „macOS matrix" martwe (Mac zvacuumowany) — re-def do podpisu (needs-owner §7) |
 | 8 | microbench pass vs baselines | 🔲 box | harness gotowy; realne liczby |
 | 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live | LIVE-VERIFIED 2026-07-05: na tym boxie `doctor` = **exit 0**, 10/10 OK (cpu_virt svm, kvm, vsock, qemu 10.2, freerdp, ovmf, libvirt, disk 135GB, config, vm_creds); zły host (`CROSSDESK_OVMF_CODE` bogus) → `ovmf [fail]` + **exit 1** |
-| 10 | `uninstall` czyste usunięcie | 🔲 box | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Zostaje live-verify pełnego usunięcia (confirm-prompt + `--force` shipped `427b15e`) |
+| 10 | `uninstall` czyste usunięcie | 🔲 box ▶ | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Live-verify = **krok B1** destrukcyjnego cyklu (greenlit 2026-07-14) — `uninstall --force` otwiera Fazę B, więc #10 i #6 domykają się jednym przejazdem |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 
-**Podsumowanie:** 1 realny blocker (#6 = P0 hard_destroy), 2 kryteria do
-re-definicji przez właściciela (#3, #7 — needs-owner §7), reszta = „odpalić na
-boxie" lub drobny kod. Żadne z powyższych nie jest już `[HW]`-blocked —
-sprzęt jest.
+**Podsumowanie:** 1 realny blocker (#6 = P0 hard_destroy) — **od 2026-07-14 bez
+bramki właściciela**, zostaje sam przejazd (Faza B). 2 kryteria do re-definicji
+przez właściciela (#3, #7 — needs-owner §7). Reszta = „odpalić na boxie" lub
+drobny kod. Żadne z powyższych nie jest już `[HW]`-blocked — sprzęt jest.
+
+Jeden destrukcyjny cykl (Faza B) domyka **#6** i **#10** i re-weryfikuje **#1**,
+a zostawia świeżego gościa, na którym stoi cała Faza C (**#2, #3, #4, #5, #8,
+#11, #12** + burn-in). To jest najkrótsza droga do v0.1.0.

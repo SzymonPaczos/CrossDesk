@@ -325,6 +325,14 @@ PROPOSED:
     promote the capability planned→stable in `docs/VERSIONING.md` if you
     agree.)
 
+  **Update 2026-07-14 (A8):** `README.md` and `.claude/architecture.md` now state
+  the transport truthfully — AF_VSOCK is the *decided* transport (DEC-0017), while
+  the shipped bring-up path is loopback TCP via the `transport.bind_kind` seam.
+  `docs/THREAT_MODEL.md` is now the **only** doc still describing AF_VSOCK as the
+  live channel, so the gap is no longer hidden, it is isolated to one boundary file
+  waiting on you. (Also corrected a mis-citation both files carried: DEC-0017 settles
+  AF_VSOCK vs AF_HYPERV and says nothing at all about a TCP path.)
+
 ### §4 — `.claude/rules/decisions.md` new DEC-META-006
 
     ## DEC-META-006 — whole-$HOME FS default supersedes the DEC-META-005 skip

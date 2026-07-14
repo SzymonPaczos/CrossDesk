@@ -175,6 +175,7 @@ markers = [
     "linux_only: requires real libvirt + KVM (run only on Linux+KVM hardware)",
     "integration: in-process host+guest mock harness",
     "benchmark: performance microbenchmark, may be skipped in fast CI",
+    "live_libvirt: DESTRUCTIVE — defines, starts, destroys and undefines a real throwaway qemu:///session domain. Skipped unless --live-libvirt is passed.",
 ]
 
 [tool.coverage.report]

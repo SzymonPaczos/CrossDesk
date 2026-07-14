@@ -9,6 +9,34 @@ import grpc
 import pytest
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--live-libvirt",
+        action="store_true",
+        default=False,
+        help=(
+            "run the DESTRUCTIVE live-libvirt tests: they define, start, destroy "
+            "and undefine a throwaway qemu:///session domain (never windows-guest)"
+        ),
+    )
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: List[pytest.Item]
+) -> None:
+    """Keep the destructive tests out of every default run.
+
+    They touch real libvirt, so an unguarded `pytest` on a developer's box — or
+    in CI — must not pick them up. Opt in explicitly with --live-libvirt.
+    """
+    if config.getoption("--live-libvirt"):
+        return
+    skip = pytest.mark.skip(reason="destructive; pass --live-libvirt to run")
+    for item in items:
+        if "live_libvirt" in item.keywords:
+            item.add_marker(skip)
+
+
 @pytest.fixture(autouse=True)
 def _no_real_libvirt(monkeypatch: pytest.MonkeyPatch) -> None:
     """Slam the real-libvirt connection choke point shut for the whole suite.

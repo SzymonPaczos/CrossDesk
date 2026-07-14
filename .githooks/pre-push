@@ -8,11 +8,13 @@ set -e
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
-# $HOME/.cargo/bin is rustup's default install path on both Linux and
-# macOS. Without it the cargo-audit / cargo-deny / clippy checks below
-# print "command not found" and the hook silently no-ops, missing
-# real vulnerabilities.
-export PATH="$PATH:$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin"
+# git runs hooks with a minimal environment, so the scanners below have to be
+# findable by absolute convention rather than by the user's interactive PATH.
+# $HOME/.cargo/bin is rustup's default (cargo-audit / cargo-deny / clippy);
+# $HOME/.local/bin is where pipx, `pip install --user` and hand-rolled venv
+# symlinks land, which is where zizmor is. Miss either and the check prints
+# "command not found" — or, worse, quietly no-ops past a real finding.
+export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:/opt/homebrew/bin"
 
 echo "🔍 pre-push: security review"
 echo "─────────────────────────────────────────────"

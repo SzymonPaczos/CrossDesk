@@ -222,6 +222,23 @@ Strategia: `docs/GPU_PASSTHROUGH.md` §"GPU passthrough interakcja z RAIL".
 
 ## P1
 
+### Agent nie łączy się ponownie po restarcie daemona hosta (live-verified 2026-07-14)
+**Restart daemona osierocia gościa aż do reboota VM.** Zaobserwowane przy pomiarze #4:
+daemon zrestartowany → VM **działa**, Windows **wstał** (RDP 3389 nasłuchuje), proces
+agenta **żyje** — ale kanały control/heartbeat **nigdy nie wracają**. 160 s obserwacji,
+`ss -tn | grep :50051` = **0**. Dopiero restart VM (przez auto-recovery) przywrócił
+agenta w 19 s.
+
+**Wniosek:** agent dzwoni do hosta **tylko przy własnym starcie**; nie ma pętli
+re-dial przy zerwaniu połączenia z hostem.
+
+**Skutek dla bety:** każda aktualizacja CrossDeska, crash daemona albo zmiana configu
+zostawia gościa bez kontroli, dopóki user nie zrestartuje VM. Dla bety to szorstkie.
+
+**Fix (guest-side, Rust):** pętla reconnect z backoffem w `agent-svc` — dial → on
+disconnect → retry (np. 1s → 30s cap). Host-side nic nie trzeba.
+
+
 ### CI / supply chain — fala z audytu 2026-07-12 (✅ ZROBIONA `05653c7`, 2026-07-14)
 Sign-off właściciela 2026-07-14 („wykonaj falę + merge"); `.github/**` przestało
 być boundary dla pętli (`loop-spec.md` toggles). **zizmor: 86 findings (42 High)

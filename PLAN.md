@@ -20,11 +20,23 @@ nigdzie indziej. Reszta to: [`status.md`](.claude/status.md) (znane problemy),
 
 ## TERAZ (jeden front)
 
-**→ P0 `hard_destroy` steady-state XML** — blokuje akceptację **#6** (kill VM →
-recovery) i wpięcie realnego `LibvirtController` do lifecycle (A3). Problem:
-domena trzyma install-ISO na `boot order=1` przez całe życie; recovery
-(`destroy`+`create`) bootuje install-ISO → autounattend **reinstaluje Windows na
-dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
+**→ P0 BRAK DETEKTORA ŚMIERCI VM** — to jest realny blocker **#6**, odsłonięty
+przez live-verify 2026-07-14. `virsh destroy` na żywej domenie → **daemon nie
+zauważa niczego**: zero linii w logu, zero eskalacji, VM leży. Root cause
+(zweryfikowany, nie zgadnięty):
+
+- FSM heartbeatu tyka z `request_iterator` strumienia gRPC → śmierć VM zamyka
+  strumień → **FSM milknie i nigdy nie eskaluje do HARD_DESTROY**;
+- `daemon.py` **nie wpina żadnego** źródła zdarzeń domeny (grep: 0 trafień);
+- `lifecycle/domain_events.py` ma `DomainEventReactor` + `MockDomainEventSource`,
+  ale **`LibvirtDomainEventSource` NIE ISTNIEJE nigdzie w `src/`**.
+
+Uwaga projektowa na przyszłe wpięcie: `hard_destroy()` robi `destroy()`+`create()`,
+a `destroy()` na **martwej** domenie rzuca `RuntimeError`. Recovery po zabiciu VM
+musi wołać samo `create()`, nie `destroy()+create()`.
+
+**Poprzedni front (`hard_destroy` steady-state XML) jest ZAMKNIĘTY** —
+mechanizm live-verified 2026-07-14 na realnej domenie Windows; szczegóły niżej.
 
 - ✅ **Mechanizm ZROBIONY (testowalny, host-side)**: `build_steady_state_domain_xml`
   (disk `boot=1`, oba CD ejected) + `redefine_steady_state` na Protocol/real/mock
@@ -48,15 +60,23 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   (`_assert_suspend_protection` przeszło z realnym kontrolerem) → „Server is
   running". Non-destrukcyjnie (libvirt nietykany przy starcie; `windows-guest`
   bez zmian; graceful shutdown). **Strona daemona P0 jest udowodniona gotowa.**
-- ▶ **GREENLIT 2026-07-14 — destrukcyjny cykl AUTORYZOWANY (ostatni krok P0)**:
-  na **wiernej** domenie (świeży install, nie incydentowa restore z pustym nvram)
-  → agent Hello → finalize redefiniuje do steady-state → `destroy`+`create`
-  bootuje DYSK (nie ISO) → agent reconnect ≤90s. Dopiero to zamyka **#6**.
-  Cykl jest sekwencją Fazy B w [`loop-spec.md`](.claude/loop-spec.md) i przy okazji
-  zamyka **#10** (`uninstall --force` = pierwszy krok) oraz re-weryfikuje **#1**
-  (świeży install). **Siatka bezpieczeństwa:** backup milestone'u wyniesiony
-  2026-07-14 do `~/crossdesk-backups/` — `uninstall()` robi `rmtree` całego
-  state-diru (`uninstall.py:112`) i skasowałby go razem z instalacją.
+- ✅ **WYKONANE 2026-07-14 — destrukcyjny cykl PRZEJECHANY NA ŻYWO.** Świeży
+  `uninstall --force` → świeży `install` → daemon `backend=real` → agent Hello →
+  finalize → `virsh destroy` → `create`. **Dowody (`/tmp/cd-evidence/`):**
+  - `20:36:07` — hook `on_session_ready` odpalił na **pierwszym** Hello:
+    `redefine_steady_state: defineXML (eject media, disk boot=1)` →
+    `steady_state_finalize_applied`; krok `steady_state` w state = **done**.
+  - **Trwała konfiguracja przestawiona:** `cdrom boot=1 + ISO` → **`disk boot=1`,
+    oba CD-ROM `(EJECTED)`**.
+  - **Recovery `create()` bootuje DYSK** — zero nośników instalacyjnych,
+    `autounattend` **nie ma jak się uruchomić**. Agent wrócił w **105 s** z tą
+    samą tożsamością mTLS, dysk 9,7→9,8 GB (**nie** przeinstalowany).
+  - **Ścieżka utraty danych jest definitywnie zamknięta.**
+
+  **ALE #6 NADAL NIE JEST SPEŁNIONE** — bo blocker był gdzie indziej, niż board
+  zakładał: recovery **nigdy się nie wyzwala** (brak detektora śmierci VM, patrz
+  front „TERAZ"), a reconnect zajął **105 s > 90 s** budżetu. Naprawa P0 była
+  **konieczna, ale niewystarczająca**.
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 
@@ -64,12 +84,10 @@ dysku = utrata danych** (dziś latentne, daemon = mock-libvirt).
   DEC-0018) + Save dialog ląduje w folderze Linuksa. To jest MVP-floor **zamiast
   JIT** (kryt. #3 wymaga re-definicji — patrz needs-owner). Host-side gotowe;
   live mount do odpalenia.
-- **Suspend/resume bez false HARD_DESTROY** (#5) + **recovery ≤90s** (#6) —
-  live na boxie, po naprawie P0.
-- **`uninstall` live** (#10) — kod kompletny; live-verify realnego usunięcia
-  (undefine niszczy `windows-guest` → zrobić z rozwagą / po becie).
-  `uninstall --dry-run` na realnym CLI potwierdzony (domena+pliki, exit 0).
-  (#9 `doctor` — ✅ LIVE-VERIFIED, patrz tabela.)
+- **Suspend/resume bez false HARD_DESTROY** (#5) — live na boxie; blokada
+  (coordinator zamrażał event-loop) zdjęta 2026-07-14 (`c4cb6e8`).
+  (#6 recovery → front „TERAZ". #9 `doctor` i #10 `uninstall` — ✅ LIVE-VERIFIED,
+  patrz tabela.)
 - **Pomiary N1** (#2 launch, #4 heartbeat, #8 microbench) — harness gotowy,
   realne liczby na boxie.
 - **README quick-start** (#11) — realny przejazd „od zera do okna".
@@ -96,24 +114,26 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 
 | # | Kryterium (MVP_SCOPE) | Stan | Nota |
 |---|---|---|---|
-| 1 | `install` ≤25 min / ≤2 min attended | ✅ live | A7-live: świeży install → agent auto-online ~12 min zero-touch. Cross-distro (Fedora/Arch) OVMF-fix jest, ale testowane tylko na tym boxie → 🔲 |
+| 1 | `install` ≤25 min / ≤2 min attended | ✅ live | **RE-VERIFIED 2026-07-14**: `uninstall --force` → świeży `install --locale pl-PL` → agent auto-online, zero ręcznych kroków. CLI wraca po 16 s; Windows + agent gotowe ~12 min. Cross-distro OVMF-fix testowany tylko na tym boxie → 🔲 |
 | 2 | `launch notepad` → natywne okno ≤3 s p50 | ✅ live / 🔨 | Render live (Notepad+Paint). Formalny pomiar ≤3 s p50 do zrobienia |
 | 3 | `.txt` → Open with Notepad → **JIT** mount, detach po zamknięciu | ⚠️ boundary / 🔲 | DEC-0018: MVP-floor = **Stage B** (persistent), nie JIT. Kryterium przeczy in-scope — re-def do podpisu (needs-owner §7). Stage B mount: 🔲 box |
 | 4 | heartbeat RTT <20 ms p50 | 🔲 box | FSM gotowy; realny pomiar na boxie |
 | 5 | suspend/resume bez false HARD_DESTROY | 🔲 box | LifecycleCoordinator gotowy; live-verify |
-| 6 | kill VM (`virsh destroy`) → recovery ≤90 s | 🔲 box ▶ | Mechanizm + finalize + A3-seam: host-side ✅ (`9ac1da1`, `30579a6`). **Mechanizm REGRESSION-GUARDED 2026-07-14**: `test_libvirt_real_destructive.py` (marker `live_libvirt`, opt-in `--live-libvirt`) jedzie realną sekwencją `define_and_start`→`redefine_steady_state`→`hard_destroy`→`undefine` na **domenie jednorazowej** i asertuje, że po recovery żywa domena bootuje DYSK bez nośnika instalacyjnego. **Greenlight 2026-07-14** → zostaje przejazd na prawdziwym Windowsie (loop-spec Faza B). Ostatni realny blocker |
+| 6 | kill VM (`virsh destroy`) → recovery ≤90 s | ⛔ P0 | **Data-loss half ZAMKNIĘTA i LIVE-VERIFIED 2026-07-14** (finalize → `disk boot=1`, oba CD ejected → `create` bootuje dysk, agent wraca, zero reinstalacji). **Ale kryterium NIE spełnione:** recovery **nigdy się nie wyzwala** — brak detektora śmierci VM (`LibvirtDomainEventSource` nie istnieje; FSM tyka ze strumienia, który śmierć VM zamyka). Do tego reconnect = **105 s > 90 s**. To jest front „TERAZ” |
 | 7 | CI green macOS + Ubuntu; `agent.exe` cross-compile | ⚠️ boundary | `agent.exe` ✅, Ubuntu CI ✅. „macOS matrix" martwe (Mac zvacuumowany) — re-def do podpisu (needs-owner §7) |
 | 8 | microbench pass vs baselines | 🔲 box | harness gotowy; realne liczby |
 | 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live | LIVE-VERIFIED 2026-07-05: na tym boxie `doctor` = **exit 0**, 10/10 OK (cpu_virt svm, kvm, vsock, qemu 10.2, freerdp, ovmf, libvirt, disk 135GB, config, vm_creds); zły host (`CROSSDESK_OVMF_CODE` bogus) → `ovmf [fail]` + **exit 1** |
-| 10 | `uninstall` czyste usunięcie | 🔲 box ▶ | Kod kompletny (`8261a35`): domena `undefine` (destroy+undefine NVRAM) + .desktop + ISO + state/disk + config. Live-verify = **krok B1** destrukcyjnego cyklu (greenlit 2026-07-14) — `uninstall --force` otwiera Fazę B, więc #10 i #6 domykają się jednym przejazdem |
+| 10 | `uninstall` czyste usunięcie | ✅ live | **LIVE-VERIFIED 2026-07-14** (`uninstall --force`): domena destroy+undefine, state-dir z dyskiem 29 GB, config, nvram, `.desktop` — usunięte, exit 0. Backup poza state-direm i ISO użytkownika **nietknięte**; `--dry-run` wcześniej pokazał dokładny plan |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 
-**Podsumowanie:** 1 realny blocker (#6 = P0 hard_destroy) — **od 2026-07-14 bez
-bramki właściciela**, zostaje sam przejazd (Faza B). 2 kryteria do re-definicji
-przez właściciela (#3, #7 — needs-owner §7). Reszta = „odpalić na boxie" lub
-drobny kod. Żadne z powyższych nie jest już `[HW]`-blocked — sprzęt jest.
+**Podsumowanie (po live-verify 2026-07-14):** destrukcyjny cykl przejechany —
+**#1 re-verified**, **#10 zamknięte**, a **data-loss half #6 zamknięta i
+udowodniona na żywym Windowsie**. Board mylił się jednak co do **#6**: naprawa
+`hard_destroy` była **konieczna, ale niewystarczająca** — recovery nigdy się nie
+wyzwala, bo **nie ma detektora śmierci VM** (nowy front „TERAZ”). Zmierzony
+reconnect: **105 s** przy budżecie 90 s.
 
-Jeden destrukcyjny cykl (Faza B) domyka **#6** i **#10** i re-weryfikuje **#1**,
-a zostawia świeżego gościa, na którym stoi cała Faza C (**#2, #3, #4, #5, #8,
-#11, #12** + burn-in). To jest najkrótsza droga do v0.1.0.
+Zostaje: **#6** (detektor + budżet), 2 kryteria do re-definicji przez właściciela
+(#3, #7 — needs-owner §7), oraz Faza C na świeżym gościu (**#2, #3, #4, #5, #8,
+#11, #12** + burn-in). Gość jest żywy i zdrowy — Faza C może ruszyć od zaraz.

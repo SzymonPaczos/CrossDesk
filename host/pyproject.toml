@@ -35,7 +35,7 @@ dependencies = [
     # Pure-Python ISO9660/Joliet writer — the tools-ISO builder
     # (installer.tools_iso) prefers system `xorriso` but falls back to
     # this so `crossdesk install` works with no system ISO tool.
-    "pycdlib>=1.14",
+    "pycdlib>=1.16.0",
 ]
 
 [project.optional-dependencies]

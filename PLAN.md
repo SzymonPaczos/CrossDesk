@@ -93,7 +93,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 
-**Stan: 9 z 12 kryteriow ✅ live.** Zostaje: **#3** (mount Stage B live), **#5** (suspend/resume live), **#11** (realny przejazd README), **#12** (test pakietu). **Zadne nie czeka juz na Twoj podpis** — oba boundary (#3, #7) okazaly sie od dawna rozstrzygniete, a board o tym nie wiedzial.
+**Stan: 8 z 12 kryteriow ✅ live** (#1, #2, #4, #6, #7, #8, #9, #10). Zostaje: **#3** (mount Stage B live), **#5** (suspend/resume live), **#11** (realny przejazd README), **#12** (test pakietu). **Zadne nie czeka juz na Twoj podpis** — oba boundary (#3, #7) okazaly sie od dawna rozstrzygniete, a board o tym nie wiedzial.
 
 **Podsumowanie (po live-verify 2026-07-14):** destrukcyjny cykl przejechany —
 **#1 re-verified**, **#10 zamknięte**, a **data-loss half #6 zamknięta i

@@ -1,111 +1,179 @@
 # CrossDesk Autonomous Loop — Operating Spec
 
-Drive CrossDesk toward **v0.1.0 (full MVP)** with *supervised autonomy*.
-Each iteration takes ONE unblocked unit of work end-to-end (implement →
-test → gate → commit → merge) and **parks** anything that needs the owner
-or the live box. This file is the prompt the loop runs every iteration —
-identical on the Mac (hardware-free items only) and the Proxmox box
-(hardware-free + live items).
+Drive CrossDesk to **v0.1.0** with supervised autonomy. One iteration = **one**
+queue item, taken end-to-end (implement → gate → commit → merge → push → record).
+The `/loop` prompt re-reads this file every iteration: it is the algorithm, the
+guardrails, and the queue. The board it serves is [`PLAN.md`](../PLAN.md).
 
-Canonical context the loop re-reads each iteration: this file (for the
-*algorithm + guardrails*), **[`PLAN.md`](../PLAN.md) for what to work on**
-(the single v0.1.0 board — it supersedes the "Work queue" section below,
-kept only for the 🟢/🔵 environment tags), [`needs-owner.md`](needs-owner.md),
-and `status.md`.
+Re-read each iteration: this file · [`PLAN.md`](../PLAN.md) (the v0.1.0 board) ·
+[`needs-owner.md`](needs-owner.md) (parked decisions) · [`status.md`](status.md)
+(known breakages).
 
-## Per-iteration algorithm — two phases
+## Toggles (owner-set — current)
 
-**Phase 1 first: land every host-side / code item you can. Phase 2 (live
-verify on the VM) runs only once Phase 1 is exhausted** (owner: "live verify
-gdy uznasz że skończyłaś wszystko co mogłaś"). Rationale: code work is
-deterministic and gate-checked; live-verify is flaky + destructive, so batch
-it at the end rather than interleave.
+| Toggle | Value | Set |
+|--------|-------|-----|
+| PUSH | **ON** — merge, then `git push origin main`, after green gates | 2026-06-29 |
+| ENV | **box** — the live Linux+KVM machine; `windows-guest` lives here | 2026-07 |
+| DESTRUCTIVE P0 | **GREENLIT** — the Phase B cycle below is authorized | 2026-07-14 |
+| WORKFLOWS | **GREENLIT** — the loop may change `.github/**` and merge it | 2026-07-14 |
+| EYEBALL | **park** — capture evidence; subjective sign-offs go to needs-owner | 2026-07-05 |
+| BOUND | queue drained · an item fails its gates twice · the box wedges | — |
 
-### Phase 1 — code (repeat until no code item remains)
+### Pre-decided owner calls — do NOT re-ask
 
-1. **Sync.** `git pull --rebase origin main`; re-read PLAN.md + status.md +
-   needs-owner.md.
-2. **Select** the top UNBLOCKED item: PLAN.md **TERAZ** front first, then
-   **NEXT** top-down. Take the *host-side / testable* part of it now; defer
-   its 🔲 live-verify to Phase 2.
-   - 🟠 owner-gated / boundary → **draft + park** to needs-owner.md, skip.
-3. **Branch** `feat|fix|chore/<topic>` from fresh `main`. One item, no
-   drive-by refactors.
-4. **Implement + Gate — all green, never `--no-verify`:**
-   - host: `ruff check src/ tests/`; `mypy --strict src/`; `pytest`.
-   - guest/gui if touched: `cargo check` + `cargo test --features
-     agent-svc/mock` + `cargo clippy -- -D warnings`.
-   - won't go green after a fair try → **park with the failure**, never merge red.
-5. **Commit** (Conventional Commits + `Co-Authored-By` trailer; **no backticks
-   in `-m`** — the shell command-substitutes them). **Merge** `--no-ff` into
-   `main`, delete the branch, **push** (PUSH=ON).
-6. **Record.** Update PLAN.md (mark done / move the TERAZ front) + status.md.
-   Append one line to the Loop log. **No WORK_LOG** (ceremony retired).
-7. **Repeat** until no host-side item remains, or the bound trips.
+- **FreeRDP RDP cert policy = `ignore`** on the localhost / SLIRP path (our own
+  guest, no MITM surface; real trust = mTLS gRPC + the Windows credential).
+- **`agent.exe` signing = self-signed** publisher root CA for beta; document
+  "unsigned-to-the-world" honestly. Not a release blocker.
+- **FS default = whole `$HOME`** (DEC-0018); sharing itself stays opt-in / off.
+- **Semver label = `0.1.0-alpha`.**
+- **THREAT_MODEL §3c honesty** (TCP-loopback vs AF_VSOCK; real `LogonUserW`) is a
+  go/no-go gate for calling anything "beta" — **not** a loop blocker. Draft, park.
 
-### Phase 2 — live verify on the box (once Phase 1 is exhausted)
+## Per-iteration algorithm
 
-8. For each 🔲 item whose code landed, exercise it on a real VM and capture
-   evidence (log / screenshot to `/tmp/cd-evidence/`). Full box autonomy —
-   `snapshot create` before a destructive step is prudent but not required.
-9. If correctness needs human judgement (Save-dialog lands right, window looks
-   right, install-not-frozen, BSOD) → capture the screenshot and **park to
-   needs-owner.md "Eyeball"**; don't self-certify a subjective call.
-10. **STOP** when the bound trips or nothing unblocked remains → emit a batched
-    needs-owner summary (decisions to make, eyeball evidence to review).
+1. **Sync.** `git pull --rebase origin main`; re-read this file, PLAN.md,
+   needs-owner.md, status.md.
+2. **Select** the top queue item that is not ⏸. Exactly **one**.
+3. **Branch** `feat|fix|chore|docs|test/<topic>` from a fresh `main`. One item per
+   branch; no drive-by refactors.
+4. **Implement + gate — green or park; never `--no-verify`:**
+   - host: `ruff check src/ tests/` · `mypy --strict src/` · `pytest`
+   - guest / gui, if touched: `cargo check` · `cargo test` · `cargo clippy -- -D warnings`
+   - workflows, if touched: `zizmor` + a YAML parse
+   - Won't go green after a fair try (**two** attempts) → **park it with the
+     failure text** and take the next item. Never merge red.
+5. **Commit.** Conventional Commits subject — the `commit-msg` hook **blocks** a
+   malformed one — plus the provenance trailers from
+   [`change-provenance.md`](rules/change-provenance.md): `Intent:` / `Task-Ref:` /
+   `Gates:` (the hook WARNs when they are missing).
+   **No AI attribution** — no `Co-Authored-By`, no `AI-Contribution` (D-006).
+   Never put backticks in `git commit -m` (the shell command-substitutes them).
+6. **Merge** `--no-ff` into `main`, delete the branch, **push** (PUSH=ON).
+7. **Record.** PLAN.md (mark done / move the front) · status.md if a partial
+   changed · one line in the Loop log below. No WORK_LOG — the ceremony is retired.
+8. **Stop the iteration.** One item per iteration; do not chain.
 
-## Parking (owner-gated / eyeball)
+**Owner-gated or boundary?** Never apply it. Draft the exact diff (or the decision
+framing) into `needs-owner.md`, mark the item ⏸, take the next one. Boundary files:
+`proto/**` · `docs/{THREAT_MODEL,DECISIONS,REQUIREMENTS,MVP_SCOPE,GOALS}.md` ·
+`ROADMAP.md` · `AGENTS.md`. `.github/**` is **no longer** boundary (greenlit
+2026-07-14) — but it is security code: gate it with `zizmor` and say so in `Gates:`.
 
-Never apply a boundary edit or owner decision. Draft the exact diff/text or
-the decision framing into `needs-owner.md` under the right bucket, mark the
-queue item ⏸, and move on. Boundary files (draft-and-park, never edit):
-`proto/**`, `docs/{THREAT_MODEL,DECISIONS,REQUIREMENTS,MVP_SCOPE,GOALS}.md`,
-`ROADMAP.md`, `AGENTS.md`.
+## Queue — v0.1.0 (ordered; work it top-down)
+
+Phase A is deterministic code. Phase B is the one sanctioned destructive cycle.
+Phase C is live work on the guest Phase B leaves behind. **Do not start Phase B
+until Phase A is drained** — bank the code first, so a wedged box costs nothing.
+
+### Phase A — code / CI (no VM)
+
+- **A1 · pre-push secret-gate bypass** (audit P1 / Red Team LOW). `.githooks/pre-push`
+  iterates `for f in $CHANGED_FILES` unquoted, so a filename with a space or a glob
+  splits into tokens, `[ -f "$f" ]` rejects them, and a file holding a real secret is
+  never scanned — the only gate when gitleaks is absent. Fix:
+  `git diff -z … | while IFS= read -r -d '' f` + `set -f`. Regression test: a file
+  named with a space carrying `api_key="AKIA…"` must make pre-push exit ≠ 0.
+- **A2 · CI / supply-chain wave** (audit P1; greenlit 2026-07-14). Restore
+  `security.yml` triggers (`push` + `pull_request` + weekly `schedule`) — the repo is
+  public, Actions are free, and this makes AGENTS.md's "always runs in CI" claim true
+  *without* a boundary edit. SHA-pin every third-party `uses:` and digest-pin the
+  semgrep image — **Red Team HIGH**: `dtolnay/rust-toolchain@stable` (a movable tag)
+  runs *before* the job that signs `agent.exe` with the real publisher cert, so a
+  compromised tag ships signed-by-us malware. Add top-level `permissions:` to
+  `ci.yml` + `compat-matrix.yml`; `persist-credentials: false` on checkouts; add
+  `.github/dependabot.yml` (cargo ×2, github-actions, pip; 3–7 d cooldown, none for
+  security). Target: `zizmor` reports 0 `unpinned-uses` (40 today).
+- **A3 · tracking honesty** (audit P2). `status.md` calls `feat/resilience-logging`
+  and `feat/fs-drive-letter` "NIE merged" — their code **is** in `main` (`0f31d52`,
+  `688b2a7`). Refresh those sections; the dangling `handoff.md` references in
+  backlog/status point at an untracked local file — move the §2.7/§2.8 plans into
+  `.claude/history/` and fix the links; delete the 17 merged stale `origin/*` branches.
+- **A4 · `libvirt_call` executor** (audit P2 / Security Review NOTE).
+  `libvirt_ctl/aio.py` offloads onto the *shared default* executor; a saturated pool
+  starves every other `run_in_executor` on the daemon. Give it a dedicated
+  `ThreadPoolExecutor` + a saturation test (N > pool_size blocked calls must not
+  starve an unrelated call).
+- **A5 · C-3: lifecycle blocks the event loop** (backlog Tech-debt; **prerequisite
+  for C5**). `lifecycle/coordinator.py` `suspend()`/`resume()` block on the D-Bus
+  PrepareForSleep path. It was deliberately excluded from the deadline-bound libvirt
+  work because the coordinator mutates FSM state — this needs a thread-safety design,
+  not a mechanical `libvirt_call` wrap. Must land before #5 is verified on `real`.
+- **A6 · `zizmor` on the box** (audit P2). Install it (uvx / pipx) so A2 has a real
+  gate rather than an eyeball; consider a job in `security.yml`.
+- **A7 · destructive-path integration test** (backlog C-2 — its trigger, the P0
+  greenlight, just fired). A `live_libvirt` pytest marker (deselected by default)
+  driving `define_and_start` → `redefine_steady_state` → `hard_destroy` → `undefine`
+  on a **throwaway** domain (never `windows-guest`) with `XDG_*` pointed at a temp
+  dir. This is what makes criterion #6 regression-guarded instead of a one-off.
+- **A8 · README quick-start (#11), the text.** Rewrite it against what actually
+  ships. The real "from zero to a window" run is C7.
+
+### Phase B — the sanctioned destructive cycle (closes #6 and #10; re-verifies #1)
+
+**Step 0 — the safety net.** The milestone backup was moved out of the state dir on
+2026-07-14 (`~/crossdesk-backups/crossdesk-win.milestone-bak.qcow2`, 30 GB) because
+`uninstall()` `rmtree`s the entire state dir (`uninstall.py:112`) and would otherwise
+delete it. **Verify it is still outside the state dir before B1.** If not, move it.
+
+- **B1 · `uninstall --force` live (#10).** Real removal via the real CLI: domain
+  destroy + undefine (NVRAM), disk, state, config, `.desktop`. Capture the report.
+- **B2 · fresh `install` (#1 re-verify).** `crossdesk install --iso-path
+  ~/Downloads/Win10_22H2_Polish_x64v1.iso --locale pl-PL`. Zero-touch; the agent's
+  Hello should land in ~12 min. This is the **faithful** domain the P0 needs — fresh
+  nvram, install-ISO still at `boot order=1`.
+- **B3 · P0 finalize + recovery (#6).** Daemon with
+  `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real` and `bind_kind=tcp`: the first Hello fires
+  `on_session_ready` → `finalize_steady_state` redefines the domain (disk `boot=1`,
+  both CDs ejected) → `virsh destroy` → recovery `create` must boot the **disk, not
+  the installer** → the agent reconnects **≤ 90 s**. Evidence to `/tmp/cd-evidence/`.
+  **This is the last real v0.1.0 blocker.** If it boots the ISO, **STOP** — that is
+  the data-loss path itself. Report it; do not retry blind.
+
+### Phase C — live, on the guest Phase B leaves behind
+
+- **C1 · #4** heartbeat RTT p50 < 20 ms — the harness exists; produce real numbers.
+- **C2 · #2** `launch notepad` → native window, ≤ 3 s p50 (formal measurement).
+- **C3 · #8** microbench vs the baselines.
+- **C4 · #3** FS Stage B live — virtio-fs mount (whole `$HOME` default, DEC-0018);
+  a Windows Save dialog must land in the Linux `$HOME`. Subjective → screenshot and
+  **park to Eyeball**.
+- **C5 · #5** suspend/resume with no false HARD_DESTROY (needs A5).
+- **C6 · #12** packaging — build the AUR PKGBUILD and install from it.
+- **C7 · #11** README quick-start — the real "from zero to a window" run.
+- **C8 · M5** burn-in — ≥ 2 Windows × cycles, to catch flakes.
+
+⏸ **Owner-gated (draft + park; never apply):** proto edits (app-discovery RPC) ·
+REQUIREMENTS F-marker re-baseline · THREAT_MODEL §3c + VERSIONING capability
+promotion · MVP_SCOPE #3 / #7 re-definition · `SECURITY.md` (public-facing) · the
+Python lockfile direction (uv vs pip-tools) · repo-hosting domain · the final beta
+go/no-go.
 
 ## Guardrails
 
-- Never `--no-verify`; never edit boundary files (draft → needs-owner).
-- One item per branch; no drive-by refactors.
-- **Bounds:** stop + report after a per-run token ceiling or **N=6 merged
-  items**, whichever first. Don't run unbounded.
-- **VM ops:** full autonomy on this box (owner: "może robić co chce na tym
-  komputerze") — spin up / tear down / reinstall VMs freely, including
-  `windows-guest`. `snapshot create` before a destructive step is prudent
-  (the host has reset under load); not a hard gate.
-- If unsure whether something is owner-gated → treat it as owner-gated and park.
+- **Never** `--no-verify`. Never merge red. Never edit a boundary file.
+- **The only sanctioned destructive VM operation is Phase B**, in order, after
+  Step 0. Anything else destructive → park it. `windows-guest` is not a test
+  fixture: the autouse conftest guard (`13c765f`) that blocks real libvirt inside
+  the suite stays, and destructive integration tests run against a **throwaway**
+  domain with temp `XDG_*`.
+- Subjective correctness — did the Save dialog land in the right place, does the
+  window look right, is the install frozen, is that a BSOD — is **not** self-certified.
+  Screenshot to `/tmp/cd-evidence/` and park to needs-owner "Eyeball".
+- Any non-trivial task discovered outside the current item goes on the board
+  **immediately** (v0.1.0 → PLAN.md; post-MVP → backlog.md; unclear → its `Inbox`)
+  before continuing. Recording it is not permission to start it.
+- If the newest `## Audyt` in `audit-log.md` is more than 7 days old, propose the
+  `weekly-audit` skill instead of taking a queue item.
+- Unsure whether something is owner-gated? Then it is. Park it.
 
-## Toggles (owner set these 2026-07-05)
+## Stop and report
 
-- **PUSH = ON** — loop pushes its own merges to `origin/main` after green gates.
-- **ENV = box** — the live Linux+KVM box (TUF FX505DT; `windows-guest` live).
-- **VM = full autonomy** — may reinstall / destroy any VM on this box.
-- **LIVE-VERIFY = deferred** — Phase 2 only, after Phase 1 is exhausted.
-- **EYEBALL = park** — capture evidence, park subjective sign-offs to needs-owner.
-- **BOUND = 6 merged items** or the token ceiling, whichever first.
-
-### Pre-decided owner calls (in effect — loop does NOT re-ask)
-
-- **FreeRDP RDP cert policy = `ignore`** for the localhost / SLIRP path (our own
-  guest, no MITM surface; real trust = mTLS gRPC + Windows cred). Loop may switch
-  `rail_command.py` `cert_policy` default `tofu`→`ignore`; the matching
-  `THREAT_MODEL` row is a boundary draft.
-- **`agent.exe` code-signing = self-signed** publisher root CA for beta (already
-  built); document "unsigned-to-the-world" honestly. Not a blocker.
-- **Security §3c honesty** (THREAT_MODEL transport TCP-vs-AF_VSOCK + real
-  LogonUserW residual-risk + VERSIONING capability promotion) is a **go/no-go
-  gate for calling anything "beta"**, NOT a loop blocker — loop drafts it, owner
-  authors/signs before the beta cut.
-
-## Board — see PLAN.md
-
-The former Work queue lived here; it is **superseded by [`PLAN.md`](../PLAN.md)**
-(TERAZ / NEXT / LATER + the 12 acceptance criteria with live status). The loop
-reads PLAN.md, not this section. Remaining **owner-gated** items (draft →
-needs-owner, never apply): proto edits (app-discovery RPC) · repo-hosting domain
-· REQUIREMENTS F-marker re-baseline · remaining THREAT_MODEL / VERSIONING honesty
-· final go/no-go. FS-exposure default, semver label, MVP_SCOPE #3, FreeRDP cert,
-and code-signing are already decided (Pre-decided calls above + `docs/DECISIONS.md`
-DEC-0018).
+Stop when the queue is drained, an item fails its gates twice, or the box wedges.
+Then emit one batched report: what merged (SHAs), what each live item actually
+proved (with evidence paths), what is parked in needs-owner and why, and the
+refreshed 12-criteria table in PLAN.md.
 
 ## Loop log
 

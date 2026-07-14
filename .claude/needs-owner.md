@@ -54,27 +54,23 @@ punkty wymagają Twojego podpisu:
   `git mv WORK_LOG.md .claude/history/2026-07-05-work-log.md` — czysty
   root, git pamięta. Powiedz „przenieś", a wykonam.
 
-## §8 — Audyt 2026-07-12: AGENTS.md security-sweep claim + fala workflow (P1)
+## §8 — ✅ ROZSTRZYGNIĘTE 2026-07-14: opcja (a) + cała fala workflow
 
-`AGENTS.md:64-69` (boundary) twierdzi, że security sweep „always runs in CI
-via `.github/workflows/security.yml` on every push, every PR, and weekly on
-Mondays" — realny YAML to `on: workflow_dispatch` **only** (billing-freeze
-2026-05-20). Repo jest dziś publiczne (Actions darmowe). Podpisz jedną opcję:
+**Właściciel podpisał: „wykonaj falę + merge".** Pętla wykonuje całość i merguje
+po zielonych bramkach; właściciel czyta diff post-hoc.
 
-- **(a) REKOMENDOWANE:** przywracam triggery `push` + `pull_request` +
-  `schedule` (poniedziałki) w `security.yml` → AGENTS.md staje się prawdziwe
-  bez edycji boundary.
-- **(b)** zostaje manual-only → AGENTS.md PROPOSED: „…lives in
-  `.github/workflows/security.yml`; **manual-only (`workflow_dispatch`)**
-  since the 2026-05-20 Actions billing freeze — run it before releases and
-  after security-relevant changes."
-
-Do tej samej decyzji: **sign-off na całą falę zmian `.github/workflows/**`**
-z backlogu P1 „CI / supply chain 2026-07-12" (SHA-pinning third-party +
-semgrep image, top-level `permissions:` w ci/compat-matrix,
-`persist-credentials: false`, `dependabot.yml`) — zmiany workflowów traktujemy
-jak security code (`ci-cd.md` §2 pkt 5), więc nie wykonuję ich bez podpisu.
-Powiedz „wykonaj (a) + falę" a zrobię całość jedną gałęzią z review.
+- **(a) wybrane:** przywracamy triggery `push` + `pull_request` + `schedule`
+  (poniedziałki) w `security.yml` — repo jest publiczne (Actions darmowe), więc
+  `AGENTS.md:64-69` staje się **prawdziwe bez edycji boundary**. Wariant (b)
+  (przepisanie AGENTS.md na „manual-only") odpada.
+- **Fala** (backlog P1 „CI / supply chain 2026-07-12") autoryzowana w tym samym
+  podpisie: SHA-pinning third-party `uses:` + digest semgrep, top-level
+  `permissions:` w `ci.yml`/`compat-matrix.yml`, `persist-credentials: false`,
+  `.github/dependabot.yml`.
+- **Konsekwencja dla granic:** `.github/**` **przestaje być boundary** dla pętli
+  (zapisane w [`loop-spec.md`](loop-spec.md) toggles). Nadal jest **security
+  code** — bramkowane `zizmor`em (dziś 40× `unpinned-uses` → cel 0) i raportowane
+  w trailerze `Gates:`. Kolejka: `loop-spec.md` Faza A, item **A2**.
 
 ## Still open (boundary-file edits / owner calls)
 
@@ -109,21 +105,21 @@ Powiedz „wykonaj (a) + falę" a zrobię całość jedną gałęzią z review.
   (daemon uses mock-libvirt) but **A3 must not wire the real LibvirtController
   into lifecycle until the steady-state-XML finalize lands.** Not a boundary
   edit — flagged so it's on the go/no-go radar.
-- [ ] **▶ GREENLIGHT the P0 live-verify (the #1 remaining release blocker).**
-  Everything host-side is now in place: the steady-state finalize is wired
-  (`9ac1da1`), the daemon can drive real libvirt via
-  `CROSSDESK_CONFIG__LIBVIRT__BACKEND=real` (`30579a6`). The last step is a
-  *faithful* live run — daemon `backend=real` + a **fresh install** → agent
-  Hello → finalize redefines to steady-state → `virsh destroy`+`create` boots
-  the **disk** (not the ISO) → agent reconnects ≤90s. Closes #6, unblocks A3.
-  **The catch:** it wants a fresh install, which **wipes the current milestone
-  Windows install** (`crossdesk-win.qcow2`; a 30 GB `…milestone-bak.qcow2`
-  backup exists). My incident-restored domain has a fresh nvram (no boot entry)
-  so it's not a faithful vehicle. I have box autonomy but I'm **holding on the
-  destructive install for your nod** given (a) the valuable existing install
-  and (b) the recent accidental-undefine incident (Eyeball below). *Say go and
-  I run it next iteration; or say "use the existing disk" and I'll attempt a
-  boot-once-to-seed-nvram path instead.*
+- [x] **▶ P0 live-verify — GREENLIT 2026-07-14 (owner: „pełny destrukcyjny
+  cykl").** The loop now owns the whole sequence; it is Phase B of
+  [`loop-spec.md`](loop-spec.md): `uninstall --force` (closes #10) → fresh
+  `install` (re-verifies #1, and yields the *faithful* domain: fresh nvram,
+  install-ISO still boot-order-1) → daemon `backend=real` → agent Hello fires
+  `on_session_ready` → `finalize_steady_state` redefines to steady-state →
+  `virsh destroy` → recovery `create` must boot the **disk, not the installer**
+  → agent reconnects ≤90 s. **Closes #6, unblocks A3.** Wipes the current
+  milestone install by design.
+  **Safety net (done 2026-07-14):** the 30 GB `…milestone-bak.qcow2` was moved
+  to `~/crossdesk-backups/` — it had been sitting *inside* the state dir that
+  `uninstall()` `rmtree`s (`uninstall.py:112`), so the destructive cycle would
+  have deleted the backup along with the install. Verified outside before B1.
+  **Abort rule:** if the recovery `create` boots the **ISO**, the loop STOPS and
+  reports — that is the data-loss path itself, not something to retry blind.
 - [ ] **Final go/no-go** for the public beta cut (after burn-in).
 - [x] **`docs/GOALS.md` whole-$HOME alignment — APPLIED 2026-07-05** (owner
   "apply"). §5 landed: G4 row, advantages row, Vision annotation, closing line.

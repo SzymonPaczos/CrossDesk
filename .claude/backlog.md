@@ -36,7 +36,17 @@ _(pusto)_
 
 ## P0
 
-### ⛔ BRAK DETEKTORA ŚMIERCI VM — blokuje kryt. #6 (live-verify 2026-07-14)
+### ✅ BRAK DETEKTORA ŚMIERCI VM — ZROBIONE `414c879` (2026-07-14, live-verified)
+Zamknięte tego samego dnia, w którym odkryte. **Zmierzone na żywo:** `virsh destroy` →
+wykryte w **1 s** → auto-recovery → domena w 6 s → **agent w 25 s** (budżet 90 s),
+bootując dysk bez nośników. Wymagało **trzech** brakujących elementów, nie jednego:
+realne `LibvirtDomainEventSource` (nie istniało), recovery w `DomainEventReactor`
+(tylko logował), oraz `LibvirtController.start()` (nie było czym wystartować martwej
+domeny — `hard_destroy()` robi `destroy()+create()`, a `destroy()` na martwej rzuca).
+Czyste wyłączenie gościa świadomie **nie** jest wskrzeszane. Oryginalny opis:
+
+<details><summary>diagnoza z live-verify</summary>
+
 **Zabity VM nie jest w ogóle zauważany przez daemona.** Odkryte przy przejeździe
 Fazy B na żywej domenie: `virsh destroy windows-guest` → 60 s obserwacji → **zero**
 linii w logu daemona, zero eskalacji FSM, domena leży wyłączona. Root cause
@@ -140,6 +150,8 @@ drive-find (`0dc3424`) + FreeRDP TOFU pin-clear (`2ab10d1`). Adversarial Workflo
   `undefine` na jednorazowej throwaway domenie (NIGDY `windows-guest`), odpalany
   w cyklu live-verify → kryt. #6 staje się regression-guarded. Dziś
   `test_libvirt_real.py` pokrywa tylko czysty `_with_domain_uuid`.
+
+</details>
 
 ### Filesystem bridge — kierunek A→B (DECYZJA właściciela 2026-06-12; beta-blocker #1)
 - **Etap A: litera dysku `Z:` + redirect Dokumenty.** `[~PARTIAL 2026-06-12]`

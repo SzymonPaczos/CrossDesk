@@ -54,6 +54,23 @@ class LibvirtController(Protocol):
         """Forceful kill+restart: ``virsh destroy`` then ``virsh start``."""
         ...
 
+    def start(self) -> None:
+        """Start an already-defined domain from its persistent config.
+
+        This is the recovery-from-death path, and it is deliberately *not*
+        :meth:`hard_destroy`: that one destroys first, and ``destroy`` on a domain
+        that is already gone raises. When the VM died on its own — ``virsh
+        destroy``, a QEMU crash, an OOM kill — there is nothing left to destroy,
+        only something to boot.
+
+        Nor is it :meth:`define_and_start`, which *redefines* the domain from XML
+        and would throw away the steady-state config the install finalized.
+
+        Idempotent: a domain that is already running is left alone, so a recovery
+        racing ``hard_destroy``'s own restart is harmless.
+        """
+        ...
+
     def redefine_steady_state(self, domain_xml: str) -> None:
         """Overwrite the PERSISTENT domain config with post-install steady-state
         XML (installed disk on ``<boot order='1'>``, install media ejected).

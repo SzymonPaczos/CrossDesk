@@ -52,10 +52,14 @@ from crossdesk_host.ipc.management import (  # noqa: E402
     mgmt_socket_path,
 )
 from crossdesk_host.ipc.verify_coordinator import VerifyCoordinator  # noqa: E402
-from crossdesk_host.libvirt_ctl import shutdown_libvirt_executor  # noqa: E402
+from crossdesk_host.libvirt_ctl import libvirt_call, shutdown_libvirt_executor  # noqa: E402
 from crossdesk_host.libvirt_ctl.mock import LibvirtControllerMock  # noqa: E402
 from crossdesk_host.lifecycle.coordinator import LifecycleCoordinator  # noqa: E402
 from crossdesk_host.lifecycle.dbus_listener import start_listener  # noqa: E402
+from crossdesk_host.lifecycle.domain_events import (  # noqa: E402
+    DomainEventReactor,
+    LibvirtDomainEventSource,
+)
 from crossdesk_host.lifecycle.notifications import SubprocessNotifier  # noqa: E402
 from crossdesk_host.observability.grpc_interceptor import TraceContextInterceptor  # noqa: E402
 from crossdesk_host.observability.otlp import configure_from_env as configure_otlp_from_env  # noqa: E402
@@ -290,6 +294,28 @@ async def main() -> None:
         logger.warning("lifecycle_listener_unavailable", error=str(exc))
     _assert_suspend_protection(libvirt_ctl, lifecycle_listener is not None)
 
+    # VM-death detection. Without this the daemon is blind to a killed guest: the
+    # heartbeat FSM ticks off the gRPC stream, so the death that closes the stream
+    # also silences the thing that would have noticed it (live-verified 2026-07-14
+    # — a `virsh destroy` produced no daemon reaction at all). Real controller only:
+    # on the mock there is no libvirt to subscribe to, and a mock "recovery" would
+    # only paper over the gap.
+    domain_events: Optional[asyncio.Task[None]] = None
+    if not isinstance(libvirt_ctl, LibvirtControllerMock):
+
+        async def _recover_vm() -> None:
+            # start(), not hard_destroy(): the domain is already gone, so
+            # hard_destroy's destroy() would raise. start() is idempotent, so a
+            # recovery that races hard_destroy's own restart is harmless.
+            await libvirt_call(libvirt_ctl.start)
+
+        reactor = DomainEventReactor(notifier=notifier, recover=_recover_vm)
+        try:
+            source = LibvirtDomainEventSource(domain_name=cfg.libvirt.domain_name)
+            domain_events = await source.start(reactor.on_event)
+        except RuntimeError as exc:
+            logger.warning("domain_event_source_unavailable", error=str(exc))
+
     if systemd_daemon is not None:
         systemd_daemon.notify("READY=1")
 
@@ -317,6 +343,8 @@ async def main() -> None:
         logger.info("daemon_shutting_down")
         if lifecycle_listener is not None:
             lifecycle_listener.cancel()
+        if domain_events is not None:
+            domain_events.cancel()
         # Stop FreeRDP children first so the supervisor's monitor tasks see
         # an expected exit, then the gRPC servers.
         await rail_supervisor.shutdown_all()

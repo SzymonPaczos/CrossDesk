@@ -30,7 +30,7 @@ dependencies = [
     # the operator opts in, so unconfigured daemons pay only the
     # wheel-install cost.
     "opentelemetry-api>=1.27",
-    "opentelemetry-sdk>=1.27",
+    "opentelemetry-sdk>=1.43.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.27",
     # Pure-Python ISO9660/Joliet writer — the tools-ISO builder
     # (installer.tools_iso) prefers system `xorriso` but falls back to

@@ -36,6 +36,9 @@ class MockHooks:
     fail_next_undefine: bool = False
 
     hard_destroy_count: int = 0
+    start_count: int = 0
+    """How many times ``start`` was called — the recovery-from-death path."""
+    fail_next_start: bool = False
     undefine_count: int = 0
     undefined: bool = False
     """Set once ``undefine`` runs — the signal ``crossdesk uninstall`` tore the
@@ -119,6 +122,19 @@ class LibvirtControllerMock(LibvirtController):
         self.hooks.hard_destroy_count += 1
         # Real virsh destroy+start leaves the domain running again;
         # mirror that so subsequent is_running() observations agree.
+        self.hooks.running = True
+        self.hooks.shutdown_polls_remaining = 0
+
+    def start(self) -> None:
+        if self.hooks.fail_next_start:
+            self.hooks.fail_next_start = False
+            raise RuntimeError("mock-injected start failure")
+        self.hooks.start_count += 1
+        if self.hooks.running:
+            # Idempotent, like the real one: recovery may race hard_destroy's
+            # own restart, and firing twice must not be an error.
+            return
+        logger.warning("[LIBVIRT MOCK] start: virsh start %s (recovery)", self.domain_name)
         self.hooks.running = True
         self.hooks.shutdown_polls_remaining = 0
 

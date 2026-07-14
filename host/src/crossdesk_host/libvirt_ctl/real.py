@@ -128,6 +128,20 @@ class RealLibvirtController(LibvirtController):
         except libvirt.libvirtError as exc:
             raise RuntimeError(f"start after destroy failed: {exc}") from exc
 
+    def start(self) -> None:
+        import libvirt
+
+        domain = self._domain()
+        try:
+            if domain.isActive():
+                # Already back — most likely hard_destroy's own create() beat us
+                # to it. Recovery must be safe to fire twice.
+                return
+            logger.warning("start: virsh start %s (recovery)", self.domain_name)
+            domain.create()
+        except libvirt.libvirtError as exc:
+            raise RuntimeError(f"start failed: {exc}") from exc
+
     def redefine_steady_state(self, domain_xml: str) -> None:
         import libvirt
 

@@ -72,6 +72,82 @@ po zielonych bramkach; właściciel czyta diff post-hoc.
   code** — bramkowane `zizmor`em (dziś 40× `unpinned-uses` → cel 0) i raportowane
   w trailerze `Gates:`. Kolejka: `loop-spec.md` Faza A, item **A2**.
 
+## §9 — FS defaults: rewizja DEC-0018 → drabina scope'ów — ✅ APPLIED 2026-07-19
+
+Owner "apply" 2026-07-19 → landed on `feat/fs-documents-default`: **DEC-0019**
+added to `docs/DECISIONS.md` (DEC-0018 marked *Amended by*); boundary docs
+updated (`MVP_SCOPE.md` #3 + Phase-5/FS line, `THREAT_MODEL.md` §C5 row I +
+security-claim #2, `PLAN.md` #3 row + NEXT + summary); code: `peripherals.py`
+scope default `home`→`documents` + `home_scope_warning()`, `management.py`
+`_jitlite_flags` + `_launch` wiring (per-launch parent-dir `/drive:` overrides
+the persistent scope, keeps other peripheral flags) + loud home-scope launch
+warning. Tests: new default/opt-in/warning + JIT-lite share/skip/override
+(65 pass in the two files; full suite green). Gates: ruff + mypy --strict clean.
+Sign-off boxes below kept for the record. **Owner still authors the exact
+THREAT_MODEL security wording if they want to refine my applied draft.**
+
+Owner decision (conversation 2026-07-19, thesis-driven): the *mechanism* of
+DEC-0018 stays (opt-in share, `scope = home|documents|custom`); what changes is
+the **default** and the posture. Ladder: (1) default `documents` + **JIT-lite**
+(per-launch rdpdr share of the opened file's parent dir, dies with the app
+session), (2) `home` stays as an explicit opt-in behind a loud warning naming
+`~/.ssh` + the mTLS key, (3) Stage C JIT-per-file remains the post-1.0
+tight-isolation mode. Rationale discussed: whole-`$HOME` R/W default collapses
+the G4 trust boundary — guest *write* to `$HOME` = host code execution
+(dotfiles/autostart/`~/.local/bin`), guest *read* = `~/.ssh` + VM password
+exfiltration; same exposure class as VirtualBox shared-folders (abused by
+Ragnar Locker/Maze). `documents`+JIT-lite keeps the UX (Save → `Z:` →
+Documents) while honoring the original "on-demand sharing, no persistent home
+mapping" commitment (B1).
+
+Say **"apply §9"** and I land the whole batch (ADR + boundary edits + code
+branch). Sign-off items:
+
+- [x] **DEC-0019 draft** (insert at top of `docs/DECISIONS.md`):
+
+      ## DEC-0019: FS share default narrows to `documents`; whole-$HOME becomes a loud opt-in; JIT-lite ships in v0.1.0
+
+      **Date:** 2026-07-19 · **Status:** active · **Amends:** DEC-0018
+
+      Sharing remains opt-in (`shared_folder_enabled` default OFF) and the
+      DEC-0018 mechanism/staging is unchanged. When sharing is enabled, the
+      default scope becomes **`documents`** (was `home`). `home` remains
+      available as an explicit opt-in accompanied by a loud CLI/GUI warning
+      naming the exposure: the guest gains R/W over `~/.ssh`,
+      `~/.config/crossdesk` (host mTLS key + VM password), and writable
+      dotfiles/autostart — i.e. guest compromise escalates to host-user code
+      execution. Additionally v0.1.0 ships **JIT-lite**: launching an app
+      with a file argument ("Open with Notepad") shares only the file's
+      parent directory for that RAIL session (per-launch rdpdr `/drive:`);
+      the share ends when the app session ends. Stage C JIT-per-file
+      (`ReleaseAck`) stays post-1.0 as the tight-isolation mode.
+
+      **Why:** a whole-`$HOME` R/W *default* collapses the G4 trust boundary
+      through the filesystem while the control plane keeps per-frame auth —
+      an inconsistent security posture, and the same exposure class as
+      always-on VM shared folders. The `documents` default + JIT-lite
+      preserves the intended UX at negligible security cost.
+
+- [x] **Code (gated on the ADR):** `peripherals.py` scope default
+  `"home"` → `"documents"`; loud warning path when `scope = home`; JIT-lite
+  wiring (launch `file_path` → parent-dir `/drive:` for that session) +
+  tests. Non-boundary, lands on one branch with the docs.
+- [x] **§7a (MVP_SCOPE #3) draft superseded** — replace the pending §7
+  wording with:
+
+      3. With file sharing enabled, a Windows app can open and save files
+         under the configured share (v0.1.0 default scope: `documents`); a
+         `.txt` opened via "Open with Notepad" is shared per-launch
+         (JIT-lite: the file's parent directory only, for the lifetime of
+         that app session). Whole-`$HOME` is an explicit, warned opt-in.
+         (Stage C JIT per-file mount/detach = post-1.0.)
+
+- [x] **THREAT_MODEL §3a/§3b re-word** (you author): residual risk should
+  now read "default `documents`; `home` opt-in raises risk to High (host
+  code-exec via writable dotfiles), mitigated by explicit warning".
+- [x] **PLAN.md #3 note** — after sign-off I update the criterion row
+  (⚠️ boundary → resolved by DEC-0019) and the NEXT "FS Stage B live" line.
+
 ## Still open (boundary-file edits / owner calls)
 
 - [ ] **Ratchet: hash-pin GitHub's OWN actions too? (surfaced by A2, `05653c7`).**

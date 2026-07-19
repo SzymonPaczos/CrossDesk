@@ -28,9 +28,10 @@ Everything in that sentence must work for v0.1.0.
 - **Phase 4** — RAIL display integration (FreeRDP RAIL with
   per-window events; X11 baseline acceptable)
 - **Phase 5 / FS** — Stage B persistent virtio-fs share (one configured
-  mount, default the whole `$HOME` R/W; DEC-0018) is the v0.1.0 floor;
-  Stage C JIT-per-file mount/detach with `ReleaseAck` is a post-1.0,
-  user-selectable tight-isolation mode
+  mount, v0.1.0 default scope `documents`; DEC-0019) is the v0.1.0 floor,
+  plus JIT-lite (per-launch share of an opened file's parent dir); whole
+  `$HOME` is a warned opt-in. Stage C JIT-per-file mount/detach with
+  `ReleaseAck` is a post-1.0, user-selectable tight-isolation mode
 
 ### From cross-cutting follow-ups
 
@@ -106,10 +107,11 @@ A v0.1.0 release happens when **all of the following are true**:
 2. `crossdesk launch notepad` produces a native Linux window within
    ≤3 s p50 (per N1.1a).
 3. With file sharing enabled, a Windows app can open and save files
-   under the configured share (v0.1.0 default: the whole `$HOME` via
-   persistent virtio-fs, Stage B / DEC-0018); a `.txt` opened via
-   "Open with Notepad" lands in the running Notepad. (JIT per-file
-   mount/detach = Stage C, post-1.0.)
+   under the configured share (v0.1.0 default scope: `documents`); a
+   `.txt` opened via "Open with Notepad" is shared per-launch
+   (JIT-lite: the file's parent directory only, for the lifetime of
+   that app session). Whole-`$HOME` is an explicit, warned opt-in.
+   (Stage C JIT per-file mount/detach = post-1.0.) (DEC-0019)
 4. Heartbeat round-trip is <20 ms p50 (per N1.2).
 5. Suspending the host laptop with the VM running, then resuming,
    leaves the VM working with no false-positive HARD_DESTROY (per

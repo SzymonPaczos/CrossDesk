@@ -117,7 +117,7 @@ There are no other approved channels.
 | **S** | TA2 spoofs `MountResult` to extend a mount lifetime | Forged token | `mount_token` is 32-byte random; verified by host on every subsequent op | Low |
 | **T** | TA2 writes outside the mounted directory via path traversal | `..` segments | Filesystem service rejects `..`, normalizes paths, refuses absolute paths in mount-relative ops | Low |
 | **R** | Disputed file modifications | Single-side audit trail | LockReport + ReleaseAck logged with mount_token | Low |
-| **I** | TA2 reads files outside the configured share | Cross-mount escape | Mount surface is one configured share; the v0.1.0 default is the whole `$HOME` R/W (DEC-0018). Per-file JIT isolation (Stage C) is post-1.0 | Medium |
+| **I** | TA2 reads/writes files outside the intended surface | Cross-mount escape / broad scope | Mount surface is one configured share; the v0.1.0 **default scope is `documents`** (DEC-0019) and per-launch JIT-lite shares only the opened file's parent dir. `home` is an explicit, warned opt-in — it raises residual to **High** (guest R/W over `~/.ssh`, `~/.config/crossdesk` and writable dotfiles/autostart = host-user code execution), mitigated only by the loud warning. Per-file JIT isolation (Stage C) is post-1.0 | Medium (default `documents`) / **High** (`home` opt-in) |
 | **D** | TA2 holds mounts open indefinitely | No `ReleaseAck` | LockReport expected within timeout; force-detach on heartbeat HARD_DESTROY | Low |
 | **E** | n/a (no privileged FS operations exposed) | — | — | None |
 
@@ -186,9 +186,11 @@ CrossDesk *does* claim to:
 1. Never elevate beyond the user's privileges to do its job.
 2. Keep file sharing opt-in (default off). When enabled, only the
    configured scope is reachable R/W by the guest; the v0.1.0 default
-   scope is the whole `$HOME` (DEC-0018), including `~/.ssh` and
-   `~/.config/crossdesk`. The `documents` / `custom` scopes narrow this,
-   and Stage C JIT-per-file is the eventual single-file mode.
+   scope is `documents` (DEC-0019), and per-launch JIT-lite shares only
+   the opened file's parent dir. The `home` scope (whole `$HOME`,
+   including `~/.ssh` and `~/.config/crossdesk`) is an explicit opt-in
+   behind a loud warning; Stage C JIT-per-file is the eventual
+   single-file mode.
 3. Reject any frame from the guest that doesn't match the per-frame
    `AuthContext` we issued.
 4. Recover deterministically from a guest that misbehaves up to and

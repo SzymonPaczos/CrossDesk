@@ -93,23 +93,45 @@ def test_shared_folder_custom_name() -> None:
     assert "/drive:Linux_Home,/tmp/x" in cfg.to_freerdp_flags()
 
 
-def test_shared_folder_scope_home_is_default() -> None:
+def test_shared_folder_scope_documents_is_default() -> None:
+    # DEC-0019: the default scope narrowed from whole-$HOME to documents.
     import os
 
     cfg = PeripheralsConfig(shared_folder_enabled=True)
-    assert cfg.shared_folder_scope == "home"
+    assert cfg.shared_folder_scope == "documents"
+    expected = os.path.join(os.path.expanduser("~"), "Documents")
+    assert cfg.shared_folder_resolved_path() == expected
+    assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
+
+
+def test_shared_folder_scope_home_is_opt_in() -> None:
+    import os
+
+    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_scope="home")
     home = os.path.expanduser("~")
     assert cfg.shared_folder_resolved_path() == home
     assert f"/drive:CrossDesk,{home}" in cfg.to_freerdp_flags()
 
 
-def test_shared_folder_scope_documents() -> None:
-    import os
+def test_home_scope_warning_fires_only_for_enabled_home() -> None:
+    # DEC-0019: whole-$HOME is a warned opt-in; documents/custom/off are silent.
+    warned = PeripheralsConfig(shared_folder_enabled=True, shared_folder_scope="home")
+    assert warned.home_scope_warning() is not None
+    assert "~/.ssh" in warned.home_scope_warning()  # names the exposure
 
-    cfg = PeripheralsConfig(shared_folder_enabled=True, shared_folder_scope="documents")
-    expected = os.path.join(os.path.expanduser("~"), "Documents")
-    assert cfg.shared_folder_resolved_path() == expected
-    assert f"/drive:CrossDesk,{expected}" in cfg.to_freerdp_flags()
+    assert (
+        PeripheralsConfig(
+            shared_folder_enabled=True, shared_folder_scope="documents"
+        ).home_scope_warning()
+        is None
+    )
+    # home scope but share disabled → nothing is exposed → no warning.
+    assert (
+        PeripheralsConfig(
+            shared_folder_enabled=False, shared_folder_scope="home"
+        ).home_scope_warning()
+        is None
+    )
 
 
 def test_shared_folder_scope_custom_ignores_home() -> None:

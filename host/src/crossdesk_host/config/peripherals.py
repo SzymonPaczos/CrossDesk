@@ -42,7 +42,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -162,30 +162,36 @@ class PeripheralsConfig(BaseModel):
     installer into it and run it inside the guest.
 
     OPT-IN (OFF by default).  :attr:`shared_folder_scope` chooses *what* is
-    exposed once enabled; the owner-confirmed default (2026-06-29) is the whole
-    ``$HOME`` R/W for maximum usefulness — a deliberate widening from the
-    earlier single-scoped-folder stance (which rejected the static
-    ``\\\\tsclient\\home`` mount in ``docs/COMPARISON_WINAPPS.md`` §7 /
-    DEC-META-005).
+    exposed once enabled; the v0.1.0 default (DEC-0019, 2026-07-19) is
+    ``documents`` — narrowed from the earlier whole-``$HOME`` default
+    (DEC-0018) because a whole-``$HOME`` R/W *default* collapses the G4 trust
+    boundary through the filesystem (guest write to ``$HOME`` = host-user code
+    execution; guest read = ``~/.ssh`` + VM-password exfiltration).
 
     SECURITY: the ``home`` scope gives the Windows guest R/W to *everything*
     under ``$HOME`` — including ``~/.ssh`` and ``~/.config/crossdesk`` (the
-    host mTLS private key and the VM password). A compromised Windows app
-    could read or overwrite them. This is the owner's accepted trade-off for
-    the default; set ``shared_folder_scope = "documents"`` (or ``custom``) to
-    keep those out of the guest. The matching ``docs/THREAT_MODEL.md`` /
-    DECISIONS rows are drafted for owner sign-off (``.claude/needs-owner.md``)."""
+    host mTLS private key and the VM password) and writable dotfiles/autostart.
+    A compromised Windows app could read or overwrite them, escalating a guest
+    compromise to host-user code execution. Under DEC-0019 ``home`` stays
+    available as an explicit opt-in behind a loud warning
+    (:meth:`home_scope_warning`); the default is the narrower ``documents``.
+    See ``docs/THREAT_MODEL.md`` §C5 / DEC-0019."""
 
-    shared_folder_scope: Literal["home", "documents", "custom"] = "home"
+    shared_folder_scope: Literal["home", "documents", "custom"] = "documents"
     """What the shared folder exposes once :attr:`shared_folder_enabled`:
 
-    - ``home`` (default) — the whole ``$HOME`` R/W.  The Windows app's
-      Open/Save dialog reaches anything the user has, no hunting for a
-      special folder.  Owner-confirmed default (2026-06-29). Exposes secrets
-      under ``$HOME`` to the guest — see :attr:`shared_folder_enabled`.
-    - ``documents`` — only ``~/Documents`` R/W (covers the common
-      open-here / save-here path without exposing the rest of ``$HOME``).
-    - ``custom`` — the explicit :attr:`shared_folder_path` directory."""
+    - ``documents`` (default, DEC-0019) — only ``~/Documents`` R/W (covers the
+      common open-here / save-here path without exposing the rest of
+      ``$HOME``).
+    - ``home`` — the whole ``$HOME`` R/W.  The Windows app's Open/Save dialog
+      reaches anything the user has, but exposes secrets under ``$HOME`` to the
+      guest — an explicit, warned opt-in (:meth:`home_scope_warning`); see
+      :attr:`shared_folder_enabled`.
+    - ``custom`` — the explicit :attr:`shared_folder_path` directory.
+
+    (Per-launch JIT-lite — sharing only an opened file's parent dir for one
+    RAIL session — is wired at the launcher, not here; it overrides this
+    persistent scope for that launch.  See ``ipc/management.py``.)"""
 
     shared_folder_path: str = "~/CrossDesk-Shared"
     """Host directory shared when :attr:`shared_folder_scope` = ``custom``.
@@ -363,6 +369,24 @@ class PeripheralsConfig(BaseModel):
             )
 
         return flags
+
+    def home_scope_warning(self) -> Optional[str]:
+        """DEC-0019: the ``home`` scope (whole ``$HOME`` R/W) is a
+        security-relevant opt-in, not the default. Returns a loud, specific
+        warning naming the exposure when the share is enabled at ``home``
+        scope, else ``None``. Callers (launcher, CLI, GUI) surface it so the
+        user is never *silently* sharing ``~/.ssh`` + the mTLS key + writable
+        dotfiles/autostart with the guest."""
+        if self.shared_folder_enabled and self.shared_folder_scope == "home":
+            return (
+                "shared_folder_scope='home' exposes the WHOLE $HOME read/write "
+                "to the Windows guest — including ~/.ssh and "
+                "~/.config/crossdesk (the host mTLS private key and the VM "
+                "password) and writable dotfiles/autostart. A compromised guest "
+                "can then run code as your host user. Use 'documents' or "
+                "'custom' to narrow this (DEC-0019)."
+            )
+        return None
 
     def shared_folder_resolved_path(self) -> str:
         """The expanded host directory the share exposes, per

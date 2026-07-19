@@ -574,6 +574,21 @@ wykrywał/logował/notyfikował.
 
 ## P2
 
+### Porządkowe — test hygiene / env
+- **[P2] Pełna suita `pytest` wisi na macOS (leaked `_poll_wrapper` thread).**
+  `pytest tests/` (bez markerów) zawiesza się ~6% na tym Macu: jeden test
+  zostawia wątek pollera (`Thread-132 (_poll_wrapper)`, spoza `host/src/` — z
+  zależności) i proces blokuje się w stanie `S`. `--timeout=30 --timeout-method
+  =thread` hard-exituje, myląco obwiniając kolejny trywialny test
+  (`test_config.py::test_load_from_toml_missing_file_returns_defaults`, który
+  sam przechodzi). Na boxie Linux suita jest zielona (44 s, audyt 2026-07-06),
+  więc to macOS-only + test-ordering. **Skutek praktyczny:** pre-push hook
+  (odpala pełny pytest przy zmianie `host/`) wisi na macu → push z Maca wymaga
+  albo boxa Linux, albo (za zgodą właściciela) `--no-verify`. Fix: znaleźć test
+  zostawiający wątek (kandydat: obserwator plików / grpc aio / dbus poller bez
+  teardown), dodać fixture zamykający, albo oznaczyć markerem i deselectować
+  domyślnie. (Odkryte 2026-07-19 przy DEC-0019.)
+
 ### Porządkowe z audytu 2026-07-12
 - **[P2] `SECURITY.md`** — repo publiczne bez kanału disclosure (skill §12).
   Krótki plik: kanał zgłoszeń, wspierane wersje (pre-release: tylko `main`),

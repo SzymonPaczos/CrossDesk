@@ -46,10 +46,11 @@ Uwaga zachowana świadomie: **czyste wyłączenie gościa NIE jest wskrzeszane**
 
 ## NEXT (do v0.1.0 — wszystko wykonalne na tym boxie)
 
-- **FS Stage B live** — virtio-fs mount jednego folderu (default whole-`$HOME`,
-  DEC-0018) + Save dialog ląduje w folderze Linuksa. To jest MVP-floor **zamiast
-  JIT** (kryt. #3 wymaga re-definicji — patrz needs-owner). Host-side gotowe;
-  live mount do odpalenia.
+- **FS Stage B live** — virtio-fs mount jednego folderu (**default `documents`**,
+  DEC-0019; whole-`$HOME` = opt-in za ostrzeżeniem) + JIT-lite (per-launch share
+  katalogu otwieranego pliku) + Save dialog ląduje w folderze Linuksa. To jest
+  MVP-floor kryt. #3 (re-definicja podpisana — DEC-0019). Host-side gotowe
+  (default+ostrzeżenie+JIT-lite w kodzie); live mount do odpalenia.
 - **Suspend/resume bez false HARD_DESTROY** (#5) — live na boxie; blokada
   (coordinator zamrażał event-loop) zdjęta 2026-07-14 (`c4cb6e8`).
   (#6 recovery → front „TERAZ". #9 `doctor` i #10 `uninstall` — ✅ LIVE-VERIFIED,
@@ -82,7 +83,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 |---|---|---|---|
 | 1 | `install` ≤25 min / ≤2 min attended | ✅ live | **RE-VERIFIED 2026-07-14**: `uninstall --force` → świeży `install --locale pl-PL` → agent auto-online, zero ręcznych kroków. CLI wraca po 16 s; Windows + agent gotowe ~12 min. Cross-distro OVMF-fix testowany tylko na tym boxie → 🔲 |
 | 2 | `launch notepad` → natywne okno ≤3 s p50 | ✅ live ⚠️ | **LIVE-MEASURED 2026-07-14 (`472b0e8`)**: komenda → zmapowane okno X (xdotool, 6 przejazdów) — **p50 = 2,748 s** przy budżecie 3 s → **PASS, ale tylko 8% zapasu**; **max 5,311 s wychodzi poza budżet**. **Rozbicie**: host-side Launch RPC = **7,5 ms p50** (~0,3% czasu!), reszta to FreeRDP negocjujący RDP+RAIL z gościem **po** powrocie RPC. Budżet mierzy więc handshake RDP, nie nasz kod. Pierwszy launch po boocie gościa **nie dał okna** (znany wyścig z verify-creds) |
-| 3 | plik -> app Windows przez skonfigurowany share | 🔲 box | **Boundary ZDJETY** — MVP_SCOPE **juz** mowi Stage B (persistent virtio-fs, default whole-`$HOME`, DEC-0018), nie JIT; re-definicja weszla 2026-07-05. Zostaje sam live-verify mountu Stage B + Save dialog |
+| 3 | plik -> app Windows przez skonfigurowany share | 🔲 box | **DEC-0019 (podpisane 2026-07-19):** MVP-floor = Stage B, **default scope `documents`** + **JIT-lite** (per-launch share katalogu pliku, gaśnie z sesją); whole-`$HOME` = opt-in za ostrzeżeniem. Host-side gotowe (default+ostrzeżenie+JIT-lite w kodzie); live-verify mountu Stage B + Save dialog 🔲 box |
 | 4 | heartbeat RTT <20 ms p50 | ✅ live | **LIVE-MEASURED 2026-07-14 (`eca3a0c`)**: 179 realnych round-tripów przez mTLS do agenta NT-service — **p50 = 2,46 ms** (budżet 20 ms, ~8× zapasu), p95 2,99 ms, p99 4,67 ms, max 6,43 ms. Metryka wcześniej **nie istniała jako histogram** — nazwa `heartbeat_rtt_seconds` była w `MetricNames` bez zapisującego, a FSM zwijał RTT do EWMA i gubił rozkład |
 | 5 | suspend/resume bez false HARD_DESTROY | 🔲 box | LifecycleCoordinator gotowy; live-verify |
 | 6 | kill VM (`virsh destroy`) → recovery ≤90 s | ✅ live | **LIVE-VERIFIED 2026-07-14 (`414c879`)**: `virsh destroy` → wykryte w **1 s** (`vm_lifecycle_event`) → auto-recovery → domena wstaje w 6 s → **agent z powrotem w 25 s** (budżet 90 s), bootując DYSK bez nośników. Zero udziału człowieka. Wymagało trzech brakujących elementów: `LibvirtDomainEventSource` (nie istniał), recovery w reaktorze (tylko logował), `LibvirtController.start()` (nie było czym wystartować martwej domeny) |
@@ -93,7 +94,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
 | 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
 
-**Stan: 8 z 12 kryteriow ✅ live** (#1, #2, #4, #6, #7, #8, #9, #10). Zostaje: **#3** (mount Stage B live), **#5** (suspend/resume live), **#11** (realny przejazd README), **#12** (test pakietu). **Zadne nie czeka juz na Twoj podpis** — oba boundary (#3, #7) okazaly sie od dawna rozstrzygniete, a board o tym nie wiedzial.
+**Stan: 8 z 12 kryteriow ✅ live** (#1, #2, #4, #6, #7, #8, #9, #10). Zostaje: **#3** (mount Stage B live — re-def podpisana DEC-0019 2026-07-19), **#5** (suspend/resume live), **#11** (realny przejazd README), **#12** (test pakietu). **Zadne nie czeka juz na Twoj podpis** — oba boundary (#3, #7) sa rozstrzygniete (#3 przez DEC-0019).
 
 **Podsumowanie (po live-verify 2026-07-14):** destrukcyjny cykl przejechany —
 **#1 re-verified**, **#10 zamknięte**, a **data-loss half #6 zamknięta i
@@ -102,6 +103,6 @@ udowodniona na żywym Windowsie**. Board mylił się jednak co do **#6**: napraw
 wyzwala, bo **nie ma detektora śmierci VM** (nowy front „TERAZ”). Zmierzony
 reconnect: **105 s** przy budżecie 90 s.
 
-Zostaje: **#6** (detektor + budżet), 2 kryteria do re-definicji przez właściciela
-(#3, #7 — needs-owner §7), oraz Faza C na świeżym gościu (**#2, #3, #4, #5, #8,
-#11, #12** + burn-in). Gość jest żywy i zdrowy — Faza C może ruszyć od zaraz.
+Zostaje: **#6** (detektor + budżet) oraz Faza C na świeżym gościu (**#2, #3, #4,
+#5, #8, #11, #12** + burn-in). Gość jest żywy i zdrowy — Faza C może ruszyć od
+zaraz. (#3 i #7 nie są już boundary — #3 rozstrzygnięte DEC-0019 2026-07-19.)

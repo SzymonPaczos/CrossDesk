@@ -280,6 +280,7 @@ def test_peripheral_flags_workdir_honours_custom_drive_letter(
         monkeypatch,
         PeripheralsConfig(
             shared_folder_enabled=True,
+            shared_folder_scope="custom",
             shared_folder_path=str(share_dir),
             shared_folder_drive_letter="m",  # lower-case normalised to M
         ),
@@ -365,6 +366,7 @@ async def test_launch_threads_workdir_into_argv(
         monkeypatch,
         PeripheralsConfig(
             shared_folder_enabled=True,
+            shared_folder_scope="custom",
             shared_folder_path=str(tmp_path / "CrossDesk-Shared"),
         ),
     )
@@ -443,3 +445,79 @@ async def test_a_rejected_launch_is_not_a_slow_launch(
     assert not resp.ok
 
     assert MetricNames.LAUNCH_DURATION_SECONDS not in registry.snapshot()["histograms"]
+
+
+# ---------------------------------------------------------------------------
+# DEC-0019 JIT-lite: a launch carrying a host file path shares only that
+# file's parent directory for the session, overriding the persistent scope.
+# ---------------------------------------------------------------------------
+
+
+def test_jitlite_flags_shares_parent_of_opened_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    # validate_mount_path requires the path under $HOME → point $HOME at tmp.
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    doc_dir = tmp_path / "notes"
+    doc_dir.mkdir()
+    opened = doc_dir / "todo.txt"
+    opened.write_text("x")
+    _patch_peripherals(monkeypatch, PeripheralsConfig())  # persistent share OFF
+
+    result = _backend_servicer()._jitlite_flags(str(opened))
+    assert result is not None
+    flags, workdir = result
+    # Only the parent dir is shared — not the whole $HOME, not the file itself.
+    assert flags == [f"/drive:CrossDesk,{doc_dir}"]
+    assert workdir == "Z:\\"
+
+
+def test_jitlite_flags_skip_for_empty_guest_or_outside_home(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    _patch_peripherals(monkeypatch, PeripheralsConfig())
+    servicer = _backend_servicer()
+    # Empty (no file arg), a guest C:\ path, a missing file, and a path
+    # outside $HOME all fall through to the persistent share (None).
+    assert servicer._jitlite_flags("") is None
+    assert servicer._jitlite_flags("C:\\Users\\me\\todo.txt") is None
+    assert servicer._jitlite_flags(str(tmp_path / "ghost.txt")) is None
+    assert servicer._jitlite_flags("/etc/passwd") is None
+
+
+async def test_launch_with_file_path_uses_jitlite_over_persistent_share(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock, tmp_path
+) -> None:
+    # Persistent share is enabled at documents scope, but a launch carrying a
+    # host file path must share ONLY that file's parent dir (JIT-lite wins).
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    doc_dir = tmp_path / "work"
+    doc_dir.mkdir()
+    opened = doc_dir / "spec.txt"
+    opened.write_text("x")
+    _patch_app_and_creds(monkeypatch)
+    _patch_peripherals(
+        monkeypatch,
+        PeripheralsConfig(shared_folder_enabled=True, clipboard_mode="text-only"),
+    )
+    seen: dict[str, object] = {}
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
+        seen["argv"] = argv
+        return RailSession(pid=55, argv=list(argv))
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await _backend_servicer().Launch(
+        mgmt_pb2.LaunchRequest(app_id="notepad", file_path=str(opened)), context
+    )
+    assert resp.ok
+    argv = seen["argv"]
+    assert isinstance(argv, list)
+    drives = [a for a in argv if a.startswith("/drive:")]
+    # Exactly one drive, pointing at the opened file's parent — not ~/Documents.
+    assert drives == [f"/drive:CrossDesk,{doc_dir}"]
+    # Non-share peripheral flags still apply.
+    assert "+clipboard" in argv

@@ -7,9 +7,62 @@ delete history.
 
 ---
 
+## DEC-0019: FS share default narrows to `documents`; whole-`$HOME` becomes a loud opt-in; JIT-lite ships in v0.1.0
+
+**Status:** Accepted — 2026-07-19
+**Owner:** filesystem / Phase 4–5
+**Amends:** DEC-0018 (default scope + posture; mechanism/staging unchanged)
+**Related:** `host/src/crossdesk_host/config/peripherals.py`;
+`docs/THREAT_MODEL.md` §C5; `docs/MVP_SCOPE.md` acceptance #3
+
+### Context
+
+DEC-0018 made the whole `$HOME` R/W the **default** share scope, for maximum
+usefulness. Revisiting the trust model (thesis-driven review, 2026-07-19): a
+whole-`$HOME` R/W *default* collapses the G4 trust boundary through the
+filesystem even while the control plane keeps per-frame auth. Guest **write**
+to `$HOME` = host-user code execution (writable dotfiles, autostart,
+`~/.local/bin`); guest **read** = `~/.ssh` + VM-password exfiltration. That is
+the same exposure class as always-on VM shared folders (VirtualBox
+shared-folders, abused by Ragnar Locker / Maze) — an inconsistent security
+posture for a project whose control plane is hardened per-frame.
+
+### Decision
+
+Sharing remains opt-in (`shared_folder_enabled` defaults OFF) and the DEC-0018
+**mechanism and staging are unchanged** (`scope = home|documents|custom`;
+Stage A rdpdr → Stage B virtio-fs). What changes is the default and the
+posture:
+
+- **Default scope becomes `documents`** (was `home`) — `~/Documents` only.
+- **`home` stays available as an explicit opt-in**, gated behind a loud
+  CLI/GUI warning that names the exposure: R/W over `~/.ssh`,
+  `~/.config/crossdesk` (host mTLS key + VM password) and writable
+  dotfiles/autostart — i.e. guest compromise escalates to host-user code
+  execution.
+- **v0.1.0 also ships JIT-lite:** launching an app with a file argument
+  ("Open with Notepad") shares only that file's **parent directory** for the
+  lifetime of that RAIL session (per-launch rdpdr `/drive:`); the share ends
+  when the app session ends. This keeps the Save → `Z:` → Documents UX while
+  honouring the original "on-demand sharing, no persistent home mapping"
+  commitment (B1).
+- **Stage C JIT-per-file** (`ReleaseAck`, mount only the opened file, detach
+  after) stays **post-1.0** as the tight-isolation mode.
+
+The `documents` default + JIT-lite preserves the intended UX at negligible
+security cost.
+
+### Reconsider when
+
+Stage C JIT-per-file lands (may replace JIT-lite), or a multi-user /
+lower-trust guest scenario enters scope.
+
+---
+
 ## DEC-0018: FS share defaults to the whole `$HOME` (Stage B); JIT-per-file is post-1.0
 
-**Status:** Accepted — 2026-06-29
+**Status:** Accepted — 2026-06-29 · **Amended by:** DEC-0019 (default scope
+narrowed to `documents`; whole-`$HOME` is now a warned opt-in, 2026-07-19)
 **Owner:** filesystem / Phase 4–5
 **Related:** DEC-META-005 (whole-`$HOME` skip — superseded for the FS item by
 DEC-META-007); `docs/COMPARISON_WINAPPS.md` §7;

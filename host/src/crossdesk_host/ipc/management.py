@@ -50,6 +50,11 @@ from crossdesk_host.doctor import has_failures, run_all
 from crossdesk_host.doctor.checks import Status as DoctorStatus
 from crossdesk_host.installer import credentials, settings
 from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
+from crossdesk_host.jit_mount.path_validation import (
+    MountPathError,
+    parent_share_path,
+    validate_mount_path,
+)
 from crossdesk_host.libvirt_ctl import libvirt_call
 from crossdesk_host.lifecycle import LifecycleCoordinator
 from crossdesk_host.observability import child_span_scope
@@ -392,8 +397,12 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         """Resolve the app, gate on the guest credential check, and spawn
         a FreeRDP RAIL session. Every failure mode maps to
         ``LaunchResponse(ok=False, error=...)`` so the CLI/GUI can print an
-        actionable message instead of an opaque RPC error. (file_path-driven
-        JIT mount is a Phase-5 follow-up — not wired here.)"""
+        actionable message instead of an opaque RPC error.
+
+        A launch that carries a host ``file_path`` ("Open with Notepad") uses
+        DEC-0019 JIT-lite: only that file's parent directory is shared for this
+        session (see :meth:`_jitlite_flags`). Stage C JIT-per-file mount/detach
+        with ``ReleaseAck`` remains a post-1.0 follow-up."""
         app_id = request.app_id
         if self._freerdp is None or self._verify_coordinator is None:
             return mgmt_pb2.LaunchResponse(
@@ -437,6 +446,16 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         # daemon restart. Best-effort: a malformed config must not block the
         # launch, so fall back to no extra flags.
         extra_flags, workdir = self._peripheral_flags()
+        # DEC-0019 JIT-lite: a launch that carries a host file path shares only
+        # that file's parent directory for this session, overriding the
+        # persistent scoped share (but keeping the other peripheral flags).
+        jit = self._jitlite_flags(request.file_path)
+        if jit is not None:
+            jit_flags, jit_workdir = jit
+            extra_flags = [
+                f for f in extra_flags if not f.startswith("/drive:")
+            ] + jit_flags
+            workdir = jit_workdir
         argv = build_rail_argv(spec, conn, extra_flags=extra_flags, workdir=workdir)
 
         # Register the icon expectation before the window appears: the agent's
@@ -514,6 +533,11 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         except Exception:
             logger.warning("peripherals config invalid; launching with no redirections")
             return [], ""
+        # DEC-0019: the whole-$HOME ``home`` scope is a security-relevant opt-in.
+        # Surface the loud warning at every launch so it is never silent.
+        home_warning = cfg.home_scope_warning()
+        if home_warning is not None:
+            logger.warning("shared_folder_home_scope", warning=home_warning)
         flags = cfg.to_freerdp_flags()
         if not cfg.shared_folder_enabled:
             return flags, ""
@@ -535,6 +559,43 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
             logger.warning("shared folder %s not creatable: %s", share, exc)
             return no_share, ""
         return flags, cfg.shared_folder_drive_path()
+
+    def _jitlite_flags(self, file_path: str) -> Optional[tuple[List[str], str]]:
+        """DEC-0019 JIT-lite: when a launch carries a host file path
+        ("Open with Notepad"), share only that file's **parent directory** for
+        this RAIL session — a per-launch rdpdr ``/drive:`` that dies with the
+        FreeRDP process — instead of any persistent scoped share.
+
+        Returns ``(flags, workdir)`` for the ephemeral drive, or ``None`` when
+        the path is not a shareable host file (empty, a guest ``C:\\`` path,
+        non-absolute, missing, denylisted, or outside ``$HOME``), in which case
+        the caller falls back to the persistent scoped share. Validation reuses
+        the JIT-mount choke point (:func:`validate_mount_path`): existence +
+        symlink-resolved, under ``$HOME``, not a system root."""
+        if not file_path:
+            return None
+        try:
+            validated = validate_mount_path(file_path)
+        except MountPathError as exc:
+            # Not JIT-lite-eligible (e.g. a guest path, or outside $HOME) —
+            # fall back to the persistent scoped share.
+            logger.info("jitlite_skip", file_path=file_path, reason=str(exc))
+            return None
+        from crossdesk_host.config.peripherals import (
+            PeripheralsConfig,
+            load_peripherals_config,
+        )
+
+        try:
+            cfg = load_peripherals_config()
+        except Exception:
+            # Defaults are fine for the share name / drive letter.
+            cfg = PeripheralsConfig()
+        parent = parent_share_path(validated.canonical)
+        flags = [f"/drive:{cfg.shared_folder_name},{parent}"]
+        workdir = f"{cfg.shared_folder_drive_letter}:\\"
+        logger.info("jitlite_share", host_dir=str(parent))
+        return flags, workdir
 
     def _on_session_exit(self, session: RailSession, returncode: int) -> None:
         """Supervisor callback: drop the dead session from the live list."""

@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-07-15 00:07:14
+**Last Updated:** 2026-07-19 20:40:12
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in
@@ -18,13 +18,10 @@
   control plane; gRPC server.
 - **Guest (Windows NT):** Rust NT service; `windows-rs`; tonic gRPC
   client; RAIL window-event bridge.
-- **Transport:** gRPC with mTLS, plus per-frame `AuthContext` (peer
-  fingerprint + nonce + monotonic seq). `AF_VSOCK` is the decided transport
-  (DEC-0017 — that ADR settles AF_VSOCK vs AF_HYPERV and says nothing about
-  TCP). The shipped bring-up path is loopback TCP via SLIRP, selected by the
-  `transport.bind_kind = auto | tcp | vsock` seam (F4.4); every live milestone
-  so far has run `tcp`. `docs/THREAT_MODEL.md` still describes AF_VSOCK as the
-  live channel — parked for the owner (needs-owner §3c).
+- **Transport:** gRPC over `AF_VSOCK` with mTLS, plus per-frame
+  `AuthContext` (peer fingerprint + nonce + monotonic seq). Bind seam:
+  `transport.bind_kind = auto | tcp | vsock` (DEC-0017 dev path — every live
+  milestone so far ran `tcp` loopback via SLIRP).
 - **Display:** FreeRDP RAIL — one host process per registered app,
   rendering as a native Wayland or X11 window.
 - **Storage:** opt-in file share (default off). Stage A = FreeRDP

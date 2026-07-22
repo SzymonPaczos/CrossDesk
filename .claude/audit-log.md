@@ -2,6 +2,205 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-07-22
+
+**Git:** `b0ecdc0` on `main`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 126 files)
+- pytest collected: 1067
+- bandit medium/high: 0
+- servicer direct blocking libvirt/fs calls (want 0): 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 24
+- gui cargo-deny issues: 2
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 254
+- #[test] annotations (rust): 84
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-22 (0d ago)
+- META decisions (status: aktywna): 8
+- ADR DEC-NNNN total: 18
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-07-06 (16d ago)
+
+**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z `.claude/rules/decisions.md` + `docs/DECISIONS.md`, MCP/skills. Procedura: `.claude/rules/audit.md`.
+
+### Warstwa głęboka (agent)
+
+```text
+AUDITED_REVISION: b0ecdc0866f0995a7e429b255cf39247a8756101
+DIFF_RANGE_OR_SCOPE: e07028f..b0ecdc0 (fala merge'ów dependabota + sprzątanie) + pełne repo dla checklisty stałej
+PREVIOUS_AUDIT: 2026-07-12 (`7b66676`)
+TOOLS: bash .claude/audit.sh · zizmor 1.27.0 · mypy --strict (126 plików) · pytest 1064 passed/3 skipped · cargo check --workspace (guest+gui) · cargo test (gui) · cargo deny · cargo audit · cargo tree -d · gh run list
+EXCLUSIONS_OR_NA: buf, qmllint, gitleaks — brak narzędzi na tym boxie (audit.sh raportuje `n/a`, NIE zero); SAST (semgrep/CodeQL) tylko w CI — run „Security audit" na `main` = success
+THREAT_MODEL_VERSION: docs/THREAT_MODEL.md @ b0ecdc0 (bez zmian w tym zakresie)
+SECURITY_REVIEW: PASS (1× MEDIUM → backlog, 2× NOTE; `.claude/agents/security-reviewer.md`, niezależny kontekst)
+RED_TEAM: NOT_DUE 2026-07-12 (miesięczna kadencja; auth/secrets/deploy bez zmian merytorycznych)
+BACKLOG_WRITE: recorded — backlog.md „Tech debt" (2 wpisy, `15f4618` + `558604f` + `b0ecdc0`)
+```
+
+**Kontekst:** audyt zbiegł się z falą merge'ów — 13 z 17 gałęzi dependabota
+weszło do `main`, 4 odrzucone. Ocena dotyczy stanu PO tej fali.
+
+#### Co potwierdzone jako zdrowe
+
+- **Zgodność z decyzjami** — bez naruszeń. Brak `Dockerfile`/`compose.yaml`
+  (DEC-0003); żaden z 10 `while True` nie jest pollingiem (blokujący event-loop
+  libvirt, keepalive `sleep(3600)`, chunked hashing, plus zatwierdzony wyjątek
+  DEC-META-006); w drzewie git tylko `generate_mtls.sh`, zero liści PKI; zero
+  importów `*.mock` z produkcji; 0 TODO/FIXME w `src`.
+- **Provenance** — wszystkie 6 nietrywialnych commitów tej fali ma komplet
+  `Intent`/`Task-Ref`/`Gates`. Atrybucja AI: **0 trafień** (D-006 trzyma).
+  Commity bota i revert bez trailerów — zgodnie z wyjątkiem konwencji.
+- **Triggery workflowów zgadzają się z dokumentacją** — `security.yml` ma
+  realnie `push` + `pull_request` + `schedule` (pn 06:17 UTC), czyli
+  `AGENTS.md:64-69` mówi prawdę (naprawione w fali 2026-07-14, tu tylko
+  re-weryfikacja).
+- **zizmor po 5 bumpach akcji: 16 findings, 0 high / 0 medium / 0 low** —
+  bez regresji względem stanu sprzed fali.
+- **CI jako niezależny sędzia** — run na `main` (`29887625451`) = **success**,
+  „Security audit" = success. Failure mają dokładnie te dwie gałęzie, które
+  odrzuciłem ręcznie (`prost-types-0.14.4`, `tonic-build-0.14.6`) — ocena
+  agenta i CI zgodne, niezależnie.
+
+#### P1
+
+1. **Bump otel rozdwoił stack gRPC w agencie Windows.** `opentelemetry`
+   0.27→0.32 przeciągnął tranzytywnie **drugi** `tonic` i **drugi** `prost`:
+   `cargo tree -i tonic@0.14.6` pokazuje `opentelemetry-otlp 0.32 → observability
+   → agent-svc`, a `guest cargo-deny issues` skoczyło **16 → 24** (wszystko
+   `duplicate`, zero podatności). Efekt zmierzony: `agent.exe` waży
+   **5 664 256 B** wobec **5,2 MB** zapisanego w `PLAN.md` #7 (2026-07-14) —
+   ok. **+9%** za opcjonalny eksporter, którego domyślnie nikt nie włącza.
+   Do 2026-07-21 otel 0.27 używał **tego samego** `tonic 0.12` co my, więc
+   rozjazd powstał dziś. Opcje: (a) revert obu merge'ów otel — najtańsze, OTLP
+   jest opt-in; (b) zrobić sprzężoną migrację prost/tonic 0.14 (i tak jest w
+   backlogu) i zejść do jednego stacku; (c) świadomie zaakceptować.
+   *Rekomendacja: (b), a jeśli migracja nie rusza w tym tygodniu — (a).*
+2. **Ścieżka OTLP nie ma ŻADNEGO testu — a właśnie ją przepisałem.**
+   `build_otlp_layer` (`guest/crates/observability/src/lib.rs:59`) przeszedł
+   breaking-change API (`SdkTracerProvider`, `Resource::builder`, batch exporter
+   bez jawnego runtime'u). W całym crate'cie jest **jeden** `#[test]` i testuje
+   writer JSON, nie ten kod. Inwariant DEC-0002 („zero telemetry by default")
+   nie ma **żadnego** strażnika regresji — dziś opiera się wyłącznie na tym,
+   że ktoś przeczyta `std::env::var(OTLP_ENV_VAR).ok()?`. Fix jest tani: test
+   asertujący `None` przy nieustawionym i przy pustym `OTEL_EXPORTER_OTLP_ENDPOINT`.
+3. **`architecture.md` i `README.md` wciąż obiecują whole-`$HOME` jako default
+   — DEC-0019 zmienił to trzy dni temu.** Kod: `shared_folder_scope` = **`documents`**
+   (`config/peripherals.py:180`). Dokumentacja: `.claude/architecture.md:29`
+   i `:67` oraz `README.md:47` i `:120` mówią „the whole `$HOME` (DEC-0018)”;
+   `.claude/loop-spec.md:29` i `:172` powtarzają to jako stan bieżący (wpisy
+   dziennika z datami są historyczne i zostają). `README` jest user-facing —
+   mówi użytkownikowi, że włączenie sharingu wystawia cały katalog domowy,
+   co jest nieprawdą od `ddbd34d`. To dokładnie ta klasa driftu, którą
+   `needs-owner.md` §9 zamknął dla plików boundary, ale nie objął tych czterech.
+
+#### P2
+
+4. **7 gałęzi `ratunek/stash-*` na `origin` ma 73 dni.** Wszystkie z 8-10 maja;
+   diff względem `main` to niemal same usunięcia (starsze snapshoty), więc
+   prawdopodobnie nie trzymają nic unikalnego — ale nikt tego nie potwierdził
+   i nie wygasają. Do triażu i skasowania albo do jawnego „zostają, bo X".
+5. **Krok 5 audytu jest dziś niewykonalny — mastera toolkitu nie ma na tym
+   boxie.** `~/DevProjects/claude-toolkit` **nie istnieje** (został na MacBooku).
+   Skill `weekly-audit` i `.claude/rules/audit.md` odsyłają do
+   `NEW-PROJECT.md §9.2` jako kanonicznego źródła, a cały `.claude/rules/`
+   opisuje się jako „kopie masterów z toolkitu" — od teraz nie ma z czym
+   porównywać. Status kroku: **DEGRADED**. Decyzja właściciela: sklonować
+   toolkit na ten box, czy uznać kopie w repo za samodzielne mastery i
+   wyciąć odwołania.
+6. **Trzy warstwy gate'ów cicho nie działają lokalnie:** `buf` (proto),
+   `qmllint` (QML), `gitleaks` (sekrety) raportują `n/a`. `.claude/rules/ci-cd.md`
+   §1 mówi wprost: „Ciche `skip` jest awarią gate'a". CI je pokrywa, więc to
+   nie jest dziura w merge'u — ale lokalny pre-push daje fałszywe poczucie
+   kompletu. To samo dotyczy `zizmor` (jest lokalnie, **nadal nie ma joba w CI**
+   — item A6).
+7. **Nadal brak `SECURITY.md` i lockfile'a Pythona.** Oba znane z audytu
+   2026-07-12, oba bez ruchu. Przy publicznym repo brak kanału disclosure
+   robi się coraz trudniejszy do obrony.
+
+#### NOTE (bez akcji)
+
+- `pytest collected` 1040 → **1067**; test files 254; `#[test]` (rust) 84.
+  Wzrost z DEC-0019 (JIT-lite + scope), nie z tej fali.
+- `guest cargo-deny 24` to **wyłącznie** `duplicate`; `cargo audit` = **0 vulns**
+  w obu workspace'ach.
+- Sprzątanie gałęzi: `origin` 31 → 13. GitHub sam skasował zmergowane gałęzie
+  dependabota (auto-delete), więc lista „do usunięcia" z `needs-owner.md`
+  domknęła się przy okazji.
+
+#### Security Review — findings (niezależny kontekst, verdict PASS)
+
+- **SEC-01 · MEDIUM · `security.yml:48` — major bramki sekretów bez potwierdzenia,
+  że jest fail-closed.** `gitleaks-action` 2.3.9 → **3.0.0**. Ta akcja ma
+  historię trybu, w którym kończy się kodem 0 mimo trafień (brak licencji dla
+  organizacji = cichy no-op). Attack path: sekret trafia do historii → jedyna
+  serwerowa bramka historii przechodzi na zielono → merge do `main` na repo
+  **publicznym**. Lokalny mirror w `pre-push` jest warunkowy
+  (`command -v gitleaks`), więc na maszynie bez gitleaksa nie łapie nic.
+  Zamknięcie jest tanie i konkretne: **kanarek** — gałąź z syntetycznym kluczem
+  w formacie łapanym przez gitleaks, push, oczekiwany job **czerwony**. Zielony
+  = bramka jest fail-open i bump trzeba cofnąć.
+- **SEC-02 · NOTE → ZAMKNIĘTE w tym audycie.** Reviewer (bez sieci) nie mógł
+  potwierdzić pary SHA↔tag dla dwóch pinów, w tym tego, który dopisałem ręcznie.
+  Sprawdzone `git ls-remote`: `gitleaks-action` v3.0.0 = `e0c47f4f…` ✅;
+  `action-gh-release` v3.0.1 to **tag anotowany** — `refs/tags/v3.0.1` wskazuje
+  obiekt `2bb465e9…`, a rozwinięty `refs/tags/v3.0.1^{}` = **`718ea10b…`**,
+  czyli dokładnie nasz pin ✅. Komentarz `# v3.0.1` jest prawdziwy.
+- **SEC-03 · NOTE.** Majory `upload-artifact` v7 / `download-artifact` v8:
+  Actions **ignorują nieznane `with:` bez błędu**, więc gdyby major przemianował
+  `if-no-files-found: error`, ochrona przed pustym artefaktem znika po cichu.
+  Ścieżki exploitu nie ma (jest zapasowe `fail_on_unmatched_files: true`,
+  `release.yml:267`), ale domyka to jeden dry-run `workflow_dispatch` przed
+  pierwszym tagiem — i tak jest w kolejce jako C-1.
+- **Potwierdzone jako zdrowe przez reviewera:** `permissions` nigdzie nie
+  rozszerzone (top-level `contents: read` ×4, podniesienia punktowe; job z
+  sekretem podpisującym **nie** ma `contents: write`); `persist-credentials:
+  false` na wszystkich 13 checkoutach; polityka `.github/zizmor.yml` pokrywa
+  YAML-e 1:1 po bumpach; floory pip **powyżej** wszystkich znanych łatek
+  (żaden bump nie obniżył flooru); DEC-0002 utrzymane po porcie OTLP (bramka
+  na zmiennej środowiskowej + `Err` → `None`, zero `unwrap` na tej ścieżce);
+  boundary files (`proto/**`, THREAT_MODEL, DECISIONS) **nietknięte**;
+  materiał z transferu nie wszedł do gita.
+- **Uwaga operacyjna reviewera (nie finding):** jeśli nagranie
+  `pararelInstaltionProcessVideo.mov` kiedyś trafi do publikacji — pokazuje
+  żywą instalację, więc warto przejrzeć kadry pod kątem hasła VM.
+
+---
+
 ## Audyt 2026-07-12
 
 **Git:** `7b66676` on `chore/toolkit-adoption`

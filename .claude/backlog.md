@@ -254,6 +254,16 @@ zostawia gościa bez kontroli, dopóki user nie zrestartuje VM. Dla bety to szor
 disconnect → retry (np. 1s → 30s cap). Host-side nic nie trzeba.
 
 
+### [P1, Security Review 2026-07-22, SEC-01] Bramka sekretów po majorze — niepotwierdzona jako fail-closed
+`gitleaks-action` 2.3.9 → **3.0.0** (`security.yml:48`). Ta akcja ma historię trybu,
+w którym kończy się kodem 0 mimo trafień (brak licencji dla organizacji = cichy
+no-op). Repo jest **publiczne**, a lokalny mirror w `pre-push` jest warunkowy
+(`command -v gitleaks`) — więc jeśli v3 jest fail-open, sekret w historii nie
+zostanie zatrzymany przez nic. **Zamknięcie:** kanarek — gałąź z syntetycznym
+kluczem w formacie łapanym przez gitleaks, push, oczekiwany job **czerwony**.
+Zielony = cofnąć bump albo skonfigurować licencję. Do czasu przejazdu kanarka
+NIE twierdzimy, że skanowanie sekretów jest egzekwowane.
+
 ### CI / supply chain — fala z audytu 2026-07-12 (✅ ZROBIONA `05653c7`, 2026-07-14)
 Sign-off właściciela 2026-07-14 („wykonaj falę + merge"); `.github/**` przestało
 być boundary dla pętli (`loop-spec.md` toggles). **zizmor: 86 findings (42 High)
@@ -772,6 +782,48 @@ wykrywał/logował/notyfikował.
   abstraction layer.
 
 ### Tech debt
+- **[P1, audyt 2026-07-22] Bump otel rozdwoił stack gRPC w agencie Windows.**
+  `opentelemetry` 0.27→0.32 przeciągnął tranzytywnie **drugi** `tonic` i **drugi**
+  `prost` (`cargo tree -i tonic@0.14.6` → `opentelemetry-otlp 0.32 → observability
+  → agent-svc`); `guest cargo-deny` skoczyło **16 → 24** (same `duplicate`, 0 vulns),
+  a `agent.exe` waży **5 664 256 B** wobec **5,2 MB** zapisanych w `PLAN.md` #7 —
+  ok. **+9%** za eksporter, którego domyślnie nikt nie włącza. Do 2026-07-21 otel
+  0.27 używał **tego samego** `tonic 0.12` co my. Opcje: (a) revert obu merge'ów
+  otel (najtańsze — OTLP jest opt-in), (b) zrobić sprzężoną migrację prost/tonic
+  0.14 z pozycji niżej i zejść do jednego stacku, (c) zaakceptować. *Rek.: (b),
+  a jeśli migracja nie rusza w tym tygodniu — (a).*
+- **[P1, audyt 2026-07-22] Ścieżka OTLP nie ma żadnego testu.** `build_otlp_layer`
+  (`guest/crates/observability/src/lib.rs:59`) przeszedł breaking-change API, a
+  w całym crate'cie jest **jeden** `#[test]` i testuje writer JSON. Inwariant
+  DEC-0002 („zero telemetry by default") nie ma strażnika regresji. Fix tani:
+  test asertujący `None` przy nieustawionym i przy pustym
+  `OTEL_EXPORTER_OTLP_ENDPOINT`.
+- **[P1, audyt 2026-07-22] `architecture.md` + `README.md` obiecują whole-`$HOME`
+  jako default — DEC-0019 zmienił to 2026-07-19.** Kod: `shared_folder_scope` =
+  **`documents`** (`config/peripherals.py:180`). Dokumentacja: `.claude/architecture.md:29`
+  i `:67`, `README.md:47` i `:120`, `.claude/loop-spec.md:29` i `:172` (wpisy
+  dziennika z datami są historyczne — zostają). `README` jest user-facing, więc
+  mówi użytkownikowi nieprawdę o zasięgu sharingu od `ddbd34d`.
+- **[P2, audyt 2026-07-22] 7 gałęzi `ratunek/stash-*` ma 73 dni** (8-10 maja).
+  Diff wobec `main` to niemal same usunięcia (starsze snapshoty), więc pewnie nic
+  unikalnego — ale nikt tego nie potwierdził. Do triażu i skasowania albo jawnego
+  „zostają, bo X".
+- **[P2, audyt 2026-07-22] Krok 5 audytu jest niewykonalny — brak mastera toolkitu.**
+  `~/DevProjects/claude-toolkit` **nie istnieje na tym boxie** (został na MacBooku),
+  a skill `weekly-audit` i `.claude/rules/audit.md` odsyłają do `NEW-PROJECT.md §9.2`
+  jako kanonicznego źródła; cały `.claude/rules/` opisuje się jako „kopie masterów".
+  Status kroku: **DEGRADED**. Decyzja właściciela: sklonować toolkit tutaj, czy
+  uznać kopie w repo za samodzielne mastery i wyciąć odwołania.
+- **[P2, audyt 2026-07-22] Trzy warstwy gate'ów cicho nie działają lokalnie** —
+  `buf`, `qmllint`, `gitleaks` raportują `n/a`. `ci-cd.md` §1: „Ciche `skip` jest
+  awarią gate'a". CI je pokrywa, więc to nie dziura w merge'u, ale lokalny pre-push
+  daje fałszywe poczucie kompletu.
+- **[P2, Security Review 2026-07-22, SEC-03] Majory `upload-artifact` v7 /
+  `download-artifact` v8** — Actions ignorują nieznane `with:` **bez błędu**, więc
+  gdyby major przemianował `if-no-files-found: error`, ochrona przed pustym
+  artefaktem znika po cichu. Zapasowo działa `fail_on_unmatched_files: true`
+  (`release.yml:267`). Domyka jeden dry-run `workflow_dispatch` przed pierwszym
+  tagiem (razem z C-1).
 - **[2026-07-22] Trzy bumpy dependabota to migracje, nie bumpy — odrzucone
   przy fali merge'ów.** Pozostałe 14 z 17 weszło do `main`; te trzy **łamią
   build** i wymagają realnej pracy, nie zatwierdzenia:

@@ -128,7 +128,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y osslsigncode
       - name: Download unsigned binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: agent-unsigned
           path: artifact
@@ -228,12 +228,12 @@ jobs:
           ref: ${{ github.ref }}
           persist-credentials: false
       - name: Download signed agent
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: agent-final
           path: release-assets
       - name: Download host wheel
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: host-wheel
           path: release-assets

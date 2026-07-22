@@ -64,7 +64,7 @@ where
     use opentelemetry::trace::TracerProvider as _;
     use opentelemetry::KeyValue;
     use opentelemetry_otlp::{SpanExporter, WithExportConfig};
-    use opentelemetry_sdk::{runtime::Tokio, trace::TracerProvider, Resource};
+    use opentelemetry_sdk::{trace::SdkTracerProvider, Resource};
 
     let endpoint = std::env::var(OTLP_ENV_VAR).ok()?;
     if endpoint.is_empty() {
@@ -91,12 +91,15 @@ where
         }
     };
 
-    let provider = TracerProvider::builder()
-        .with_batch_exporter(exporter, Tokio)
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            SERVICE_NAME,
-        )]))
+    let provider = SdkTracerProvider::builder()
+        // 0.30 dropped the explicit runtime argument — the batch processor
+        // now picks up the ambient tokio runtime itself.
+        .with_batch_exporter(exporter)
+        .with_resource(
+            Resource::builder()
+                .with_attribute(KeyValue::new("service.name", SERVICE_NAME))
+                .build(),
+        )
         .build();
     let tracer = provider.tracer(SERVICE_NAME);
     // Hand the provider to the OTel global so tonic and other

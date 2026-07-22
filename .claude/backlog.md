@@ -788,6 +788,15 @@ wykrywał/logował/notyfikował.
     `qrc_files` **zniknęło**. To dokładnie to pole, na którym stoi fix ikon
     GUI (`bbc425b`, `icons.qrc` + `CxxQtBuilder::qrc()`), więc migracja musi
     skończyć się live-verify okna managera, nie samym `cargo check`.
+  - `dependabot/cargo/gui/gui-minor-patch-5b558cd62c` — **czwarty**, wykryty
+    dopiero przy pushu: zmergowany, potem zrewertowany (`7c9ebe4`). Grupa
+    podbija `cxx` 1.0.194→1.0.198, ale wygenerowany mostek cxx-qt 0.7 wciąż
+    emituje symbole `cxxbridge1$194$…` → `cargo test` nie linkuje (mold:
+    undefined symbol, ~kilkadziesiąt sztuk). **`cargo check` tego NIE łapie**,
+    bo nie linkuje — złapał dopiero pre-push. `cxx` jest więc de facto
+    przypięty do wersji, z którą generuje cxx-qt 0.7.3; odblokuje go dopiero
+    migracja cxx-qt-build 0.9 powyżej. Warto rozważyć jawny pin `cxx` w
+    `gui/Cargo.toml`, żeby dependabot nie proponował tego w kółko.
   Gałęzie zostawione na `origin` **celowo** — to jedyny ślad po tych bumpach.
 - **[2026-07-22] `notify_forced_stop` krzyczy CRITICAL na śmierć, którą sami
   zlecamy.** `DomainEventReactor.on_event` (`lifecycle/domain_events.py:130`)

@@ -186,4 +186,33 @@ mod tests {
         );
         assert_eq!(fields.get("key").and_then(|s| s.as_str()), Some("value"));
     }
+
+    /// DEC-0002: zero telemetry unless the operator opts in. Both the
+    /// unset and the empty-string endpoint must yield no OTel layer —
+    /// an empty value is what you get from `FOO=` in a unit file, and
+    /// it must not be read as "export to the default endpoint".
+    ///
+    /// Both cases live in one test on purpose: they mutate the same
+    /// process-wide env var, and cargo runs tests in parallel threads.
+    #[test]
+    fn otlp_layer_absent_unless_endpoint_configured() {
+        let previous = std::env::var(OTLP_ENV_VAR).ok();
+
+        std::env::remove_var(OTLP_ENV_VAR);
+        assert!(
+            build_otlp_layer::<tracing_subscriber::Registry>().is_none(),
+            "OTel layer built with no endpoint set"
+        );
+
+        std::env::set_var(OTLP_ENV_VAR, "");
+        assert!(
+            build_otlp_layer::<tracing_subscriber::Registry>().is_none(),
+            "OTel layer built from an empty endpoint"
+        );
+
+        match previous {
+            Some(v) => std::env::set_var(OTLP_ENV_VAR, v),
+            None => std::env::remove_var(OTLP_ENV_VAR),
+        }
+    }
 }

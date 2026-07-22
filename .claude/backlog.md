@@ -792,14 +792,14 @@ wykrywał/logował/notyfikował.
   otel (najtańsze — OTLP jest opt-in), (b) zrobić sprzężoną migrację prost/tonic
   0.14 z pozycji niżej i zejść do jednego stacku, (c) zaakceptować. *Rek.: (b),
   a jeśli migracja nie rusza w tym tygodniu — (a).*
-- **[P1, audyt 2026-07-22] Ścieżka OTLP nie ma żadnego testu.** `build_otlp_layer`
+- **✅ [P1, audyt 2026-07-22] ZROBIONE `b2d2680` — ścieżka OTLP nie miała żadnego testu.** `build_otlp_layer`
   (`guest/crates/observability/src/lib.rs:59`) przeszedł breaking-change API, a
   w całym crate'cie jest **jeden** `#[test]` i testuje writer JSON. Inwariant
   DEC-0002 („zero telemetry by default") nie ma strażnika regresji. Fix tani:
   test asertujący `None` przy nieustawionym i przy pustym
   `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- **[P1, audyt 2026-07-22] `architecture.md` + `README.md` obiecują whole-`$HOME`
-  jako default — DEC-0019 zmienił to 2026-07-19.** Kod: `shared_folder_scope` =
+- **✅ [P1, audyt 2026-07-22] ZROBIONE `ad80f72` — `architecture.md` + `README.md`
+  obiecywały whole-`$HOME` jako default, DEC-0019 zmienił to 2026-07-19.** Kod: `shared_folder_scope` =
   **`documents`** (`config/peripherals.py:180`). Dokumentacja: `.claude/architecture.md:29`
   i `:67`, `README.md:47` i `:120`, `.claude/loop-spec.md:29` i `:172` (wpisy
   dziennika z datami są historyczne — zostają). `README` jest user-facing, więc

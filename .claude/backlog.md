@@ -797,7 +797,9 @@ wykrywał/logował/notyfikował.
     przypięty do wersji, z którą generuje cxx-qt 0.7.3; odblokuje go dopiero
     migracja cxx-qt-build 0.9 powyżej. Warto rozważyć jawny pin `cxx` w
     `gui/Cargo.toml`, żeby dependabot nie proponował tego w kółko.
-  Gałęzie zostawione na `origin` **celowo** — to jedyny ślad po tych bumpach.
+  Trzy pierwsze gałęzie zostawione na `origin` **celowo** — to jedyny ślad
+  po tych bumpach. Czwartą GitHub skasował sam przy merge'u (auto-delete),
+  więc jej jedynym śladem jest revert `7c9ebe4` i ten wpis.
 - **[2026-07-22] `notify_forced_stop` krzyczy CRITICAL na śmierć, którą sami
   zlecamy.** `DomainEventReactor.on_event` (`lifecycle/domain_events.py:130`)
   rozróżnia `destroyed` od `crashed`, ale pilność notyfikacji dobiera tak samo

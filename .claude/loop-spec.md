@@ -26,7 +26,8 @@ Re-read each iteration: this file · [`PLAN.md`](../PLAN.md) (the v0.1.0 board) 
   guest, no MITM surface; real trust = mTLS gRPC + the Windows credential).
 - **`agent.exe` signing = self-signed** publisher root CA for beta; document
   "unsigned-to-the-world" honestly. Not a release blocker.
-- **FS default = whole `$HOME`** (DEC-0018); sharing itself stays opt-in / off.
+- **FS default = `documents`** (DEC-0019, amends DEC-0018; whole `$HOME` is a
+  warned opt-in) + JIT-lite per-launch share; sharing itself stays opt-in / off.
 - **Semver label = `0.1.0-alpha`.**
 - **THREAT_MODEL §3c honesty** (TCP-loopback vs AF_VSOCK; real `LogonUserW`) is a
   go/no-go gate for calling anything "beta" — **not** a loop blocker. Draft, park.
@@ -169,8 +170,8 @@ domain raises). A clean guest shutdown is deliberately NOT resurrected.
 - **C1 · #4** heartbeat RTT p50 < 20 ms — the harness exists; produce real numbers.
 - **C2 · #2** `launch notepad` → native window, ≤ 3 s p50 (formal measurement).
 - **C3 · #8** microbench vs the baselines.
-- **C4 · #3** FS Stage B live — virtio-fs mount (whole `$HOME` default, DEC-0018);
-  a Windows Save dialog must land in the Linux `$HOME`. Subjective → screenshot and
+- **C4 · #3** FS Stage B live — virtio-fs mount (`documents` default, DEC-0019);
+  a Windows Save dialog must land in the shared Linux folder. Subjective → screenshot and
   **park to Eyeball**.
 - **C5 · #5** suspend/resume with no false HARD_DESTROY (needs A5).
 - **C6 · #12** packaging — build the AUR PKGBUILD and install from it.

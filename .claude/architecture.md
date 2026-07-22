@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-07-22 05:19:14
+**Last Updated:** 2026-07-22 05:21:11
 
 > Slim snapshot for agents. The full layout, with one-line
 > per-file/module descriptions, lives in
@@ -26,8 +26,10 @@
   rendering as a native Wayland or X11 window.
 - **Storage:** opt-in file share (default off). Stage A = FreeRDP
   `/drive:` (rdpdr) redirect; Stage B = persistent virtio-fs share,
-  default the whole `$HOME` (DEC-0018). Stage C JIT-per-file
-  hot-plug/detach is post-1.0.
+  default scope `documents` (DEC-0019; whole `$HOME` is a warned
+  opt-in). A launch carrying a file argument also gets a per-session
+  share of that file's parent directory (JIT-lite). Stage C
+  JIT-per-file hot-plug/detach is post-1.0.
 
 ## Top-level layout
 
@@ -64,5 +66,6 @@ Restated from `docs/GOALS.md` (read it for the full list):
 - No Docker (per `docs/DECISIONS.md` DEC-0003).
 - No polling — async streams both directions.
 - File sharing is opt-in (default off); when on, the v0.1.0 default
-  scope is the whole `$HOME` (DEC-0018). Stage C JIT-per-file is the
-  eventual tight-isolation mode.
+  scope is `documents` (DEC-0019), with whole `$HOME` available as a
+  warned opt-in. Stage C JIT-per-file is the eventual tight-isolation
+  mode.

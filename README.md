@@ -44,10 +44,12 @@ handing a Windows VM that much of my system.
 So CrossDesk runs the VM under user-session libvirt (`qemu:///session`) —
 no privileged container, no daemon running as root — and **file sharing is
 opt-in and off by default**. Turn it on and you choose the scope; the
-v0.1.0 default when enabled is the whole `$HOME`, which is roughly what
-WinApps gives you, except you asked for it
-([DEC-0018](docs/DECISIONS.md)). Narrower scopes (`documents`, a single
-`custom` folder) are config, and a per-file just-in-time mount that
+v0.1.0 default when enabled is `documents`
+([DEC-0019](docs/DECISIONS.md)). Opening a file with a Windows app also
+shares just that file's folder, for that session only. The whole `$HOME`
+— roughly what WinApps gives you — is available too, behind a warning
+that spells out what it exposes. A single `custom` folder is config, and
+a per-file just-in-time mount that
 vanishes when the file closes is the eventual tight-isolation mode —
 post-1.0, not today.
 
@@ -117,8 +119,10 @@ crossdesk uninstall     # asks first; --force skips the prompt, --dry-run previe
   (CREATED / FOCUS / DESTROYED) flow from the guest agent to a
   host-side window manager.
 - **Storage:** opt-in, off by default. When enabled, one configured share
-  is exposed to the guest — v0.1.0 defaults to the whole `$HOME`
-  ([DEC-0018](docs/DECISIONS.md)), narrower scopes are config. Just-in-time
+  is exposed to the guest — v0.1.0 defaults to `documents`
+  ([DEC-0019](docs/DECISIONS.md)); whole `$HOME` is a warned opt-in and a
+  single `custom` folder is config. A launch that carries a file argument
+  additionally shares that file's folder for the session. Just-in-time
   VirtioFS (hot-plug the opened file's directory, detach on `ReleaseAck`)
   is the eventual tight-isolation mode and is **not** what ships in v0.1.0.
 - **Recovery:** Adaptive heartbeat FSM with explicit

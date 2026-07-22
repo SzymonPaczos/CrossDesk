@@ -256,10 +256,10 @@ jobs:
         run: |
           sha256sum * | tee SHA256SUMS
       - name: Create GitHub release
-        # softprops/action-gh-release@v2.6.2 — third-party action, pinned
-        # to commit SHA per security.yml convention. Bump alongside a
-        # security.yml refresh to avoid drift.
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b
+        # Third-party action, pinned to a commit SHA per security.yml
+        # convention. The trailing version comment is what lets dependabot
+        # recognize and bump the pin — keep it on the `uses:` line.
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           files: release-assets/*
           draft: true   # human review the asset list before publishing

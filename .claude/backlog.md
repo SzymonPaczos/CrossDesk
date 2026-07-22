@@ -772,6 +772,33 @@ wykrywał/logował/notyfikował.
   abstraction layer.
 
 ### Tech debt
+- **[2026-07-22] Trzy bumpy dependabota to migracje, nie bumpy — odrzucone
+  przy fali merge'ów.** Pozostałe 14 z 17 weszło do `main`; te trzy **łamią
+  build** i wymagają realnej pracy, nie zatwierdzenia:
+  - `dependabot/cargo/guest/prost-types-0.14.4` **+**
+    `dependabot/cargo/guest/tonic-build-0.14.6` — **sprzężone**. Workspace stoi
+    na `tonic 0.12` / `prost 0.13`; sam `prost-types 0.14` daje 12 błędów
+    `E0277` (derive `::prost::Message` nie spełnia bounda z `prost-0.13`).
+    tonic-build 0.14 dodatkowo wyniósł codegen do osobnego `tonic-prost-build`
+    (stąd −311 linii w jego `Cargo.lock`), więc `build.rs` w `crates/proto`
+    trzeba przepisać. Zakres: cała trójka prost/tonic/tonic-build naraz +
+    regeneracja stubów guesta.
+  - `dependabot/cargo/gui/cxx-qt-build-0.9.1` — 0.7→0.9 zmienia API
+    `QmlModule`: `qml_files` to dziś `Vec<QmlFile>` (było `&[&str]`), a
+    `qrc_files` **zniknęło**. To dokładnie to pole, na którym stoi fix ikon
+    GUI (`bbc425b`, `icons.qrc` + `CxxQtBuilder::qrc()`), więc migracja musi
+    skończyć się live-verify okna managera, nie samym `cargo check`.
+  Gałęzie zostawione na `origin` **celowo** — to jedyny ślad po tych bumpach.
+- **[2026-07-22] `notify_forced_stop` krzyczy CRITICAL na śmierć, którą sami
+  zlecamy.** `DomainEventReactor.on_event` (`lifecycle/domain_events.py:130`)
+  rozróżnia `destroyed` od `crashed`, ale pilność notyfikacji dobiera tak samo
+  — a przy przejazdach kryterium #6 (`virsh destroy`) to my naciskamy spust.
+  Do tego `SubprocessNotifier` nie ma dedup ani rate-limitu, a `config/` nie ma
+  wyłącznika (daemon wpina notifiera bezwarunkowo, `daemon.py:201`) — więc
+  serię zerwań FreeRDP widać jako serię bannerów. Precedens: `launch_cmd.py:233`
+  wyciął już jedno źródło zamiast naprawić mechanizm. Fix: pole
+  `notifications.enabled` + `min_interval_s` z dedup po `(summary, category)`
+  i degradacja zamierzonej śmierci do NORMAL.
 - **[C-3, planning-addendum audytu 2026-07-07] `lifecycle/coordinator.py`
   suspend/resume blokuje event-loop.** `suspend()`/`resume()` (dawniej
   `:139,162`) blokują na ścieżce D-Bus PrepareForSleep + delegacji z mgmt.

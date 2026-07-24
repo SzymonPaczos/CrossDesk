@@ -464,6 +464,24 @@ PROPOSED:
   remaining P0 live-verify (actually `start` it → boots disk + agent reconnects)
   is still open.
 
+- **#5 suspend/resume — 5-minute owner runbook (loop 2026-07-25, C5 parked).** The
+  loop cannot self-drive this: the coordinator subscribes to
+  `org.freedesktop.login1.Manager.PrepareForSleep` on the **system bus** (can't be
+  spoofed without root), `rtcwake` needs root (`sudo -n` prompts here), and any real
+  suspend freezes the box the agent runs on — so no autonomous session can trigger
+  *and* observe it. The mechanism is already sentinel-tested (A5 `c4cb6e8`). To close
+  #5, with the daemon `backend=real` up and the agent connected (a fresh guest boot
+  brings it online):
+  1. `journalctl --user -u ... ` or tail the daemon log; note the FSM is HEALTHY.
+  2. Real sleep + auto-wake: `sudo rtcwake -m mem -s 90` (or just close the laptop
+     lid, wait, reopen).
+  3. After resume, grep the daemon log for the sleep window: **expect** a
+     `lifecycle` suspend line + FSM `SUSPENDED`, **and NO `HARD_DESTROY` / no
+     `virsh destroy`** during the sleep, then a resume line and the agent still
+     connected. A false HARD_DESTROY = the FSM escalated across the sleep = fail.
+  Screenshot/log to `/tmp/cd-evidence/` and it's done. *Rec:* run it right after the
+  next reinstall while the guest is fresh and connected.
+
 - **FS Save-dialog (whole `$HOME`):** when A5-live runs, confirm a Windows
   app's Save dialog lands in the Linux `$HOME` and the saved file appears
   host-side. Evidence path TBD (needs the live VM + GUI capture tools).

@@ -150,6 +150,21 @@ branch). Sign-off items:
 
 ## Still open (boundary-file edits / owner calls)
 
+- [ ] **#12 packaging install-test — blocked on environment + first release tag (loop 2026-07-25, C6).**
+  The AUR PKGBUILD and agent bundling are done and host-side sound (`af8fd76`
+  tested the `_resolve_tools_inputs` packaged-dir contract; I re-confirmed all
+  five `install -D` sources exist in-tree). But the *actual* "install from the
+  package" acceptance test can't run here: this box is **Ubuntu 26.04**, so there
+  is no `makepkg`/`pacman`, and the PKGBUILD's `source=` fetches
+  `github.com/.../archive/v0.1.0.tar.gz` — a tag that **does not exist**. So #12
+  needs two things I won't do autonomously: **(a)** an Arch host or a clean Arch
+  chroot to run `makepkg -si`, and **(b)** the first tagged `v0.1.0` release so
+  there's a tarball to source (also the trigger for the `sha256sums=('SKIP')` →
+  pin in backlog C-1). Both are owner calls — tagging a release is the beta
+  go/no-go you've kept for yourself. *Rec:* decide the release-tag timing; if you
+  want #12 proven before then, point me at an Arch chroot and I'll run
+  `makepkg -si` against a `--holdver` local checkout.
+
 - [ ] **Ratchet: hash-pin GitHub's OWN actions too? (surfaced by A2, `05653c7`).**
   The wave pinned every **third-party** action to a SHA (that was your sign-off's
   scope) and encoded the convention in `.github/zizmor.yml`: `actions/*` and

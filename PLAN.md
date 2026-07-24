@@ -92,7 +92,7 @@ teraz, do odpalenia · **🔨 code** = wymaga jeszcze kodu · **⛔** = zablokow
 | 9 | `doctor` = 0 na dobrym hoście, błędy na złym | ✅ live | LIVE-VERIFIED 2026-07-05: na tym boxie `doctor` = **exit 0**, 10/10 OK (cpu_virt svm, kvm, vsock, qemu 10.2, freerdp, ovmf, libvirt, disk 135GB, config, vm_creds); zły host (`CROSSDESK_OVMF_CODE` bogus) → `ovmf [fail]` + **exit 1** |
 | 10 | `uninstall` czyste usunięcie | ✅ live | **LIVE-VERIFIED 2026-07-14** (`uninstall --force`): domena destroy+undefine, state-dir z dyskiem 29 GB, config, nvram, `.desktop` — usunięte, exit 0. Backup poza state-direm i ISO użytkownika **nietknięte**; `--dry-run` wcześniej pokazał dokładny plan |
 | 11 | README quick-start działa dla zwykłego usera | 🔨 | ISO-honesty naprawione; realny przejazd do zrobienia |
-| 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | 🔲 box | AUR + agent bundling gotowe; test instalacji |
+| 12 | ≥1 format pakietu instaluje bez ręcznego kopiowania | ⛔ env | AUR PKGBUILD + agent bundling gotowe i host-side sprawdzone (`af8fd76`; 5/5 plików `install -D` obecnych). Ale **test instalacji NIE odpali się na tym boxie**: to Ubuntu 26.04 — brak `makepkg`/`pacman` — a `source=` PKGBUILDa ciągnie tarball z tagu `v0.1.0`, który **nie istnieje**. Realny test #12 wymaga (a) hosta Arch / czystego chroota Arch **oraz** (b) pierwszego otagowanego release (owner go/no-go). Zaparkowane 2026-07-25 — patrz `needs-owner.md`. |
 
 **Stan: 8 z 12 kryteriow ✅ live** (#1, #2, #4, #6, #7, #8, #9, #10). Zostaje: **#3** (mount Stage B live — re-def podpisana DEC-0019 2026-07-19), **#5** (suspend/resume live), **#11** (realny przejazd README), **#12** (test pakietu). **Zadne nie czeka juz na Twoj podpis** — oba boundary (#3, #7) sa rozstrzygniete (#3 przez DEC-0019).
 

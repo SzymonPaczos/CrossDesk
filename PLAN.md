@@ -50,7 +50,17 @@ Uwaga zachowana świadomie: **czyste wyłączenie gościa NIE jest wskrzeszane**
   DEC-0019; whole-`$HOME` = opt-in za ostrzeżeniem) + JIT-lite (per-launch share
   katalogu otwieranego pliku) + Save dialog ląduje w folderze Linuksa. To jest
   MVP-floor kryt. #3 (re-definicja podpisana — DEC-0019). Host-side gotowe
-  (default+ostrzeżenie+JIT-lite w kodzie); live mount do odpalenia.
+  (default+ostrzeżenie+JIT-lite w kodzie). **BLOKER odkryty 2026-07-25 (loop C4):
+  strona GOŚCIA nie istnieje.** Live-verify Stage B potrzebuje dwóch rzeczy,
+  których nie ma: (1) domena z **shared-memory backing** (memfd) — `domain_xml.py`
+  emituje je tylko gdy share jest skonfigurowany PRZY instalacji; bieżąca domena go
+  nie ma, więc virtio-fs **nie da się hotplugować** (`'virtiofs' requires shared
+  memory`, potwierdzone na żywo); (2) **provisioning w gościu — WinFsp + sterownik
+  viofs + usługa VirtioFsSvc — NIE JEST zbudowany** (`domain_xml.py:123` sam mówi
+  „box-gated follow-up… once the guest driver is confirmed”; `grep` po `infra/` = 0
+  trafień). Bez tego nic w Windowsie nie zamontuje share'u → dowód „Save dialog →
+  folder Linuksa” jest nieosiągalny. Nowe zadanie na guest-provisioning w kolejce
+  NEXT niżej. `live mount do odpalenia` było **nieprawdą** — poprawione.
 - **Suspend/resume bez false HARD_DESTROY** (#5) — live na boxie; blokada
   (coordinator zamrażał event-loop) zdjęta 2026-07-14 (`c4cb6e8`).
   (#6 recovery → front „TERAZ". #9 `doctor` i #10 `uninstall` — ✅ LIVE-VERIFIED,
@@ -60,6 +70,13 @@ Uwaga zachowana świadomie: **czyste wyłączenie gościa NIE jest wskrzeszane**
 - **README quick-start** (#11) — realny przejazd „od zera do okna".
 - **1 format pakietu instaluje** (#12) — AUR PKGBUILD + agent bundling gotowe,
   test instalacji.
+- **[NOWE 2026-07-25, bloker #3] Guest-side virtio-fs provisioning** — dołóż do
+  tools.iso + autounattend: instalator **WinFsp** (MSI), sterownik **viofs**
+  (virtio-win) i autostart usługi **VirtioFsSvc**, tak żeby świeży install z
+  włączonym share'em zamontował tag virtio-fs jako dysk w gościu. To jest realny
+  warunek konieczny kryt. #3 (host-side już konsumuje `persistent_shares` +
+  memfd backing). Weryfikacja = destrukcyjny reinstall z `shared_folder_enabled`
+  → mount widoczny → Save dialog. Bez tego #3 nie ruszy.
 - **M5 burn-in** — ≥2 Windows × cykle, żeby złapać flaki.
 
 ## LATER (post-MVP — NIE blokuje v0.1.0)

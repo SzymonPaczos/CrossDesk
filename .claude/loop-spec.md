@@ -167,16 +167,25 @@ one: a real `LibvirtDomainEventSource`, recovery in the reactor (it only logged)
 `LibvirtController.start()` (`hard_destroy` is destroy+create, and destroy on a dead
 domain raises). A clean guest shutdown is deliberately NOT resurrected.
 
-- **C1 · #4** heartbeat RTT p50 < 20 ms — the harness exists; produce real numbers.
-- **C2 · #2** `launch notepad` → native window, ≤ 3 s p50 (formal measurement).
-- **C3 · #8** microbench vs the baselines.
+- **✅ C1 · #4** heartbeat RTT p50 < 20 ms — DONE `eca3a0c` (live-measured p50 2.46 ms).
+- **✅ C2 · #2** `launch notepad` → native window — DONE `472b0e8` (live p50 2.748 s vs 3 s).
+- **✅ C3 · #8** microbench vs the baselines — DONE `7ee8b60` (real ubuntu-latest baselines).
+
+**TODAY (2026-07-25) — front, owner chose "wszystko z reinstall" (full queue incl. destructive).**
+Order: A8 → C6 → C4 → C5 → C7 (destructive reinstall) → C8 burn-in. Bank the deterministic
+code first (A8, C6 host-side); the live items screenshot to `/tmp/cd-evidence/` and **park to
+Eyeball** — the loop does NOT self-certify a Save dialog / a native window / a frozen install.
+C7 wipes the current running install by design (Phase B Step 0 safety net still applies: the
+30 GB milestone backup must be outside the state dir before the destructive run).
+
+- **A8 · #11** README quick-start — the text. Rewrite it against what actually ships. (deterministic)
+- **C6 · #12** packaging — build the AUR PKGBUILD and install from it.
 - **C4 · #3** FS Stage B live — virtio-fs mount (`documents` default, DEC-0019);
   a Windows Save dialog must land in the shared Linux folder. Subjective → screenshot and
   **park to Eyeball**.
 - **C5 · #5** suspend/resume with no false HARD_DESTROY (needs A5).
-- **C6 · #12** packaging — build the AUR PKGBUILD and install from it.
-- **C7 · #11** README quick-start — the real "from zero to a window" run.
-- **C8 · M5** burn-in — ≥ 2 Windows × cycles, to catch flakes.
+- **C7 · #11** README quick-start — the real "from zero to a window" run. Destructive; eyeball.
+- **C8 · M5** burn-in — ≥ 2 Windows × cycles, to catch flakes. Destructive.
 
 ⏸ **Owner-gated (draft + park; never apply):** proto edits (app-discovery RPC) ·
 REQUIREMENTS F-marker re-baseline · THREAT_MODEL §3c + VERSIONING capability

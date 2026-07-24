@@ -19,13 +19,17 @@ claimed until it has run on real hardware.
 Windows unattended and the in-VM NT-service agent connects by itself in
 about 12 minutes with zero manual steps; the agent survives an RDP
 disconnect and a hard reset; `crossdesk launch` renders Notepad and Paint
-as separate native Linux windows over mTLS; `crossdesk doctor` passes on
-a good host and fails loudly on a broken one.
+as separate native Linux windows over mTLS; killing the VM outright
+(`virsh destroy`) is noticed in about a second and the agent is back in
+roughly 25 seconds — booting the installed disk, not reinstalling over it;
+heartbeat round-trips run at a ~2.5 ms median and a launch reaches a mapped
+window in ~2.7 s; `crossdesk doctor` passes on a good host and fails loudly
+on a broken one.
 
-*Not verified yet:* recovery after the VM is killed, the persistent
-virtio-fs share, latency numbers, and installing from a distro package.
-Those are the remaining v0.1.0 acceptance criteria — tracked, with their
-real state, in [PLAN.md](PLAN.md).
+*Not verified yet:* the persistent virtio-fs share, suspend/resume across a
+host sleep, and installing from a distro package. Those are the remaining
+v0.1.0 acceptance criteria — tracked, with their real state, in
+[PLAN.md](PLAN.md).
 
 Bring your own Windows ISO (`--iso-path`); auto-download is not
 implemented. See [ROADMAP.md](ROADMAP.md) for phase definitions,

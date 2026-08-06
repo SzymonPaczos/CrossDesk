@@ -29,6 +29,31 @@ launchd/cron; hosted CI → workflow tworzący issue. Przy każdej zmianie
 mutującej startup/merge preflight sprawdza datę. Jeśli minęło >7 dni, `READY_TO_MERGE` pozostaje
 `BLOCKED` do Security Review albo jawnej decyzji właściciela o wyjątku.
 
+## Krok 00 — Wersja toolkitu (ZAWSZE PIERWSZY)
+
+Zanim spojrzysz na kod. Audyt prowadzony na nieaktualnej checkliście sprawdza
+wczorajsze ryzyka i melduje „czysto".
+
+```sh
+bash <toolkit>/scripts/toolkit-sync.sh check .
+```
+
+Reakcja zależy od wyniku, zgodnie z `conventions/toolkit-sync.md`:
+
+| Wynik | Co robisz |
+|---|---|
+| kopie zgodne | prowadź audyt normalnie |
+| **MASTER NOWSZY** | najpierw `update` osobnym commitem, potem audyt na nowej checkliście |
+| **ZMIENIONY LOKALNIE** | nie nadpisuj. Zgłoś jako znalezisko: albo promocja do mastera, albo cofnięcie |
+| brak `toolkit.lock` | projekt nigdy nie był stemplowany — `update` zakłada lock |
+
+Jeżeli **w trakcie audytu** powstanie nowa reguła, skill albo szablon, wykonaj
+`promote` do mastera i podbij `VERSION` **w tej samej sesji**. Odłożona
+promocja nie następuje — tak powstały trzy równoległe wersje jednego skilla.
+
+Błędu w regule nie naprawiaj w kopii projektu. Poprawka idzie do mastera
+i wraca przez `update`; załatana kopia jest początkiem następnego dryfu.
+
 ## Krok 0 — SAST i workflowy (jeśli dostępne)
 
 - Uruchom projektowy CodeQL/Semgrep/SAST, jeśli jest skonfigurowany. Brak
@@ -105,6 +130,39 @@ Skrypt liczy, Ty oceniasz. Przejrzyj i oceń:
     per widok (osobne wyliczenia = widoki, które się rozjadą). Każdy procent
     bez mianownika renderuje „Brak danych" — nigdy `x/0` ani `NULL→0`
     udające zero. (Wkład z audytu JawnePanstwo, 2026-07-11.)
+14. **Higiena repo i ekspozycja na utratę danych** (wkład z audytu floty
+    2026-08-01; 4/6 agentów niezależnie wskazało punkt a). Sprawdź:
+    a. **Ekspozycja na utratę** — `git branch -vv` (gałęzie ahead/bez
+       upstreamu), `git stash list`, `git worktree list --porcelain | grep
+       prunable`, wiek najstarszego niepushowanego commita — oceniane łącznie
+       z posturą backupu maszyny (D-005). W profilu local-first bez backupu to
+       de facto check ryzyka utraty danych, nie kosmetyka.
+    b. **Dane osobowe jako osobna klasa** (obok sekretów): `git ls-files |
+       grep -iE 'legitymacja|dowod|pesel|zaswiadczenie|_b64'` + skany/PDF
+       z PII poza katalogami dozwolonymi lokalną decyzją projektu.
+    c. **Dysk vs git** — zawsze zestawiaj `du -sh` z `git count-objects -vH`
+       i listą największych blobów historii (`git rev-list --objects --all |
+       git cat-file --batch-check`); inaczej fałszywy „bloat P0" albo
+       przeoczony realny (baza commitowana N razy).
+    d. **Integralność referencyjna** — każda ścieżka w trackowanych
+       `.claude/*.md` (backlog, status) istnieje i jest trackowana albo
+       świadomie ignorowana; martwy link do „jedynej kopii" to P0.
+    e. **Świeżość audytu** — porównaj `AUDITED_REVISION` z bieżącym HEAD
+       i liczbą merge'y pomiędzy (cały silnik potrafi prześlizgnąć się między
+       audytami bez wpisu).
+    f. **Gotowość publikacyjna** dla „docelowo publiczne": LICENSE,
+       SECURITY.md, czystość historii.
+    g. **Odtwarzalność środowiska/gate'ów** — `requirements.txt`/lockfile dla
+       venv/node_modules; każdy scheme z `local-ci.sh` obecny w
+       `xcshareddata/xcschemes/` (świeży klon nie ma `xcuserdata`).
+    h. **Wygasłe credentiale** — grep `Expires|EXPIRES_ON` w plikach env
+       vs bieżąca data.
+    i. **Wiek najstarszej pozycji P1 w backlogu** — sam werdykt FAIL nie
+       wymusza ruchu (P1 potrafią przetrwać kilka audytów).
+    j. **Kandydaci na mechaniczne gate'y** (`rules-as-gates.md`, tryb
+       raportowy): pliki `.bak`/`BACKUP`/`*_b64` tracked; zmergowane gałęzie
+       do skasowania + duplikat `master`/`main`; egzekwowanie lokalnych
+       decyzji projektu (np. „skany tylko w sources/").
 
 ## Krok 3 — Raport + lista P0/P1/P2
 

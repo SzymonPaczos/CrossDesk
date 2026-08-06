@@ -1,0 +1,14 @@
+# Wygenerowane przez toolkit-sync.sh — nie edytuj ręcznie.
+# Sprawdzenie: bash <toolkit>/scripts/toolkit-sync.sh check .
+toolkit_version 2026.08.06
+toolkit_source  https://github.com/SzymonPaczos/claude-toolkit.git
+toolkit_sha     4dc1c34
+#
+# sha256	plik-w-projekcie	źródło-w-masterze
+72fa7919342c019bd3af298957a9cc752011d80f9ec85485a0e3526d51c86cdf	.claude/agents/red-team.md	agents/red-team.md
+3d88bb9d61bab3bea84b6871c7becc0b7683fe9c42875bb4add018230519d545	.claude/agents/security-reviewer.md	agents/security-reviewer.md
+78561abcbcc82a2f1abe7fbb0c9905ac03b6fc8b3fbda32a2b435960add3f0e5	.claude/rules/change-provenance.md	conventions/change-provenance.md
+8683742df9bf4d92dca3581402a909adf20655cec1a56c87b892c63ce881fb6d	.claude/rules/ci-cd.md	conventions/ci-cd.md
+e39931a9ae8721def3cfcab52adb27bbdcf28279cbcfb1d9c9c27bd733504639	.claude/rules/multi-agent-delivery.md	conventions/multi-agent-delivery.md
+659ba50c572e8d9a2494d3a96a2aa412d002ffd5e354d1687c18e782a0e65172	.claude/rules/rules-as-gates.md	conventions/rules-as-gates.md
+32f7cddd7fdea9b25c0c3a7181e0da13120690c2f1d8a625f2cb79de52f02faf	.claude/skills/weekly-audit/SKILL.md	skills/weekly-audit/SKILL.md

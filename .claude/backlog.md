@@ -23,6 +23,81 @@ VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT
 
 ---
 
+## 🔴 TOP — aktualizacja toolkitu projektowego do claude-toolkit 2026.08.06
+
+**Zadanie dla agenta tego projektu. Najpierw `git diff` i plan, dopiero potem
+zmiana — nie łataj w locie.** Zakres jest wystarczająco duży, żeby wymagał
+specyfikacji i zielonego światła właściciela.
+
+Master `claude-toolkit` stał od 2026-07-11. 2026-08-06 dostał naprawę gate'ów,
+mechanizm wersjonowania i nowe konwencje. Kopie reguł w tym repo są już
+zsynchronizowane (`toolkit_version 2026.08.06` w `.claude/toolkit.lock`),
+ale **praca po stronie projektu została celowo zostawiona Tobie** — dotyka
+plików, które należą do projektu, nie do toolkitu.
+
+### 1. P0 — gate `pre-push` sprawdza working tree zamiast pushowanego commita
+
+Dotyczy tego repo: `.githooks/pre-push` nie czyta refów ze stdin i nie
+odtwarza pushowanego commita — sprawdza working tree.
+
+Reprodukcja: zacommituj plik z sekretem, popraw go **tylko w working tree** bez
+commitowania, wypchnij. Gate melduje „czysto", a sekret trafia na origin.
+Potwierdzone w **7 z 7** repozytoriów floty — wszystkie skopiowały ten sam
+wadliwy szablon z toolkitu, więc to nie jest błąd autora tego repo.
+
+Naprawiony wzorzec: `claude-toolkit/NEW-PROJECT.md` §4.2. Kluczowe elementy:
+czyta `<local ref> <local sha> <remote ref> <remote sha>` ze stdin; zakres
+z `remote_sha..local_sha` (nowa gałąź: `local_sha --not --remotes`); odtwarza
+commit przez `git worktree add --detach` i sprawdza pliki tam, nie na dysku;
+każdy advisory pipeline w `{ ...; } || true`; jeden `exit "$STATUS"` na końcu.
+
+Drugi antywzorzec do sprawdzenia przy okazji: pod `set -euo pipefail` puste
+dopasowanie grepa albo `head` zamykający potok ubijają hook **w środku**, więc
+kolejne warstwy nie wykonują się, a wynik wygląda na czysty. Opis obu:
+`conventions/rules-as-gates.md`, sekcja „Antywzorce z reprodukcją".
+
+**Dowód wymagany do zamknięcia:**
+`bash <toolkit>/templates/test-gates.sh .githooks/pre-push` → 6/6.
+Samo „przechodzi na zdrowym repo" nie jest dowodem, że gate blokuje.
+
+### 2. Kopie do ręcznego scalenia
+
+Trzy kopie mają lokalne nadpisania; `update` ich nie ruszył.
+
+- `.claude/agents/security-reviewer.md` — własny model zagrożeń projektu.
+  **Ma zostać**; scal bazę z mastera, zachowaj sekcję projektową.
+- `.claude/rules/ci-cd.md` (+2/−41) — master urósł mocno, warto przejąć całość.
+- `.claude/agents/red-team.md` (+1/−9) — master dodał soczewkę „tool misuse".
+
+Po scaleniu uruchom `toolkit-sync.sh check .` — ma być zielono. Jeśli zostawiasz
+treść lokalną, to jest decyzja do zapisania, nie milczące pominięcie.
+
+### 3. Krok 00 audytu — wersja toolkitu przed czytaniem kodu
+
+`skills/weekly-audit/SKILL.md` ma nowy pierwszy krok: `toolkit-sync.sh check .`
+**przed** wszystkim innym. Audyt na nieaktualnej checkliście sprawdza wczorajsze
+ryzyka i melduje „czysto". Wepnij to w swój `audit.sh` albo preflight.
+
+Reguła przy błędzie w regule: **nie łataj kopii w projekcie.** Poprawka idzie do
+mastera i wraca przez `update`. Załatana kopia to początek następnego dryfu —
+tak powstały trzy równoległe wersje jednego skilla w tej flocie.
+
+### 4. Co odesłać do mastera
+
+Jeśli masz u siebie wzorzec, którego master nie ma — `toolkit-sync.sh promote`,
+w tej samej sesji. Odłożona promocja nie następuje; to również jest sprawdzone
+empirycznie. Kandydaci zgłoszeni z rekonesansu floty czekają w backlogu
+toolkitu.
+
+### Kryteria akceptacji
+
+- `test-gates.sh` na `.githooks/pre-push` → 6/6 (albo jawne `n/a`, gdy repo
+  nie ma hooka);
+- `toolkit-sync.sh check .` → zielono, bez pozycji „do ręcznego scalenia";
+- każda zachowana treść lokalna ma wpis w `decisions.md` z uzasadnieniem;
+- krok 00 wpięty w audyt;
+- zmiany w osobnym commicie, oddzielone od pracy merytorycznej.
+
 ## Inbox — zapisane automatycznie, do sklasyfikowania
 
 <!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,

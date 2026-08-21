@@ -2,6 +2,215 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-08-22
+
+```text
+TOOLKIT_VERSION:      2026.08.21
+AUDITED_REVISION:     12268c7b6809db1c111e53bf0e466d427fec2499
+BRANCH:               chore/audit-toolkit-2026-08-20
+PREVIOUS_AUDIT:       2026-07-22
+DIFF_RANGE_OR_SCOPE:  --since=2026-07-22..HEAD (45 commitów, 24 merge'y)
+PYTHON_ENV:           brak  ← DEGRADED: mierzone poza venvem projektu
+DOCS_SOURCE:          n/a (pamięć modelu, odcięcie 2026-05) — BRAK źródła dokumentacji.
+                      Audyt NIE podaje wersji, dat wydania ani statusu EOL jako faktu.
+SECURITY_REVIEW:      **FAIL** (2× HIGH, 2× MEDIUM, 4× NOTE) — niezależny kontekst,
+                      .claude/agents/security-reviewer.md. Blokują SEC-01 i SEC-02.
+RED_TEAM:             **FINDINGS** (2× HIGH, 1× MEDIUM-HIGH) — kadencja miesięczna,
+                      poprzedni 2026-07-12. Wszystkie 3 łańcuchy zweryfikowane niezależnie.
+DEEP_REVIEW:          tak — punkty 1–26 z references/kontrola-glebokosci.md
+SAST:                 semgrep 1.157.0 — 51 znalezisk (4 ERROR / 2 WARNING / 45 INFO)
+                      + 2 błędy parsowania (.ts Qt jako TypeScript). Zatriażowane:
+                      0 eksploatowalnych. W CI **advisory** (`|| true`), bez baseline'u.
+                      zizmor: n/a lokalnie (jest w CI, blokujący). CodeQL: n/a lokalnie.
+DEPENDENCY_CURRENCY:  REPORT — rozjazd deklaracji: requires-python >=3.9 vs CI 3.12.
+                      Status EOL NIESPRAWDZONY (brak DOCS_SOURCE). Python: brak lockfile.
+CODE_HEALTH_DELTA:    n/a (brak narzędzia deltowego) — trend liczony ręcznie z metryk niżej.
+PYTEST_ENV_NOTE:      brak host/.venv na tej maszynie → mypy DEGRADED (pycdlib),
+                      pełna suita nieuruchamiana (znany zawis macOS ~6%, backlog P2).
+BACKLOG_WRITE:        recorded — 3× P0, 5× P1, 5× P2, 1× NOTE
+VERDICT:              **FAIL** — Security Review blokuje; 3 pozycje P0.
+```
+
+### Krok 00 — wersja toolkitu
+
+- master: 2026.08.21 · projekt: 2026.08.21
+- kopie rozjechane (do `update`): 0
+- odstępstwa zadeklarowane (`toolkit.local`): 1
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 126 files, env=brak)
+- mypy: **DEGRADED** — braki importu: 1 (środowisko niekompletne, nie regresja typów): named "pycdlib" 
+- pytest collected: 1067
+- bandit medium/high: 0
+- servicer direct blocking libvirt/fs calls (want 0): 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 25
+- gui cargo-deny issues: 2
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf lint findings: 0
+- buf format diff lines: 0
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint warnings: 0
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 98
+- #[test] annotations (rust): 85
+
+**Dependency currency (punkt 15)**
+
+- declared `requires-python`: 3.9 (EOL do potwierdzenia przy DOCS_SOURCE)
+- python w matrycy CI: 3.12  (rozbieżność z deklaracją = osobne ustalenie)
+- rust toolchain: brak pinu (stable)
+- lockfile'y: Cargo.lock guest=tak · gui=tak · python=NIE
+- bramka aktualności: `.claude/templates/dependency-currency.sh` (szkielet — dopisz ekosystemy przed użyciem)
+
+**Higiena repo (punkt 14)**
+
+- gałęzie bez upstreamu: 1 · ahead of upstream: 0
+- stash entries: 0
+- worktree prunable: 0
+- zmergowane gałęzie na origin (do sprzątnięcia): 0
+- tracked `.bak`/`BACKUP`/`_b64`: 0
+- martwe linki w `.claude/*.md` (14d): 0
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-25 (28d ago)
+- META decisions: 9
+- ADR DEC-NNNN total: 18
+- host subpackages (AGENTS.md „Repository layout" twierdzi liczbę): 20
+- kryteria akceptacji ✅ live (PLAN.md): 8/12
+
+**Security**
+
+- gitleaks worktree findings: 0
+- zizmor: n/a
+- gate self-test: `bash /Users/szymonpaczos/Projects/dev/claude-toolkit/templates/test-gates.sh .githooks/pre-push` (uruchom ręcznie; wynik do raportu)
+
+**Cadence**
+
+- previous audit: 2026-07-22 (31d ago)
+- ⚠️  kadencja przekroczona (>7 dni) — patrz preflight w `.githooks/pre-push`
+
+### Warstwa głęboka — znaleziska
+
+**P0-1 · JIT-lite omija opt-in i scope DEC-0019** (Red Team, zweryfikowane
+empirycznie). `_jitlite_flags` (`ipc/management.py:563`) wołane bezwarunkowo
+z `_launch` (`:452`), **nigdy nie sprawdza `shared_folder_enabled`**; waliduje
+**plik**, a udostępnia **katalog nadrzędny**, którego nie waliduje ponownie —
+wbrew własnemu kontraktowi `parent_share_path` (`path_validation.py:104`).
+Repro: plik wprost w `$HOME` → share całego `$HOME` przy share'owaniu
+WYŁĄCZONYM; argument = katalog `$HOME` → share **rodzica `$HOME`**, poza
+allowed root. Bramka to utrwala: `test_management_launch.py:456` asertuje
+„only the parent dir — not the whole $HOME", ale własność pochodzi z fixture'a
+(plik w podkatalogu), a `PeripheralsConfig()  # share OFF` oczekuje `/drive:`
+mimo to. Blokuje uczciwe zamknięcie kryt. #3.
+
+**P0-2 · Ostrzeżenie DEC-0019 wycinane przez własną redakcję** (SEC-01,
+zweryfikowane empirycznie). `THREAT_MODEL.md:120` warunkuje residual High na
+„loud warning"; realny output to `warning=<redacted>` + `redaction_drop_count=1`
+(pole spoza `ALLOWED_FIELDS` **i** treść z frazą `password` łapaną przez
+`_FORBIDDEN_PATTERNS:97`). CLI nie przenosi ostrzeżenia do `LaunchResponse`.
+Warunek przyjęcia ryzyka whole-`$HOME` nie jest spełniony w żadnym kanale.
+
+**P0-3 · `steady-state.xml` bez kontroli integralności** (Red Team).
+`finalize_steady_state` (`installer/steady_state.py:104`) czyta plik i podaje
+do `redefine_steady_state` bez walidacji; `install.state.json` nie ma sumy ani
+podpisu. Gość z zapisem w `~/.local/state/crossdesk/` (dostarcza P0-1) dyktuje
+trwały XML domeny: `<disk source=~/.ssh/id_ed25519>`, `<filesystem source='/'>`,
+`<emulator>` wskazujący wybraną binarkę. Auto-recovery wprowadza to w życie bez
+człowieka. Trigger: przed przejazdem `backend=real` z włączonym share'em.
+
+**P1** — `AuthValidator._active_streams` bez limitu długości nonce'a i liczby
+wpisów, `remove_stream` w jednym call-site (SEC-02 == Red Team F3; asymetria
+wobec `MOUNT_TOKEN_LEN=32` w tym samym repo) · `RailManager._windows` rośnie
+z danych gościa, `icon_png` walidowany za późno w łańcuchu (SEC-03) · hasło VM
+w argv `xfreerdp` → `/proc/<pid>/cmdline` (SEC-04) · SAST advisory bez baseline'u
+· pola logów spoza allow-listy redagowane w produkcji.
+
+**P2** — `import libvirt` poza `real.py` bez gate'a, autouse-guard omijany przez
+`libvirt.open()` (SEC-07) · trzy deklaracje THREAT_MODEL bez pokrycia (SEC-05/06)
+· TOCTOU na sockecie mgmt (SEC-08) · rozjazd runtime'u Pythona · dwa uśpione
+z jawnym triggerem.
+
+### Zweryfikowane i czyste
+
+Zgodność z decyzjami (No Docker, No polling poza DEC-META-006, leaf-certy poza
+gitem, scope default `documents`, 0 importów `*.mock` w produkcji) · provenance
+15/15 commitów z trailerami, **0 atrybucji AI** (D-006) · higiena repo: 0
+martwych linków, 0 śmieci tracked, 0 stashy, 0 prunable worktree · baseline'y
+microbencha: 11 metryk, **0 zerowych**, każdy z udokumentowanym pomiarem
+(ratchet z 2026-07-14 utrzymany) · guard self-hosted runnera: label **i**
+head-repo (poprawna ochrona przed pwn-request) · 20 połkniętych wyjątków
+spróbkowanych — wszystkie zasadne · mTLS i per-frame auth wołane na wszystkich
+trzech płaszczyznach · PKI per-install, klucze leaf `os.open(0o600)` bez okna
+· `escape()` przy wstrzykiwaniu hasła do `autounattend.xml` · domain XML
+budowany `ElementTree`, nie f-stringiem · 41 `unsafe` w Rust / 40 komentarzy
+`// Safety:` · brak `shell=True`, `eval`, `pickle` · `architecture.md` zgodne
+z DEC-0019.
+
+### Czego NIE sprawdzono (wprost)
+
+- **EOL runtime'ów** — brak `DOCS_SOURCE`; punkt 15 niedomknięty, `requires-python
+  >=3.9` vs CI 3.12 zapisane jako rozjazd deklaracji, bez orzekania o wsparciu.
+- **Pełna suita testów** — brak `host/.venv`; uruchomiono wyłącznie
+  `test_pre_push_hook.py` (3/3). Znany zawis macOS ~6% czyni lokalny baseline
+  niewiarygodnym; należy do boxa Linux.
+- **Historia gita pod kątem sekretów** — `gitleaks` odpalony tylko na worktree
+  (0 findings); skan historii to `CROSSDESK_FULL_AUDIT=1` / CI.
+- **CodeQL, zizmor lokalnie** — n/a na tej maszynie (w CI obecne; zizmor
+  blokujący z `--min-severity=low`).
+- **`test-gates.sh` na `pre-push`** — wynik 4/6 **skażony**: `pre-push:323` myli
+  awarię `cd` ze znaleziskiem, więc harness nie mierzy tego hooka. Do czasu
+  naprawy raport NIE twierdzi, że bramka sekretów jest egzekwowana.
+- **Boundary files nietknięte** — Security Reviewer nie miał `git diff`; ocena
+  z treści plików.
+
+### Wiarygodność tego raportu
+
+Warstwę statyczną i głęboką prowadził ten sam agent, który w tej samej sesji
+przebudował metodę audytu (DEC-META-009) — **samoprzegląd narzędzia**. Security
+Review i Red Team szły w **niezależnych, read-only kontekstach**, a ich trzy
+najcięższe znaleziska (P0-1, P0-2, P0-3) zweryfikowałem samodzielnie na kodzie,
+dwa z nich reprodukcją. Werdykt wygasa ze zmianą SHA.
+
+### Ratchet — propozycje (nie wykonane, audyt nie naprawia)
+
+1. Grep-gate na `import libvirt` poza dozwolonymi call-site'ami (dziś reguła
+   żyje wyłącznie w prozie i jest nieprawdziwa).
+2. Zdjąć `|| true` z semgrepa po ustaleniu baseline'u — dziś 4 ERROR tonie
+   w 45 INFO i nikt tego nie widzi.
+3. Naprawić `pre-push:323` (rozdzielić awarię narzędzia od znaleziska), potem
+   dopiero `test-gates.sh` cokolwiek mierzy → dopiero wtedy P0 hooka da się zamknąć.
+4. Dopisać do checklisty punkt „czy fixture nie dowodzi własności zamiast kodu"
+   — trzy znaleziska tego audytu mają zielony test asertujący więcej, niż kod
+   egzekwuje. Kandydat do `promote` (rozszerzenie punktu 13).
+
+**Do przeglądu agentem (warstwa głęboka):** punkty 1–26 z
+`.claude/skills/weekly-audit/references/kontrola-glebokosci.md`,
+skonkretyzowane dla CrossDeska w `.claude/rules/audit.md`.
+
+---
+
 ## Audyt 2026-07-22
 
 **Git:** `b0ecdc0` on `main`

@@ -163,7 +163,233 @@ importów). Do decyzji właściciela: przyjąć czy jawnie odrzucić.
 - ⬜ `test-gates.sh .githooks/pre-push` → **6/6** (blokowane przez 1 i 1a);
 - ✅ promocje z §4 wykonane (punkt 26 w masterze);
 - ⬜ przegląd i merge gałęzi `fix/sync-nie-kasuje-scalonej-kopii` w toolkicie.
+## 🔴 P0 — z audytu 2026-08-22 (Red Team, zweryfikowane niezależnie)
+
+### JIT-lite omija opt-in ORAZ scope DEC-0019 — whole-`$HOME` R/W bez ostrzeżenia
+
+**Zweryfikowane empirycznie 2026-08-22**, nie tylko przeczytane.
+`_jitlite_flags` ([management.py:563](../host/src/crossdesk_host/ipc/management.py#L563))
+jest wołane **bezwarunkowo** z `_launch` (`:452`) i **nigdy nie sprawdza
+`shared_folder_enabled`** — config ładuje wyłącznie po nazwę share'u i literę
+dysku. Skutek: przy share'owaniu **wyłączonym** (default) otwarcie pliku
+aplikacją Windows i tak tworzy `/drive:`.
+
+Drugi błąd w tym samym miejscu: walidowany jest **plik**, a udostępniany
+**katalog nadrzędny**, który nie przechodzi ponownej walidacji — mimo że
+`parent_share_path` sam tego wymaga w kontrakcie („*Caller still must run
+`validate_mount_path` on the result*",
+[path_validation.py:104](../host/src/crossdesk_host/jit_mount/path_validation.py#L104)).
+
+Repro (uruchomione, `$HOME` podstawione na tmp):
+
+| argument | udostępniony katalog |
+|---|---|
+| `$HOME/notatki.txt` | **całe `$HOME`** |
+| `$HOME` (katalog) | **rodzic `$HOME`** — poza allowed root |
+
+**Skutek:** dokładnie ta eskalacja, którą DEC-0019 nazwał po imieniu — gość
+czyta `~/.ssh` i `~/.config/crossdesk/vm.toml`, zapisuje `~/.bashrc`,
+`~/.config/autostart/` i `~/.local/state/crossdesk/`. Kryt. #3 nie może zostać
+uczciwie zamknięte, dopóki to żyje: kod przeczy `docs/DECISIONS.md:43-48`.
+
+**Bramka utrwala błąd, zamiast go łapać.**
+`test_jitlite_flags_shares_parent_of_opened_file`
+([test_management_launch.py:456](../host/tests/test_management_launch.py#L456))
+asertuje „*Only the parent dir is shared — not the whole `$HOME`*", ale fixture
+kładzie plik w **podkatalogu** — własność pochodzi z fixture'a, nie z kodu.
+Ten sam test ustawia `PeripheralsConfig()  # persistent share OFF` i oczekuje
+`/drive:` mimo to, czyli **utrwala obejście opt-inu jako poprawne**.
+
+**Fix + testy (muszą czerwienić na dzisiejszym kodzie):** `_jitlite_flags`
+zwraca `None` gdy `not cfg.shared_folder_enabled`; `validate_mount_path` na
+rodzicu z `allowed_roots` = katalog skonfigurowanego scope'u; odrzucić
+`parent == Path.home()`. Testy: `test_jitlite_refuses_when_parent_is_home`,
+`test_jitlite_refuses_directory_argument_above_home`,
+`test_jitlite_noop_when_sharing_disabled`.
+**Boundary:** po naprawie `docs/THREAT_MODEL.md` §C5 wiersz I wymaga przeglądu
+(właściciel).
+
+### Ostrzeżenie DEC-0019 o whole-`$HOME` jest wycinane przez własną redakcję
+
+**Zweryfikowane empirycznie 2026-08-22.** `docs/THREAT_MODEL.md:120` mówi, że
+scope `home` podnosi residual do **High** i jest *„mitigated **only** by the loud
+warning"*. To ostrzeżenie nie dociera do użytkownika **żadnym** kanałem:
+
+1. **Log** — `management.py:540` loguje `logger.warning("shared_folder_home_scope",
+   warning=home_warning)`. Pole `warning` nie jest w `ALLOWED_FIELDS`
+   (`observability/redaction.py`), a jego treść zawiera frazę `password`, którą
+   łapie `_FORBIDDEN_PATTERNS` (`:97`) — dwa niezależne powody redakcji.
+   Realny output: `{"event":"shared_folder_home_scope","warning":"<redacted>",
+   "redaction_drop_count":1}`.
+2. **CLI** — `launch_cmd.py` drukuje tylko „Launching {name}…"; `home_warning`
+   nie jest przenoszone do `LaunchResponse`. Docstring `peripherals.py:377`
+   twierdzi „Callers (launcher, CLI, GUI) surface it" — produkcyjny call-site
+   jest **jeden** (`management.py:538`).
+
+**Skutek:** warunek, pod którym właściciel przyjął ryzyko whole-`$HOME`
+(needs-owner §9, DEC-0019), nie jest spełniony. To nie jest accepted risk,
+tylko finding — mitygacja istnieje w dokumencie, nie w działaniu.
+
+**Fix:** ostrzeżenie musi iść kanałem **omijającym redakcję świadomie** (osobny
+kanał UI / stderr / pole w `LaunchResponse`), nie przez dopisanie `warning` do
+`ALLOWED_FIELDS` — wzorzec `password` i tak zetnie treść. Test:
+`test_home_scope_warning_survives_redaction_and_reaches_the_user`.
+
+### `steady-state.xml` + `install.state.json` bez kontroli integralności
+
+Gość, który raz zapisze w `~/.local/state/crossdesk/` (dostarcza to P0 wyżej),
+dyktuje hostowi trwały XML domeny. `finalize_steady_state`
+([steady_state.py:104](../host/src/crossdesk_host/installer/steady_state.py#L104))
+czyta plik i podaje go do `redefine_steady_state` **bez żadnej walidacji**;
+`install.state.json` nie ma sumy ani podpisu (grep `sha256|hmac|signature` w
+`installer/state.py` = 0), więc `"steady_state": "done"` → `"pending"` odblokowuje
+ponowny przebieg, a `on_session_ready` odpala na **każdym** Hello.
+
+Prymitywy dostępne z samego XML-a: `<disk><source file='~/.ssh/id_ed25519'/>`,
+`<filesystem><source dir='/'/>` (z pominięciem całej warstwy
+`validate_mount_path`), `<emulator>` wskazujący binarkę wybraną przez gościa.
+Auto-recovery po `destroy` wprowadza nową definicję w życie bez udziału człowieka.
+
+**Trigger:** przed jakimkolwiek przejazdem `backend=real` z włączonym share'em.
+**Fix:** sha256 XML-a w state przy instalacji i weryfikacja przed `defineXML`,
+albo odbudowa XML z `DomainSpec` w procesie zamiast czytania pliku. Niezależnie:
+share nigdy nie może obejmować `~/.config/crossdesk` ani `~/.local/state/crossdesk`.
+Test: `test_finalize_rejects_tampered_steady_state_xml`.
+
 ## Inbox — zapisane automatycznie, do sklasyfikowania
+
+### [P1, audyt 2026-08-22] `AuthValidator`: nonce bez limitu, mapa bez sufitu, brak sprzątania
+
+`_active_streams[nonce] = seq + 1` ([auth.py:90](../host/src/crossdesk_host/ipc/auth.py#L90))
+bez limitu długości nonce'a, bez TTL, bez sufitu liczby wpisów. `remove_stream`
+ma **jeden** call-site (`control.py:291`) — heartbeat i filesystem nie sprzątają
+nigdy. Nonce rotowany co ramkę = trwały wpis na ramkę, a gałąź `seq != expected`
+nigdy się nie wykonuje, więc **anty-replay milczy**.
+
+Asymetria we własnym repo: `filesystem.py:19` ma `MOUNT_TOKEN_LEN = 32`
+egzekwowane w `:130` z uzasadnieniem „*would let a malicious peer balloon host
+memory*". Ten sam wektor dla `stream_nonce` — który jest **kluczem trwałej
+mapy** — nie jest obsłużony. `proto/crossdesk/v1/common.proto:35-37` wymaga
+16 bajtów i stałości w obrębie strumienia; host nie sprawdza ani jednego, ani
+drugiego.
+
+**Fix:** wymusić `len(nonce) == 16`; przypiąć nonce do strumienia i odrzucać
+zmianę; `remove_stream` w `finally` na wszystkich trzech płaszczyznach; sufit
+liczby strumieni. W tym samym zadaniu wyrównać `docs/THREAT_MODEL.md:96,99`
+(boundary — właściciel).
+
+### [P1, audyt 2026-08-22] SAST działa doradczo — 51 znalezisk bez triażu
+
+`semgrep ci … || true` (`security.yml:145`) i bandit `… || true` (`:87`) nigdy
+nie failują joba. SCA blokuje (`pip-audit`, `cargo audit --deny warnings`,
+`cargo deny`), ale **SAST nie**. Lokalny przebieg: **51 znalezisk (4 ERROR,
+2 WARNING, 45 INFO) + 2 błędy parsowania**. Zatriażowane w tym audycie: żadne
+nie jest eksploatowalne (`saxutils.escape` to escaper nie parser;
+`subprocess.run` dostaje listę; XML pochodzi od libvirt i z naszego szablonu),
+ale **nie ma baseline'u ani allowlisty**, więc realne znalezisko wygląda dziś
+identycznie jak dzisiejszy szum. Punkt 21: narzędzie obecne, ale niepodpięte
+do bramki, daje złudzenie pokrycia.
+
+### [P1, audyt 2026-08-22] `RailManager._windows` rośnie z danych gościa
+
+`rail_manager.py:96-113` wstawia wpis per `window_id` (gość wybiera klucz) i
+zapisuje `title` oraz `icon_png` **bez limitu rozmiaru**; usuwa tylko na
+`KIND_DESTROYED`, czyli na zdarzenie, którego złośliwy gość nigdy nie wyśle.
+Limit 1 MiB + magic PNG istnieje w `window_icon.py:110-116` — czyli **po** tym,
+jak `rail_manager.py:112` już skopiował bajty; `_handle_icon_change` (`:230`)
+omija walidator zupełnie. `THREAT_MODEL.md:88,132` deklaruje rate-limit na
+Launch/Discover; `grep -rE 'rate_limit|maximum_concurrent_rpcs'` = **0 trafień**.
+
+### [P1, audyt 2026-08-22] Hasło VM w argv `xfreerdp` → `/proc/<pid>/cmdline`
+
+`rail_command.py:139` buduje `f"/p:{conn.password}"`, `freerdp/real.py:160`
+odpala to `Popen`-em. Na Linuksie `/proc/<pid>/cmdline` jest domyślnie czytelne
+dla wszystkich → drugie konto lokalne odczytuje hasło konta Windows.
+
+**To nie jest out-of-scope §C7** (tamto wyłącza *tego samego* użytkownika):
+projekt świadomie broni się przed **innymi** kontami lokalnymi w trzech
+miejscach — `vm.toml` 0600, socket mgmt 0600, log capture 0600. Argv obchodzi
+wszystkie trzy naraz. **To także nie jest** powtórka P1-1 z 2026-07-07: tamta
+naprawa dotyczyła wyłącznie logu i explicite zostawiła realne argv.
+Precedens we własnym repo: `keyring/kwallet.py:63` podaje sekret przez `input=`
+(stdin). Ta sama właściwość dotyczy `crossdesk vm credentials set --password`
+(plus historia powłoki). Test: `test_password_never_appears_in_spawned_argv`.
+
+### [P2, audyt 2026-08-22] Trzy deklaracje THREAT_MODEL bez pokrycia w kodzie
+
+Wszystkie wymagają edycji boundary (właściciel) **albo** naprawy kodu:
+- `THREAT_MODEL.md:76` obiecuje TTY-gated `credentials show`;
+  `cli/credentials_cmd.py:55-62` drukuje bezwarunkowo, `grep isatty host/src` = 0.
+- `THREAT_MODEL.md:117` obiecuje weryfikację `mount_token` „on every subsequent
+  op"; `ipc/filesystem.py:128-139` sprawdza **tylko długość** i nigdy nie
+  porównuje z wydanym tokenem. Uśpione — `trigger_mount` bez produkcyjnych
+  callerów; domknąć razem z Phase 5.
+- `THREAT_MODEL.md:99` obiecuje „per-stream bounded buffers"; nie istnieją
+  (pokryte pozycją o `AuthValidator` wyżej).
+
+### [P2, audyt 2026-08-22] Okno TOCTOU na sockecie zarządzania
+
+`daemon.py:277-284`: `add_insecure_port` → `start()` → **dopiero potem**
+`chmod 0600`. Na Linuksie chroni `$XDG_RUNTIME_DIR` (0700), ale fallback
+`~/.local/run` (`ipc/management.py:86-88`) powstaje `mkdir(parents=True)`
+z domyślnym umaskiem. Okno milisekundowe, wymaga innego konta lokalnego.
+
+### [P1, audyt 2026-08-22] Dziesiątki pól logów spoza allow-listy → `<redacted>` w produkcji
+
+Ta sama przyczyna co P0 z ostrzeżeniem, szerszy zasięg: `error`, `detail`,
+`reason`, `app_id`, `file_path`, `host_dir`, `phase`, `fsms` i inne nie są
+w `ALLOWED_FIELDS`, więc w trybie lenient produkcyjny log gubi treść
+(`daemon.py:294,317`, `management.py:477,582,597`, `lifecycle/dbus_listener.py:65`).
+Dług obserwowalności bez ścieżki exploitu — ale to znaczy, że diagnostyka
+produkcyjna jest dziś istotnie słabsza, niż wygląda w kodzie.
+
+### [P2, audyt 2026-08-22] `import libvirt` poza `libvirt_ctl/real.py` — bez gate'a
+
+`lifecycle/domain_events.py` importuje `libvirt` w trzech miejscach (`:198`,
+`:243`, `:260`). Abstrakcja jest zachowana (`DomainEventSource` Protocol +
+Mock + Libvirt), więc to drugi **legalny** real-impl, ale reguła w
+`rules/audit.md` §6 i `backend.md` mówi „poza `real.py`" i jest dziś
+nieprawdziwa. **Gate'a nie ma** (grep w `.githooks/`, `.github/`, `audit.sh` = 0)
+— audyt sprawdza to ręcznie co tydzień. Ratchet: albo dopisać drugi dozwolony
+call-site do reguły, albo przenieść klasę; w obu wypadkach dołożyć grep-gate.
+
+**Gorszy skutek uboczny:** autouse-guard z incydentu 2026-07-05
+(`host/tests/conftest.py:40`) łata wyłącznie `RealLibvirtController._connect`,
+a `LibvirtDomainEventSource.start()` woła `libvirt.open()` wprost
+(`domain_events.py:209`) — czyli **omija guard**. Ta ścieżka jest
+nie-mutująca (subskrypcja zdarzeń), więc nie powtórzy incydentu z `undefine`,
+ale docstring guardu obiecuje „slam the real-libvirt connection choke point
+shut for the whole suite" i to jest dziś nieprawda.
+
+### [P2, audyt 2026-08-22] Rozjazd deklaracji runtime'u Pythona
+
+`requires-python = ">=3.9"` (`host/pyproject.toml:8`) wobec **wyłącznie 3.12**
+w matrycy CI. Albo deklarowana podłoga jest nietestowana (czyli nieprawdziwa),
+albo 3.9 jest wspierany i wtedy jego status EOL przesądza o P0 wg punktu 15.
+**Nie rozstrzygam** — audyt nie miał `DOCS_SOURCE`, więc nie ma prawa podać
+daty EOL jako faktu. Do sprawdzenia przy pierwszym audycie ze źródłem
+dokumentacji.
+
+### [P2, audyt 2026-08-22] Dwa uśpione, z jawnym triggerem
+
+- `attach_virtiofs` buduje XML f-stringiem bez escapingu
+  (`libvirt_ctl/real.py:251-261`); `trigger_mount` nie ma produkcyjnego callera.
+  Trigger: Stage C. Nazwa katalogu z apostrofem jest osiągalna dla gościa
+  w share'owanym `~/Documents`.
+- `display_name` niesanityzowany w `name:` klauzuli `/app:` i w `Name=` pliku
+  `.desktop` (`management.py:128` sanityzuje tylko `app_id`). Źródłem jest
+  lokalny socket mgmt (0600), czyli użytkownik — higiena, nie ścieżka ataku.
+
+### [NOTE, audyt 2026-08-22] Nowy punkt do checklisty: fixture zamiast kodu
+
+Trzy znaleziska tego audytu mają **zielony test asertujący własność silniejszą,
+niż kod egzekwuje** (`test_management_launch.py:466,471`,
+`test_security_edges.py:29-43`). To rozszerzenie punktu 13 („test
+samopotwierdzający") o wariant, w którym własność pochodzi z **fixture'a**,
+nie z produkcyjnego kontraktu. Kandydat do `promote` przy najbliższej sesji
+w toolkicie.
+
+
 
 <!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,
 gdy priorytet jest niejasny (reguła „zapisz najpierw" w rules/general.md,

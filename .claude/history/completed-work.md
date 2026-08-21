@@ -80,6 +80,14 @@ nagłówek maszynowy, Krok 00, higienę repo, aktualność runtime'ów i tryb
 
 Pierwszy przebieg nowej metody znalazł: P0 `pre-push` potwierdzony lekturą
 (`:222-228` skanuje dysk, nie commit), nowy P1 (`:323` myli awarię `cd`
-ze znaleziskiem, przez co bramka jest niemierzalna), rozjazd
-`requires-python 3.9` vs CI 3.12, oraz nieprzenośny `find -printf` w samym
-masterze toolkitu (zgłoszone, nie łatane lokalnie).
+ze znaleziskiem, przez co bramka jest niemierzalna) oraz rozjazd
+`requires-python 3.9` vs CI 3.12.
+
+Dwie usterki samego toolkitu naprawione **u źródła** (gałąź
+`fix/sync-nie-kasuje-scalonej-kopii`, niezmergowana): nieprzenośny
+`find -printf` wywracający `check` na macOS przy zielonym wyniku, oraz —
+poważniejsza — `update` kasujący ręcznie scaloną kopię, bo lock trzymał tylko
+sumę kopii. Lock ma teraz drugą sumę (mastera z chwili stemplowania) i test
+negatywny potwierdzony sentinelem. W drugą stronę poszła promocja: trzy sygnały
+ze starej checklisty projektowej to dziś **punkt 26** mastera, więc kontrola
+głęboka ma 26 punktów.

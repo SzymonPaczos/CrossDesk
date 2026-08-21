@@ -5,7 +5,7 @@
 
 - procedura → [`.claude/skills/weekly-audit/SKILL.md`](../skills/weekly-audit/SKILL.md)
   (Kroki 00 → 5, obowiązkowy nagłówek raportu);
-- **punkty kontroli głębokiej (1–25)** →
+- **punkty kontroli głębokiej (1–26)** →
   [`.claude/skills/weekly-audit/references/kontrola-glebokosci.md`](../skills/weekly-audit/references/kontrola-glebokosci.md).
   **Wczytaj ten plik przed oceną** — ocena z pamięci pomija punkty dopisane
   po ostatnim postmortemie.
@@ -116,7 +116,7 @@ maszynowym. Wzorzec pełnego wpisu: [`.claude/templates/audit-log-entry.md`](../
 
 ---
 
-## Konkretyzacja punktów 1–25 dla CrossDeska
+## Konkretyzacja punktów 1–26 dla CrossDeska
 
 Numeracja = `references/kontrola-glebokosci.md`. Punkt bez wiersza tutaj
 stosuje się wprost z mastera.
@@ -300,6 +300,17 @@ Wyrocznią CrossDeska są **budżety 12 kryteriów akceptacji** z
 6 z 11 baseline'ów miało `0` (collect-only), a reszta do 66% luzu — bramka nie
 bramkowała niczego (naprawione `7ee8b60`). Regresja +25% ma być łapana; jeśli
 nie jest, to nie jest bramka.
+
+### 26. Dane, które cicho kłamią — **punkt promowany stąd**
+
+Ten punkt trafił do mastera **z CrossDeska** (2026-08-21): połknięte błędy
+(`except: pass`), czas wykonania podany jako czas zdarzenia (`datetime.now()`
+jako data dokumentu historycznego) i identyfikator jako licznik zamiast skrótu
+żyły w starej, projektowej checkliście — czyli w pliku, którego `check` nie
+widzi, bo nie jest kopią. Przy przepisywaniu na nakładkę wróciły do mastera
+przez `promote`, więc obowiązują teraz całą flotę i wracają tu przez `update`.
+
+To jest wzorzec do naśladowania: reguła ogólna **nie zostaje** w nakładce.
 
 ### 20.–25. Nowe warstwy (adopcja 2026-08-21)
 - **20** [`quality-gates-and-dod.md`](quality-gates-and-dod.md) — katalog bramek

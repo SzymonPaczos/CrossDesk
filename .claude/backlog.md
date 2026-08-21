@@ -113,7 +113,7 @@ raportuje **`DEGRADED`**, nie „pominięto" (ścieżka konfigurowalna przez
 `CROSSDESK_TOOLKIT_DIR`). Reguła przy błędzie w regule: **nie łataj kopii
 w projekcie** — poprawka idzie do mastera i wraca przez `update`.
 
-### 4. Co odesłać do mastera (`promote`) — OTWARTE, wymaga zgody
+### 4. ✅ Odesłane do mastera — ZROBIONE 2026-08-21
 
 Stary `rules/audit.md` miał sygnały **ogólne**, których master nie ma. Przy
 przepisywaniu na nakładkę wypadły z tego pliku (są w `git show HEAD~:`), więc
@@ -123,13 +123,12 @@ albo wracają do mastera, albo znikają. Kandydaci (§3 „Backend" starej wersj
 - `datetime.now()` użyte jako **data dokumentu historycznego**;
 - **ID jako licznik zamiast hasha**.
 
-Cel: `skills/weekly-audit/references/kontrola-glebokosci.md` (punkt 1 albo 3),
-komendą `toolkit-sync.sh promote . <plik> --into <cel>`. **Nie zrobione
-autonomicznie** — `promote` mutuje **inne repozytorium** (master + `VERSION`
-+ commit), a właściciel prosił o kierunek toolkit → projekt. Uwaga
-z konwencji: *odłożona promocja nie następuje* — to jest tykająca pozycja.
+Wylądowały w masterze jako **punkt 26 „Dane, które cicho kłamią"**
+(`kontrola-glebokosci.md`), po decyzji właściciela 2026-08-21. Wróciły tu przez
+`update`, więc obowiązują całą flotę, a nie tylko ten projekt. Gałąź w toolkicie:
+`fix/sync-nie-kasuje-scalonej-kopii` — **niezmergowana**, czeka na przegląd.
 
-### 5. [P2, nowe 2026-08-21] `toolkit-sync.sh` nie działa w całości na macOS
+### 5. ✅ [P2] `toolkit-sync.sh` na macOS — NAPRAWIONE U ŹRÓDŁA 2026-08-21
 
 `scripts/toolkit-sync.sh:240` (master) używa GNU-owego
 `find skills -mindepth 1 -maxdepth 1 -type d -printf '%f\n'`. BSD find na macOS
@@ -138,11 +137,13 @@ kompletności skilli (D-015) nie wykonuje się na maszynie właściciela** — a
 `check` i tak kończy zielono. Awaria wygląda dokładnie jak brak znalezisk, czyli
 klasa z Kroku 0 mastera.
 
-Naprawa **idzie do mastera** (`toolkit-sync.md` pkt 4 — nie łatamy kopii;
-zresztą to skrypt toolkitu, nie kopia w tym repo). Przenośny odpowiednik:
-`find skills -mindepth 1 -maxdepth 1 -type d -exec basename {} \;` albo
-`for d in skills/*/; do basename "$d"; done`. Zgłosić przy najbliższej sesji
-w toolkicie.
+Naprawione w masterze (`-exec basename {} \;`) na gałęzi
+`fix/sync-nie-kasuje-scalonej-kopii`, wraz z **poważniejszą** usterką wykrytą
+przy okazji: `update` kasował ręcznie scaloną kopię, bo lock trzymał tylko sumę
+kopii, więc plik stemplowany PO scaleniu wyglądał na nietknięty master. Lock ma
+teraz drugą sumę — mastera z chwili stemplowania — a `validate-toolkit.sh` ma
+test negatywny (sentinel: bez naprawy pada na drugim przebiegu). Gałąź
+**niezmergowana**, czeka na przegląd właściciela.
 
 ### 6. [P2, nowe 2026-08-21] Dwie konwencje z fali 2026.08.21 bez decyzji
 
@@ -160,7 +161,8 @@ importów). Do decyzji właściciela: przyjąć czy jawnie odrzucić.
   w `toolkit.local` z uzasadnieniem;
 - ✅ zmiany w osobnym commicie, oddzielone od pracy merytorycznej;
 - ⬜ `test-gates.sh .githooks/pre-push` → **6/6** (blokowane przez 1 i 1a);
-- ⬜ promocje z §4 wykonane albo świadomie odrzucone.
+- ✅ promocje z §4 wykonane (punkt 26 w masterze);
+- ⬜ przegląd i merge gałęzi `fix/sync-nie-kasuje-scalonej-kopii` w toolkicie.
 ## Inbox — zapisane automatycznie, do sklasyfikowania
 
 <!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,

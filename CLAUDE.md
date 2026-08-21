@@ -17,7 +17,7 @@ load.
 - @.claude/rules/backend.md — Python (host) + Rust (guest)
   path-specific rules.
 - @.claude/rules/audit.md — **nakładka** CrossDeska na audyt: konkretyzacja
-  punktów 1–25 z `.claude/skills/weekly-audit/references/kontrola-glebokosci.md`
+  punktów 1–26 z `.claude/skills/weekly-audit/references/kontrola-glebokosci.md`
   (ścieżki, grepy, wyjątki, P0/P1/P2). Sama procedura żyje w skillu.
 - @.claude/rules/quality-gates-and-dod.md — katalog bramek, tryby, odstępstwa
   i definicja ukończenia. Kopia z claude-toolkit (adopcja 2026-08-21).

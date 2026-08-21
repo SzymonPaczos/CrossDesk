@@ -17,7 +17,7 @@
 # guest/gui (cargo check, clippy, deny, audit) + proto (buf) + QML (qmllint)
 # + sekrety (gitleaks) + higiena repo + aktualność runtime'ów + drift.
 #
-# Procedura (Kroki 00–5 i punkty głębokie 1–25) → .claude/skills/weekly-audit/,
+# Procedura (Kroki 00–5 i punkty głębokie 1–26) → .claude/skills/weekly-audit/,
 # konkretyzacja CrossDeska → .claude/rules/audit.md.
 
 set -uo pipefail
@@ -367,7 +367,7 @@ else
 fi
 add ""
 
-add "**Do przeglądu agentem (warstwa głęboka):** punkty 1–25 z"
+add "**Do przeglądu agentem (warstwa głęboka):** punkty 1–26 z"
 add "\`.claude/skills/weekly-audit/references/kontrola-glebokosci.md\`,"
 add "skonkretyzowane dla CrossDeska w \`.claude/rules/audit.md\`."
 add ""

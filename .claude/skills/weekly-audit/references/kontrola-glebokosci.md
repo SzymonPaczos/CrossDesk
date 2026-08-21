@@ -213,3 +213,21 @@ Skrypt liczy, Ty oceniasz. Przejrzyj i oceń:
 25. **Zgłoszenia defektów** — czy defekty mają reprodukcję i dowód przed/po,
     czy giną w prozie. Zgłoszenie bez kroków reprodukcji wraca do zgłaszającego,
     nie do backlogu. Reguły: `.claude/rules/issue-reporting.md`.
+26. **Dane, które cicho kłamią** (wkład z CrossDesk, 2026-08-21 — trzy sygnały
+    żyły w checkliście projektowej, której mechanizm synchronizacji nie widział,
+    bo nie była kopią; do mastera trafiły dopiero przy przepisaniu jej na
+    nakładkę). Wspólny mianownik: kod przechodzi wszystkie bramki i produkuje
+    wartość, która wygląda poprawnie i jest nieprawdziwa. Sprawdź:
+    a. **Połknięte błędy** — `except: pass`, `except: return []`, `catch {}`
+       i odpowiedniki. Pusty wynik z połkniętego wyjątku jest nieodróżnialny od
+       pustego wyniku prawdziwego, a wyżej wygląda jak „brak danych", nie jak
+       awaria. To ta sama klasa co skan, który padł i podał zero (Krok 0).
+    b. **Czas wykonania podany jako czas zdarzenia** — `datetime.now()`/`NOW()`
+       wpisane jako data dokumentu, zdarzenia albo rekordu historycznego.
+       Backfill i ponowne przetworzenie przesuwają wtedy całą historię na dziś,
+       bez żadnego sygnału. Data pochodząca ze źródła i data zapisu to dwa
+       różne pola; jeśli jest jedno, ustal które.
+    c. **Identyfikator jako licznik zamiast skrótu** — ID nadawane sekwencyjnie
+       tam, gdzie ma być stabilne i deterministyczne. Ujawnia liczność zbioru,
+       rozjeżdża się przy dwóch producentach i zmienia po ponownym imporcie,
+       więc odsyłacze zewnętrzne wskazują po czasie na inny byt.

@@ -311,14 +311,29 @@ tylko na wyraźne polecenie „audyt z naprawą".
 fali), a zadanie brzmiało „zaktualizuj sposób audytu". Do osobnej decyzji;
 zapisane w `backlog.md`, żeby nie zniknęły.
 
-### Usterka mastera zgłoszona, nie załatana lokalnie
+### Usterki mastera — naprawione u źródła, nie załatane lokalnie
 
 `scripts/toolkit-sync.sh:240` używa GNU-owego `find -printf '%f\n'`. Na macOS
 (BSD find) kończy się `find: -printf: unknown primary or operator`, więc **nowy
 check kompletności skilli (D-015) nie wykonuje się na maszynie właściciela** —
 a `check` i tak kończy się zielono, czyli awaria wygląda jak brak znalezisk.
-Zgodnie z protokołem (`toolkit-sync.md` pkt 4) poprawka idzie **do mastera**,
-nie do kopii. Zapisane w `backlog.md`.
+Zgodnie z protokołem (`toolkit-sync.md` pkt 4) poprawka poszła **do mastera**,
+nie do kopii — gałąź `fix/sync-nie-kasuje-scalonej-kopii` (niezmergowana).
+
+Przy okazji wyszła usterka **poważniejsza**: `update` kasował ręcznie scaloną
+kopię, co ten projekt odczuł na własnej skórze. Lock trzymał jedną sumę — kopii
+w projekcie — więc plik stemplowany **po** scaleniu zgadzał się ze swoim lockiem
+i wyglądał jak nietknięty master. Zabezpieczenie `purely_outdated`, napisane
+dokładnie dla ról, które master każe skonkretyzować, było nieosiągalne po
+pierwszym ostemplowaniu. Lock ma teraz **drugą sumę** (mastera z chwili
+stemplowania), a `validate-toolkit.sh` test negatywny potwierdzony sentinelem.
+Nasz `toolkit.local` zostaje mimo naprawy — rozjazd jest trwały z definicji,
+więc deklaracja jest właściwszą formą niż powtarzane `POMINIĘTO`.
+
+**Promocja w drugą stronę:** trzy sygnały ze starej checklisty projektowej
+(połknięte błędy, `datetime.now()` jako data zdarzenia, ID jako licznik) weszły
+do mastera jako **punkt 26** i wróciły tu przez `update` — checklista ma dziś
+**26 punktów**, nie 25.
 
 **Jak stosować:** audyt zaczyna się od `toolkit-sync.sh check .`; ocena
 głęboka wczytuje `references/kontrola-glebokosci.md`, a `rules/audit.md`

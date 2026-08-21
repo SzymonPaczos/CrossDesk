@@ -10,6 +10,23 @@ flag w [`backlog.md`](backlog.md).
 
 ---
 
+## ⏭️ Audyt 2026-08-22 wraca na box — [handoff](history/2026-08-22-handoff-linux.md)
+
+Audyt przejechał na MacBooku; **siedem klas pomiarów jest tam niewykonalnych
+albo zniekształconych** (brak `host/.venv`, pytest wiesza się na macOS, brak
+`zizmor`, brak libvirt, `test-gates.sh` daje wynik skażony, `DOCS_SOURCE`
+pusty, hooki nie były aktywne w klonie). Lista do powtórzenia — z komendami
+i z tym, co dany wynik znaczy — w
+[`history/2026-08-22-handoff-linux.md`](history/2026-08-22-handoff-linux.md).
+Warunek wstępny: **toolkit nie jest sklonowany na boxie**, więc Krok 00 i
+`test-gates.sh` są tam dziś nieosiągalne.
+
+Znaleziska: [`backlog.md`](backlog.md) — trzy P0 (JIT-lite omija opt-in
+i scope DEC-0019 · ostrzeżenie o whole-`$HOME` zjadane przez własną redakcję ·
+`steady-state.xml` bez kontroli integralności) + Inbox P1/P2.
+
+---
+
 ## 🎉 MILESTONE — A7-live: świeży `crossdesk install` → agent auto-online (2026-07-01, Linux+KVM)
 
 **Czysta destructive reinstalacja na żywym boxie** (owner autoryzował): `crossdesk

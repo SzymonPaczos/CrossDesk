@@ -1,0 +1,17 @@
+# gitleaks — wyciszenia jako kod w repo (security-verification-gates.md §6:
+# nigdy w interfejsie narzędzia). Każdy wpis: co, dlaczego, i dlaczego nie ma
+# czego rotować.
+#
+# Fingerprint = <commit>:<plik>:<reguła>:<linia>, czyli wyciszenie jest przypięte
+# do JEDNEJ historycznej migawki. Ten sam wzorzec w nowym commicie zablokuje push.
+
+# `.claude/templates/test-gates.sh` to kopia szablonu z claude-toolkit, który
+# DOWODZI, że bramka sekretów blokuje (rules-as-gates.md §9). Fixture musi
+# zawierać atrapę sekretu — inaczej niczego nie dowodzi. Wartość jest
+# syntetyczna (`ABCDEFGH12345`), nigdy nie była poświadczeniem, nie ma czego
+# rotować. Skanowanie działa na historii, więc inline `gitleaks:allow` w drzewie
+# roboczym starego blobu nie dotyczy; pliku nie wolno też edytować, bo jest
+# kopią toolkitu (poprawka idzie do mastera, nie do kopii).
+# Bliźniacza atrapa w tym samym pliku (linia 82) jest obsłużona markerem
+# `pre-push-allow-secret` w `.githooks/pre-push` — patrz backlog TOP 1b.
+89907d16eeb2aa16dbe3e358377fefd07542c94c:.claude/templates/test-gates.sh:generic-api-key:107

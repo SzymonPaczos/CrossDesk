@@ -120,9 +120,21 @@ Sentinel: dopisanie **nieoznaczonej** linii `api_key = "…"` do tego samego
 pliku → push **zablokowany**; po usunięciu → warstwa sekretów przechodzi.
 Zweryfikowane oboma kierunkami 2026-08-22.
 
+Druga warstwa złapała **ten sam plik w historii**: `gitleaks` (skan historii,
+nie drzewa) wskazał atrapę z linii 107, zacommitowaną w `89907d1` — czyli
+wtedy, gdy hooki w klonie **nie były włączone**. Tego nie da się rozwiązać
+inline'em: skan patrzy na stary blob, a samego pliku ruszyć nie wolno, bo
+**jest kopią toolkitu** (1 trafienie w `toolkit.lock`). Rozwiązane
+[`.gitleaksignore`](../.gitleaksignore) — wpis przypięty do
+`<commit>:<plik>:<reguła>:<linia>`, więc ten sam wzorzec w **nowym** commicie
+nadal zablokuje push. Wartość jest syntetyczna, nigdy nie była poświadczeniem,
+nie ma czego rotować (`security-verification-gates.md` §5).
+
 **Do zrobienia:** `promote` mechanizmu do mastera (`NEW-PROJECT.md` §4.2,
 szablon hooka) — inaczej każdy projekt floty, który przyjmie `test-gates.sh`,
-zablokuje sobie push i najtańszym wyjściem będzie `--no-verify`.
+zablokuje sobie push **dwukrotnie** (warstwa 1 i warstwa gitleaks), a
+najtańszym wyjściem będzie `--no-verify`. To jest dokładnie ten mechanizm,
+który reguły zabraniają — więc szablon dziś popycha flotę do jego łamania.
 
 ### 1c. ✅ [2026-08-22] RUSTSEC-2026-0258 (`h2`) — złapane przez bramkę, naprawione
 

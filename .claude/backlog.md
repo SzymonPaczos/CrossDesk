@@ -256,6 +256,51 @@ albo odbudowa XML z `DomainSpec` w procesie zamiast czytania pliku. Niezależnie
 share nigdy nie może obejmować `~/.config/crossdesk` ani `~/.local/state/crossdesk`.
 Test: `test_finalize_rejects_tampered_steady_state_xml`.
 
+### Kolejność naprawy tych trzech + flaga boundary (dopisane 2026-08-22)
+
+Nie są równoległe: **JIT-lite jest bramą** do `steady-state.xml` (dostarcza
+zapis do `~/.local/state/crossdesk`).
+
+1. **JIT-lite** — jedyny z trzech, który wywala się przy **zwykłym użyciu**,
+   bez złośliwego gościa (plik wprost w `$HOME` → rodzicem jest `$HOME`).
+   Naprawa lokalna i mechanicznie gotowa: `validate_mount_path` przyjmuje
+   `allowed_roots`, a `shared_folder_resolved_path()`
+   ([peripherals.py:391](../host/src/crossdesk_host/config/peripherals.py#L391))
+   zwraca korzeń skonfigurowanego scope'u — czyli walidacja **rodzica** ma
+   gotowy argument:
+
+   ```python
+   if not cfg.shared_folder_enabled:        # (1) honoruj opt-in
+       return None
+   parent = parent_share_path(validated.canonical)
+   if parent == Path.home():                # (2) nigdy całe $HOME
+       return None
+   validate_mount_path(                     # (3) rodzic wobec scope'u
+       str(parent),
+       allowed_roots=[Path(cfg.shared_folder_resolved_path())],
+   )
+   ```
+
+   Zasada, której dziś brak: JIT-lite ma **zawężać** skonfigurowany scope,
+   nigdy go poszerzać.
+
+2. **Denylist `~/.config/crossdesk` + `~/.local/state/crossdesk`** w
+   `jit_mount/path_validation.py`. Dwie linijki, a odcinają łańcuch do
+   `steady-state.xml` **także** przy świadomie włączonym scope `home` — więc
+   warte zrobienia niezależnie od kolejności reszty.
+
+3. **`steady-state.xml`** — trigger to dopiero pierwszy przejazd
+   `backend=real` z włączonym share'em. *Rek.: wariant (b)* — odbuduj XML
+   z `DomainSpec` w procesie zamiast czytać plik. Nie ma pliku → nie ma czego
+   podmienić; wariant (a) (sha256 w state) zostawia podatny `install.state.json`
+   obok i wymaga osobno jego podpisania.
+
+4. **Ostrzeżenie o scope `home`** — osobno, bo **dotyka boundary**. Najczystszy
+   kanał (pole `warning` w `LaunchResponse` → `stderr` w `launch_cmd.py`)
+   wymaga edycji `proto/**`, czyli decyzji właściciela. Wariant bez proto:
+   stderr daemona — ale wtedy ostrzeżenie widzi operator daemona, niekoniecznie
+   ten, kto klika. **Rozstrzygnąć przed naprawą, nie w trakcie.**
+
 ## Inbox — zapisane automatycznie, do sklasyfikowania
 
 ### [P1, audyt 2026-08-22] `AuthValidator`: nonce bez limitu, mapa bez sufitu, brak sprzątania

@@ -1,0 +1,8 @@
+# Zadeklarowane odstępstwa od masterów claude-toolkit.
+# Format: <ścieżka-w-projekcie><TAB><powód>
+# Czyta: scripts/toolkit-sync.sh (check nie liczy jako dryf, update nie nadpisuje).
+#
+# Bez tego wpisu `update` KASUJE sekcję projektową — zdarzyło się przy
+# adopcji 2026.08.20: lock zgadzał się z plikiem, więc skrypt uznał kopię
+# za nietkniętą i nadpisał ją masterem razem z 37 liniami konkretyzacji.
+.claude/agents/security-reviewer.md	master WYMAGA sekcji „Co sprawdzać w tym projekcie” (CrossDesk: mTLS/AuthContext, granice walidacji, boundary files, accepted risks DEC-0017/DEC-0019). Trwałe z definicji — scalać bazę ręcznie, nie nadpisywać.

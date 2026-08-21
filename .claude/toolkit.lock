@@ -1,14 +1,27 @@
 # Wygenerowane przez toolkit-sync.sh — nie edytuj ręcznie.
 # Sprawdzenie: bash <toolkit>/scripts/toolkit-sync.sh check .
-toolkit_version 2026.08.06
+toolkit_version 2026.08.21
 toolkit_source  https://github.com/SzymonPaczos/claude-toolkit.git
-toolkit_sha     4dc1c34
+toolkit_sha     d201b47
 #
 # sha256	plik-w-projekcie	źródło-w-masterze
-72fa7919342c019bd3af298957a9cc752011d80f9ec85485a0e3526d51c86cdf	.claude/agents/red-team.md	agents/red-team.md
-3d88bb9d61bab3bea84b6871c7becc0b7683fe9c42875bb4add018230519d545	.claude/agents/security-reviewer.md	agents/security-reviewer.md
-78561abcbcc82a2f1abe7fbb0c9905ac03b6fc8b3fbda32a2b435960add3f0e5	.claude/rules/change-provenance.md	conventions/change-provenance.md
-8683742df9bf4d92dca3581402a909adf20655cec1a56c87b892c63ce881fb6d	.claude/rules/ci-cd.md	conventions/ci-cd.md
-e39931a9ae8721def3cfcab52adb27bbdcf28279cbcfb1d9c9c27bd733504639	.claude/rules/multi-agent-delivery.md	conventions/multi-agent-delivery.md
-659ba50c572e8d9a2494d3a96a2aa412d002ffd5e354d1687c18e782a0e65172	.claude/rules/rules-as-gates.md	conventions/rules-as-gates.md
-32f7cddd7fdea9b25c0c3a7181e0da13120690c2f1d8a625f2cb79de52f02faf	.claude/skills/weekly-audit/SKILL.md	skills/weekly-audit/SKILL.md
+aef5d3534e93afd54d42ebe5bab4ef98c53085bfad1b082d162aa89c17ecd367	.claude/agents/red-team.md	agents/red-team.md
+fde74596dcadfb9187a007ecd6eb8d4d02b1f69c589419ebf90f0c96423ea773	.claude/agents/security-reviewer.md	agents/security-reviewer.md
+ba50643234ce8fdf506a2dc097f9de98ecfe5b8b441cd2329f611d961e223bcb	.claude/rules/change-provenance.md	conventions/change-provenance.md
+911b6c5ea8c1648d222dc55705d5bcb27db46b3dc0cf17252fe559c959502fad	.claude/rules/ci-cd.md	conventions/ci-cd.md
+47a007aac9f9e87b48b7210a7800fb6b840002b1156ee2a8b8fb2c0ec0b6564c	.claude/rules/ci-pipeline-architecture.md	conventions/ci-pipeline-architecture.md
+50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd	.claude/rules/dependency-currency.md	conventions/dependency-currency.md
+00fec561c5a90a3ded03d4e2b38bad544d79178a5705a85e68b3bb901031b847	.claude/rules/issue-reporting.md	conventions/issue-reporting.md
+d39275a1e8406027d34ef56e4b353f12216f4ba3cbfdebd19796c464d37d3646	.claude/rules/multi-agent-delivery.md	conventions/multi-agent-delivery.md
+176b7fa04c6e3a037fa134094a207fee91ff20f4b6ef1c7528a35b1f33885fd3	.claude/rules/pull-request-review.md	conventions/pull-request-review.md
+ca931b152153de7a9238533f7d7e8968ac0ee1d2270057bc3496b2285dab7226	.claude/rules/quality-gates-and-dod.md	conventions/quality-gates-and-dod.md
+65e37c6217c9db32d0f444fd77eb350a4a29664b4c0010584aeb2fe398732ac5	.claude/rules/repo-hygiene-gates.md	conventions/repo-hygiene-gates.md
+edd314d9e793e730e89a2342543b66657034fcc3a6c7ee18b8c5cd0cef96e19d	.claude/rules/rules-as-gates.md	conventions/rules-as-gates.md
+503e6246a1b182e3f3d7e70a836533e985693bccdc64e276813880216383fd29	.claude/rules/security-verification-gates.md	conventions/security-verification-gates.md
+869f9a10d3b28b5bdadefa953c3a6430f6064201d3f594fe5a383091aec62a45	.claude/rules/test-evidence.md	conventions/test-evidence.md
+3f3126dc0d37b525c0626597c3ef49fb2fbaf0ae86c151ccfad6130696ee58a2	.claude/skills/audyt-naprawczy/SKILL.md	skills/audyt-naprawczy/SKILL.md
+e1c7a71dc78a8b412a4f7067f67ad12ad5495422e7b4f41b9011684e68122822	.claude/skills/weekly-audit/SKILL.md	skills/weekly-audit/SKILL.md
+f67cf92fc89822dad9bbd23f900e01ccd3a6b7c26566366fdcf666f23a1677c5	.claude/skills/weekly-audit/references/kontrola-glebokosci.md	skills/weekly-audit/references/kontrola-glebokosci.md
+d50a517ef2aab4405b1a38837c4a8ba4733793652d31d156f01a9dbf4a5edf5a	.claude/templates/audit-log-entry.md	templates/audit-log-entry.md
+0d28f2455f43d4d450e82e06d5e7d492feaa96b647ee7fe8df25c3bbaee0ee54	.claude/templates/dependency-currency.sh	templates/dependency-currency.sh
+d9fcf1f40e2c8c53e80da693041cce9f71485fd7d61a89657ca3efcecc020556	.claude/templates/test-gates.sh	templates/test-gates.sh

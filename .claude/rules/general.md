@@ -72,6 +72,9 @@ is also using, unless the owner explicitly asked for shared work.
 
 - Naming: `feat/<topic>`, `fix/<topic>`, `chore/<topic>`,
   `docs/<topic>`. Keep `<topic>` short.
+- `audyt/RRRR-MM-DD` is a fifth, **audit-only** prefix, reserved for the
+  `audyt-naprawczy` skill (DEC-META-009). It never merges without the owner's
+  say-so and is never pushed by the skill itself.
 - New session = new branch from a freshly-rebased `main`. Do not
   branch from another agent's feature branch.
 - Mixing two agents' commits on one branch blocks selective merge —

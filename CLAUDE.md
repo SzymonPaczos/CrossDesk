@@ -16,8 +16,13 @@ load.
   conventions, branch-per-agent rule, coordination protocol.
 - @.claude/rules/backend.md — Python (host) + Rust (guest)
   path-specific rules.
-- @.claude/rules/audit.md — weekly audit procedure (statyczna +
-  głęboka warstwa; P0/P1/P2 definitions).
+- @.claude/rules/audit.md — **nakładka** CrossDeska na audyt: konkretyzacja
+  punktów 1–25 z `.claude/skills/weekly-audit/references/kontrola-glebokosci.md`
+  (ścieżki, grepy, wyjątki, P0/P1/P2). Sama procedura żyje w skillu.
+- @.claude/rules/quality-gates-and-dod.md — katalog bramek, tryby, odstępstwa
+  i definicja ukończenia. Kopia z claude-toolkit (adopcja 2026-08-21).
+- @.claude/rules/test-evidence.md — co dowodzi pojedynczy test: cofnij naprawę,
+  test MUSI zrobić się czerwony. Kopia z claude-toolkit (adopcja 2026-08-21).
 - @.claude/rules/decisions.md — META-decyzje (proces / workflow /
   layout); ADR `DEC-NNNN` żyją w `docs/DECISIONS.md`.
 - @.claude/rules/ci-cd.md — baseline CI/CD i supply chain (SHA-pinning,
@@ -43,8 +48,11 @@ dopisuj START/END. Historia: `git log` + `history/completed-work.md`.
 ## Audit reminder
 
 Sprawdź `.claude/audit-log.md` przy starcie sesji — jeśli ostatni wpis
-`## Audyt YYYY-MM-DD` jest >7 dni, zaproponuj cotygodniowy audyt
-(skill `weekly-audit`, procedura `.claude/rules/audit.md`).
+`## Audyt YYYY-MM-DD` jest >7 dni, zaproponuj cotygodniowy audyt: skill
+`weekly-audit` (procedura), `.claude/rules/audit.md` (nakładka CrossDeska).
+Ten sam preflight, w trybie raportowym, siedzi w `.githooks/pre-push`.
+**Krok 00 audytu wyprzedza wszystko** — `toolkit-sync.sh check .` zanim
+spojrzysz na kod; audyt na nieaktualnej checkliście melduje „czysto".
 
 ## One-time setup per clone
 
@@ -59,11 +67,49 @@ git config commit.template .gitmessage
 The `core.hooksPath` and `commit.template` settings are per-clone (they
 live in `.git/config`, not tracked) — re-run after every fresh clone.
 
-`.claude/rules/multi-agent-delivery.md` oraz `.claude/agents/` (Security
-Reviewer, Red Team) to kopie masterów z toolkitu używane przez
-cotygodniowy audyt — pełny kontrakt zespołu multi-agent jest NIEaktywny
-(solo owner + jeden agent, DEC-META-008); nie ładuj ich do sesji poza
-audytem.
+## Kopie audytowe — NIE ładuj do sesji
+
+Kopie masterów toolkitu czytane **tylko podczas audytu** (i przy pracy nad
+bramkami). Trzymanie ich poza load-listą jest świadome: ~1300 linii w każdym
+kontekście sesji to koszt bez pokrycia, skoro konsumentem jest jeden skill.
+
+- `.claude/skills/weekly-audit/` — procedura (Kroki 00–5) + `references/`
+  z 25 punktami kontroli głębokiej. Wejście: skill `weekly-audit`.
+- `.claude/skills/audyt-naprawczy/` — ten sam protokół **zakończony naprawą**
+  klas dowodliwych bramką (commit na klasę, gałąź `audyt/RRRR-MM-DD`).
+  Uruchamiaj **tylko** na wyraźne „audyt z naprawą". W CrossDesku obowiązują
+  odstępstwa z `rules/audit.md` — najważniejsze: **boundary files są wyłączone
+  z automatu, także z naprawy zepsutych odsyłaczy**.
+- `.claude/rules/multi-agent-delivery.md` + `.claude/agents/` (Security
+  Reviewer, Red Team) — pełny kontrakt zespołu multi-agent jest NIEaktywny
+  (solo owner + jeden agent, DEC-META-008).
+- `.claude/rules/security-verification-gates.md` — które skanery blokują
+  merge, a które tylko raportują (punkt 21).
+- `.claude/rules/ci-pipeline-architecture.md` — topologia bramek; CrossDesk
+  czyta ją przez **§11a** (profil local-first/hybrydowy), punkt 24.
+- `.claude/rules/repo-hygiene-gates.md` — mechaniczne sygnały higieny repo
+  i ekspozycji na utratę danych (punkt 14).
+- `.claude/rules/dependency-currency.md` — dystans do bieżących wersji i EOL
+  runtime'ów (punkt 15). **Runtime po EOL = P0.**
+- `.claude/rules/pull-request-review.md` — punkt 23. CrossDesk merguje lokalnie
+  bez PR-ów; czytane przez odpowiedniki (merge + trailer `Gates:`).
+- `.claude/rules/issue-reporting.md` — punkt 25; wymóg reprodukcji stosuje się
+  do wpisów w `backlog.md` / `status.md`.
+- `.claude/templates/` — `audit-log-entry.md` (wzorzec wpisu),
+  `test-gates.sh` (dowód, że bramka BLOKUJE), `dependency-currency.sh`.
+
+## Synchronizacja z masterem
+
+Kopie toolkitu są stemplowane w `.claude/toolkit.lock`; świadome odstępstwa
+(dziś: sekcja projektowa w `agents/security-reviewer.md`) w
+`.claude/toolkit.local`. **Krok 00 każdego audytu:**
+
+```sh
+bash ../claude-toolkit/scripts/toolkit-sync.sh check .
+```
+
+Błędu w regule nie łataj w kopii — poprawka idzie do mastera i wraca przez
+`update`.
 
 ## Why this layout
 

@@ -1,6 +1,6 @@
 # Konwencja: reguły jako gate'y
 
-Stack-agnostic. Wyekstrahowana z JawnePanstwo i CrossDesk.
+Stack-agnostic. Wyekstrahowana z dwóch projektów produkcyjnych.
 
 ## Problem
 

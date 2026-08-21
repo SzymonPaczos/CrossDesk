@@ -23,81 +23,144 @@ VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT
 
 ---
 
-## 🔴 TOP — aktualizacja toolkitu projektowego do claude-toolkit 2026.08.06
+## 🔴 TOP — dokończenie adopcji claude-toolkit 2026.08.21
 
-**Zadanie dla agenta tego projektu. Najpierw `git diff` i plan, dopiero potem
-zmiana — nie łataj w locie.** Zakres jest wystarczająco duży, żeby wymagał
-specyfikacji i zielonego światła właściciela.
+**Warstwa audytu ZROBIONA 2026-08-21** (`chore/audit-toolkit-2026-08-20`,
+DEC-META-009). Zostaje **P0 bramki `pre-push`** i promocje do mastera — poniżej.
+Master ruszył w trakcie pracy (2026.08.20 → 2026.08.21); adopcja powtórzona na
+wersji końcowej, lock stoi na `2026.08.21`.
 
-Master `claude-toolkit` stał od 2026-07-11. 2026-08-06 dostał naprawę gate'ów,
-mechanizm wersjonowania i nowe konwencje. Kopie reguł w tym repo są już
-zsynchronizowane (`toolkit_version 2026.08.06` w `.claude/toolkit.lock`),
-ale **praca po stronie projektu została celowo zostawiona Tobie** — dotyka
-plików, które należą do projektu, nie do toolkitu.
+### ✅ ZROBIONE 2026-08-21 — sposób audytu przebudowany na master 2026.08.20
 
-### 1. P0 — gate `pre-push` sprawdza working tree zamiast pushowanego commita
+- **7 kopii zsynchronizowanych** (`toolkit-sync.sh update`), lock `2026.08.06`
+  → `2026.08.20`, `check` **zielony**.
+- **`references/kontrola-glebokosci.md`** przyjęte — checklista głęboka
+  **14 → 25 punktów**; wyszła z ciała skilla, więc trzeba ją wczytać osobno.
+- **`rules/audit.md` przepisany na nakładkę.** `contrib` pokazał **16 pozycji
+  projektu wobec 8 w masterze** przy zielonym `check` — plik nie jest kopią,
+  więc manifest go nie widział. Nie trzyma już własnej numeracji.
+- **8 konwencji zaadoptowanych** (decyzja właściciela): dependency-currency,
+  quality-gates-and-dod, security-verification-gates, test-evidence,
+  ci-pipeline-architecture, repo-hygiene-gates, pull-request-review,
+  issue-reporting. Dwie pierwsze z listy „każde zadanie" w load-liście
+  `CLAUDE.md`, reszta audytowo.
+- **`audit.sh`:** trzy stany zamiast jednego (liczba · `n/a` · **`BLOCKED`**),
+  nagłówek maszynowy, Krok 00, higiena repo (14), aktualność runtime'ów (15),
+  przeliczanie liczb z prozy (4), `CROSSDESK_AUDIT_DRYRUN=1`.
+- **Drugi skill audytowy `audyt-naprawczy`** przyjęty w całości (D-015) —
+  audyt kończący się naprawą klas dowodliwych bramką. Trzy odstępstwa
+  CrossDeska w `rules/audit.md` (boundary files poza automatem, prefiks
+  `audyt/`, zawis pytest = `n/a`).
+- **`.claude/toolkit.local`** — zadeklarowane odstępstwo dla
+  `agents/security-reviewer.md`. Powód namacalny: `update` **skasował** sekcję
+  projektową (lock zgadzał się z plikiem → „kopia nietknięta"); odtworzona
+  z `git show` i zaktualizowana do DEC-0019.
 
-Dotyczy tego repo: `.githooks/pre-push` nie czyta refów ze stdin i nie
-odtwarza pushowanego commita — sprawdza working tree.
+### 1. P0 — bramka `pre-push` skanuje dysk, nie pushowany commit
 
-Reprodukcja: zacommituj plik z sekretem, popraw go **tylko w working tree** bez
-commitowania, wypchnij. Gate melduje „czysto", a sekret trafia na origin.
+**Potwierdzone 2026-08-21 lekturą kodu, nie założeniem.** Lista plików jest
+poprawna — pochodzi z commita (`pre-push:52`,
+`git diff -z --name-only origin/main...HEAD`). **Treść już nie:**
+`pre-push:222-228` robi `grep -E -l "$SECRET_PATTERNS" "$f"` **z dysku**,
+z gardą `[ -f "$f" ] || continue`. Sekret zacommitowany i posprzątany **tylko
+w working tree** przechodzi na `origin`. Hook nie czyta refów ze stdin ani nie
+odtwarza commita w `git worktree`.
+
+Reprodukcja: zacommituj plik z sekretem, popraw go tylko w working tree, pushnij.
 Potwierdzone w **7 z 7** repozytoriów floty — wszystkie skopiowały ten sam
-wadliwy szablon z toolkitu, więc to nie jest błąd autora tego repo.
+wadliwy szablon, więc to nie jest błąd autora tego repo.
+Wzorzec naprawy: `claude-toolkit/NEW-PROJECT.md` §4.2 — refy ze stdin, zakres
+`remote_sha..local_sha` (nowa gałąź: `local_sha --not --remotes`), odtworzenie
+commita przez `git worktree add --detach`, advisory pipeline w `{ …; } || true`,
+jeden `exit "$STATUS"` na końcu.
 
-Naprawiony wzorzec: `claude-toolkit/NEW-PROJECT.md` §4.2. Kluczowe elementy:
-czyta `<local ref> <local sha> <remote ref> <remote sha>` ze stdin; zakres
-z `remote_sha..local_sha` (nowa gałąź: `local_sha --not --remotes`); odtwarza
-commit przez `git worktree add --detach` i sprawdza pliki tam, nie na dysku;
-każdy advisory pipeline w `{ ...; } || true`; jeden `exit "$STATUS"` na końcu.
+**Dowód wymagany do zamknięcia:** `test-gates.sh` → **6/6 z niesprzecznych
+powodów** (patrz pozycja niżej — dziś harness nie jest w stanie tego zmierzyć).
 
-Drugi antywzorzec do sprawdzenia przy okazji: pod `set -euo pipefail` puste
-dopasowanie grepa albo `head` zamykający potok ubijają hook **w środku**, więc
-kolejne warstwy nie wykonują się, a wynik wygląda na czysty. Opis obu:
-`conventions/rules-as-gates.md`, sekcja „Antywzorce z reprodukcją".
+### 1a. [P1, nowe 2026-08-21] Warstwa 5 `pre-push` myli awarię narzędzia ze znaleziskiem
 
-**Dowód wymagany do zamknięcia:**
-`bash <toolkit>/templates/test-gates.sh .githooks/pre-push` → 6/6.
-Samo „przechodzi na zdrowym repo" nie jest dowodem, że gate blokuje.
+`pre-push:323`:
 
-### 2. Kopie do ręcznego scalenia
+```sh
+(cd "$REPO_ROOT/guest" && cargo audit --quiet --deny warnings 2>&1) || {
+    echo "❌ cargo audit found vulnerabilities in guest workspace."; exit 1; }
+```
 
-Trzy kopie mają lokalne nadpisania; `update` ich nie ruszył.
+Gdy `cd` się nie powiedzie (brak katalogu), hook melduje **„found
+vulnerabilities"** i kończy 1. Fail-closed — ale z fałszywym powodem, a to
+psuje dwie rzeczy naraz: diagnostykę i **mierzalność bramki**.
 
-- `.claude/agents/security-reviewer.md` — własny model zagrożeń projektu.
-  **Ma zostać**; scal bazę z mastera, zachowaj sekcję projektową.
-- `.claude/rules/ci-cd.md` (+2/−41) — master urósł mocno, warto przejąć całość.
-- `.claude/agents/red-team.md` (+1/−9) — master dodał soczewkę „tool misuse".
+Zmierzone: `test-gates.sh .githooks/pre-push` → `4 zdanych, 2 niezdanych`,
+przy czym wynik jest **skażony**. Testy 2 (zdrowy commit) i 3 (usunięcie
+gałęzi) padają, bo fixture nie ma katalogu `guest/`; test 1 „przechodzi"
+**z tego samego powodu** — hook zwrócił 1, tylko nie za sekret. To jest
+dokładnie klasa z Kroku 0 mastera: *skan, który padł, nie ma prawa podać
+wyniku*. Fix: rozdzielić „nie mogę wejść / nie mam narzędzia" (`BLOCKED`
+z instrukcją) od „znalazłem podatność"; dopiero potem `test-gates.sh` mierzy
+cokolwiek. To jest **warunek konieczny** zamknięcia P0 wyżej.
 
-Po scaleniu uruchom `toolkit-sync.sh check .` — ma być zielono. Jeśli zostawiasz
-treść lokalną, to jest decyzja do zapisania, nie milczące pominięcie.
+### 2. ✅ Kopie do ręcznego scalenia — ZROBIONE
 
-### 3. Krok 00 audytu — wersja toolkitu przed czytaniem kodu
+`security-reviewer.md` scalony (baza mastera + sekcja CrossDesk, accepted-risk
+zaktualizowany DEC-0018 → DEC-0019) i zadeklarowany w `toolkit.local`.
+`ci-cd.md` (+2/−41) i `red-team.md` (+1/−9) przejęte z mastera w całości —
+nie miały treści projektowej, tylko były stare.
 
-`skills/weekly-audit/SKILL.md` ma nowy pierwszy krok: `toolkit-sync.sh check .`
-**przed** wszystkim innym. Audyt na nieaktualnej checkliście sprawdza wczorajsze
-ryzyka i melduje „czysto". Wepnij to w swój `audit.sh` albo preflight.
+### 3. ✅ Krok 00 audytu — ZROBIONE
 
-Reguła przy błędzie w regule: **nie łataj kopii w projekcie.** Poprawka idzie do
-mastera i wraca przez `update`. Załatana kopia to początek następnego dryfu —
-tak powstały trzy równoległe wersje jednego skilla w tej flocie.
+`toolkit-sync.sh check` jest pierwszą sekcją `audit.sh`; brak mastera obok repo
+raportuje **`DEGRADED`**, nie „pominięto" (ścieżka konfigurowalna przez
+`CROSSDESK_TOOLKIT_DIR`). Reguła przy błędzie w regule: **nie łataj kopii
+w projekcie** — poprawka idzie do mastera i wraca przez `update`.
 
-### 4. Co odesłać do mastera
+### 4. Co odesłać do mastera (`promote`) — OTWARTE, wymaga zgody
 
-Jeśli masz u siebie wzorzec, którego master nie ma — `toolkit-sync.sh promote`,
-w tej samej sesji. Odłożona promocja nie następuje; to również jest sprawdzone
-empirycznie. Kandydaci zgłoszeni z rekonesansu floty czekają w backlogu
-toolkitu.
+Stary `rules/audit.md` miał sygnały **ogólne**, których master nie ma. Przy
+przepisywaniu na nakładkę wypadły z tego pliku (są w `git show HEAD~:`), więc
+albo wracają do mastera, albo znikają. Kandydaci (§3 „Backend" starej wersji):
+
+- `except: pass` / `except: return []` jako klasa „swallowed errors";
+- `datetime.now()` użyte jako **data dokumentu historycznego**;
+- **ID jako licznik zamiast hasha**.
+
+Cel: `skills/weekly-audit/references/kontrola-glebokosci.md` (punkt 1 albo 3),
+komendą `toolkit-sync.sh promote . <plik> --into <cel>`. **Nie zrobione
+autonomicznie** — `promote` mutuje **inne repozytorium** (master + `VERSION`
++ commit), a właściciel prosił o kierunek toolkit → projekt. Uwaga
+z konwencji: *odłożona promocja nie następuje* — to jest tykająca pozycja.
+
+### 5. [P2, nowe 2026-08-21] `toolkit-sync.sh` nie działa w całości na macOS
+
+`scripts/toolkit-sync.sh:240` (master) używa GNU-owego
+`find skills -mindepth 1 -maxdepth 1 -type d -printf '%f\n'`. BSD find na macOS
+nie zna `-printf` → `find: -printf: unknown primary or operator`, więc **check
+kompletności skilli (D-015) nie wykonuje się na maszynie właściciela** — a
+`check` i tak kończy zielono. Awaria wygląda dokładnie jak brak znalezisk, czyli
+klasa z Kroku 0 mastera.
+
+Naprawa **idzie do mastera** (`toolkit-sync.md` pkt 4 — nie łatamy kopii;
+zresztą to skrypt toolkitu, nie kopia w tym repo). Przenośny odpowiednik:
+`find skills -mindepth 1 -maxdepth 1 -type d -exec basename {} \;` albo
+`for d in skills/*/; do basename "$d"; done`. Zgłosić przy najbliższej sesji
+w toolkicie.
+
+### 6. [P2, nowe 2026-08-21] Dwie konwencje z fali 2026.08.21 bez decyzji
+
+`conventions/naming-conventions.md` (233 l.) + `conventions/module-paths.md`
+(184 l.) wraz z `templates/{lexicon.md,import-depth.sh}`. **Nie zaadoptowane** —
+checklista audytu ich nie dereferencjonuje (punkty 1–25 bez zmian w tej fali),
+a zadanie dotyczyło sposobu audytu. Realne dla kodu (nazewnictwo, głębokość
+importów). Do decyzji właściciela: przyjąć czy jawnie odrzucić.
 
 ### Kryteria akceptacji
 
-- `test-gates.sh` na `.githooks/pre-push` → 6/6 (albo jawne `n/a`, gdy repo
-  nie ma hooka);
-- `toolkit-sync.sh check .` → zielono, bez pozycji „do ręcznego scalenia";
-- każda zachowana treść lokalna ma wpis w `decisions.md` z uzasadnieniem;
-- krok 00 wpięty w audyt;
-- zmiany w osobnym commicie, oddzielone od pracy merytorycznej.
-
+- ✅ `toolkit-sync.sh check .` → zielono (jedno odstępstwo zadeklarowane);
+- ✅ Krok 00 wpięty w audyt;
+- ✅ zachowana treść lokalna ma wpis w `decisions.md` (DEC-META-009) i
+  w `toolkit.local` z uzasadnieniem;
+- ✅ zmiany w osobnym commicie, oddzielone od pracy merytorycznej;
+- ⬜ `test-gates.sh .githooks/pre-push` → **6/6** (blokowane przez 1 i 1a);
+- ⬜ promocje z §4 wykonane albo świadomie odrzucone.
 ## Inbox — zapisane automatycznie, do sklasyfikowania
 
 <!-- Nietrywialne zadanie odkryte poza bieżącym scope trafia tu OD RAZU,

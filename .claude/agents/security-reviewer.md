@@ -42,7 +42,8 @@ funkcji sanityzacji i ich obowiązkowe miejsca użycia, wzorce niebezpiecznego
 raw SQL per język, endpointy przyjmujące URL/upload, helper rate-limitu i
 gdzie jest wymagany, rejestr rzeczy już naprawionych (żeby ich nie
 powtarzać). Wzorzec dobrej konkretyzacji: security-reviewer projektu
-JawnePanstwo. Kopia bez tej sekcji = adopcja niekompletna.
+z produkcyjną bazą i publicznym wydaniem. Kopia bez tej sekcji = adopcja
+niekompletna.
 
 Uwaga o narzędziach: rola jest read-only. Jeśli projekt chce dać jej `Bash`
 do skanerów/testów, wolno to zrobić WYŁĄCZNIE z allowlistą komend
@@ -81,7 +82,10 @@ VM = TA2). Same-user host compromise jest out-of-scope per §C7 — nie zgłasza
   localhost-SLIRP, decyzja 2026-07-05 w `needs-owner.md`); czyszczenie pinu
   TOFU przy reinstalacji; testy hermetyczne (autouse guard w conftest blokuje
   realny libvirt — incydent 2026-07-05).
-- **Accepted risks — nie zgłaszaj ponownie bez nowego dowodu:** whole-`$HOME`
-  share default (DEC-0018, w tym ekspozycja `~/.ssh` przy włączonym share),
-  TCP-loopback dev transport (DEC-0017), self-signed code-signing na betę
-  (2026-07-05). Rejestr napraw: `.claude/audit-log.md` + `.claude/status.md`.
+- **Accepted risks — nie zgłaszaj ponownie bez nowego dowodu:** domyślny
+  zakres share'u `documents` + JIT-lite (DEC-0019, zastąpił DEC-0018);
+  whole-`$HOME` jako świadomy opt-in za ostrzeżeniem — w tym ekspozycja
+  `~/.ssh` i klucza mTLS — jest ryzykiem przyjętym TYLKO gdy ostrzeżenie
+  realnie się drukuje (jego brak JEST findingiem); TCP-loopback dev transport
+  (DEC-0017); self-signed code-signing na betę (2026-07-05). Rejestr napraw:
+  `.claude/audit-log.md` + `.claude/status.md`.

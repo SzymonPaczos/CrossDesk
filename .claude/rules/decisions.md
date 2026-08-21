@@ -209,3 +209,118 @@ zaparkowane w `needs-owner.md`; po podpisie dopisać tu status.
 audyt przechodzi rozszerzoną checklistę skilla (w tym gate'y, supply
 chain, provenance); Security Reviewer uruchamiany przy każdym audycie
 z `.claude/agents/security-reviewer.md` w niezależnym kontekście.
+
+## DEC-META-009 — Adopcja toolkitu 2026.08.21: audyt jako nakładka na master
+
+**Data:** 2026-08-21 · **Status:** aktywna · **Rozszerza:** DEC-META-008
+
+Aktualizacja kopii toolkitu z `2026.08.06` → `2026.08.21` i przebudowa
+wewnętrznego sposobu audytu. Polecenie właściciela 2026-08-21. Master zmieniał
+się **w trakcie** tej pracy (2026.08.20 → 2026.08.21); adopcja została powtórzona
+na wersji końcowej, a nie domknięta na migawce.
+
+### Co się zmieniło mechanicznie
+
+- **7 kopii zsynchronizowanych** przez `toolkit-sync.sh update`
+  (`skills/weekly-audit/SKILL.md`, `agents/{security-reviewer,red-team}.md`,
+  `rules/{ci-cd,change-provenance,multi-agent-delivery,rules-as-gates}.md`).
+- **Nowa referencja:** `skills/weekly-audit/references/kontrola-glebokosci.md` —
+  master wyniósł checklistę głęboką z ciała skilla i rozszerzył ją **14 → 25**
+  punktów.
+- **`.claude/toolkit.local`** — nowy plik zadeklarowanych odstępstw. Jeden wpis:
+  `agents/security-reviewer.md`, bo master **wymaga** sekcji projektowej.
+  Bez tego wpisu `update` ją kasuje — i skasował 2026-08-21: lock zgadzał się
+  z plikiem, więc skrypt uznał kopię za nietkniętą. Odtworzone z `git show`
+  i przy okazji zaktualizowane (accepted-risk wskazywał DEC-0018, który
+  DEC-0019 zastąpił 2026-07-19).
+
+### `rules/audit.md` przestaje być drugą checklistą
+
+Plik trzymał własną, równoległą listę 8 punktów. `toolkit-sync.sh contrib`
+pokazał **16 pozycji po stronie projektu wobec 8 w masterze** przy `check`
+świecącym na zielono — bo ten plik kopią nie jest, więc manifest go nie widzi.
+Master urósł w tym czasie do 25 punktów.
+
+Od teraz `rules/audit.md` jest **nakładką**: konkretyzuje punkty mastera
+ścieżkami, grepami i wyjątkami CrossDeska, i nie trzyma własnej numeracji.
+Reguła ogólna wypracowana w projekcie idzie do mastera przez `promote`, nie
+tutaj. `promote` **na tym pliku jest zabroniony** — utworzyłby
+`conventions/audit.md` obok `skills/weekly-audit/SKILL.md`, czyli drugi master
+jednego dokumentu (skrypt sam to blokuje).
+
+### Zaadoptowane konwencje (8, decyzja właściciela 2026-08-21)
+
+Punkty 15 i 20–25 nowej checklisty odsyłały do plików, których projekt nie
+miał — checklista z wiszącym odsyłaczem nie jest checklistą. Przyjęte
+**wszystkie osiem**: `dependency-currency`, `quality-gates-and-dod`,
+`security-verification-gates`, `test-evidence`, `ci-pipeline-architecture`,
+`repo-hygiene-gates`, `pull-request-review`, `issue-reporting`.
+
+Do load-listy `CLAUDE.md` weszły **dwie** — `quality-gates-and-dod` i
+`test-evidence` — bo zmieniają sposób wykonania **każdego** zadania (definicja
+ukończenia, dowód z testu). Pozostałe sześć są czytane przy audycie i pracy nad
+bramkami; trzymanie ~1300 linii w każdym kontekście sesji byłoby kosztem bez
+pokrycia. To ten sam wzorzec, co `multi-agent-delivery.md` w DEC-META-008.
+
+Dwie z nich CrossDesk czyta **przez odpowiedniki**, nie dosłownie:
+`pull-request-review` (merge lokalny + trailer `Gates:` zamiast PR-a) oraz
+`ci-pipeline-architecture` **§11a** (profil local-first/hybrydowy — bez tego
+audyt zaraportuje „brak bramek" o repo, które ma ich kilkanaście).
+
+**Nadal NIE zaadoptowane** (bez zmian wobec DEC-META-008): `progressive-delivery`,
+`production-operations`, `delivery-log` — brak produkcji. Punkt 10 checklisty
+stosuje się więc tylko w części niezależnej od deploymentu.
+
+### `audit.sh` — trzy stany zamiast jednego
+
+Skrypt statyczny nie odróżniał „narzędzie nie znalazło nic" od „narzędzie
+padło": `cmd | grep -c` gubi kod wyjścia w potoku, więc crash lintera
+raportował się jako **0 findings** — nie do odróżnienia od czystego repo.
+Krok 0 mastera nazywa to wprost. Teraz każdy pomiar ma trzy stany: liczba ·
+`n/a` (narzędzia nie ma) · `BLOCKED` (wystartowało i padło). Doszły też:
+nagłówek maszynowy (`TOOLKIT_VERSION`, `AUDITED_REVISION`, `DIFF_RANGE`),
+Krok 00 jako pierwsza sekcja, higiena repo (punkt 14), aktualność runtime'ów
+(punkt 15), przeliczanie liczb load-bearing z prozy (punkt 4) oraz tryb
+`CROSSDESK_AUDIT_DRYRUN=1`.
+
+### Drugi skill audytowy: `audyt-naprawczy` (nowy w 2026.08.21)
+
+Przyjęty w całości (D-015: skill jest jednostką niepodzielną). Robi to, czego
+`weekly-audit` **nie robi z założenia** — wprowadza zmiany, ale wyłącznie
+w klasach, dla których istnieje bramka czerwona przed i zielona po. Uruchamiany
+tylko na wyraźne polecenie „audyt z naprawą".
+
+**Trzy odstępstwa CrossDeska, zapisane w `rules/audit.md`:**
+
+1. **Boundary files wypadają z automatu** — w tym z masterowej klasy „literówki
+   i zepsute odsyłacze w dokumentacji". W typowym repo dokumentacja nie jest
+   kontraktem; tutaj `AGENTS.md`, `docs/{DECISIONS,THREAT_MODEL,REQUIREMENTS,
+   MVP_SCOPE,GOALS}.md`, `ROADMAP.md` i `proto/**` są. Bramka udowodni, że link
+   działa — **nie udowodni, że wolno go było ruszyć**.
+2. **`audyt/RRRR-MM-DD` to piąty dozwolony prefiks gałęzi**, wyłącznie dla tego
+   skilla (`general.md` zaktualizowany). Nigdy nie merguje się bez zgody
+   właściciela; skill sam nie pushuje.
+3. **Zawis `pytest` na macOS to `n/a (środowisko)`, nie czerwony test** —
+   baseline z Kroku 1 liczony na zawieszonej suicie jest nieinterpretowalny.
+
+### Świadomie NIE zaadoptowane z fali 2026.08.21
+
+`conventions/naming-conventions.md` i `conventions/module-paths.md`
+(+ `templates/{lexicon.md,import-depth.sh}`) — realne konwencje kodu, ale
+**checklista audytu ich nie dereferencjonuje** (punkty 1–25 bez zmian w tej
+fali), a zadanie brzmiało „zaktualizuj sposób audytu". Do osobnej decyzji;
+zapisane w `backlog.md`, żeby nie zniknęły.
+
+### Usterka mastera zgłoszona, nie załatana lokalnie
+
+`scripts/toolkit-sync.sh:240` używa GNU-owego `find -printf '%f\n'`. Na macOS
+(BSD find) kończy się `find: -printf: unknown primary or operator`, więc **nowy
+check kompletności skilli (D-015) nie wykonuje się na maszynie właściciela** —
+a `check` i tak kończy się zielono, czyli awaria wygląda jak brak znalezisk.
+Zgodnie z protokołem (`toolkit-sync.md` pkt 4) poprawka idzie **do mastera**,
+nie do kopii. Zapisane w `backlog.md`.
+
+**Jak stosować:** audyt zaczyna się od `toolkit-sync.sh check .`; ocena
+głęboka wczytuje `references/kontrola-glebokosci.md`, a `rules/audit.md`
+czyta się **razem z nim**, nie zamiast niego. Naprawa idzie przez
+`audyt-naprawczy` tylko wtedy, gdy właściciel o nią poprosi.

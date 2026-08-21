@@ -219,10 +219,25 @@ fi
 echo "🔐 hardcoded secrets ..."
 SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'
 SECRET_HITS=()
+# Line-level allowlist. A gate needs a fixture that CONTAINS a fake secret to
+# prove it blocks (rules-as-gates.md §9) — .claude/templates/test-gates.sh is
+# exactly that. Path-excluding the file would blind the scanner to a real
+# secret landing next to the dummy, so the exemption is per line and is
+# reported out loud: a silent escape hatch is the same failure as no gate.
+SECRET_ALLOW_MARKER='pre-push-allow-secret'
+SECRET_ALLOWED=0
 for f in "${CHANGED_FILES[@]}"; do
     [ -f "$f" ] || continue
     is_excluded "$f" && continue
-    if grep -E -l "$SECRET_PATTERNS" "$f" >/dev/null 2>&1; then
+    hits="$(grep -nE "$SECRET_PATTERNS" "$f" 2>/dev/null || true)"
+    [ -n "$hits" ] || continue
+    real="$(printf '%s\n' "$hits" | grep -v "$SECRET_ALLOW_MARKER" || true)"
+    allowed_n="$(printf '%s\n' "$hits" | grep -c "$SECRET_ALLOW_MARKER" || true)"
+    if [ "${allowed_n:-0}" -gt 0 ]; then
+        echo "   ℹ  $f: ${allowed_n} linii dopuszczonych markerem ${SECRET_ALLOW_MARKER}"
+        SECRET_ALLOWED=$(( SECRET_ALLOWED + allowed_n ))
+    fi
+    if [ -n "$real" ]; then
         SECRET_HITS+=("$f")
     fi
 done

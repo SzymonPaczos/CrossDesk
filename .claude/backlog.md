@@ -99,6 +99,48 @@ wyniku*. Fix: rozdzielić „nie mogę wejść / nie mam narzędzia" (`BLOCKED`
 z instrukcją) od „znalazłem podatność"; dopiero potem `test-gates.sh` mierzy
 cokolwiek. To jest **warunek konieczny** zamknięcia P0 wyżej.
 
+### 1b. ✅ [2026-08-22] Marker `pre-push-allow-secret` — master go pisze, nikt go nie czyta
+
+Wyszło przy pierwszym pushu **z włączonymi hookami**: bramka sekretów
+zablokowała push na `.claude/templates/test-gates.sh`, czyli na fixturze,
+który z definicji **musi** zawierać atrapę sekretu, żeby dowodzić, że gate
+blokuje (`rules-as-gates.md` §9). Plik nosi w masterze adnotacje
+`# pre-push-allow-secret:` przy obu atrapach — ale `grep -rn` po całym
+toolkicie pokazuje, że **żaden hook tego markera nie implementuje**. Marker
+jest życzeniem autora, nie mechanizmem.
+
+Naprawione w CrossDesku (`.githooks/pre-push` **nie jest** kopią toolkitu —
+0 trafień w `toolkit.lock`, więc to plik projektu): dopuszczenie jest
+**per linia**, nie per ścieżka, i jest **raportowane głośno**
+(`ℹ  <plik>: N linii dopuszczonych markerem`). Path-exclude oślepiłby skaner
+na realny sekret położony obok atrapy, a cichy escape hatch to ta sama awaria
+co brak bramki (`rules-as-gates.md` §7).
+
+Sentinel: dopisanie **nieoznaczonej** linii `api_key = "…"` do tego samego
+pliku → push **zablokowany**; po usunięciu → warstwa sekretów przechodzi.
+Zweryfikowane oboma kierunkami 2026-08-22.
+
+**Do zrobienia:** `promote` mechanizmu do mastera (`NEW-PROJECT.md` §4.2,
+szablon hooka) — inaczej każdy projekt floty, który przyjmie `test-gates.sh`,
+zablokuje sobie push i najtańszym wyjściem będzie `--no-verify`.
+
+### 1c. ✅ [2026-08-22] RUSTSEC-2026-0258 (`h2`) — złapane przez bramkę, naprawione
+
+Ten sam push, warstwa 5: `cargo audit` wskazał **realną** podatność —
+`h2` 0.4.13, *„unbounded empty DATA frames"*, advisory z **2026-08-17**
+(pięć dni przed audytem), tranzytywnie przez `tonic`/`hyper`/`reqwest`.
+Naprawa: `cargo update -p h2` → **0.4.18** (sam lockfile, bez zmian
+manifestu; `ci-cd.md` §3 zwalnia aktualizacje bezpieczeństwa z cooldownu).
+Po bumpie `cargo audit` czysty w obu workspace'ach, `cargo check --workspace`
+zielony. `gui/` nie ma `h2` w lockfile'u.
+
+**Korekta raportu audytu:** sekcja 2026-08-22 podaje `guest cargo-audit
+vulns: 0`. To było nieprawdą już w chwili zapisu — liczba zależy od stanu
+bazy advisory, a nie od kodu. Wniosek na przyszłość: pomiar SCA bez
+**znacznika wersji bazy advisory** jest nieinterpretowalny po czasie.
+Kandydat do dopisania w `audit.sh` obok trzech stanów (`liczba`/`n-a`/
+`BLOCKED`).
+
 ### 2. ✅ Kopie do ręcznego scalenia — ZROBIONE
 
 `security-reviewer.md` scalony (baza mastera + sekcja CrossDesk, accepted-risk

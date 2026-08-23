@@ -3,7 +3,7 @@ import contextlib
 import hmac
 import logging
 import uuid
-from typing import AsyncIterator, Dict
+from typing import AsyncIterator, Dict, Optional
 
 import grpc
 from google.protobuf.duration_pb2 import Duration
@@ -46,12 +46,16 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
     ) -> AsyncIterator[filesystem_pb2.ShareHostFrame]:
         peer_identity = context.peer()
         logger.info(f"[{peer_identity}] Filesystem channel established")
+        stream_nonce: Optional[bytes] = None
 
         async def consume_incoming() -> None:
+            nonlocal stream_nonce
             async for frame in request_iterator:
                 # Per-frame validation: without this, ShareChannel would let any peer
                 # holding a TLS handshake push MountResult/ReleaseAck and detach shares.
                 await self.auth_validator.verify_auth_context(context, frame.auth)
+                if stream_nonce is None:
+                    stream_nonce = frame.auth.stream_nonce or None
                 await self._process_guest_frame(frame)
 
         consumer_task = asyncio.create_task(consume_incoming())
@@ -77,6 +81,11 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             consumer_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await consumer_task
+            # Deregister the stream nonce, as the control plane does —
+            # otherwise the validator's per-stream sequence map grows by one
+            # entry per reconnect and never shrinks.
+            if stream_nonce is not None:
+                self.auth_validator.remove_stream(stream_nonce)
             logger.info(f"[{peer_identity}] Filesystem channel closed")
 
     async def _process_guest_frame(self, frame: filesystem_pb2.ShareGuestFrame) -> None:

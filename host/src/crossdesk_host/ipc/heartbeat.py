@@ -21,7 +21,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import AsyncIterator, Awaitable, Callable, List, Optional
+from typing import AsyncIterator, Awaitable, Callable, List, NamedTuple, Optional
 
 import grpc
 from google.protobuf import duration_pb2
@@ -57,6 +57,20 @@ class _MissedSleepTracker:
     healthy_left_at_ns: Optional[int] = None
     recovery_armed_during_outage: bool = False
     threshold_seconds: float = 30.0
+
+
+class _FrameOutcome(NamedTuple):
+    """What one turn of the channel loop got from the guest.
+
+    ``tick`` drives the FSM (``None`` = the client closed, break out).
+    ``stream_nonce`` is the nonce of the frame behind it, if there was one —
+    carried out so the channel can deregister it from the AuthValidator when
+    the stream ends.
+    """
+
+    tick: Optional[TickInput]
+    stream_nonce: Optional[bytes]
+
 
 BootProbe = Callable[[], Awaitable[bool]]
 """Optional async predicate invoked once per Channel when the FSM
@@ -190,12 +204,17 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         request_iterator: AsyncIterator[heartbeat_pb2.GuestFrame],
         context: grpc.aio.ServicerContext,
         start_ns: int,
-    ) -> Optional[TickInput]:
-        """Wait for a guest frame; return TickInput for the FSM.
+    ) -> "_FrameOutcome":
+        """Wait for a guest frame; return the FSM's TickInput plus the frame's
+        stream nonce.
 
-        Returns ``None`` to signal the channel should break out (client
-        closed cleanly). Timeout → TickInput(pong_received=False).
-        Unexpected payload → False with a structured log.
+        ``tick is None`` signals the channel should break out (client closed
+        cleanly). Timeout → TickInput(pong_received=False). Unexpected payload
+        → False with a structured log.
+
+        The nonce rides along only so ``Channel`` can deregister it from the
+        AuthValidator when the stream ends; a tick without a frame behind it
+        (timeout, clean close) carries ``None``.
         """
         try:
             guest_frame = await asyncio.wait_for(
@@ -203,12 +222,13 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                 timeout=self.pong_timeout_seconds,
             )
         except asyncio.TimeoutError:
-            return TickInput(pong_received=False)
+            return _FrameOutcome(TickInput(pong_received=False), None)
         except StopAsyncIteration:
             logger.info("heartbeat_client_closed")
-            return None
+            return _FrameOutcome(None, None)
 
         await self.auth_validator.verify_auth_context(context, guest_frame.auth)
+        nonce = guest_frame.auth.stream_nonce or None
         if guest_frame.WhichOneof("payload") == "pong":
             rtt_ns = time.monotonic_ns() - start_ns
             # The FSM folds this into an EWMA, which is the right input for
@@ -219,15 +239,15 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
             self.metrics.histogram(MetricNames.HEARTBEAT_RTT_SECONDS).observe(
                 rtt_ns / 1e9
             )
-            return TickInput(
-                pong_received=True,
-                rtt_ns=rtt_ns,
+            return _FrameOutcome(
+                TickInput(pong_received=True, rtt_ns=rtt_ns),
+                nonce,
             )
         logger.info(
             "heartbeat_unexpected_payload kind=%s",
             guest_frame.WhichOneof("payload"),
         )
-        return TickInput(pong_received=False)
+        return _FrameOutcome(TickInput(pong_received=False), nonce)
 
     def _track_state_transition(
         self,
@@ -327,6 +347,7 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
         last_state: State = fsm.state
         probe_already_run = False
         tracker = _MissedSleepTracker()
+        stream_nonce: Optional[bytes] = None
 
         try:
             while True:
@@ -338,9 +359,11 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
                     )
                 )
 
-                tick_in = await self._await_pong_or_timeout(
+                tick_in, frame_nonce = await self._await_pong_or_timeout(
                     request_iterator, context, start_ns
                 )
+                if stream_nonce is None:
+                    stream_nonce = frame_nonce
                 if tick_in is None:
                     break
                 out = fsm.tick(tick_in)
@@ -388,3 +411,10 @@ class HeartbeatServiceServicer(heartbeat_pb2_grpc.HeartbeatServiceServicer):
             self._active_fsms = [
                 existing for existing in self._active_fsms if existing is not fsm
             ]
+            # Deregister the stream nonce, as the control plane does. Without
+            # it the validator's per-stream sequence map grows by one entry per
+            # reconnect and never shrinks — and the guest reconnects routinely
+            # (agent re-dial, VM recovery), so it is a slow leak for the life
+            # of the daemon rather than a rare one.
+            if stream_nonce is not None:
+                self.auth_validator.remove_stream(stream_nonce)

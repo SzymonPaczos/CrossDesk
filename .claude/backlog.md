@@ -390,7 +390,17 @@ Stage B live-verify.** **Fix:** przechowuj `mount_token` per `share_id` w `trigg
 `share_id` z `'`/`<` odrzucony przed wywołaniem XML.
 </details>
 
-### [P2, audyt 2026-08-23, Security Review F-2 — NOTE] `AuthValidator._active_streams` rośnie bez ograniczeń dla heartbeat i filesystem
+### ✅ [P2, audyt 2026-08-23, Security Review F-2] ZROBIONE `e5d672b` — `_active_streams` leak w heartbeat + filesystem
+Oba kanały zdejmują nonce w bloku `finally` (wzór `control.py`). Heartbeat wymagał
+wyniesienia nonce'a z `_await_pong_or_timeout` — zwraca teraz nazwaną parę
+(`_FrameOutcome`) zamiast samego `TickInput`. 2 testy regresji przez **realny drut**
+(fix żyje w `finally`, więc unit-call handlera nic by nie dowiódł). Uwaga metodologiczna:
+pierwsza wersja testu heartbeatu **przechodziła z usuniętym fixem** — zrywała strumień na
+pierwszym pingu, zanim jakakolwiek ramka dotarła do serwera, więc nonce nigdy się nie
+rejestrował; teraz czeka na **drugi** ping (dowód, że serwer skonsumował ponga).
+Oryginalny opis:
+
+<details><summary>diagnoza audytu</summary>
 `remove_stream` (`ipc/auth.py`) jest wołane **tylko** w `control.py:291`. Kanały heartbeat
 (`ipc/heartbeat.py`, blok `finally` `Channel`) i filesystem (`ipc/filesystem.py`,
 `ShareChannel`) rejestrują nonce w `_active_streams` przy pierwszej ramce, ale nigdy go nie
@@ -399,6 +409,7 @@ zdejmują → każdy reconnect gościa (częste: re-dial agenta, recovery) zosta
 atakujący musi przejść mTLS (jedyny gość) → **dług, nie ścieżka eksploitu**. **Fix:** wołać
 `auth_validator.remove_stream(stream_nonce)` w blokach `finally` obu kanałów (jak w
 control.py). **Test:** po zamknięciu N kanałów `len(validator._active_streams) == 0`.
+</details>
 
 ### [P1, Security Review 2026-07-22, SEC-01] Bramka sekretów po majorze — niepotwierdzona jako fail-closed
 `gitleaks-action` 2.3.9 → **3.0.0** (`security.yml:48`). Ta akcja ma historię trybu,

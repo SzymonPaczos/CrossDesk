@@ -31,9 +31,42 @@ def _commit_file(repo: Path, name: str, body: str) -> None:
     _git(repo, "commit", "-m", f"add {name}")
 
 
-def _run_hook(repo: Path) -> subprocess.CompletedProcess[str]:
+def _run_hook(
+    repo: Path, push_refs: str | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run the hook the way git does.
+
+    *push_refs* is the stdin git feeds a pre-push hook: one
+    ``<local ref> <local sha> <remote ref> <remote sha>`` line per ref. ``None``
+    means no refs at all (a manual invocation), which the hook handles by
+    falling back to HEAD vs the default branch.
+    """
     return subprocess.run(
-        ["bash", str(HOOK)], cwd=repo, capture_output=True, text=True
+        ["bash", str(HOOK)],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        input=push_refs if push_refs is not None else "",
+    )
+
+
+def _push_line(repo: Path, branch: str = "main") -> str:
+    local_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    remote_sha = subprocess.run(
+        ["git", "rev-parse", f"origin/{branch}"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    return (
+        f"refs/heads/{branch} {local_sha} refs/heads/{branch} {remote_sha}\n"
     )
 
 
@@ -88,3 +121,111 @@ def test_secret_in_plain_filename_still_caught(repo: Path) -> None:
     assert result.returncode != 0
     assert "potential hardcoded secrets" in result.stdout
     assert name in result.stdout
+
+
+# ---------------------------------------------------------------------------
+# Antipattern A1 (.claude/rules/rules-as-gates.md): the gate must check the
+# commit being PUSHED, not the working tree.
+#
+# The old hook derived its range from HEAD and grepped files off disk. Both
+# halves are wrong in the same direction: a secret that was committed and then
+# edited out of the working tree — the "fix it quickly before pushing" move —
+# was never read, so the push went through carrying it.
+# ---------------------------------------------------------------------------
+
+
+def test_secret_committed_then_removed_only_in_the_working_tree_is_caught(
+    repo: Path,
+) -> None:
+    name = "leaky.py"
+    _commit_file(repo, name, f'api_key = "{FAKE_SECRET}"\n')
+    # The working tree is now clean-looking; the commit is not. This is what
+    # the remote would receive.
+    (repo / name).write_text("api_key = os.environ['API_KEY']\n", encoding="utf-8")
+
+    result = _run_hook(repo, _push_line(repo))
+
+    assert result.returncode != 0, (
+        "hook passed a push whose commit carries the secret — it scanned the "
+        f"working tree instead of the pushed commit. stdout:\n{result.stdout}"
+    )
+    assert "potential hardcoded secrets" in result.stdout
+    assert name in result.stdout
+
+
+def test_secret_present_only_in_the_working_tree_is_not_reported(
+    repo: Path,
+) -> None:
+    """The mirror case, and the reason this is a fix rather than a tightening:
+    an uncommitted scratch edit is not part of the push and must not fail it."""
+    _commit_file(repo, "clean.py", "value = 1\n")
+    (repo / "scratch.py").write_text(f'api_key = "{FAKE_SECRET}"\n', encoding="utf-8")
+
+    result = _run_hook(repo, _push_line(repo))
+
+    assert "potential hardcoded secrets" not in result.stdout
+    assert result.returncode == 0
+
+
+def test_range_comes_from_stdin_not_from_head(repo: Path) -> None:
+    """Given a remote sha that already includes the secret commit, that commit
+    is not part of this push and must not be re-reported.
+
+    The old hook could not express this: its range was always
+    origin/<default>...HEAD, so anything not yet on the remote branch counted,
+    regardless of what the push actually advertised.
+    """
+    _commit_file(repo, "old-leak.py", f'api_key = "{FAKE_SECRET}"\n')
+    already_pushed = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    _commit_file(repo, "new-clean.py", "value = 2\n")
+    local_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    result = _run_hook(
+        repo, f"refs/heads/main {local_sha} refs/heads/main {already_pushed}\n"
+    )
+
+    assert result.returncode == 0, result.stdout
+    assert "old-leak.py" not in result.stdout
+
+
+def test_new_branch_push_scans_its_own_commits(repo: Path) -> None:
+    """A branch the remote has never seen reports an all-zero remote sha. The
+    range is then 'commits no remote ref contains', not an empty diff."""
+    _git(repo, "checkout", "-b", "feature", "-q")
+    _commit_file(repo, "feature-leak.py", f'api_key = "{FAKE_SECRET}"\n')
+    local_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    result = _run_hook(
+        repo, f"refs/heads/feature {local_sha} refs/heads/feature {'0' * 40}\n"
+    )
+
+    assert result.returncode != 0, result.stdout
+    assert "feature-leak.py" in result.stdout
+
+
+def test_branch_deletion_is_not_scanned(repo: Path) -> None:
+    """Deleting a remote branch pushes an all-zero LOCAL sha. There is no
+    commit to check out, and treating it as one would crash the hook."""
+    result = _run_hook(
+        repo, f"(delete) {'0' * 40} refs/heads/gone {'0' * 40}\n"
+    )
+
+    assert result.returncode == 0, result.stdout

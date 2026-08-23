@@ -42,6 +42,59 @@ fi
 DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
     | sed 's@^refs/remotes/origin/@@' || echo main)"
 
+# === What is actually being pushed ========================================
+# git feeds a pre-push hook one line per ref on stdin:
+#     <local ref> <local sha> <remote ref> <remote sha>
+# Deriving the range from HEAD instead — as this hook used to — is antipattern
+# A1 in .claude/rules/rules-as-gates.md: it scans whatever the developer's
+# checkout happens to be, which is not necessarily what the remote is about to
+# receive. Combined with reading file contents off disk, a secret that was
+# COMMITTED and then edited out of the working tree only passed cleanly.
+ZERO_SHA="0000000000000000000000000000000000000000"
+PUSH_TIP=""
+PUSH_BASE=""
+if [ ! -t 0 ]; then
+    while read -r _local_ref local_sha _remote_ref remote_sha; do
+        [ -z "$local_sha" ] && continue
+        # All-zero local sha = branch deletion; nothing to scan.
+        [ "$local_sha" = "$ZERO_SHA" ] && continue
+        PUSH_TIP="$local_sha"
+        if [ "$remote_sha" = "$ZERO_SHA" ] || [ -z "$remote_sha" ]; then
+            # New branch on the remote: its "new" commits are the ones no
+            # remote-tracking ref already contains. Diff from the parent of the
+            # oldest such commit (empty tree if this is a root commit).
+            oldest="$(git rev-list "$local_sha" --not --remotes 2>/dev/null | tail -1)"
+            if [ -n "$oldest" ]; then
+                PUSH_BASE="$(git rev-parse --verify --quiet "${oldest}^" || true)"
+            else
+                PUSH_BASE="$(git rev-parse "$local_sha^" 2>/dev/null || true)"
+            fi
+        else
+            PUSH_BASE="$remote_sha"
+        fi
+        # One ref per push is the norm here; a multi-ref push scans the first,
+        # which is strictly better than the old HEAD-derived guess. Widening
+        # this to every ref is tracked in .claude/backlog.md.
+        break
+    done
+fi
+
+if [ -z "$PUSH_TIP" ]; then
+    # No refs on stdin — a manual `bash .githooks/pre-push` run. Fall back to
+    # HEAD vs the default branch, and say so, so nobody reads this run as
+    # proof about a specific push.
+    PUSH_TIP="$(git rev-parse HEAD)"
+    PUSH_BASE="$(git rev-parse --verify --quiet "origin/$DEFAULT_BRANCH" || true)"
+    echo "ℹ  No push refs on stdin — scanning HEAD vs origin/$DEFAULT_BRANCH."
+fi
+
+if [ -n "$PUSH_BASE" ]; then
+    DIFF_ARGS=("$PUSH_BASE" "$PUSH_TIP")
+else
+    # Root commit: diff against git's empty tree so every file counts as added.
+    DIFF_ARGS=("$(git hash-object -t tree /dev/null)" "$PUSH_TIP")
+fi
+
 # NUL-delimited into an array. A bare `for f in $CHANGED_FILES` word-splits any
 # path containing a space (git prints those unquoted), every fragment then fails
 # the `[ -f ]` guard, and the secret scan below silently SKIPS the file — a gate
@@ -49,12 +102,45 @@ DEFAULT_BRANCH="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
 CHANGED_FILES=()
 while IFS= read -r -d '' f; do
     CHANGED_FILES+=("$f")
-done < <(git diff -z --name-only "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
-    || git diff -z --name-only HEAD)
+done < <(git diff -z --name-only "${DIFF_ARGS[@]}")
 
 if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
-    echo "ℹ  No changes vs origin/$DEFAULT_BRANCH — skipping."
+    echo "ℹ  Nothing new in this push — skipping."
     exit 0
+fi
+
+# === Where the content scans read from ====================================
+# A detached worktree of the pushed commit. The scanners below read files from
+# $SCAN_ROOT, never from the developer's checkout, so an uncommitted edit can
+# neither hide a committed secret nor invent a finding that is not being
+# pushed. The toolchain gates (ruff / mypy / pytest / cargo / zizmor) still run
+# against the real checkout on purpose: they need .venv and cargo's target dir,
+# which are untracked and would be absent here — CI runs them against the
+# pushed commit. A dirty tree therefore makes those gates advisory, and the
+# warning below says so rather than letting it pass silently.
+SCAN_ROOT="$REPO_ROOT"
+SCAN_WORKTREE=""
+cleanup_worktree() {
+    if [ -n "$SCAN_WORKTREE" ] && [ -d "$SCAN_WORKTREE" ]; then
+        git worktree remove --force "$SCAN_WORKTREE" >/dev/null 2>&1 || true
+        rm -rf "$SCAN_WORKTREE" >/dev/null 2>&1 || true
+    fi
+}
+trap cleanup_worktree EXIT
+
+SCAN_WORKTREE="$(mktemp -d "${TMPDIR:-/tmp}/crossdesk-prepush.XXXXXX")"
+if git worktree add --detach --quiet "$SCAN_WORKTREE" "$PUSH_TIP" >/dev/null 2>&1; then
+    SCAN_ROOT="$SCAN_WORKTREE"
+else
+    echo "⚠️  WARN: could not materialise $PUSH_TIP in a temp worktree —"
+    echo "    falling back to scanning the working tree, which may differ"
+    echo "    from what is being pushed."
+    SCAN_WORKTREE=""
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "ℹ  Working tree is dirty: the content scans read the pushed commit,"
+    echo "   but the toolchain gates below run against your checkout."
 fi
 
 # Replaces `echo "$CHANGED_FILES" | grep -qE`, which re-split the same way.
@@ -220,9 +306,9 @@ echo "🔐 hardcoded secrets ..."
 SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'
 SECRET_HITS=()
 for f in "${CHANGED_FILES[@]}"; do
-    [ -f "$f" ] || continue
+    [ -f "$SCAN_ROOT/$f" ] || continue
     is_excluded "$f" && continue
-    if grep -E -l "$SECRET_PATTERNS" "$f" >/dev/null 2>&1; then
+    if grep -E -l "$SECRET_PATTERNS" "$SCAN_ROOT/$f" >/dev/null 2>&1; then
         SECRET_HITS+=("$f")
     fi
 done
@@ -249,7 +335,7 @@ for f in "${CHANGED_FILES[@]}"; do
         echo "    $f:$line"
         COUNT=$((COUNT + 1))
         [ $COUNT -ge 5 ] && break 2
-    done < <(grep -n -E 'console\.(log|debug|warn)' "$f" 2>/dev/null || true)
+    done < <(grep -n -E 'console\.(log|debug|warn)' "$SCAN_ROOT/$f" 2>/dev/null || true)
 done
 
 # === 3. print() in Python hot paths (WARN) ================================
@@ -269,7 +355,7 @@ for f in "${CHANGED_FILES[@]}"; do
         echo "    $f:$line"
         COUNT=$((COUNT + 1))
         [ $COUNT -ge 5 ] && break 2
-    done < <(grep -n -E '^\s*print\(' "$f" 2>/dev/null || true)
+    done < <(grep -n -E '^\s*print\(' "$SCAN_ROOT/$f" 2>/dev/null || true)
 done
 
 # === 4b. qmllint on changed QML files (HARD FAIL when tool present) =======
@@ -289,9 +375,9 @@ if [ -n "$QMLLINT_BIN" ]; then
             *.qml) ;;
             *) continue ;;
         esac
-        [ -f "$f" ] || continue
+        [ -f "$SCAN_ROOT/$f" ] || continue
         # Run from gui/ so the per-repo .qmllint.ini is picked up.
-        if ! ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" -W 0 "$REPO_ROOT/$f" >/dev/null 2>&1 ); then
+        if ! ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" -W 0 "$SCAN_ROOT/$f" >/dev/null 2>&1 ); then
             QML_HITS+=("$f")
         fi
     done
@@ -299,8 +385,8 @@ if [ -n "$QMLLINT_BIN" ]; then
         echo "❌ qmllint found issues in:"
         for f in "${QML_HITS[@]}"; do
             echo "    $f"
-            ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" "$REPO_ROOT/$f" 2>&1 \
-                | grep -E "^(Warning|Error):" | head -5 | sed 's/^/      /' )
+            { ( cd "$REPO_ROOT/gui" && "$QMLLINT_BIN" "$SCAN_ROOT/$f" 2>&1 \
+                | grep -E "^(Warning|Error):" | head -5 | sed 's/^/      /' ); } || true
         done
         echo "   Fix the QML or adjust gui/.qmllint.ui to silence."
         exit 1
@@ -308,40 +394,56 @@ if [ -n "$QMLLINT_BIN" ]; then
 fi
 
 # === 4. TODO/FIXME added in this push (INFO) ==============================
-echo "📝 TODO/FIXME added vs origin/$DEFAULT_BRANCH ..."
-git diff "origin/$DEFAULT_BRANCH"...HEAD 2>/dev/null \
+# Braced + `|| true`: an advisory pipeline whose grep finds nothing exits 1,
+# and `head` closing the pipe raises SIGPIPE — under `set -e` either would kill
+# the hook HERE, skipping every layer below while still exiting 0. That is
+# antipattern A2 in rules-as-gates.md.
+echo "📝 TODO/FIXME added in this push ..."
+{ git diff "${DIFF_ARGS[@]}" 2>/dev/null \
     | grep -E '^\+.*(TODO|FIXME)' \
-    | head -10 || true
+    | head -10; } || true
 
 # === 5. Supply-chain audit (HARD FAIL when tools available) ==============
 # These run automatically when the corresponding scanner is installed.
 # Skipped silently if not — keeps the hook usable on minimal dev machines.
 # To install everything: see docs/AUDIT_REPORT.md "How to re-run".
 
+# The `[ -d ]` guards are not decoration: `(cd missing/ && cargo audit)` fails
+# on the cd, and the `||` branch below reads that as "vulnerabilities found" —
+# so a repo without a Rust workspace failed the push with a message naming a
+# workspace it does not have.
 if command -v cargo-audit >/dev/null 2>&1; then
-    echo "🦀 cargo audit (guest) ..."
-    (cd "$REPO_ROOT/guest" && cargo audit --quiet --deny warnings 2>&1) || {
-        echo "❌ cargo audit found vulnerabilities in guest workspace."
-        exit 1
-    }
-    echo "🦀 cargo audit (gui) ..."
-    (cd "$REPO_ROOT/gui" && cargo audit --quiet --deny warnings 2>&1) || {
-        echo "❌ cargo audit found vulnerabilities in gui workspace."
-        exit 1
-    }
+    if [ -d "$REPO_ROOT/guest" ]; then
+        echo "🦀 cargo audit (guest) ..."
+        (cd "$REPO_ROOT/guest" && cargo audit --quiet --deny warnings 2>&1) || {
+            echo "❌ cargo audit found vulnerabilities in guest workspace."
+            exit 1
+        }
+    fi
+    if [ -d "$REPO_ROOT/gui" ]; then
+        echo "🦀 cargo audit (gui) ..."
+        (cd "$REPO_ROOT/gui" && cargo audit --quiet --deny warnings 2>&1) || {
+            echo "❌ cargo audit found vulnerabilities in gui workspace."
+            exit 1
+        }
+    fi
 fi
 
 if command -v cargo-deny >/dev/null 2>&1; then
-    echo "🚧 cargo deny check (guest) ..."
-    (cd "$REPO_ROOT/guest" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
-        echo "❌ cargo deny rejected guest workspace — re-run for details."
-        exit 1
-    }
-    echo "🚧 cargo deny check (gui) ..."
-    (cd "$REPO_ROOT/gui" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
-        echo "❌ cargo deny rejected gui workspace — re-run for details."
-        exit 1
-    }
+    if [ -d "$REPO_ROOT/guest" ]; then
+        echo "🚧 cargo deny check (guest) ..."
+        (cd "$REPO_ROOT/guest" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
+            echo "❌ cargo deny rejected guest workspace — re-run for details."
+            exit 1
+        }
+    fi
+    if [ -d "$REPO_ROOT/gui" ]; then
+        echo "🚧 cargo deny check (gui) ..."
+        (cd "$REPO_ROOT/gui" && cargo deny check --hide-inclusion-graph >/dev/null 2>&1) || {
+            echo "❌ cargo deny rejected gui workspace — re-run for details."
+            exit 1
+        }
+    fi
 fi
 
 if command -v gitleaks >/dev/null 2>&1; then

@@ -2,6 +2,152 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-08-23
+
+**Git:** `3205027` on `main`
+
+### Warstwa statyczna (automat)
+
+**Python (`host/`)**
+
+- ruff findings: 0
+- mypy --strict errors: 0 (across 126 files)
+- pytest collected: 1067
+- bandit medium/high: 0
+- servicer direct blocking libvirt/fs calls (want 0): 0
+
+**Rust (`guest/`, `gui/`)**
+
+- guest cargo check warnings: 0
+- guest clippy errors (-D warnings): 0
+- gui cargo check warnings: 0
+- gui clippy errors (-D warnings): 0
+- guest cargo-deny issues: 25
+- gui cargo-deny issues: 2
+- guest cargo-audit vulns: 0
+- gui cargo-audit vulns: 0
+
+**Proto (`proto/`)**
+
+- buf: n/a
+- .proto files: 5
+
+**QML (`gui/`)**
+
+- qmllint: n/a
+
+**Code hygiene**
+
+- files with TODO/FIXME/HACK/XXX (src only): 0
+- test files (python): 254
+- #[test] annotations (rust): 85
+
+**Drift & meta**
+
+- architecture.md Last Updated: 2026-07-25 (29d ago)
+- META decisions (status: aktywna): 8
+- ADR DEC-NNNN total: 18
+
+**Security**
+
+- gitleaks: n/a (use `CROSSDESK_FULL_AUDIT=1 git push` for history scan)
+
+**Cadence**
+
+- previous audit: 2026-07-12 (42d ago)
+
+### Nagłówek raportu (skill weekly-audit, Krok 3)
+
+```
+AUDITED_REVISION: 3205027122b599f84a982d7185658e91d604a9ae
+DIFF_RANGE_OR_SCOPE: 2026-07-22..HEAD — 14 commitów, WSZYSTKIE docs/chore
+  (parking pętli C4/C5/C6, sync toolkitu, backlog TOP). Jedyny nie-doc plik:
+  .claude/toolkit.lock. Zero zmian kodu produkcyjnego.
+PREVIOUS_AUDIT: 2026-07-22 (b0ecdc0) — 32 dni (audyt zaległy; próg 7 dni)
+TOOLS: bash .claude/audit.sh (ruff/mypy --strict/bandit/cargo-deny/cargo-audit/
+  clippy — wszystkie zielone poza cargo-deny 25/2 = duplikaty otel);
+  zizmor 1.27.0 lokalnie; agenty security-reviewer + red-team (niezależne konteksty).
+EXCLUSIONS_OR_NA: buf / qmllint / gitleaks = n/a lokalnie (brak narzędzi na boxie;
+  CI je pokrywa). Krok 00 (toolkit-sync check) + Krok 05 (porównanie masterów) =
+  DEGRADED — ~/DevProjects/claude-toolkit NIE ISTNIEJE na tym boxie.
+THREAT_MODEL_VERSION: docs/THREAT_MODEL.md (bez zmian w oknie)
+SECURITY_REVIEW: PASS — 1× MEDIUM (F-1 JIT-lite whole-$HOME bypass DEC-0019),
+  1× NOTE (F-2 AuthValidator stream-leak), 1× NOTE śledzony (SEC-01). Zero CRITICAL/HIGH.
+RED_TEAM: FINDINGS — A = F-1 (potwierdzony niezależnie, MEDIUM);
+  B = ShareChannel token-authz + nieescapowany libvirt XML (LOW dziś / latent-MEDIUM
+  przy Stage B). Recovery/reinstall P0 zweryfikowany JAKO ZAMKNIĘTY (finalize_steady_state).
+BACKLOG_WRITE: recorded — 3 nowe (F-1, Finding B, F-2) do backlog.md; P0 pre-push
+  i persystencje (SEC-01, SECURITY.md, lockfile, toolkit-DEGRADED) już śledzone.
+```
+
+### Warstwa głęboka (osąd agenta)
+
+**Charakter okna:** czysto dokumentacyjne — 14 commitów, zero kodu produkcyjnego
+(potwierdzone: jedyny nie-`.md` to `.claude/toolkit.lock`). Powierzchnia
+bezpieczeństwa niezmieniona; findingi to realne wady istniejące od wcześniej,
+odsłonięte przez adwersaryjny przegląd, plus persystencje.
+
+**P0**
+- **Gate `pre-push` — antywzorzec A1 NADAL nienaprawiony** (backlog TOP, 32 dni).
+  Hook liczy zmiany z *working tree* (`git diff …origin/$DEFAULT_BRANCH...HEAD` +
+  czyta pliki z dysku, l. 52/63/222…), nie z pushowanego commita odtworzonego przez
+  `git worktree add --detach`, i nie czyta refów ze stdin. Lipcowy `1b9c6f1` załatał
+  tylko word-splitting (NUL-array), nie rdzeń A1. Dowód domknięcia
+  (`test-gates.sh → 6/6`) **niewykonalny** — toolkit nieobecny.
+
+**P1**
+- **[NOWE — F-1 / Red-Team A, MEDIUM, dwa agenty niezależnie]** JIT-lite dzieli
+  **całe `$HOME`** dla pliku leżącego w korzeniu `$HOME` (`~/x.txt`), po cichu,
+  **bez** ostrzeżenia `home_scope_warning` DEC-0019, i **nawet przy
+  `shared_folder_enabled=False`**. `management.py:452` woła `_jitlite_flags`
+  bezwarunkowo; `parent_share_path(~/x.txt)` = `Path.home()` (`path_validation.py:104`);
+  kontrakt „caller must re-validate" z docstringu niespełniony. Gość → R/W do `~/.ssh`
+  + klucz mTLS + hasło VM → eksfiltracja + host code-exec. Kolaps granicy G4, którego
+  DEC-0019 miał bronić. **Blokuje kryt. #3 (FS Stage B live).** Zweryfikowane w kodzie.
+- **[NOWE — Red-Team B, LOW dziś / latent-MEDIUM przy Stage B]** `ShareChannel`:
+  `_token_ok` (`filesystem.py:128`) waliduje **tylko długość** 32B — zero autoryzacji,
+  brak `share_id in active_shares`; `attach/detach_virtiofs` (`real.py:255/277`) budują
+  device XML nieescapowanym f-stringiem z `share_id`/`host_path`. Sink dziś nieosiągalny
+  (`trigger_mount` bez produkcyjnego callera → `_attached` puste), ale **musi paść przed
+  Stage B** (kryt. #3). Zweryfikowane w kodzie.
+- **[persystencja] SEC-01** — kanarek `gitleaks-action` v3.0.0 (`security.yml:48`) nadal
+  niezweryfikowany jako fail-closed. Bez zmiany SHA/dowodu — status bez zmian.
+- **[persystencja] Krok 00 + Krok 05 DEGRADED** — toolkit nieobecny na boxie → kanoniczna
+  procedura (toolkit-sync check, porównanie masterów) niewykonalna. Decyzja właściciela:
+  sklonować toolkit czy uznać kopie za samodzielne mastery.
+
+**P2 / NOTE**
+- **[NOWE — F-2, NOTE]** `AuthValidator._active_streams` rośnie bez ograniczeń dla
+  heartbeat i filesystem — `remove_stream` wołane tylko w `control.py:291`, brak w
+  blokach `finally` `heartbeat.py`/`filesystem.py`. Resource-leak proporcjonalny do
+  reconnectów (atakujący musi przejść mTLS → nie ścieżka eksploitu).
+- `cargo-deny` guest 24→**25** (+1) — duplikaty tranzytywne otel (znane, Tech-debt).
+- Brak `SECURITY.md` (repo publiczne, brak kanału disclosure) — persystencja od 07-12.
+- Brak lockfile'a Pythona (`ci-cd.md` §3) — persystencja.
+- `audit.sh` raportuje „previous audit 2026-07-12" zamiast 2026-07-22 — quirk detekcji
+  kadencji (czyta zły wpis/marker).
+- Trzy lokalne gate'y cicho `n/a` (buf/qmllint/gitleaks) — CI pokrywa, lokalnie fałszywy
+  komplet.
+
+**Zamknięte / czyste (zweryfikowane):**
+- **Recovery/reinstall P0 ZAMKNIĘTY** — `finalize_steady_state` na pierwszym Hello
+  (`control.py:221`) redefiniuje domenę disk-boot=1/CD-ejected przed kolejną ramką;
+  recovery = idempotentny `start()`, nie `hard_destroy`; gość nie sfałszuje
+  `EVENT_STOPPED_DESTROYED`. (Red Team.)
+- **zizmor job JEST w CI** (`security.yml:154`) — item A6 z 2026-07-22 domknięty.
+- Per-frame AuthContext na **wszystkich 3** servicerach (fingerprint+nonce+seq per ramka);
+  timeouty (libvirt 30s + pula 4 wątków, heartbeat `wait_for`); supply-chain hardening
+  (brak `pull_request_target`, `permissions: contents:read`, `persist-credentials:false`,
+  third-party SHA-pinned, pwn-request guard); sekrety gitignored; Rust `unsafe` z `// Safety:`.
+- Provenance: commity robocze mają `Intent`; **atrybucja AI = 0** (D-006 OK); No-Docker OK;
+  integralność referencyjna docs OK; `main` w pełni wypchnięty; `.git` 35M bez bloatu.
+
+**SECURITY_REVIEW verdict:** PASS (wiąże SHA 3205027). **RED_TEAM:** FINDINGS (2).
+Ratchet (Krok 4): brak nowych zamrożeń — findingi czekają na decyzję właściciela;
+zizmor-w-CI już zratchetowany w poprzednim oknie.
+
+---
+
 ## Audyt 2026-07-22
 
 **Git:** `b0ecdc0` on `main`

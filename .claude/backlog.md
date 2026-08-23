@@ -329,6 +329,54 @@ zostawia gościa bez kontroli, dopóki user nie zrestartuje VM. Dla bety to szor
 disconnect → retry (np. 1s → 30s cap). Host-side nic nie trzeba.
 
 
+### [P1, audyt 2026-08-23, SEC-02 — Security Review F-1 + Red-Team A, dwa agenty niezależnie] JIT-lite dzieli CAŁE `$HOME` bez ostrzeżenia, gdy plik leży w korzeniu `$HOME` — **blokuje kryt. #3**
+`_jitlite_flags` (`ipc/management.py:563-598`) jest wołane **bezwarunkowo** przy każdym
+launchu z niepustym `file_path` (`management.py:452`) — także przy
+`shared_folder_enabled=False` — i **nadpisuje** `/drive:`. Dla pliku leżącego w korzeniu
+`$HOME` (`~/notes.txt`, `~/instalator.exe`) `parent_share_path(validated.canonical)`
+zwraca `Path.home()` (`jit_mount/path_validation.py:104-111`), więc gość dostaje
+`/drive:CrossDesk,/home/<user>` = **całe `$HOME` R/W** na czas sesji RAIL. Ścieżka JIT-lite
+**nie woła** `home_scope_warning()` (emitowany tylko z `_peripheral_flags`,
+`management.py:538-540`), a kontrakt „caller must re-validate" z docstringu
+`parent_share_path` jest **niespełniony**. Skutek: gość R/W do `~/.ssh`,
+`~/.config/crossdesk` (klucz mTLS hosta + hasło VM), zapisywalne dotfiles/autostart →
+eksfiltracja sekretów + host-user code execution. To **kolaps granicy G4**, przed którym
+DEC-0019 miał chronić przez „loud opt-in" — tu osiągalny po cichu. Zaostrzenie: entry-point
+przez MIME/URL-handler (`launch_cmd.py:71-76`) może wskazać dowolny istniejący plik `$HOME`
+(np. rodzic `~/.ssh/id_rsa`) bez świadomego wyboru użytkownika. **Zweryfikowane w kodzie**
+(nie zgadnięte). **Fix:** w `_jitlite_flags` po wyliczeniu `parent` odrzuć/fallback (return
+`None`) gdy `parent == Path.home()` lub dowolny `allowed_root`; re-waliduj `parent` przez
+`validate_mount_path`; emituj ostrzeżenie gdy share == `$HOME`. **Test regresji:**
+`_jitlite_flags("/home/<u>/x.txt")` NIE emituje cicho `/drive:...,/home/<u>`;
+`~/Documents/x.txt` → dzieli tylko `~/Documents`. Blokuje live-verify kryt. #3 (FS Stage B).
+
+### [P1, audyt 2026-08-23, Red-Team Finding B — LOW dziś / latent-MEDIUM przy Stage B] `ShareChannel` — `mount_token` tylko length-checked + `share_id` nieescapowany do libvirt XML
+`_token_ok` (`ipc/filesystem.py:128-139`) waliduje **wyłącznie długość** tokenu (32B) —
+zero autoryzacji: nie porównuje z tokenem mintowanym w `trigger_mount`, a `detach_share`
+woła się bez sprawdzenia `share_id in active_shares` (`filesystem.py:114`).
+`attach_virtiofs`/`detach_virtiofs` (`libvirt_ctl/real.py:255-289`) interpolują `share_id`
+i `host_path` **surowo** w f-string device XML → sink injection do `attach/detachDeviceFlags`.
+**Mityzacja dziś:** `trigger_mount` **nie ma produkcyjnego callera** (grep = tylko
+definicja + docstring), więc `_attached` puste → sink nieosiągalny, a cross-share detach
+ograniczony do własnych UUID gościa (model single-VM). **Ale** przy wpięciu Stage B
+virtiofs (NEXT, kryt. #3, niosące realne pliki usera) length-only token i nieescapowany XML
+stają się realną powierzchnią integralności/injection. **Zweryfikowane w kodzie. Gate przed
+Stage B live-verify.** **Fix:** przechowuj `mount_token` per `share_id` w `trigger_mount` +
+`hmac.compare_digest`; odrzuć `share_id` spoza `active_shares`; buduj device XML przez
+`ElementTree`/`quoteattr` zamiast f-string; walidacja UUID `share_id` przed libvirt. **Test:**
+`release_ack` ze złym 32B tokenem i/lub nieznanym `share_id` NIE woła `detach_virtiofs`;
+`share_id` z `'`/`<` odrzucony przed wywołaniem XML.
+
+### [P2, audyt 2026-08-23, Security Review F-2 — NOTE] `AuthValidator._active_streams` rośnie bez ograniczeń dla heartbeat i filesystem
+`remove_stream` (`ipc/auth.py`) jest wołane **tylko** w `control.py:291`. Kanały heartbeat
+(`ipc/heartbeat.py`, blok `finally` `Channel`) i filesystem (`ipc/filesystem.py`,
+`ShareChannel`) rejestrują nonce w `_active_streams` przy pierwszej ramce, ale nigdy go nie
+zdejmują → każdy reconnect gościa (częste: re-dial agenta, recovery) zostawia trwały wpis
+`nonce→seq`. Resource-leak proporcjonalny do liczby reconnectów w cyklu życia daemona;
+atakujący musi przejść mTLS (jedyny gość) → **dług, nie ścieżka eksploitu**. **Fix:** wołać
+`auth_validator.remove_stream(stream_nonce)` w blokach `finally` obu kanałów (jak w
+control.py). **Test:** po zamknięciu N kanałów `len(validator._active_streams) == 0`.
+
 ### [P1, Security Review 2026-07-22, SEC-01] Bramka sekretów po majorze — niepotwierdzona jako fail-closed
 `gitleaks-action` 2.3.9 → **3.0.0** (`security.yml:48`). Ta akcja ma historię trybu,
 w którym kończy się kodem 0 mimo trafień (brak licencji dla organizacji = cichy

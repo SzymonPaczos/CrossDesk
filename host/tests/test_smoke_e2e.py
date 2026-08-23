@@ -67,7 +67,21 @@ def _guest_fingerprint() -> str:
 
 
 @pytest.fixture
-async def host_server():
+def smoke_auth() -> AuthValidator:
+    """The one AuthValidator all three planes share, as in the daemon."""
+    return AuthValidator()
+
+
+@pytest.fixture
+def smoke_filesystem(smoke_auth: AuthValidator) -> FilesystemServiceServicer:
+    """Exposed separately from ``host_server`` so a test can mint a share on
+    the *same* servicer the wire talks to: guest frames are authorised against
+    the token the host handed out, so a smoke frame needs that mint first."""
+    return FilesystemServiceServicer(smoke_auth, LibvirtControllerMock())
+
+
+@pytest.fixture
+async def host_server(smoke_auth, smoke_filesystem):
     """Spin up the host gRPC server on a free TCP port with the real services."""
     server = grpc.aio.server()
 
@@ -82,7 +96,7 @@ async def host_server():
         require_client_auth=True,
     )
 
-    auth = AuthValidator()
+    auth = smoke_auth
     libvirt = LibvirtControllerMock()
     control_pb2_grpc.add_ControlServiceServicer_to_server(
         ControlServiceServicer(auth), server
@@ -91,7 +105,7 @@ async def host_server():
         HeartbeatServiceServicer(auth, libvirt), server
     )
     filesystem_pb2_grpc.add_FilesystemServiceServicer_to_server(
-        FilesystemServiceServicer(auth, libvirt), server
+        smoke_filesystem, server
     )
 
     port = server.add_secure_port("127.0.0.1:0", creds)
@@ -249,7 +263,10 @@ async def test_heartbeat_ping_pong_roundtrip(host_server, channel_factory) -> No
 
 
 async def test_filesystem_mount_result_recorded(
-    host_server, channel_factory, caplog: pytest.LogCaptureFixture
+    host_server,
+    channel_factory,
+    smoke_filesystem: FilesystemServiceServicer,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Connect to ShareChannel, push a MountResult(STATUS_MOUNTED), then close.
 
@@ -260,6 +277,9 @@ async def test_filesystem_mount_result_recorded(
     """
     fp = _guest_fingerprint()
     nonce = b"smoke-filesystem"
+    # The host only accepts frames about shares it minted, with the token it
+    # minted for them — stand in for the trigger_mount that would have done so.
+    smoke_filesystem.mount_tokens["smoke-share-1"] = _MOUNT_TOKEN
 
     async def guest_frames() -> AsyncIterator[filesystem_pb2.ShareGuestFrame]:
         yield filesystem_pb2.ShareGuestFrame(

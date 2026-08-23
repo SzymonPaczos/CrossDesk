@@ -69,6 +69,10 @@ async def test_wrong_length_token_is_dropped(
     mount_result, and by detach_virtiofs not being called on
     release_ack."""
     token = b"\x00" * length
+    # Mint every share the frames name, so the ONLY reason a frame can be
+    # rejected here is its token length — the property this file pins.
+    for share_id in ("share-mt", "share-lr", "share-ra"):
+        servicer.mount_tokens[share_id] = b"\x00" * MOUNT_TOKEN_LEN
     pre_attached = set(servicer.filesystem_ctl.list_active_shares())
     pre_detach_calls = len(servicer.filesystem_ctl.hooks.detached_ids)
 
@@ -90,6 +94,9 @@ async def test_exact_32_byte_mount_result_records_share(
     servicer: FilesystemServiceServicer,
 ) -> None:
     token = b"\x00" * MOUNT_TOKEN_LEN
+    # Length alone no longer authorises a frame: the share must also be one
+    # this host minted, with this exact token (see test_filesystem_service).
+    servicer.mount_tokens["share-mt"] = token
     await servicer._process_guest_frame(_frame_for("mount_result", token))
     assert servicer.active_shares["share-mt"] == "MOUNTED"
 

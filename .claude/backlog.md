@@ -359,7 +359,20 @@ przez MIME/URL-handler (`launch_cmd.py:71-76`) może wskazać dowolny istniejąc
 `~/Documents/x.txt` → dzieli tylko `~/Documents`. Blokuje live-verify kryt. #3 (FS Stage B).
 </details>
 
-### [P1, audyt 2026-08-23, Red-Team Finding B — LOW dziś / latent-MEDIUM przy Stage B] `ShareChannel` — `mount_token` tylko length-checked + `share_id` nieescapowany do libvirt XML
+### ✅ [P1, audyt 2026-08-23, Red-Team Finding B] ZROBIONE `1adf106` — `ShareChannel` token-authz + escapowany libvirt XML
+Fix (obie warstwy w jednej iteracji): (1) **token-authz** — `trigger_mount` zapamiętuje
+mintowany token w `mount_tokens[share_id]`, `_token_ok` porównuje przez
+`hmac.compare_digest` i odrzuca `share_id` spoza mintu **przed** `detach_share`; token
+ginie razem z share'em (replay ReleaseAck trafia w gałąź „unknown share"). (2) **XML** —
+`share_id` musi być kanonicznym UUID, oba atrybuty przez `quoteattr`; budowanie device
+XML wyniesione do dwóch czystych funkcji, więc escaping jest testowalny bez żywej domeny.
+Zmiana zachowania zapisana w teście: ReleaseAck dla nieznanego share'a jest teraz
+**odrzucany**, nie przepuszczany — stary argument „libvirt jest idempotentny" i tak nic
+nie odłączał w produkcji (`LibvirtFilesystemController.detach_share` zwraca False poza
+własnym `_attached`). Sentinele: wyłączenie porównania tokenu wywala 3 testy authz,
+powrót do surowych f-stringów wywala 7 testów XML. Oryginalny opis:
+
+<details><summary>diagnoza audytu</summary>
 `_token_ok` (`ipc/filesystem.py:128-139`) waliduje **wyłącznie długość** tokenu (32B) —
 zero autoryzacji: nie porównuje z tokenem mintowanym w `trigger_mount`, a `detach_share`
 woła się bez sprawdzenia `share_id in active_shares` (`filesystem.py:114`).
@@ -375,6 +388,7 @@ Stage B live-verify.** **Fix:** przechowuj `mount_token` per `share_id` w `trigg
 `ElementTree`/`quoteattr` zamiast f-string; walidacja UUID `share_id` przed libvirt. **Test:**
 `release_ack` ze złym 32B tokenem i/lub nieznanym `share_id` NIE woła `detach_virtiofs`;
 `share_id` z `'`/`<` odrzucony przed wywołaniem XML.
+</details>
 
 ### [P2, audyt 2026-08-23, Security Review F-2 — NOTE] `AuthValidator._active_streams` rośnie bez ograniczeń dla heartbeat i filesystem
 `remove_stream` (`ipc/auth.py`) jest wołane **tylko** w `control.py:291`. Kanały heartbeat

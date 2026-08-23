@@ -329,7 +329,15 @@ zostawia gościa bez kontroli, dopóki user nie zrestartuje VM. Dla bety to szor
 disconnect → retry (np. 1s → 30s cap). Host-side nic nie trzeba.
 
 
-### [P1, audyt 2026-08-23, SEC-02 — Security Review F-1 + Red-Team A, dwa agenty niezależnie] JIT-lite dzieli CAŁE `$HOME` bez ostrzeżenia, gdy plik leży w korzeniu `$HOME` — **blokuje kryt. #3**
+### ✅ [P1, audyt 2026-08-23, SEC-02] ZROBIONE `1243070` — JIT-lite dzielił CAŁE `$HOME` bez ostrzeżenia
+Fix: `_jitlite_flags` re-waliduje `parent` przez `validate_mount_path` (kontrakt
+`parent_share_path` był niespełniony) i **odrzuca** parenta równego dowolnemu
+`default_allowed_roots()` (dziś `$HOME`) — fallback do skonfigurowanego share'u,
+a przy `shared_folder_enabled=False` do **braku** `/drive:` w ogóle. 3 testy;
+sentinel: dwa nowe testy bezpieczeństwa padają z wyłączonym guardem, test
+podkatalogu przechodzi w obie strony (izoluje defekt). Oryginalny opis:
+
+<details><summary>diagnoza audytu</summary>
 `_jitlite_flags` (`ipc/management.py:563-598`) jest wołane **bezwarunkowo** przy każdym
 launchu z niepustym `file_path` (`management.py:452`) — także przy
 `shared_folder_enabled=False` — i **nadpisuje** `/drive:`. Dla pliku leżącego w korzeniu
@@ -349,6 +357,7 @@ przez MIME/URL-handler (`launch_cmd.py:71-76`) może wskazać dowolny istniejąc
 `validate_mount_path`; emituj ostrzeżenie gdy share == `$HOME`. **Test regresji:**
 `_jitlite_flags("/home/<u>/x.txt")` NIE emituje cicho `/drive:...,/home/<u>`;
 `~/Documents/x.txt` → dzieli tylko `~/Documents`. Blokuje live-verify kryt. #3 (FS Stage B).
+</details>
 
 ### [P1, audyt 2026-08-23, Red-Team Finding B — LOW dziś / latent-MEDIUM przy Stage B] `ShareChannel` — `mount_token` tylko length-checked + `share_id` nieescapowany do libvirt XML
 `_token_ok` (`ipc/filesystem.py:128-139`) waliduje **wyłącznie długość** tokenu (32B) —

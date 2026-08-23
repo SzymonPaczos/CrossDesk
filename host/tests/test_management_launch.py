@@ -487,6 +487,71 @@ def test_jitlite_flags_skip_for_empty_guest_or_outside_home(
     assert servicer._jitlite_flags("/etc/passwd") is None
 
 
+def test_jitlite_refuses_to_share_home_itself(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """A file directly in $HOME must NOT silently share the whole $HOME.
+
+    Its parent *is* $HOME, so the naive "share the parent" produces
+    ``/drive:CrossDesk,/home/<user>`` — R/W over ~/.ssh and
+    ~/.config/crossdesk (host mTLS key + VM password) — with no warning and
+    with the persistent share disabled. DEC-0019 makes that scope an explicit,
+    warned opt-in; this path bypassed it.
+    """
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    loose = tmp_path / "notes.txt"
+    loose.write_text("x")
+    _patch_peripherals(monkeypatch, PeripheralsConfig())  # persistent share OFF
+
+    assert _backend_servicer()._jitlite_flags(str(loose)) is None
+
+
+async def test_launch_with_home_root_file_shares_nothing(
+    monkeypatch: pytest.MonkeyPatch, context: MagicMock, tmp_path
+) -> None:
+    """End-to-end: launching with ~/x.txt while sharing is off must produce
+    no /drive: flag at all — not a whole-$HOME one."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    loose = tmp_path / "instalator.exe"
+    loose.write_text("x")
+    _patch_app_and_creds(monkeypatch)
+    _patch_peripherals(monkeypatch, PeripheralsConfig())
+    seen: dict[str, object] = {}
+
+    async def fake_spawn(inv, coord, argv, *, creds=None, verify_timeout=5.0, log_label=""):  # type: ignore[no-untyped-def]
+        seen["argv"] = argv
+        return RailSession(pid=56, argv=list(argv))
+
+    monkeypatch.setattr(management, "spawn_rail_with_auth_check", fake_spawn)
+
+    resp = await _backend_servicer().Launch(
+        mgmt_pb2.LaunchRequest(app_id="notepad", file_path=str(loose)), context
+    )
+    assert resp.ok
+    argv = seen["argv"]
+    assert isinstance(argv, list)
+    assert [a for a in argv if a.startswith("/drive:")] == []
+
+
+def test_jitlite_still_shares_a_subdirectory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """The guard must not break the feature: a file one level down still
+    shares exactly its parent."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
+    docs = tmp_path / "Documents"
+    docs.mkdir()
+    opened = docs / "spec.docx"
+    opened.write_text("x")
+    _patch_peripherals(monkeypatch, PeripheralsConfig())
+
+    result = _backend_servicer()._jitlite_flags(str(opened))
+    assert result == ([f"/drive:CrossDesk,{docs}"], "Z:\\")
+
+
 async def test_launch_with_file_path_uses_jitlite_over_persistent_share(
     monkeypatch: pytest.MonkeyPatch, context: MagicMock, tmp_path
 ) -> None:

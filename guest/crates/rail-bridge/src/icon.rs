@@ -25,8 +25,8 @@
 /// an invisible one, and the mask-precise path is a later refinement.
 #[cfg(any(windows, test))]
 fn bgra_to_rgba_in_place(buf: &mut [u8]) {
-    let any_alpha = buf.chunks_exact(4).any(|px| px[3] != 0);
-    for px in buf.chunks_exact_mut(4) {
+    let any_alpha = buf.as_chunks::<4>().0.iter().any(|px| px[3] != 0);
+    for px in buf.as_chunks_mut::<4>().0 {
         px.swap(0, 2); // B <-> R
         if !any_alpha {
             px[3] = 0xff;

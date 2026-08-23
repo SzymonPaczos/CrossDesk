@@ -52,6 +52,7 @@ from crossdesk_host.installer import credentials, settings
 from crossdesk_host.ipc.verify_coordinator import NoActiveSession, VerifyCoordinator
 from crossdesk_host.jit_mount.path_validation import (
     MountPathError,
+    default_allowed_roots,
     parent_share_path,
     validate_mount_path,
 )
@@ -571,7 +572,14 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         non-absolute, missing, denylisted, or outside ``$HOME``), in which case
         the caller falls back to the persistent scoped share. Validation reuses
         the JIT-mount choke point (:func:`validate_mount_path`): existence +
-        symlink-resolved, under ``$HOME``, not a system root."""
+        symlink-resolved, under ``$HOME``, not a system root.
+
+        SECURITY: a file sitting *directly* in ``$HOME`` (``~/notes.txt``) has
+        ``$HOME`` itself as its parent, so sharing "just the parent" would hand
+        the guest the whole home R/W — the exact exposure DEC-0019 made an
+        explicit, warned opt-in (``scope = home``), reachable here silently and
+        regardless of :attr:`shared_folder_enabled`. Such a parent is refused,
+        not shared."""
         if not file_path:
             return None
         try:
@@ -591,7 +599,34 @@ class ManagementServiceServicer(mgmt_pb2_grpc.ManagementServiceServicer):
         except Exception:
             # Defaults are fine for the share name / drive letter.
             cfg = PeripheralsConfig()
+        # parent_share_path's contract is "caller still must run
+        # validate_mount_path on the result" — the parent is a different path
+        # from the file, so it gets the same denylist / allowed-root / symlink
+        # treatment rather than inheriting the child's verdict.
         parent = parent_share_path(validated.canonical)
+        try:
+            validated_parent = validate_mount_path(str(parent))
+        except MountPathError as exc:
+            logger.info("jitlite_skip", file_path=file_path, reason=str(exc))
+            return None
+        roots = [root.resolve() for root in default_allowed_roots()]
+        if validated_parent.canonical in roots:
+            # Refuse rather than fall through to a warning: the persistent
+            # scoped share (or no share at all, when sharing is off) is the
+            # safe default, and a per-launch whole-$HOME share is precisely
+            # what DEC-0019 removed from the defaults.
+            logger.warning(
+                "jitlite_root_scope_refused",
+                file_path=file_path,
+                host_dir=str(validated_parent.canonical),
+                reason=(
+                    "sharing this file's parent would expose an entire allowed "
+                    "root (e.g. $HOME) to the guest; falling back to the "
+                    "configured share (DEC-0019)"
+                ),
+            )
+            return None
+        parent = validated_parent.canonical
         flags = [f"/drive:{cfg.shared_folder_name},{parent}"]
         workdir = f"{cfg.shared_folder_drive_letter}:\\"
         logger.info("jitlite_share", host_dir=str(parent))

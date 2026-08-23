@@ -53,6 +53,14 @@ class ValidatedMountPath:
     user-supplied string."""
 
 
+def default_allowed_roots() -> List[Path]:
+    """The roots :func:`validate_mount_path` accepts when the caller passes
+    none. Exposed so a caller that must *refuse* a share equal to a root
+    (see ``ipc/management.py`` JIT-lite) tests against the same list this
+    module validates against, instead of hardcoding its own copy."""
+    return [Path.home()]
+
+
 def validate_mount_path(
     raw: str,
     allowed_roots: Optional[List[Path]] = None,
@@ -64,7 +72,7 @@ def validate_mount_path(
         raise MountPathError(f"path must be absolute (got {raw!r})")
 
     if allowed_roots is None:
-        allowed_roots = [Path.home()]
+        allowed_roots = default_allowed_roots()
 
     # Resolve symlinks so we catch a symlink chain that points at /etc.
     candidate = Path(raw)

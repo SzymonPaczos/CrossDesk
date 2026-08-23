@@ -13,6 +13,7 @@ to have generated certs at infra/certs/pki/).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from pathlib import Path
 from typing import AsyncIterator
@@ -368,3 +369,107 @@ async def test_filesystem_rejects_fingerprint_spoof(
 
         with pytest.raises((grpc.aio.AioRpcError, asyncio.TimeoutError)):
             await asyncio.wait_for(consume(), timeout=1.5)
+
+
+# ---------------------------------------------------------------------------
+# AuthValidator bookkeeping: a closed stream must be deregistered
+#
+# `remove_stream` was called only by the control plane, so every heartbeat or
+# filesystem reconnect left a permanent nonce→sequence entry behind. The guest
+# reconnects routinely (agent re-dial, VM recovery), so the validator's map
+# grew for the lifetime of the daemon. Driven over the real wire because the
+# fix lives in a `finally` block — a unit call of the handler would not prove
+# the cleanup runs when the stream actually ends.
+# ---------------------------------------------------------------------------
+
+
+async def test_closed_heartbeat_channels_deregister_their_nonce(
+    host_server, channel_factory, smoke_auth: AuthValidator
+) -> None:
+    fp = _guest_fingerprint()
+
+    async def one_channel(channel, nonce: bytes) -> None:
+        pong_sent = asyncio.Event()
+
+        async def guest_frames() -> AsyncIterator[heartbeat_pb2.GuestFrame]:
+            await pong_sent.wait()
+            yield heartbeat_pb2.GuestFrame(
+                auth=common_pb2.AuthContext(
+                    peer_cert_fingerprint=fp, stream_nonce=nonce, sequence=1
+                ),
+                pong=heartbeat_pb2.Pong(sequence=1),
+            )
+
+        stub = heartbeat_pb2_grpc.HeartbeatServiceStub(channel)
+        pings = 0
+        try:
+            async for hf in stub.Channel(guest_frames()):
+                if hf.WhichOneof("payload") != "ping":
+                    continue
+                pings += 1
+                if pings == 1:
+                    pong_sent.set()
+                    continue
+                # The SECOND ping proves the server consumed our pong — i.e.
+                # ran verify_auth_context and registered the nonce. Breaking on
+                # the first one would tear the stream down before any frame
+                # reached the server, and the test would pass without the
+                # cleanup it is supposed to be pinning.
+                break
+        except grpc.aio.AioRpcError:
+            pass
+
+    for i in range(3):
+        async with channel_factory(host_server) as channel:
+            await one_channel(channel, f"hb-nonce-{i}".encode())
+
+    # Give the server's finally blocks a turn to run after the client hung up.
+    for _ in range(50):
+        if not smoke_auth._active_streams:
+            break
+        await asyncio.sleep(0.02)
+
+    assert smoke_auth._active_streams == {}
+
+
+async def test_closed_filesystem_channels_deregister_their_nonce(
+    host_server,
+    channel_factory,
+    smoke_auth: AuthValidator,
+    smoke_filesystem: FilesystemServiceServicer,
+) -> None:
+    fp = _guest_fingerprint()
+    smoke_filesystem.mount_tokens["leak-share"] = _MOUNT_TOKEN
+
+    async def one_channel(channel, nonce: bytes) -> None:
+        async def frames() -> AsyncIterator[filesystem_pb2.ShareGuestFrame]:
+            yield filesystem_pb2.ShareGuestFrame(
+                auth=common_pb2.AuthContext(
+                    peer_cert_fingerprint=fp, stream_nonce=nonce, sequence=1
+                ),
+                mount_result=filesystem_pb2.MountResult(
+                    share_id="leak-share",
+                    status=filesystem_pb2.MountResult.Status.STATUS_MOUNTED,
+                    mount_token=_MOUNT_TOKEN,
+                ),
+            )
+
+        stub = filesystem_pb2_grpc.FilesystemServiceStub(channel)
+
+        async def consume() -> None:
+            async for _ in stub.ShareChannel(frames()):
+                break
+
+        with contextlib.suppress(asyncio.TimeoutError, grpc.aio.AioRpcError):
+            await asyncio.wait_for(consume(), timeout=1.0)
+
+    for i in range(3):
+        async with channel_factory(host_server) as channel:
+            await one_channel(channel, f"fs-nonce-{i}".encode())
+
+    for _ in range(50):
+        if not smoke_auth._active_streams:
+            break
+        await asyncio.sleep(0.02)
+
+    assert smoke_auth._active_streams == {}

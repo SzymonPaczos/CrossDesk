@@ -43,9 +43,17 @@ def _auth() -> common_pb2.AuthContext:
 # ---------------------------------------------------------------------------
 
 
+def _mint(servicer: FilesystemServiceServicer, share_id: str) -> None:
+    """Stand in for the trigger_mount that would have handed the guest this
+    share and its token. Frames naming a share the host never minted are
+    rejected, so a test frame has to be preceded by the mint."""
+    servicer.mount_tokens[share_id] = _TOKEN
+
+
 async def test_mount_result_status_mounted_marks_share_active(
     servicer: FilesystemServiceServicer,
 ) -> None:
+    _mint(servicer, "share-1")
     frame = filesystem_pb2.ShareGuestFrame(
         auth=_auth(),
         mount_result=filesystem_pb2.MountResult(
@@ -68,6 +76,7 @@ async def test_mount_result_failure_does_not_register_share(
         filesystem_pb2.MountResult.Status.STATUS_PERMISSION_DENIED,
         filesystem_pb2.MountResult.Status.STATUS_DEVICE_NOT_PRESENT,
     ):
+        _mint(servicer, f"share-{failed_status}")
         frame = filesystem_pb2.ShareGuestFrame(
             auth=_auth(),
             mount_result=filesystem_pb2.MountResult(
@@ -89,6 +98,7 @@ async def test_release_ack_triggers_detach_and_removes_share(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
     """ROADMAP Phase 5 happy path: ReleaseAck → libvirt detach + state cleanup."""
+    _mint(servicer, "s1")
     servicer.active_shares["s1"] = "MOUNTED"
 
     ack = filesystem_pb2.ShareGuestFrame(
@@ -101,19 +111,83 @@ async def test_release_ack_triggers_detach_and_removes_share(
     assert "s1" not in servicer.active_shares
 
 
-async def test_release_ack_for_unknown_share_still_detaches(
+async def test_release_ack_for_unknown_share_is_refused(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
-    """Defense-in-depth: if Guest reports release for a share we don't track,
-    still call detach (libvirt is idempotent for missing devices) — the
-    alternative is a stuck virtiofs device on the host."""
+    """A ReleaseAck naming a share this host never minted must NOT reach the
+    detach path.
+
+    This inverts the earlier "still detach, libvirt is idempotent" stance.
+    That reasoning bought nothing real: the production controller
+    (``LibvirtFilesystemController.detach_share``) already returns False for
+    an id outside its own ``_attached`` set, so the pass-through never
+    detached anything anyway — it only handed a guest-supplied string to the
+    device-XML builder.
+    """
     ack = filesystem_pb2.ShareGuestFrame(
         auth=_auth(),
         release_ack=filesystem_pb2.ReleaseAck(share_id="ghost", mount_token=_TOKEN),
     )
     await servicer._process_guest_frame(ack)
 
-    fs_ctl.detach_share.assert_called_once_with("ghost")
+    fs_ctl.detach_share.assert_not_called()
+
+
+async def test_release_ack_with_wrong_token_is_refused(
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock
+) -> None:
+    """Right length, right share, wrong value — the case the length-only
+    check waved through."""
+    _mint(servicer, "s1")
+    servicer.active_shares["s1"] = "MOUNTED"
+
+    ack = filesystem_pb2.ShareGuestFrame(
+        auth=_auth(),
+        release_ack=filesystem_pb2.ReleaseAck(
+            share_id="s1", mount_token=b"\xcd" * 32
+        ),
+    )
+    await servicer._process_guest_frame(ack)
+
+    fs_ctl.detach_share.assert_not_called()
+    assert servicer.active_shares == {"s1": "MOUNTED"}
+
+
+async def test_a_replayed_release_ack_does_not_detach_twice(
+    servicer: FilesystemServiceServicer, fs_ctl: MagicMock
+) -> None:
+    """The token dies with the share, so a resent (or captured) ReleaseAck
+    hits the unknown-share branch instead of re-driving detach."""
+    _mint(servicer, "s1")
+    servicer.active_shares["s1"] = "MOUNTED"
+    ack = filesystem_pb2.ShareGuestFrame(
+        auth=_auth(),
+        release_ack=filesystem_pb2.ReleaseAck(share_id="s1", mount_token=_TOKEN),
+    )
+
+    await servicer._process_guest_frame(ack)
+    await servicer._process_guest_frame(ack)
+
+    fs_ctl.detach_share.assert_called_once_with("s1")
+    assert "s1" not in servicer.mount_tokens
+
+
+async def test_mount_result_for_an_unminted_share_is_refused(
+    servicer: FilesystemServiceServicer,
+) -> None:
+    """State-mutating frames are authorised too, not just the detach path —
+    otherwise a guest could populate active_shares with ids of its choosing."""
+    frame = filesystem_pb2.ShareGuestFrame(
+        auth=_auth(),
+        mount_result=filesystem_pb2.MountResult(
+            share_id="not-ours",
+            status=filesystem_pb2.MountResult.Status.STATUS_MOUNTED,
+            mount_token=_TOKEN,
+        ),
+    )
+    await servicer._process_guest_frame(frame)
+
+    assert servicer.active_shares == {}
 
 
 # ---------------------------------------------------------------------------
@@ -124,6 +198,7 @@ async def test_release_ack_for_unknown_share_still_detaches(
 async def test_lock_report_does_not_mutate_state(
     servicer: FilesystemServiceServicer, fs_ctl: MagicMock
 ) -> None:
+    _mint(servicer, "s1")
     servicer.active_shares["s1"] = "MOUNTED"
 
     rep = filesystem_pb2.ShareGuestFrame(
@@ -191,6 +266,10 @@ async def test_trigger_mount_attaches_libvirt_and_queues_request(
     assert frame.WhichOneof("payload") == "mount"
     assert frame.mount.share_id == share_id
 
+    # 3. The token on the wire is the one remembered for this share — that
+    # binding is what later authorises the guest's frames about it.
+    assert servicer.mount_tokens[share_id] == frame.mount.mount_token
+
 
 async def test_trigger_mount_assigns_unique_share_ids(
     servicer: FilesystemServiceServicer,
@@ -236,6 +315,7 @@ async def test_release_ack_rejected_when_mount_token_length_invalid(
 ) -> None:
     """A malicious or buggy Guest could otherwise stamp every frame with a
     multi-MB token to balloon host memory; we drop the frame on length mismatch."""
+    _mint(servicer, "s1")
     servicer.active_shares["s1"] = "MOUNTED"
 
     ack = filesystem_pb2.ShareGuestFrame(

@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import hmac
 import logging
 import uuid
 from typing import AsyncIterator, Dict
@@ -31,6 +32,12 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
             asyncio.Queue()
         )
         self.active_shares: Dict[str, str] = {}
+        self.mount_tokens: Dict[str, bytes] = {}
+        """``share_id`` → the token minted for it in :meth:`trigger_mount`.
+
+        A frame's ``mount_token`` is compared against this, so a share the
+        host never handed out cannot be acted on. Entries are dropped when
+        the share is released."""
 
     async def ShareChannel(
         self,
@@ -115,6 +122,9 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
 
             if ack.share_id in self.active_shares:
                 del self.active_shares[ack.share_id]
+            # The token dies with the share: a replayed ReleaseAck now hits
+            # the unknown-share branch instead of re-driving detach.
+            self.mount_tokens.pop(ack.share_id, None)
 
         elif payload_type == "incident":
             inc = frame.incident
@@ -125,8 +135,21 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         else:
             logger.warning(f"Unhandled payload type: {payload_type}")
 
-    @staticmethod
-    def _token_ok(token: bytes, frame_kind: str, share_id: str) -> bool:
+    def _token_ok(self, token: bytes, frame_kind: str, share_id: str) -> bool:
+        """Authorise a guest frame against the share it names.
+
+        Three layers, cheapest first:
+
+        1. **Length.** A multi-MB ``mount_token`` on every frame would balloon
+           host memory, so a wrong length is dropped before anything else.
+        2. **Known share.** The share must be one this host minted and has not
+           released. Without it, a frame naming an arbitrary ``share_id`` could
+           drive the detach path for a device we never attached.
+        3. **Value.** The token must equal the one minted for *this* share,
+           compared with :func:`hmac.compare_digest` so a wrong guess leaks
+           nothing through timing. Length-checking alone — the previous
+           behaviour — authorised nothing at all: any 32 bytes passed.
+        """
         if len(token) != MOUNT_TOKEN_LEN:
             logger.error(
                 "[Filesystem] %s for share %s rejected: mount_token len=%d (expected %d)",
@@ -134,6 +157,22 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
                 share_id,
                 len(token),
                 MOUNT_TOKEN_LEN,
+            )
+            return False
+        expected = self.mount_tokens.get(share_id)
+        if expected is None:
+            logger.error(
+                "[Filesystem] %s rejected: unknown share %r (never minted here, "
+                "or already released)",
+                frame_kind,
+                share_id,
+            )
+            return False
+        if not hmac.compare_digest(token, expected):
+            logger.error(
+                "[Filesystem] %s for share %s rejected: mount_token mismatch",
+                frame_kind,
+                share_id,
             )
             return False
         return True
@@ -167,10 +206,11 @@ class FilesystemServiceServicer(filesystem_pb2_grpc.FilesystemServiceServicer):
         await libvirt_call(lambda: self.filesystem_ctl.attach_share(share_id, str(validated.canonical)))
         self.active_shares[share_id] = "ATTACHED"
 
-        # 32-byte random token bound to this share. Real deployments rotate
-        # via HMAC over (share_id, libvirt domain UUID) — for now any
-        # cryptographically random 32 bytes satisfy the wire contract.
+        # 32-byte random token bound to this share, remembered so guest frames
+        # naming this share can be checked against it. Real deployments rotate
+        # via HMAC over (share_id, libvirt domain UUID).
         mount_token = uuid.uuid4().bytes + uuid.uuid4().bytes
+        self.mount_tokens[share_id] = mount_token
 
         req = filesystem_pb2.MountRequest(
             share_id=share_id,

@@ -6,8 +6,10 @@ checking but constructing it raises if ``libvirt`` is not installed.
 from __future__ import annotations
 
 import logging
+import uuid as _uuid
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING, Sequence
+from xml.sax.saxutils import quoteattr
 
 from crossdesk_host.abstractions.libvirt import LibvirtController
 
@@ -15,6 +17,56 @@ if TYPE_CHECKING:
     import libvirt as _libvirt_t
 
 logger = logging.getLogger(__name__)
+
+
+def _checked_share_id(share_id: str) -> str:
+    """Boundary check for a virtiofs share tag before it reaches libvirt.
+
+    Share IDs are minted host-side as ``uuid4()`` (``ipc/filesystem.py``), but
+    the detach path is reached from a guest-supplied frame, so the value is
+    validated here rather than trusted. Canonical form only — ``urn:uuid:``,
+    braced and undashed spellings parse as UUIDs but are not what we emit, and
+    accepting them would mean the tag we attach and the tag we detach can
+    differ.
+    """
+    try:
+        parsed = _uuid.UUID(share_id)
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError(f"share_id is not a UUID: {share_id!r}") from exc
+    if str(parsed) != share_id.lower():
+        raise ValueError(f"share_id is not in canonical UUID form: {share_id!r}")
+    return share_id
+
+
+def _virtiofs_attach_xml(share_id: str, host_path: str) -> str:
+    """Device XML for a virtiofs hot-plug.
+
+    Pure so the escaping is testable without libvirt — the alternative is a
+    test that either needs a live domain or asserts against a copy of the
+    format string, which proves nothing about what actually reaches libvirt.
+
+    Attribute values are quoted rather than interpolated raw: a directory name
+    may legally contain a quote or an angle bracket, and an f-string would let
+    it close the attribute and append device XML of its own.
+    """
+    return (
+        f"<filesystem type='mount' accessmode='passthrough'>"
+        f"  <driver type='virtiofs'/>"
+        f"  <source dir={quoteattr(host_path)}/>"
+        f"  <target dir={quoteattr(_checked_share_id(share_id))}/>"
+        f"</filesystem>"
+    )
+
+
+def _virtiofs_detach_xml(share_id: str) -> str:
+    """Device XML for a virtiofs hot-unplug. libvirt matches by target tag, so
+    the share_id is all that is needed — and it arrives from a guest frame, so
+    it is checked, not trusted."""
+    return (
+        f"<filesystem type='mount'>"
+        f"  <target dir={quoteattr(_checked_share_id(share_id))}/>"
+        f"</filesystem>"
+    )
 
 
 def _with_domain_uuid(domain_xml: str, uuid: str) -> str:
@@ -251,14 +303,10 @@ class RealLibvirtController(LibvirtController):
     def attach_virtiofs(self, share_id: str, host_path: str) -> bool:
         import libvirt
 
+        # Built (and validated) before the domain lookup, so a bad share_id
+        # never reaches libvirt at all.
+        device_xml = _virtiofs_attach_xml(share_id, host_path)
         domain = self._domain()
-        device_xml = (
-            f"<filesystem type='mount' accessmode='passthrough'>"
-            f"  <driver type='virtiofs'/>"
-            f"  <source dir='{host_path}'/>"
-            f"  <target dir='{share_id}'/>"
-            f"</filesystem>"
-        )
         try:
             domain.attachDeviceFlags(
                 device_xml,
@@ -271,14 +319,8 @@ class RealLibvirtController(LibvirtController):
     def detach_virtiofs(self, share_id: str) -> bool:
         import libvirt
 
+        device_xml = _virtiofs_detach_xml(share_id)
         domain = self._domain()
-        # libvirt detach matches by target tag, so we only need the
-        # share_id to identify which device to remove.
-        device_xml = (
-            f"<filesystem type='mount'>"
-            f"  <target dir='{share_id}'/>"
-            f"</filesystem>"
-        )
         try:
             domain.detachDeviceFlags(
                 device_xml,

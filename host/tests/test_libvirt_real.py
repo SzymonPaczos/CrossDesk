@@ -10,7 +10,14 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 
-from crossdesk_host.libvirt_ctl.real import _with_domain_uuid
+import pytest
+
+from crossdesk_host.libvirt_ctl.real import (
+    _checked_share_id,
+    _virtiofs_attach_xml,
+    _virtiofs_detach_xml,
+    _with_domain_uuid,
+)
 
 _UUID = "12345678-1234-1234-1234-1234567890ab"
 
@@ -45,3 +52,54 @@ def test_preserves_the_rest_of_the_domain() -> None:
     assert root.get("type") == "kvm"
     assert root.findtext("name") == "windows-guest"
     assert root.findtext("memory") == "4096"
+
+
+# ---------------------------------------------------------------------------
+# virtiofs device XML — the share_id boundary check
+#
+# attach/detach build a <filesystem> device by string interpolation and hand it
+# to libvirt. The detach side is reached from a guest-supplied frame, so the
+# tag is validated rather than trusted, and both attribute values are quoted.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "s1' /><disk type='file'><source file='/etc/shadow'/></disk><x a='",
+        "not-a-uuid",
+        "",
+        "urn:uuid:12345678-1234-1234-1234-1234567890ab",
+        "{12345678-1234-1234-1234-1234567890ab}",
+        "123456781234123412341234567890ab",
+    ],
+)
+def test_share_id_that_is_not_a_canonical_uuid_is_rejected(bad: str) -> None:
+    """Both device builders refuse it, so neither libvirt call can be reached
+    with a tag the host did not mint."""
+    with pytest.raises(ValueError):
+        _checked_share_id(bad)
+    with pytest.raises(ValueError):
+        _virtiofs_attach_xml(bad, "/home/u/docs")
+    with pytest.raises(ValueError):
+        _virtiofs_detach_xml(bad)
+
+
+def test_a_canonical_uuid_passes_unchanged() -> None:
+    assert _checked_share_id(_UUID) == _UUID
+    assert ET.fromstring(_virtiofs_detach_xml(_UUID)).find("target").get("dir") == _UUID  # type: ignore[union-attr]
+
+
+def test_a_quote_in_a_shared_directory_name_cannot_close_the_attribute() -> None:
+    """A directory may legally contain a quote; raw interpolation would let it
+    terminate the source attribute and append device XML of the caller's
+    choosing. Parsed back rather than string-matched, so the assertion is
+    'this is one <filesystem> element with that literal dir', not 'the escape
+    looks how I expected'."""
+    hostile = "/home/u/we're '/><disk type='file'><source file='/etc/shadow'/><x y='"
+    root = ET.fromstring(_virtiofs_attach_xml(_UUID, hostile))
+    assert root.tag == "filesystem"
+    assert root.find("source") is not None
+    assert root.find("source").get("dir") == hostile  # type: ignore[union-attr]
+    # No smuggled sibling survived the quoting.
+    assert [child.tag for child in root] == ["driver", "source", "target"]

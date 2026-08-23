@@ -35,7 +35,28 @@ zsynchronizowane (`toolkit_version 2026.08.06` w `.claude/toolkit.lock`),
 ale **praca po stronie projektu została celowo zostawiona Tobie** — dotyka
 plików, które należą do projektu, nie do toolkitu.
 
-### 1. P0 — gate `pre-push` sprawdza working tree zamiast pushowanego commita
+### 1. ✅ ZROBIONE `a6efb19` (2026-08-24) — P0 gate `pre-push` sprawdzał working tree
+
+Naprawione zgodnie z wzorcem A1: zakres z refów na **stdin** (nowa gałąź →
+`--not --remotes`; usunięcie gałęzi → pomijane), skany treści czytają
+**detached worktree pushowanego commita** (0,23 s na tym drzewie), advisory
+pipeline TODO w `{ ...; } || true` (antywzorzec A2). Przy okazji: sekcje
+`cargo audit`/`cargo deny` dostały gard `[ -d ]` — `(cd missing/ && cargo audit)`
+padał na `cd`, a `||` raportował to jako „znaleziono podatności".
+
+**Dowód** (kanoniczny `test-gates.sh` niewykonalny — toolkit nieobecny na boxie,
+patrz `[P2] Krok 5 audytu`): własny sentinel w `host/tests/test_pre_push_hook.py`
+— 3 nowe testy A1 **padają na starym hooku** (sekret zacommitowany i cofnięty
+tylko w working tree przechodzi), przechodzą na nowym; 3 istniejące testy
+przechodzą na obu (izolacja defektu). Plus 2 testy przypadków brzegowych
+(push nowej gałęzi, usunięcie gałęzi). Razem 8/8.
+
+**ZOSTAJE** (świadomie poza zakresem, do rozważenia): (a) push wielu refów naraz
+skanuje pierwszy ref; (b) bramki toolchainowe (ruff/mypy/pytest/cargo/zizmor)
+nadal biegną na checkoutcie, bo potrzebują nietrackowanego `.venv` i `target/` —
+brudne drzewo drukuje teraz ostrzeżenie zamiast milczeć. Oryginalny opis:
+
+<details><summary>diagnoza</summary>
 
 Dotyczy tego repo: `.githooks/pre-push` nie czyta refów ze stdin i nie
 odtwarza pushowanego commita — sprawdza working tree.
@@ -59,6 +80,7 @@ kolejne warstwy nie wykonują się, a wynik wygląda na czysty. Opis obu:
 **Dowód wymagany do zamknięcia:**
 `bash <toolkit>/templates/test-gates.sh .githooks/pre-push` → 6/6.
 Samo „przechodzi na zdrowym repo" nie jest dowodem, że gate blokuje.
+</details>
 
 ### 2. Kopie do ręcznego scalenia
 

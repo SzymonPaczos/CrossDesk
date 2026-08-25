@@ -79,6 +79,25 @@ Uwaga zachowana świadomie: **czyste wyłączenie gościa NIE jest wskrzeszane**
   → mount widoczny → Save dialog. Bez tego #3 nie ruszy.
 - **M5 burn-in** — ≥2 Windows × cykle, żeby złapać flaki.
 
+### ⚠️ Odkryte 2026-08-25 — dwa P0 bezpieczeństwa NIE są zamknięte
+
+Ocena stanu (2026-08-25) znalazła **drugi audyt** (2026-08-22) na niezmergowanej
+gałęzi `origin/chore/audit-toolkit-2026-08-20`, którego audyt 08-23 nie widział
+(zakres `2026-07-22..HEAD` **na main**). Dwie z trzech jego pozycji P0 są nadal
+otwarte w kodzie — sprawdzone w plikach, nie przyjęte na słowo:
+
+- **denylist JIT nie obejmuje `~/.config/crossdesk` ani `~/.local/state/crossdesk`**
+  (`jit_mount/path_validation.py:34`) — przy opt-in scope `home` gość dostaje R/W
+  do klucza mTLS hosta, hasła VM i `steady-state.xml`;
+- **`finalize_steady_state` czyta `steady-state.xml` z dysku** i podaje do
+  `defineXML` (`installer/steady_state.py:107`) — czyli plik zapisywalny przez
+  gościa (patrz wyżej) jest wejściem do definicji domeny; brak testu integralności.
+
+Oba są **przed** kryterium #3 (live-verify FS Stage B), nie po nim. Kolejka
+naprawcza + reszta drogi do v0.1.0: [`loop-spec.md`](.claude/loop-spec.md)
+„Queue — ACTIVE (2026-08-25)" — Faza D (rekonsyliacja) → E (guest-side #3
++ jedna destrukcyjna reinstalacja zamykająca #3 i #11) → F (#5 eyeball, M5, #12).
+
 ## LATER (post-MVP — NIE blokuje v0.1.0)
 
 Pełna lista w [`backlog.md`](.claude/backlog.md). Skrót: GPU passthrough ·

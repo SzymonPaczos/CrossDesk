@@ -69,7 +69,85 @@ framing) into `needs-owner.md`, mark the item ⏸, take the next one. Boundary f
 `ROADMAP.md` · `AGENTS.md`. `.github/**` is **no longer** boundary (greenlit
 2026-07-14) — but it is security code: gate it with `zizmor` and say so in `Gates:`.
 
-## Queue — v0.1.0 (ordered; work it top-down)
+## Queue — ACTIVE (set 2026-08-25, owner-signed)
+
+The R1-R4 remediation queue from the 2026-08-23 audit is **drained** (`a6efb19`
+closed it). This queue replaces it. The Phase A / B / C sections further down are
+**historical** — kept for the reasoning they carry, not as work.
+
+**Why Phase D comes first.** An assessment on 2026-08-25 found the repo disagreeing
+with itself. `origin/chore/audit-toolkit-2026-08-20` carries an **entire second audit
+(2026-08-22)**, the toolkit 2026.08.21 upgrade and `.claude/templates/` — including the
+canonical `test-gates.sh` — and was never merged. The 2026-08-23 audit scoped itself to
+`2026-07-22..HEAD` **on main**, so it never saw that branch, and recorded
+"Recovery/reinstall P0 CLOSED" for a path the 08-22 audit had just re-opened. Two of
+that audit's three P0s are **still open in code**, verified in the files on 2026-08-25:
+the JIT denylist does not cover `~/.config/crossdesk` / `~/.local/state/crossdesk`
+(`path_validation.py:34`), and `finalize_steady_state` feeds `defineXML` from a file
+read off disk (`steady_state.py:107`) with no integrity test. Nothing else should be
+stacked on top of that. Second-order lesson for the audit skill: an audit scoped to one
+branch's diff cannot see work parked on another, and will report the gap as absent.
+
+**Owner decisions carried into this queue (2026-08-25):** selective triage of the audit
+branch, not a blind merge · the destructive reinstall is authorized **after** D and
+E1-E3, and closes #3 and #11 in one run · **no `v0.1.0-alpha` tag yet** — that is the
+beta go/no-go, revisited after burn-in, so #12 stays parked.
+
+### Phase D — reconciliation (deterministic, no VM)
+
+- **D1 · triage `origin/chore/audit-toolkit-2026-08-20`.** Three items in this order,
+  never one merge: **(a)** `.gitleaksignore` + the `pre-push-allow-secret` marker,
+  reconciled with the hook `a6efb19` rewrote — this also un-reds `main`, whose Monday
+  scheduled scan (run `32701702919`) fails on that branch's fixture; **(b)** the toolkit
+  2026.08.21 rules + `.claude/templates/` + the `audyt-naprawczy` skill; **(c)** the
+  2026-08-22 findings into `backlog.md`, deduplicated against what R1-R4 already fixed.
+  **Proof required:** `bash .claude/templates/test-gates.sh .githooks/pre-push` -> 6/6
+  (runnable once (b) lands) **and** the 8 R4 sentinels still green. Closes the R4
+  evidence gap and the DEGRADED audit steps 00/05 in the same pass.
+- **D2 · P0 · JIT denylist.** Add `~/.config/crossdesk` and `~/.local/state/crossdesk`
+  to `_DEFAULT_DENYLIST`. Sentinel: with `scope = home` opted in both paths are refused,
+  while a normal `~/Documents` share still passes.
+- **D3 · P0 · steady-state integrity.** Rebuild the domain XML from `DomainSpec`
+  in-process instead of reading `steady-state.xml` — variant (b) of the 08-22 write-up:
+  no file, nothing to tamper with. Test: a tampered file on disk cannot influence what
+  `defineXML` receives.
+- **D4 · P1 · `_active_streams` ceiling.** R3 fixed the leak, not the bound. Cap +
+  eviction + a saturation test.
+- **D5 · SEC-01 closed by evidence.** The Monday run proves `gitleaks-action` v3 is
+  **fail-closed** — it blocked on a real hit. Record that against SEC-01 instead of
+  building the synthetic canary. No code change.
+
+### Phase E — criterion #3, the only criterion still needing code
+
+- **E1** fetch virtio-win + the WinFsp MSI with pinned sha256, mirroring
+  `iso_downloader`'s cache contract; hermetic test, no network in CI.
+- **E2** `tools.iso` carries the MSI + the viofs driver; `autounattend` installs them
+  (`msiexec /qn`, `pnputil`, `sc config VirtioFsSvc start=auto`).
+- **E3** the install path sets `persistent_shares` when sharing is on, so the domain has
+  memfd backing **from first boot**. The running domain does not — that is why the
+  2026-07-25 hotplug attempt failed with `'virtiofs' requires shared memory`.
+- **E4 · destructive, owner-authorized 2026-08-25** — reinstall with sharing on -> the
+  tag mounts in the guest -> a Windows Save dialog lands in the Linux folder. Screenshot
+  to `/tmp/cd-evidence/` and **park to Eyeball**; the loop does not self-certify it.
+  **The same run is criterion #11's real README pass.** Step 0 safety net still holds:
+  the 32 GB backup is already outside the state dir (`~/crossdesk-backups/`, verified
+  2026-08-25, 106 GB free).
+
+### Phase F — closing
+
+- **F1 · #5** suspend/resume — nothing left to build; the 5-minute owner runbook lives
+  in `needs-owner.md`. Owner-gated.
+- **F2 · M5** burn-in — at least 2 Windows x cycles, on the guest E4 leaves behind.
+- **F3 · #12** packaging — parked until the owner tags a release: no tag, no tarball,
+  and no `makepkg` on this Ubuntu box.
+
+**Deliberately not in this queue** (recorded, not started): the launch metric that
+measures 0.3% of what criterion #2 promises · the guest's missing re-dial loop after a
+daemon restart · the otel duplicate tonic/prost stack · 17 dependabot branches, 3 of
+them build-breaking migrations · 7 May-era `ratunek/stash-*` · `SECURITY.md` · the
+Python lockfile direction. All are P1/P2 debt in `backlog.md`; none gates a criterion.
+
+## Queue — historical (Phases A / B / C; drained, kept for the reasoning)
 
 Phase A is deterministic code. Phase B is the one sanctioned destructive cycle.
 Phase C is live work on the guest Phase B leaves behind. **Do not start Phase B
@@ -171,7 +249,7 @@ domain raises). A clean guest shutdown is deliberately NOT resurrected.
 - **✅ C2 · #2** `launch notepad` → native window — DONE `472b0e8` (live p50 2.748 s vs 3 s).
 - **✅ C3 · #8** microbench vs the baselines — DONE `7ee8b60` (real ubuntu-latest baselines).
 
-**TODAY (2026-07-25) — front, owner chose "wszystko z reinstall" (full queue incl. destructive).**
+**[historical] 2026-07-25 front — owner chose "wszystko z reinstall" (full queue incl. destructive).**
 Order: A8 → C6 → C4 → C5 → C7 (destructive reinstall) → C8 burn-in. Bank the deterministic
 code first (A8, C6 host-side); the live items screenshot to `/tmp/cd-evidence/` and **park to
 Eyeball** — the loop does NOT self-certify a Save dialog / a native window / a frozen install.

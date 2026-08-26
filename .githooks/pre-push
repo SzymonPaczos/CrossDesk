@@ -305,10 +305,24 @@ fi
 echo "🔐 hardcoded secrets ..."
 SECRET_PATTERNS='(password|api[_-]?key|secret|token)[[:space:]]*=[[:space:]]*["'"'"'][A-Za-z0-9._\-]{8,}["'"'"']'
 SECRET_HITS=()
+# A gate that blocks secrets needs a fixture CONTAINING a fake secret to prove
+# it blocks (rules-as-gates.md §9) — .claude/templates/test-gates.sh is exactly
+# that, and it tripped this layer on its own push. Excluding the path would
+# blind the scanner to a real secret landing next to the dummy, so the
+# exemption is per LINE, and it is announced: a silent escape hatch is the same
+# failure as no gate at all (rules-as-gates.md §7).
+SECRET_ALLOW_MARKER='pre-push-allow-secret'
 for f in "${CHANGED_FILES[@]}"; do
     [ -f "$SCAN_ROOT/$f" ] || continue
     is_excluded "$f" && continue
-    if grep -E -l "$SECRET_PATTERNS" "$SCAN_ROOT/$f" >/dev/null 2>&1; then
+    hits="$(grep -nE "$SECRET_PATTERNS" "$SCAN_ROOT/$f" 2>/dev/null || true)"
+    [ -n "$hits" ] || continue
+    real="$(printf '%s\n' "$hits" | grep -v "$SECRET_ALLOW_MARKER" || true)"
+    allowed_n="$(printf '%s\n' "$hits" | grep -c "$SECRET_ALLOW_MARKER" || true)"
+    if [ "${allowed_n:-0}" -gt 0 ]; then
+        echo "   ℹ  $f: ${allowed_n} line(s) exempted by ${SECRET_ALLOW_MARKER}"
+    fi
+    if [ -n "$real" ]; then
         SECRET_HITS+=("$f")
     fi
 done

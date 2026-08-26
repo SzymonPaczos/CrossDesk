@@ -1,0 +1,15 @@
+# gitleaks silencings, as code in the repo — never in the tool's UI.
+#
+# A fingerprint is <commit>:<file>:<rule>:<line>, so an entry is pinned to ONE
+# historical snapshot. The same pattern in a new commit still blocks the push.
+
+# .claude/templates/test-gates.sh is the toolkit's fixture that PROVES the
+# secret gate blocks (rules-as-gates.md §9) — it has to contain a dummy secret
+# or it proves nothing. The value is synthetic ("ABCDEFGH12345"), was never a
+# credential, and there is nothing to rotate. It cannot be edited in place
+# either: it is a copy of a toolkit master, so a fix belongs upstream.
+# The weekly full-history scan reaches this commit even though it lives on an
+# unmerged branch, which is why the silencing belongs on main.
+# The twin dummy in the same file is handled by the per-line
+# `pre-push-allow-secret` marker in .githooks/pre-push.
+89907d16eeb2aa16dbe3e358377fefd07542c94c:.claude/templates/test-gates.sh:generic-api-key:107

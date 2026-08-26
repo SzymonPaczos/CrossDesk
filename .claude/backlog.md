@@ -54,7 +54,14 @@ przechodzą na obu (izolacja defektu). Plus 2 testy przypadków brzegowych
 **ZOSTAJE** (świadomie poza zakresem, do rozważenia): (a) push wielu refów naraz
 skanuje pierwszy ref; (b) bramki toolchainowe (ruff/mypy/pytest/cargo/zizmor)
 nadal biegną na checkoutcie, bo potrzebują nietrackowanego `.venv` i `target/` —
-brudne drzewo drukuje teraz ostrzeżenie zamiast milczeć. Oryginalny opis:
+brudne drzewo drukuje teraz ostrzeżenie zamiast milczeć; **(c) [P2, odkryte
+2026-08-26 przy D1(a)] resztka A1 w warstwach advisory** — `console.log` i
+`print()` (`.githooks/pre-push:342` i `:359`) gardują na `[ -f "$f" ]`, czyli na
+**checkoutcie dewelopera**, a grepują `$SCAN_ROOT/$f`, czyli pushowany commit.
+Plik obecny w commicie, a nieobecny na dysku, jest w tych dwóch warstwach
+pomijany. Warstwa blokująca (sekrety, `:316`) i TODO (`:392`) robią to poprawnie.
+Tylko WARN, więc nie bramkuje merge'a — ale to ta sama klasa błędu co A1.
+Oryginalny opis:
 
 <details><summary>diagnoza</summary>
 

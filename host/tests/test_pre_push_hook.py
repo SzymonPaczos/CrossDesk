@@ -229,3 +229,44 @@ def test_branch_deletion_is_not_scanned(repo: Path) -> None:
     )
 
     assert result.returncode == 0, result.stdout
+
+
+# ---------------------------------------------------------------------------
+# The per-line `pre-push-allow-secret` marker (.claude/rules/rules-as-gates.md
+# §9): a gate proving it blocks needs a fixture containing a dummy secret, and
+# that fixture tripped this very layer. The exemption must stay per LINE —
+# excluding the path would blind the scanner to a real secret sitting next to
+# the dummy, which is the failure mode the marker exists to avoid.
+# ---------------------------------------------------------------------------
+
+
+def test_marked_line_does_not_block_and_is_announced(repo: Path) -> None:
+    _commit_file(
+        repo,
+        "gate-probe.sh",
+        f'api_key = "{FAKE_SECRET}"  # pre-push-allow-secret: gate fixture\n',
+    )
+
+    result = _run_hook(repo, _push_line(repo))
+
+    assert result.returncode == 0, result.stdout
+    assert "potential hardcoded secrets" not in result.stdout
+    # Loud, not silent: an unannounced escape hatch is the same failure as no
+    # gate (rules-as-gates.md §7).
+    assert "pre-push-allow-secret" in result.stdout
+
+
+def test_unmarked_secret_beside_a_marked_one_still_blocks(repo: Path) -> None:
+    """Per-line, not per-file — the point of the whole design."""
+    _commit_file(
+        repo,
+        "gate-probe.sh",
+        f'api_key = "{FAKE_SECRET}"  # pre-push-allow-secret: gate fixture\n'
+        f'password = "{FAKE_SECRET}"\n',
+    )
+
+    result = _run_hook(repo, _push_line(repo))
+
+    assert result.returncode != 0, result.stdout
+    assert "potential hardcoded secrets" in result.stdout
+    assert "gate-probe.sh" in result.stdout

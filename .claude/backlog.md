@@ -143,7 +143,21 @@ gdy priorytet jest niejasny (reguła „zapisz najpierw" w rules/general.md,
 adopcja 2026-07-12). Praca v0.1.0 → PLAN.md, nie tu. Najpierw deduplikuj.
 Zapis ≠ zgoda na implementację. Pusto = nic nieoczekującego. -->
 
-_(pusto)_
+### Audit 2026-09-05 — deduplicated remediation intake
+
+- **[P1 A0905-01; unmerged SEC-01] Deliver the DEC-0019 home-share warning.** Production logging replaces `warning=home_warning` with `<redacted>` (`management.py:541`, `redaction.py:176-188`). Reproduced using the actual logging pipeline. Test user-visible delivery before sharing without weakening secret redaction.
+- **[P1 A0905-02; loop D4 / unmerged SEC-02 / residual F-2] Bind a bounded nonce to each RPC and guarantee cleanup on every exit.** Changed nonces are accepted per frame, only the first is cleaned, and a failed ShareChannel consumer skips cleanup (`auth.py:80-105`, `filesystem.py:57-88`). Tiny synthetic checks reproduced retention after nonce rotation and error termination. Include replay-state ownership across streams and cancellation in regression tests. Ordinary-disconnect fix `e5d672b` remains valid but incomplete.
+- **[P1 A0905-03; unmerged SEC-03] Bound session-owned window state.** Guest CREATED/ICON_CHANGED events retain unchecked title/icon bytes and unlimited HWND entries before icon-store validation (`rail_manager.py:103-112`, control dispatch :239-240). Bound count/bytes and reclaim on disconnect; test through the control boundary.
+- **[P1 A0905-04; extends TOP A1] Make pre-push fail closed on diff/materialisation errors.** Process-substitution failure (`git diff` with missing base) becomes empty changes and exit 0; failed worktree creation falls back to checkout. Add fault-injection regression tests. Existing multi-ref and advisory-checkout gaps remain tracked in TOP.
+- **[P1 A0905-05] Preserve scanner status and accurate audit metrics.** `audit.sh` reports Bandit 0 despite one MEDIUM result, counts venv test files, picks the second audit header as previous, and discards scanner exit statuses. Keep machine-readable outputs, explicit failed/n-a statuses and parser fault tests. Current CI Bandit/Semgrep are advisory via `|| true`; record baseline before considering blocking gates.
+- **[P1 A0905-06; owner decision] Reconcile supported Python floor with tested/runtime dependencies.** `requires-python >=3.9` admits an upstream-EOL runtime; local Python is 3.14, CI only 3.12. Python 3.9 EOL is 2025-10-31 per https://devguide.python.org/versions/. This is a support-contract problem, not evidence the running daemon uses 3.9. Propose 3.12 minimum with documented migration; owner decides public compatibility change.
+- **[P2 A0905-07] Complete test-quality baseline gaps.** Add producer/error-pair inventory, skip observers, remaining gate meta-tests, deterministic-wait cleanup, parser-enumeration anchors and measured mutation pilot. Existing real-wire security tests, path/version PBT and libvirt isolation remain useful; audit report has per-property evidence. No arbitrary mutation/coverage threshold.
+- **[P2 A0905-08; owner decision] Document/enforce server-side merge gates consistently with local-only review.** GitHub main rules endpoint returned `[]`; local hooks exist but are bypassable and Actions runs after push. Decide required checks/ruleset without silently introducing mandatory PRs. First-party action pinning and disclosure channel remain existing owner items.
+
+- **[P1 A0905-09; extends Python lockfile/environment debt] Refresh and reproduce the host environment.** Local SCA reports seven unique advisory IDs across `cryptography 48.0.0`, `pip 26.1.1`, and `setuptools 82.0.1` (duplicate records removed). Current source requires `cryptography>=49.0.0`, while installed distribution metadata still lets `pip check` pass. Recreate/install from current source, select patched versions using current advisories, then rerun SCA and tests; distinguish runtime library from installation tools and assess reachable APIs. Full IDs and limits in audit-log.
+
+Triage correction: D2/D3 hardening remains queued, but an ancestor whole-home share cannot be filtered by validating child launch paths. Both independent reviews found no separate P0 entry path to `steady-state.xml` after the root-home JIT fix; explicit home R/W already accepts host-user compromise. Do not mark extra hardening as a proven default-scope VM escape.
+
 
 ---
 

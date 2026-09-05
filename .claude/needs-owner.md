@@ -6,6 +6,30 @@ correctness needs human eyes. **Review in batches**, decide, and the loop
 resumes. Resolving one = either you author the boundary edit, or you reply
 "apply" and the loop applies the drafted text below for your final sign-off.
 
+## Audit 2026-09-05 — current decision batch
+
+- **Python support floor (A0905-06):** recommend Python **3.12+**, matching CI,
+  rather than continuing the declared 3.9 floor (upstream EOL 2025-10-31).
+  Local runtime is 3.14; this is a compatibility/documentation decision, not
+  an assertion that the running daemon is on an unsupported interpreter.
+  After approval, update packaging/runtime requirements and the relevant
+  user-owned documentation together; verify installation and tests.
+- **Server-side gate policy (A0905-08):** GitHub reports no effective main
+  rules. Local hooks remain real gates, but a failed diff can skip them and
+  CI is post-push. Choose explicit acceptance of the current local-first
+  risk or required checks/ruleset compatible with the no-PR workflow.
+  Existing first-party SHA-pinning and WARN-to-blocking choices are still
+  open; they are not implicitly resolved by toolkit adoption.
+- **Existing release decisions remain parked:** tag/go-no-go after burn-in,
+  Arch packaging environment, public disclosure contact and package domain;
+  app-discovery/proto and future GPU/peripheral threat boundaries need their
+  own design decisions. Do not re-ask signing-for-beta, documents default,
+  localhost RDP policy or the already authorized staged reinstall.
+
+These decisions do not prevent read-only audit completion or preparation of
+ordinary nonce/window/warning/gate corrections. Security-policy changes still
+follow the boundary rules in AGENTS.md.
+
 ## Decided this session (2026-06-29) — drafts ready below
 
 - [x] **FS exposure default = whole `$HOME` R/W.** Owner confirmed

@@ -2,6 +2,224 @@
 
 Newest audit first. Format: each run dopisuje sekcję `## Audyt YYYY-MM-DD` na górę.
 
+## Audyt 2026-09-05
+
+**Verdict: FAIL — confirmed security/reliability defects and vulnerable local
+Python dependencies.** No new independently demonstrated P0 VM escape. This
+is an audit report, not a repair or release approval.
+
+```text
+AUDITED_REVISION: 8c173e01b57f4edcbec661df7003dc24767ace01
+BRANCH: chore/audit-toolkit-current (based on chore/toolkit-update)
+TOOLKIT_VERSION: 2026.09.05; check PASS; one declared CrossDesk specialization
+DIFF_RANGE_OR_SCOPE: 3205027..8c173e0 (28 commits, 11 merges), plus current
+ guest-to-host invariants, test baseline, delivery controls and unmerged
+ origin/chore/audit-toolkit-2026-08-20 findings; no blind merge
+PREVIOUS_AUDIT: 2026-08-23, 3205027122b599f84a982d7185658e91d604a9ae (13 days)
+THREAT_MODEL_VERSION: ddbd34d97ef0fbcc728897d8bf3c65a534b09417; DEC-0019
+SECURITY_REVIEW: FAIL — independent security_current, exact SHA above
+RED_TEAM: FINDINGS — independent redteam_current, exact SHA above
+DOCS_SOURCE: official Python devguide, cryptography changelog and maintainer
+ advisory through web browsing; installed versions measured from local tools
+DEPENDENCY_CURRENCY: REPORT — vulnerable/stale installed Python environment;
+ declared Python 3.9 floor is upstream EOL, actual runtime is supported 3.14
+SAST: Bandit 1 MEDIUM scanner finding (not a proven exploit); zizmor 3 INFO;
+ Semgrep/CodeQL not installed locally, prior CI evidence explicitly separate
+CODE_HEALTH_DELTA: n/a (no delta tooling); manual full-diff and invariant review
+BACKLOG_WRITE: A0905-01..09 recorded/deduplicated; owner batch in needs-owner.md
+EXCLUSIONS_OR_NA: no live KVM/Windows, suspend, reinstall, release/packaging,
+ restore drill or stress/OOM test; no fresh local buf/qmllint/gitleaks/CodeQL/
+ Semgrep; GUI test run timed out in earlier attempt (not counted as PASS)
+```
+
+### Measured checks and evidence provenance
+
+| Check | Result / interpretation |
+|---|---|
+| Toolkit preflight + contrib | PASS; local audit file delegates to complete master skill, so contrib's heading difference is not a missing checklist |
+| `bash .claude/audit.sh` at audited SHA | Exit 0; raw counters are unreliable in several fields, corrected below; not accepted alone as scanner-success evidence |
+| `cd host && .venv/bin/pytest -q --cov=crossdesk_host --cov-report=term --cov-report=json:... -ra` | **1087 passed, 3 skipped, 29 warnings, 58.50 s**; **5714/7134 statements = 80.0953%**; configured floor 75% passes |
+| Skip inventory | 1 needs xorriso; 2 destructive libvirt tests require explicit opt-in; no live domain was touched |
+| `ruff check src/ tests/` / `mypy --strict src/` | PASS; 0 findings / 126 source files |
+| Guest check, host tests, Windows-target clippy | Earlier same-day direct commands exit 0; guest runner summed **37 passing tests**. `git diff --quiet d56108c HEAD -- host guest gui proto infra .github .githooks` proves identical inputs; results reused, not represented as new runs |
+| GUI check/clippy | Direct same-day checks pass on identical source; GUI tests timed out, not passed |
+| Rust dependency scans | Direct fresh `cargo audit --deny warnings` / `cargo deny check --hide-inclusion-graph`: exit 0 both workspaces; 274 guest / 106 GUI packages; deny has **24 / 2 duplicate warnings**, not vulnerabilities |
+| Python dependency scan | Fresh isolated pip-audit scanner, `--path host/.venv/lib/python3.14/site-packages`: exit 1 with **7 unique advisory IDs across 3 packages**; repeated IDs deduplicated. Editable crossdesk-host not on PyPI, skipped explicitly |
+| `bandit -c host/pyproject.toml -ll -r host/src -f json` | Exit 1: **B314 MEDIUM**, `libvirt_ctl/real.py:80` XML parse. Input path reviewed; no independent malicious XML entry beyond already accepted whole-home write demonstrated |
+| `zizmor --format json .github/workflows` | 3 Informational results (2 template expressions, 1 action-style finding), no blocking findings under project policy; first-party tag exception still owner-pending |
+| Gate regression evidence | Current canonical template: **6/6**; existing pre-push tests pass (same-day adoption evidence). Those tests do not cover the missing-base/worktree-error paths found here |
+| Negative verification | In an isolated `git archive HEAD host` tree, `test_release_ack_with_wrong_token_is_refused` exits 0 on fixed code, exits 1 after disabling only the token comparison. Working source untouched |
+| Provenance | All 17 non-merge commits in the reviewed range contain Intent/Task-Ref/Gates; no AI attribution trailer introduced |
+
+Commands and raw evidence: `/tmp/crossdesk-audit-current/` (current static,
+coverage JSON/test log, pip-audit JSON, pip-check, tiny boundary checks,
+fixed/mutated sentinel logs); `/tmp/crossdesk-audit-2026-09-05/` (same-day
+unchanged-input Rust/SAST evidence); `/tmp/crossdesk-toolkit-update/` (gate
+checks). Tool versions measured: Python 3.14.4, ruff 0.15.15, mypy 2.1.0,
+cargo 1.98.0, zizmor 1.27.0. Reproduction summaries below are retained here
+because temporary evidence directories are not permanent archives.
+
+**CI is separate evidence:** latest hosted Security audit succeeded
+[2026-08-31 on d56108c](https://github.com/SzymonPaczos/CrossDesk/actions/runs/33399559497);
+CI succeeded [2026-08-26 on d56108c](https://github.com/SzymonPaczos/CrossDesk/actions/runs/32956833921).
+There is no hosted run for this unpushed audit SHA. CodeQL, Semgrep, gitleaks
+and Rust/Python scanner jobs succeeded then; Semgrep/Bandit commands use
+`|| true`, so job success is not a zero-findings assertion.
+
+### Findings and remediation order
+
+1. **P1 A0905-09 — stale/vulnerable installed Python environment.**
+   `cryptography 48.0.0` is installed; source requires `>=49.0.0`, installed
+   crossdesk-host metadata still says `>=41.0`. Thus `pip check` misleadingly
+   passes against stale installed metadata. pip-audit reports four unique
+   cryptography advisories: `PYSEC-2026-3554`, `PYSEC-2026-3553`,
+   `PYSEC-2026-3552`, `GHSA-537c-gmf6-5ccf`; two for pip 26.1.1:
+   `PYSEC-2026-196`, `PYSEC-2026-3721`; one for setuptools 82.0.1:
+   `PYSEC-2026-3447`. Runtime-library findings and installation-tool findings
+   are different exposure surfaces. Do not claim reachable exploitation of
+   every advisory: CrossDesk does not call all affected APIs. Recreate from
+   current source, select patched dependencies and rerun SCA/tests. The
+   [maintainer changelog](https://cryptography.io/en/latest/changelog/)
+   identifies security fixes through 50.0.0; the
+   [wheel OpenSSL advisory](https://github.com/pyca/cryptography/security/advisories/GHSA-537c-gmf6-5ccf)
+   distinguishes upstream wheels from source builds.
+2. **P1 A0905-01 — home-sharing warning is erased.** `management.py:541`
+   logs `warning=home_warning`; `redaction.py:176-188` drops its field/text.
+   Actual configured logger + `PeripheralsConfig(... scope='home')` emitted
+   `warning: <redacted>` in a tiny standalone process. The only production
+   consumer does not deliver the warning elsewhere. Restore user-visible
+   disclosure required by DEC-0019 without weakening secret redaction.
+3. **P1 A0905-02 — unbounded nonce state and incomplete teardown.**
+   `auth.py:80-105` treats each new nonce as a fresh sequence. Channels retain
+   only the first for teardown. Coordinator's two 16-byte nonces in one
+   fingerprint-valid context left one entry after first-nonce removal;
+   independent Red Team's three-nonce case left two. A valid ShareChannel
+   frame followed by fingerprint rejection leaves one entry because awaiting
+   the failed consumer at `filesystem.py:83` bypasses cleanup at :88.
+   Bind nonce/ownership to RPC lifetime, enforce length/count bounds, guarantee
+   error/cancel cleanup. **Authenticated guest required; no mTLS bypass.**
+4. **P1 A0905-03 — unbounded guest window state.** `control.py:239-240`
+   dispatches to `rail_manager.py:103-113,230`; it retains arbitrary unique
+   HWNDs, titles and icon bytes before icon-store validation. Manager survives
+   stream close. Red Team's three tiny CREATED events retained three entries
+   and invalid PNG bytes; no memory stress test was attempted. Bound count/
+   aggregate bytes before storage and reclaim session state on disconnect.
+5. **P1 A0905-04 — pre-push can silently skip all gates.** Its `git diff`
+   process substitution (:103-109) loses the command's failure status. Red
+   Team's tiny temporary repository with a missing remote-base object emitted
+   `fatal: bad object` then exited **0**, claiming no changes. Failed worktree
+   creation (:132-138) also falls back to mutable checkout (source evidence).
+   Fail closed with fetch/retry instructions; add both fault-injection tests.
+   Existing multi-ref/advisory-path limitations remain separate residuals.
+6. **P1 A0905-05 — audit report counts can claim false success.** Current
+   raw script said Bandit 0 despite JSON MEDIUM=1; counted **254** Python
+   test files including venv instead of **97 tracked project files**; selected
+   previous audit **July 22 / 45 days** instead of **August 23 / 13 days**.
+   Scanner errors are discarded. Generated static table was replaced with
+   this corrected report; no change to audit.sh was made by this audit.
+7. **P1 A0905-06 — public Python support claim needs owner choice.**
+   `requires-python >=3.9` includes upstream-EOL Python 3.9. Official
+   [Python status](https://devguide.python.org/versions/) gives EOL
+   **2025-10-31**. Actual local 3.14 and CI 3.12 are supported; no actual EOL
+   running interpreter was found, so this is a support-contract P1 rather
+   than an asserted live-runtime P0. Recommend a 3.12 floor and aligned docs.
+8. **P2 A0905-07 — incomplete suite-quality controls**, detailed below.
+9. **P2 A0905-08 — server-side gate policy unresolved.**
+   `gh api repos/SzymonPaczos/CrossDesk/rules/branches/main` returned `[]`;
+   legacy branch protection returned 404. Local hooks are real controls,
+   but no server-required check protects main; Actions is post-push. Owner
+   should choose explicit local-first acceptance or a compatible ruleset,
+   without silently replacing the no-PR workflow.
+
+Security Reviewer rated warning/nonce/window findings HIGH; Red Team rated
+resource and gate findings MEDIUM conditional on authenticated guest/local
+ref failure. Coordinator uses **P1** for remediation ordering; severity is
+not conflated with unauthenticated reachability. Teardown is grouped with
+nonce lifecycle rather than counted twice.
+
+### Previous-report reconciliation
+
+- `1243070` root-home JIT guard and `1adf106` minted-token/XML-quoting fixes
+  are present; token sentinel above demonstrates a meaningful regression test.
+- `e5d672b` fixes ordinary close; error exits and changing nonce remain open.
+- The unmerged August 22 warning/nonce/window findings were verified and
+  deduplicated into A0905-01/02/03, not imported blindly.
+- `steady-state.xml` is writable/trusted, but both reviewers found no separate
+  default-scope entry path after the root-home fix. Explicit home R/W already
+  accepts host-user execution. Keep D2/D3 hardening, do not advertise a newly
+  proven P0; child-path denylisting cannot filter a whole ancestor share.
+- FreeRDP password argv observation lacks runtime cross-UID exposure proof;
+  same-user malicious Linux process remains out of scope. No new confirmed
+  password-exposure finding is asserted.
+- Existing guest-redial, Stage-B provisioning, end-to-end launch metric,
+  first-launch race, packaging/tag, SECURITY.md and Python lockfile tasks
+  remain open; no duplicate feature tasks added. PLAN's old TERAZ and trailing
+  summary still contradict its own completed criteria; reconcile during loop
+  preparation. Existing signed decisions are not reopened.
+
+### Test-quality baseline (new checklist, all properties assessed)
+
+`test-baseline: 1 partial(plan) 2 partial(plan) 3 partial(plan) 4 corrected
+5 pass 6 partial(plan) 7 partial(plan) 8 n/a(SQL) 9 n/a(SQL) 10 partial(plan)
+11 partial(plan) 12 partial(plan) 13 pass(sample) 14 missing(plan)`
+
+| # | Evidence / follow-up in A0905-07 |
+|---|---|
+| 1 | RPC errors are generally explicit; `management.py:534-536` silently falls back to no peripheral flags on config failure. No producer/error-state inventory |
+| 2 | Real-wire mTLS/auth failure tests and token rejection pairs exist; not a complete producer inventory |
+| 3 | Skips are named in runner output; no automated observer preventing loss of each optional lane |
+| 4 | Runner counts above; original script mixed installed-package files with project tests, corrected and filed A0905-05 |
+| 5 | Coverage floor 75 has measured 78% baseline comment; microbench measured baselines + 20% regression sentinel documented in existing work |
+| 6 | Real hook file tested; missing-base/worktree failure and audit parser failures remain uncovered |
+| 7 | Bandit skips, zizmor first-party exception and ignorefiles reviewed; expiry/review policy not systematic |
+| 8 | No shared SQL database: database-writer lane requirement n/a. Temp paths and autouse real-libvirt guard protect default suite, with explicit destructive opt-in; no live run here |
+| 9 | No SQL query variant surface: n/a; guest-driver/live-transport gaps tracked independently |
+| 10 | CI pytest has no retry mask; no fresh repeated-run flake study, plan measured baseline before flake changes |
+| 11 | FSM tests use injected clocks, but autopause/libvirt-async tests also use timed sleeps; migrate synchronization case by case |
+| 12 | Gate fixture tests assert return/output; no complete inventory/nonempty anchor for every enumerating parser |
+| 13 | Existing Hypothesis path, version parse/negotiation and EWMA properties; sampled actual fixtures; no universal coverage claim |
+| 14 | Manual token mutation pair passes; no configured/measured mutation-tool pilot. Add pilot without invented score threshold |
+
+### Deep-review coverage and limits (26-point checklist)
+
+1 security: independent reviews above; 2 producers/slop: GUI progress and
+catalog/recovery stubs explicitly listed in ignorefiles, not newly labelled
+shipped; 3 tests: baseline table; 4 architecture: PLAN/cadence/count drift;
+5 dead code: excluded known scaffolds, no speculative removals; 6 decisions:
+DEC-0019 warning broken, known home opt-in preserved; 7 toolkit/docs: current
+check PASS, official sources available; 8 gates: real-file negative evidence;
+9 supply chain: SCA and lockfile gap; 10 delivery: hosted/local policy above;
+11 provenance: trailers verified, existing no-attribution decision preserved;
+12 disclosure: existing SECURITY.md/contact task open; 13 duplicate/empty
+state: known catalog ratings/mock producer gaps remain explicitly deferred;
+14 hygiene: no stash/prunable worktree, 97 tracked host test files, no
+suspicious PII/backup filename hits outside reference vendor tree, git about
+37 MiB versus guest build cache 8.8 GiB (not repository-history bloat), old
+rescue/dependabot branches remain triage work; 15 currency: Python/SCA above;
+16 deploy: no running hosted production, release review remains separate;
+17 canonical artifact: proto is wire source, public tag/package evidence
+not yet available; 18 restore: **not exercised**, no backup restoration claim;
+19 external oracle: independent runtime/advisory sources, no civic-data
+count domain; 20 DoD: PLAN has 8 live criteria, remaining live/owner gates
+not self-certified; 21 security tools: configured vs advisory vs absent
+explicit above; 22 negative test: token pair verified in isolated tree;
+23 review: local-only project workflow preserved; 24 pipeline topology:
+read master `ci-pipeline-architecture.md` §11/11a (not copied during audit);
+25 defects: actionable reproductions/dedup recorded; 26 swallowed failures:
+audit counters and config fallback covered above, no new historical timestamp
+or identity-counter bug established.
+
+### Next decisions and execution boundary
+
+`needs-owner.md` now has a current batch: Python floor; server-gate policy;
+existing release/environment/disclosure and later wire/security decisions.
+The recommended initial repair queue is environment SCA → warning/nonce/
+window bounds → hook/audit-report integrity, then reconcile the MVP/live
+queue. This audit changes only report/backlog/decision-parking documents.
+No production patch, VM operation, release, merge or push was performed.
+
+---
+
 ## Audyt 2026-08-23
 
 **Git:** `3205027` on `main`

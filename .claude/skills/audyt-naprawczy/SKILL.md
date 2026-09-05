@@ -4,7 +4,7 @@ description: Audyt jakości projektu zakończony NAPRAWĄ — zakłada gałąź 
 compatibility: Wymaga bash i git; repozytorium musi mieć czyste drzewo robocze. Naprawy automatyczne wymagają narzędzi projektu (formatter, linter, testy) — bez nich skill degraduje się do raportu. Zaprojektowane dla agentów czytających SKILL.md (Claude Code i pokrewne).
 metadata:
   author: claude-toolkit
-  version: "2026.09.04"
+  version: "2026.09.06"
 ---
 
 # Audyt naprawczy

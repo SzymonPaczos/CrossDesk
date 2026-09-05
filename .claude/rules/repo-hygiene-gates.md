@@ -39,8 +39,17 @@ audytu albo pre-push w trybie `WARN`:
    '\.bak$|BACKUP|_b64'`.
 6. **Gałęzie do sprzątania:** `git branch --merged main` (poza chronionymi
    i żywymi worktree) + wykrycie duplikatu `master`/`main`.
+   ⚠️ **Samo `--merged` ZANIŻA listę i to jest pomiar, nie teoria.** Gałąź po
+   rebasie ma inny patch-id, więc jej treść potrafi leżeć na głównej gałęzi,
+   podczas gdy ancestry mówi co innego — Jawne Państwo 2026-08-21:
+   `fix/mandate-end-reason-label` nie był `--merged`, a identyczny commit
+   siedział na masterze jako `4cdc75c8`. Rozstrzyga `git cherry main <gałąź>`:
+   brak linii z `+` znaczy „wszystko już zastosowane". Check oparty wyłącznie
+   na ancestry generuje fałszywy alarm „praca istnieje tylko lokalnie".
 7. **Wygasłe credentiale:** `grep -riE 'Expires|EXPIRES_ON' .env*` vs
-   bieżąca data.
+   bieżąca data. Obejmij tym **kopie** (`.env*.bak*`): są gitignorowane, więc
+   gate sekretów skanujący PUSHOWANY commit nie widzi ich z definicji — tak
+   token Cloudflare przeleżał w Jawnym Państwie 43 dni po wygaśnięciu.
 8. **Wroga konfiguracja w klonowanym repo** — uruchamiany **przed** otwarciem
    cudzego repozytorium w agencie lub edytorze, nie po:
 

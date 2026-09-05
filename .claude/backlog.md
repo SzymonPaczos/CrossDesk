@@ -23,7 +23,16 @@ VirtioFS, perf, suspend/resume) **nie są już `[HW]`** — są w `PLAN.md` NEXT
 
 ---
 
-## 🔴 TOP — aktualizacja toolkitu projektowego do claude-toolkit 2026.08.06
+## Toolkit adoption — superseded by 2026.09.05
+
+**2026-09-05:** adopted the current local master, complete audit skills and
+references, test/review conventions and gate templates; preserved the CrossDesk
+Security Reviewer specialization as a declared override (DEC-META-009).
+`toolkit-check.sh` is wired before audit scanners; canonical `test-gates.sh`
+passes 6/6 and repeated sync makes no changes. The audit itself is paused
+by owner instruction. Historical scope and remaining hook defects follow.
+
+### Historical upgrade request — 2026.08.06
 
 **Zadanie dla agenta tego projektu. Najpierw `git diff` i plan, dopiero potem
 zmiana — nie łataj w locie.** Zakres jest wystarczająco duży, żeby wymagał

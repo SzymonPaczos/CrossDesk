@@ -1,14 +1,15 @@
 # Konwencja: bezpieczny baseline CI/CD
 
 Stack-agnostic. Domyślny punkt startu dla nowych projektów na GitHubie.
-Powstał z audytu praktyk JawnePanstwo i CrossDesk oraz aktualnych zaleceń
-GitHub, npm, PyPI i uv (2026-07-11).
+Powstał z audytu praktyk dwóch projektów produkcyjnych oraz aktualnych
+zaleceń GitHub, npm, PyPI i uv (2026-07-11).
 
 > **D-007 — profil CI wybiera się per projekt, pytaniem.** Nie zakładaj ani
 > dostępności płatnego hosted CI, ani jej braku — agent przy adopcji/
 > bootstrapie PYTA właściciela: hosted CI (Actions — darmowe dla repo
 > publicznych, minuty limitowane/płatne dla prywatnych) czy **local-first**
-> (pre-push lustrzy pipeline, wzorzec `scripts/local-ci.sh` z CrossDesk;
+> (pre-push lustrzy pipeline, wzorzec `scripts/local-ci.sh` z projektu
+> prowadzonego local-first;
 > audyt pilnowany lokalnym preflightem). Odpowiedź → `decisions.md`
 > projektu. Hosted → pełny hardening z sekcji 2; local-first → zapisz,
 > które zabezpieczenia tracisz (gate'y na zmianach botów, czyste
@@ -42,7 +43,7 @@ trwałych danych albo realnej integracji, której nie potwierdza unit test.
   lockfile. Test, pre-production i produkcja promują dokładnie ten sam digest.
 - Poprzedni znany dobry artefakt pozostaje dostępny do rollbacku. Skrypty
   deploymentu i konfiguracja są wersjonowane.
-- Profile i rollout opisuje `progressive-delivery.md`.
+- Profile i rollout opisuje [`progressive-delivery.md`](progressive-delivery.md).
 
 ## 2. Supply chain GitHub Actions
 
@@ -72,6 +73,19 @@ jest w tej samej linii. Włącz `github-actions` version updates; same alerty
 bezpieczeństwa nie raportują akcji przypiętych do SHA, więc aktualizacje oraz
 okresowy audyt dependency graph są obowiązkowym uzupełnieniem.
 
+**Pinowanie do SHA przenosi na ciebie odpowiedzialność za aktualizacje
+bezpieczeństwa.** Gdy dostawca akcji zaostrza domyślne zachowanie — na
+przykład blokuje checkout kodu forka w uprzywilejowanym kontekście — repo
+przypięte do starego SHA **nie dostaje tej ochrony automatycznie**. To nie
+jest argument przeciw pinowaniu; to powód, dla którego bot aktualizacji
+przestaje być „uzupełnieniem", a staje się warunkiem koniecznym. Pinowanie
+bez automatycznych aktualizacji jest zamrożeniem znanych podatności.
+
+Pinowanie do SHA nie obejmuje też **zależności tranzytywnych** composite
+actions — akcja przypięta do SHA może wewnątrz wołać kolejne po tagu. Do czasu
+pojawienia się natywnego lockfile'a dla akcji jest to świadomie akceptowana
+dziura; zapisz ją w `decisions.md` zamiast udawać, że pin daje pełne pokrycie.
+
 ## 3. Zależności i lockfile
 
 - Commituj lockfile aplikacji (`package-lock.json`, `pnpm-lock.yaml`,
@@ -86,7 +100,11 @@ okresowy audyt dependency graph są obowiązkowym uzupełnieniem.
   Aktualizacje security nie podlegają cooldownowi. Grupuj małe aktualizacje,
   majory osobno; każde trwałe ignorowanie ma uzasadnienie w decyzjach.
 - Skrypty instalacyjne zależności są powierzchnią ataku. Wyłączaj je w jobach,
-  które ich nie potrzebują; wymagane skrypty dopuszczaj świadomie.
+  które ich nie potrzebują; wymagane skrypty dopuszczaj świadomie. Nowsze npm
+  wyłącza je domyślnie — do czasu migracji ustaw jawnie `ignore-scripts=true`
+  w `.npmrc` i trzymaj listę świadomie zatwierdzonych skryptów pod review.
+  `preinstall` wykonywany przed kodem projektu to klasyczny wektor wejścia
+  robaka; nie polegaj na tym, że „przecież tylko instalujemy zależności".
 
 ## 4. Ochrona głównej gałęzi
 
@@ -95,7 +113,12 @@ Dla każdego repo skonfiguruj minimalny ruleset:
 - blokada usuwania i force-push na `main`/`master`;
 - merge przez PR oraz wymagany status minimalnego CI;
 - opcjonalny bypass wyłącznie dla właściciela i sytuacji awaryjnej;
-- osobny tag ruleset dla tagów wydań, jeśli projekt je publikuje.
+- osobny tag ruleset dla tagów wydań, jeśli projekt je publikuje;
+- allowlista wyzwalaczy workflowów, jeśli platforma ją oferuje: kto może
+  uruchomić przebieg i które zdarzenia go uruchamiają. Tryb ewaluacyjny
+  (raport bez blokady) mapuje się wprost na krok 3
+  [`rules-as-gates.md`](rules-as-gates.md) — włącz go najpierw, policz
+  fałszywe alarmy, dopiero potem egzekwuj.
 
 Merge queue ma sens dopiero przy realnej kolejce wielu PR-ów. Nie jest
 domyślnym wymaganiem dla projektu solo.
@@ -108,14 +131,31 @@ domyślnym wymaganiem dla projektu solo.
   `id-token: write` wyłącznie jobowi, który wymienia token. Cloud trust policy
   ogranicza `aud` i `sub` do konkretnego repo oraz chronionego environment,
   taga lub refu — samo OIDC bez tych warunków nie daje least privilege.
+  **Sprawdź format `sub` przy zakładaniu repo, zanim napiszesz trust policy** —
+  format bywa różny dla starszych i nowszych repozytoriów (niezmienne
+  identyfikatory właściciela/repo), a zmiana nazwy repo potrafi unieważnić
+  politykę napisaną pod stary wzorzec.
 - Publikacja npm/PyPI używa Trusted Publishing. Po migracji usuń/revokuj
   klasyczne tokeny publikacyjne.
+- **Trusted Publishing i provenance dowodzą pochodzenia, nie nieszkodliwości.**
+  Chronią przed kradzieżą *tokena*; nie chronią przed kompromitacją *workflow*.
+  Attestation mówi „to zbudował ten workflow z tego SHA" — nie „ten build jest
+  bezpieczny". Pakiet opublikowany przez przejęty pipeline niesie **ważne**
+  provenance. Zielona weryfikacja nie kończy analizy, jeśli podmieniono sam build.
+- **Rotacja poświadczeń zakłada wrogiego obserwatora.** Złośliwa persistence
+  (LaunchAgent, systemd user unit, cron) potrafi pollować API i traktować
+  odpowiedź 40x — czyli moment odwołania tokenu — jako sygnał wyzwalający.
+  Kolejność: najpierw odetnij maszynę od sieci i przejrzyj jednostki
+  autostartu, dopiero potem revoke. Odwrotna kolejność sama uzbraja handler.
+- Job mający sekrety nie uploaduje artefaktów bez przeglądu ich zawartości i
+  nie serializuje całego kontekstu sekretów (`toJSON(secrets)`). Oba wzorce
+  są tanim kandydatem na grep w trybie raportowym.
 - Deploy na zwykły VPS, gdy OIDC nie jest dostępne, używa osobnego klucza
   per projekt i użytkownika bez uprawnień administracyjnych. Ogranicz klucz
   w `authorized_keys` (`command=`, `no-pty`, bez forwardingów) albo wybierz
   model pull-based.
 - Sekrety deployu żyją w chronionym GitHub Environment ograniczonym do tagów
-  wydań. Produkcję obowiązuje `production-operations.md`.
+  wydań. Produkcję obowiązuje [`production-operations.md`](production-operations.md).
 
 ## 6. Release i pochodzenie artefaktów
 
@@ -141,8 +181,9 @@ domyślnym wymaganiem dla projektu solo.
 ## 7. Agenty i AI w CI
 
 - Review AI jest domyślnie **advisory**. W zespole opisanym w
-  `multi-agent-delivery.md` niezależny Reviewer może być wymaganym proceduralnym
-  sign-offem, ale nigdy jedynym gate'em i nigdy nie nadpisuje czerwonego CI.
+  [`multi-agent-delivery.md`](multi-agent-delivery.md) niezależny Reviewer może
+  być wymaganym proceduralnym sign-offem, ale nigdy jedynym gate'em i nigdy nie
+  nadpisuje czerwonego CI.
 - Workflow wyzwalany tekstem PR/issue nie może jednocześnie mieć sekretów lub
   write permissions. Treść użytkownika jest niezaufanym inputem i może
   zawierać prompt injection.
@@ -165,7 +206,8 @@ ma dobry use-case, ale nie jest kosztem bazowym każdego nowego repo.
 - **Pojedynczy VPS:** powyższe + pre-production na drugim porcie/kontenerze,
   smoke, atomowe przełączenie, bake condition, poprzedni digest i rollback.
 - **Wiele instancji:** powyższe + canary/control, rollout falami i automatyczny
-  rollback z telemetryki. Szczegóły: `progressive-delivery.md`.
+  rollback z telemetryki. Szczegóły:
+  [`progressive-delivery.md`](progressive-delivery.md).
 
 ## 10. Vulnerability response
 
@@ -177,16 +219,22 @@ sam skaner zależności nie jest procesem response.
 
 ## Źródła referencyjne
 
-- GitHub: [Secure use reference](https://docs.github.com/en/actions/reference/security/secure-use)
+- GitHub: [Secure use
+  reference](https://docs.github.com/en/actions/reference/security/secure-use)
 - GitHub: [OIDC hardening](https://docs.github.com/en/actions/reference/security/oidc)
-- GitHub: [Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets)
-- GitHub: [Artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations)
-- GitHub: [Immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
-- GitHub: [Dependabot cooldown](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#cooldown)
+- GitHub:
+  [Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets)
+- GitHub: [Artifact
+  attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations)
+- GitHub: [Immutable
+  releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
+- GitHub: [Dependabot
+  cooldown](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#cooldown)
 - PyPI: [Trusted Publishers](https://docs.pypi.org/trusted-publishers/)
 - npm: [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 - uv: [Locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
 - DORA: [Continuous delivery](https://dora.dev/capabilities/continuous-delivery/)
-- NIST: [Secure Software Development Framework 1.1](https://csrc.nist.gov/pubs/sp/800/218/final)
+- NIST: [Secure Software Development Framework
+  1.1](https://csrc.nist.gov/pubs/sp/800/218/final)
 - SLSA: [Build track basics](https://slsa.dev/spec/v1.2/build-track-basics)
 - SLSA: [Verifying artifacts](https://slsa.dev/spec/v1.2/verifying-artifacts)

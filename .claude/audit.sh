@@ -21,6 +21,9 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Do not produce a fresh audit header using an outdated checklist.
+bash "$REPO_ROOT/.claude/toolkit-check.sh" || exit $?
+
 # Python tooling (ruff/mypy/pytest/bandit) lives in host/.venv, not on
 # PATH — without this the whole Python section reported "n/a" (audit
 # 2026-06-12). Same venv-first convention as .githooks/pre-commit.

@@ -46,7 +46,7 @@ Gates: bash scripts/validate-toolkit.sh (pass)
 ### Udział AI — celowo NIEoznaczany (decyzja D-006, 2026-07-11)
 
 Właściciel na tym etapie **nie chce** atrybucji AI w historii commitów
-(spójnie z rewrite'em historii CrossDesk 2026-07-07, który usunął stopki
+(spójnie z rewrite'em historii jednego z projektów, 2026-07-07, który usunął stopki
 `Co-Authored-By`). Dlatego:
 
 - pola `AI-Contribution` ani stopki `Co-Authored-By` **nie dodaje się** do
@@ -80,7 +80,7 @@ jest poufna, użyj bezpiecznego identyfikatora wewnętrznego i minimalnego opisu
 
 ## 5. Egzekwowanie bez blokowania pracy
 
-Wdrażaj etapami zgodnie z `rules-as-gates.md`:
+Wdrażaj etapami zgodnie z [`rules-as-gates.md`](rules-as-gates.md):
 
 1. Dodaj poniższy szablon przez `git config commit.template .gitmessage`.
 2. Przez 1–2 tygodnie hook `commit-msg` i audyt tylko RAPORTUJĄ brak pól

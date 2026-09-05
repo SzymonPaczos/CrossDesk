@@ -1,6 +1,10 @@
 ---
 name: weekly-audit
-description: Przeprowadza cotygodniowy/okresowy audyt jakości kodu projektu — czystość, dead code, bezpieczeństwo, pokrycie testów, drift dokumentacji, zgodność z decyzjami. Użyj gdy właściciel prosi o audyt, przegląd jakości, sprawdzenie stanu kodu, lub gdy minęło >7 dni od ostatniego wpisu w audit-log.
+description: Przeprowadza cotygodniowy/okresowy audyt jakości kodu projektu — czystość, dead code, bezpieczeństwo, pokrycie testów, drift dokumentacji, zgodność z decyzjami. Użyj gdy właściciel prosi o audyt, przegląd jakości, sprawdzenie stanu kodu, lub gdy minęło >7 dni od ostatniego wpisu w audit-log. EN — run a weekly or periodic code quality audit of one project; use when the owner asks for an audit, a quality review, a repo health check, or when more than seven days passed since the last audit-log entry.
+compatibility: Wymaga bash i git; kroki korzystające z GitHuba wymagają zalogowanego gh. Zaprojektowane dla agentów czytających SKILL.md (Claude Code i pokrewne).
+metadata:
+  author: claude-toolkit
+  version: "2026.09.05"
 ---
 
 # Cotygodniowy audyt jakości kodu
@@ -47,6 +51,27 @@ Reakcja zależy od wyniku, zgodnie z `conventions/toolkit-sync.md`:
 | **ZMIENIONY LOKALNIE** | nie nadpisuj. Zgłoś jako znalezisko: albo promocja do mastera, albo cofnięcie |
 | brak `toolkit.lock` | projekt nigdy nie był stemplowany — `update` zakłada lock |
 
+`check` porównuje **kopie**. Reguła dopisana do pliku, który kopią nie jest,
+jest dla niego niewidzialna — tak checklista audytu urosła w jednym projekcie
+z 14 do 17 pozycji przy zielonym `check` przez pięć tygodni. Dlatego dla
+plików, które rozrosły się lokalnie (checklisty, rejestry, listy warstw),
+uruchom też:
+
+```sh
+bash <toolkit>/scripts/toolkit-sync.sh contrib . <plik> [plik-w-masterze]
+```
+
+Zestawia tytuły pozycji po obu stronach i pokazuje, co ma tylko jedna.
+Dopasowanie jest po tytule, więc przeredagowany nagłówek wygląda na nowy —
+to sygnał do przeczytania, nie werdykt. Pozycja, która wyszła tylko po
+stronie projektu, wraca do mastera przez `promote` (flagi: `--yes` bez
+terminala, `--into` dla innego celu, `--new` dla świadomie nowego artefaktu).
+
+**Przecięcia claimów.** Jeśli w repo pracuje więcej niż jeden agent, uruchom
+także `bash <toolkit>/scripts/check-active-overlap.sh .` — claim scommitowany
+na gałęzi feature jest niewidoczny z innej gałęzi aż do merge'a. Przecięcie =
+przerwij i zapytaj, zanim dotkniesz tych plików.
+
 Jeżeli **w trakcie audytu** powstanie nowa reguła, skill albo szablon, wykonaj
 `promote` do mastera i podbij `VERSION` **w tej samej sesji**. Odłożona
 promocja nie następuje — tak powstały trzy równoległe wersje jednego skilla.
@@ -54,10 +79,36 @@ promocja nie następuje — tak powstały trzy równoległe wersje jednego skill
 Błędu w regule nie naprawiaj w kopii projektu. Poprawka idzie do mastera
 i wraca przez `update`; załatana kopia jest początkiem następnego dryfu.
 
+### Źródło dokumentacji (zanim zaczniesz twierdzić o wersjach)
+
+Sprawdź, czy masz podłączone **źródło aktualnej dokumentacji** — serwer MCP
+typu Context7 albo równoważny. To jest sprawdzenie narzędzia audytu, dlatego
+stoi tu, obok wersji checklisty: audyt orzekający o wersjach z pamięci modelu
+melduje stan sprzed daty odcięcia i nie ma jak tego zauważyć od środka.
+
+| Stan | Co robisz |
+|---|---|
+| **dostępne** | używasz go do **każdego** twierdzenia o API, konfiguracji i wersji — również gdy „znasz odpowiedź". Zapisujesz `DOCS_SOURCE: <nazwa>` |
+| **niedostępne** | zapisujesz `DOCS_SOURCE: n/a (pamięć modelu, odcięcie <data>)`, **prosisz właściciela o udostępnienie źródła** i zapisujesz zadanie do backlogu |
+
+Bez źródła audyt nadal jest ważny — traci tylko prawo do podawania numeru
+wersji, daty wydania i statusu wsparcia **jako faktu**. Takie pozycje
+raportujesz wtedy jako niesprawdzone, nie pomijasz ich po cichu.
+
 ## Krok 0 — SAST i workflowy (jeśli dostępne)
 
 - Uruchom projektowy CodeQL/Semgrep/SAST, jeśli jest skonfigurowany. Brak
   narzędzia raportuj jako `n/a`, nigdy jako zero findings.
+- **Skan, który padł, nie ma prawa podać liczb.** „Brak narzędzia = n/a" nie
+  łapie gorszego przypadku: skanu, który wystartował i umarł w połowie.
+  Trzy niezależne guardy, bo każdy z osobna zawodzi: (a) kod wyjścia ≠ 0
+  kończy audyt jako `BLOCKED`; (b) fatal w logu **mimo** kodu 0 (narzędzie
+  potrafi zwrócić sukces po nieudanej analizie) też jest awarią; (c) plik
+  wynikowy musi być świeży i parsowalny — inaczej podsumowanie policzy się
+  z zeszłotygodniowego artefaktu i wygląda dokładnie jak czysty skan.
+  Brak liczb to `BLOCKED`, nie „0 findings". (Wkład z JawnePanstwo,
+  2026-08-19: fatal „Query pack cannot be found" + exit 0 + liczby ze
+  SARIF-a z poprzedniego tygodnia; dziś pilnuje tego test na skrypcie skanu.)
 - Jeśli istnieje `.github/workflows/`, uruchom `zizmor` (lub równoważny
   linter) i sprawdź: pełne SHA w `uses:`, minimalne `permissions`, expression
   injection, `pull_request_target`, sekrety w jobach z niezaufanym kodem.
@@ -81,88 +132,32 @@ dlatego, że ma `node_modules`.
 Jeśli nie ma — policz ręcznie: błędy lintera (eslint/ruff/...), liczba
 TODO/FIXME, liczba plików testowych, moduły bez importera (`grep -rl`).
 
+**Jakość suity testowej — własności, nie liczba plików.** Liczba plików
+testowych mierzy pojemniki; o ochronie decydują WŁASNOŚCI suity. Przejdź
+checklist z [`test-quality-baseline.md`](references/test-quality-baseline.md)
+(14 własności, każda ze zmierzoną awarią za sobą: producent klasyfikujący
+własną awarię, testy niemogące zniknąć po cichu, progi z pomiaru, meta-testy
+bramek, lane split writerów, waity deterministyczne…). Wynik jedną linią
+w audit-log (`test-baseline: 1✓ 2✗(plan) …`). **Brak własności = ostrzeżenie
++ obowiązkowy wpis planu w backlogu projektu** — nie automatyczne P1, ale
+cisza czyta się jak zieleń. Świadome „nie dotyczy" z powodem zapisuje się raz.
+
+**Trend zdrowia kodu między audytami.** Metryki wyżej są migawką; delta mówi
+o kierunku. Jeśli projekt ma narzędzie deltowe (CodeScene `cs delta <base>
+HEAD` albo równoważne), uruchom je **report-only** — degradację ocenia agent
+warstwy głębokiej, nie próg: deklaratywna tabela konfiguracji to nie „chora
+metoda", ale rosnąca złożoność cyklomatyczna w orkiestratorze już tak.
+Narzędzia nie ma? Raport odpowiada wprost **mamy / planujemy / świadome
+n/a** — ta sama zasada co przy SAST: przemilczenie czyta się jak zieleń.
+
 ## Krok 2 — Warstwa głęboka (osąd agenta)
 
-Skrypt liczy, Ty oceniasz. Przejrzyj i oceń:
-
-1. **Bezpieczeństwo** — nowe endpointy bez rate-limit/walidacji, XSS (HTML
-   z bazy renderowany bez sanityzacji), sekrety w repo, raw SQL z interpolacją
-   user-inputu.
-2. **Slop** — hardcoded dane w UI udające prawdziwe, mocki podane jako dane,
-   funkcje oznaczone "gotowe" gdy są zaślepkami. Dla każdego trwałego
-   `EmptyState` prześledź producer chain: UI → query → DB → loader; brak
-   producenta danych jest tym samym kłamstwem piętro niżej. Odróżniaj
-   fallback tymczasowy (producent istnieje, dane w drodze) od stanu
-   permanentnego (producenta NIE MA — wydmuszka udająca gotową funkcję).
-3. **Jakość testów** — nie *ile*, ale czy testują **właściwe** rzeczy:
-   krytyczne ścieżki bez pokrycia, testy które nic nie weryfikują, skipped
-   bez uzasadnienia.
-4. **Architektura** — drift dokumentacja↔kod, duplikaty, martwe pola schematu,
-   nieużywane eksporty, niespójne wzorce.
-5. **Dead code** — zweryfikuj heurystykę skryptu greppem (sub-agenty mylą
-   base-classy z dead code — zawsze potwierdź).
-6. **Zgodność z rejestrem decyzji** (`decisions.md`) — złamana decyzja = P0/P1.
-7. **Skille / MCP** — czy pojawiło się coś nowego co przyspieszy pracę.
-8. **Gate'y** — czy `SKIP_*` jest per-warstwa; czy `exit 0` nie omija dalszych
-   checków; czy gate sprawdza zmianę, a nie dowolny istniejący test; czy brak
-   narzędzia/DB nie daje fałszywego sukcesu. Porównaj z
-   `.claude/rules/rules-as-gates.md`.
-9. **Supply chain** — lockfile, dependency bot/cooldown, secret protection,
-   OIDC/trusted publishing i release/deploy według `.claude/rules/ci-cd.md`.
-10. **Delivery** — wiek aktywnych branchy/WIP, szybki lane CI (<10 min jako
-    cel), build-once/same digest, poprzedni artifact, health gate, bake,
-    rollback drill, feature-flag expiry, SLO/error budget i release evidence.
-    Porównaj z `.claude/rules/progressive-delivery.md`.
-11. **Provenance zmiany** — próbka nietrywialnych commitów zawiera `Intent`,
-    `Task-Ref`, `Gates`; task brief zgadza się z diffem, a review
-    record/check jest związany z niezmienionym SHA. Sprawdź też, czy do
-    commitów nie wróciła atrybucja AI (`AI-Contribution`, `Co-Authored-By`)
-    wbrew D-006 — chyba że projekt ma zapisany wyjątek we własnym
-    `decisions.md` (np. JawnePanstwo jawnie deklaruje użycie AI); wtedy
-    pilnuj odwrotnie: atrybucja MA być. **Raz w miesiącu** zadaj
-    właścicielowi pytanie, czy chce zmienić politykę oznaczania udziału AI;
-    odpowiedź (także „nie") zapisz w `decisions.md` z datą.
-12. **Vulnerability response** — kanał disclosure, wspierane wersje, owner
-    triage, otwarte advisories i root-cause→test/gate po incydencie. Dla
-    prywatnego repo dopuszczalny jest prywatny runbook zamiast `SECURITY.md`.
-13. **Jedna derywacja + uczciwe procenty** — byt renderowany w ≥2 widokach
-    czerpie stan z JEDNEJ kanonicznej funkcji derywacji, nie liczy go osobno
-    per widok (osobne wyliczenia = widoki, które się rozjadą). Każdy procent
-    bez mianownika renderuje „Brak danych" — nigdy `x/0` ani `NULL→0`
-    udające zero. (Wkład z audytu JawnePanstwo, 2026-07-11.)
-14. **Higiena repo i ekspozycja na utratę danych** (wkład z audytu floty
-    2026-08-01; 4/6 agentów niezależnie wskazało punkt a). Sprawdź:
-    a. **Ekspozycja na utratę** — `git branch -vv` (gałęzie ahead/bez
-       upstreamu), `git stash list`, `git worktree list --porcelain | grep
-       prunable`, wiek najstarszego niepushowanego commita — oceniane łącznie
-       z posturą backupu maszyny (D-005). W profilu local-first bez backupu to
-       de facto check ryzyka utraty danych, nie kosmetyka.
-    b. **Dane osobowe jako osobna klasa** (obok sekretów): `git ls-files |
-       grep -iE 'legitymacja|dowod|pesel|zaswiadczenie|_b64'` + skany/PDF
-       z PII poza katalogami dozwolonymi lokalną decyzją projektu.
-    c. **Dysk vs git** — zawsze zestawiaj `du -sh` z `git count-objects -vH`
-       i listą największych blobów historii (`git rev-list --objects --all |
-       git cat-file --batch-check`); inaczej fałszywy „bloat P0" albo
-       przeoczony realny (baza commitowana N razy).
-    d. **Integralność referencyjna** — każda ścieżka w trackowanych
-       `.claude/*.md` (backlog, status) istnieje i jest trackowana albo
-       świadomie ignorowana; martwy link do „jedynej kopii" to P0.
-    e. **Świeżość audytu** — porównaj `AUDITED_REVISION` z bieżącym HEAD
-       i liczbą merge'y pomiędzy (cały silnik potrafi prześlizgnąć się między
-       audytami bez wpisu).
-    f. **Gotowość publikacyjna** dla „docelowo publiczne": LICENSE,
-       SECURITY.md, czystość historii.
-    g. **Odtwarzalność środowiska/gate'ów** — `requirements.txt`/lockfile dla
-       venv/node_modules; każdy scheme z `local-ci.sh` obecny w
-       `xcshareddata/xcschemes/` (świeży klon nie ma `xcuserdata`).
-    h. **Wygasłe credentiale** — grep `Expires|EXPIRES_ON` w plikach env
-       vs bieżąca data.
-    i. **Wiek najstarszej pozycji P1 w backlogu** — sam werdykt FAIL nie
-       wymusza ruchu (P1 potrafią przetrwać kilka audytów).
-    j. **Kandydaci na mechaniczne gate'y** (`rules-as-gates.md`, tryb
-       raportowy): pliki `.bak`/`BACKUP`/`*_b64` tracked; zmergowane gałęzie
-       do skasowania + duplikat `master`/`main`; egzekwowanie lokalnych
-       decyzji projektu (np. „skany tylko w sources/").
+Skrypt liczy, Ty oceniasz. Pełna lista punktów kontroli głębokiej — wraz
+z uzasadnieniami i wkładami z konkretnych audytów — leży w
+[`references/kontrola-glebokosci.md`](references/kontrola-glebokosci.md).
+**Wczytaj ten plik przed oceną.** Ocena z pamięci listy pomija punkty dopisane
+po ostatnim postmortemie, czyli dokładnie te, które ktoś już przerobił na
+własnej szkodzie.
 
 ## Krok 3 — Raport + lista P0/P1/P2
 
@@ -184,10 +179,14 @@ AUDITED_REVISION: <full SHA>
 DIFF_RANGE_OR_SCOPE: <...>
 PREVIOUS_AUDIT: <date/ref>
 TOOLS: <commands + versions + evidence URLs>
+DOCS_SOURCE: <nazwa serwera dokumentacji | n/a (pamięć modelu, odcięcie <data>)>
+DEPENDENCY_CURRENCY: OK | REPORT <n przeterminowanych> | EOL <runtime> | n/a
 EXCLUSIONS_OR_NA: <reasoned list>
 THREAT_MODEL_VERSION: <ref>
 SECURITY_REVIEW: PASS | FAIL | ACCEPTED_RISK <decision-id> | BLOCKED
 RED_TEAM: PASS | FINDINGS | NOT_DUE <last-run-date>
+SAST: <tool+version, findings> | BLOCKED <reason> | n/a (not configured)
+CODE_HEALTH_DELTA: <tool, delta vs previous audit> | planned | n/a (no tooling)
 BACKLOG_WRITE: recorded <task refs> | none
 ```
 

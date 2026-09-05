@@ -11,6 +11,45 @@ oznaczone inaczej.
 
 ---
 
+## DEC-META-009 — Toolkit 2026.09.05 adopted for CrossDesk
+
+**Date:** 2026-09-05 · **Status:** active
+
+Owner instruction: stop the audit, adopt the newer local toolkit in CrossDesk,
+then perform the audit later. Source: the local clone at
+`/home/szymon-paczos/Projects/dev/claude-toolkit`, version `2026.09.05`;
+exact master revision and per-file hashes are in `../toolkit.lock`.
+Existing tracked adoption continues; this is an upgrade, not a new setup.
+
+- Updated all previously adopted master copies and installed the complete
+  `weekly-audit` reference tree plus `audyt-naprawczy` for future explicit use.
+- Added test evidence, test execution economy, test quality baseline, review,
+  issue reporting, dependency currency, repository hygiene, security gates,
+  definition of done and sync conventions, plus audit/review/gate templates.
+- Retained the Security Reviewer's CrossDesk section after merging the current
+  master. Corrected its superseded home-default statement to DEC-0019 and its
+  TCP/AF_VSOCK citation. This is the sole declared `toolkit.local` override;
+  future upgrades must review the project section, never silently replace it.
+- `AGENTS.md` and project decisions remain authoritative: PLAN is the MVP
+  board; backlog is post-MVP parking; local merges without GitHub PRs/issues;
+  full multi-agent delivery remains inactive; boundary edits stay owner-gated.
+  Generic PR/review procedures apply to local review where relevant.
+- Existing WARN gates, AI attribution policy and loop authorization are not
+  reset by the upgrade. New dependency/security baseline guidance is adopted
+  for subsequent work, not a claim that its checks already pass. Operational
+  production/rollout rules remain reference-only/not adopted per DEC-META-008.
+- Current documentation may be obtained from official documentation through
+  available browsing tools; adding an MCP server is not necessary for this
+  upgrade. A future audit records the actual sources used.
+- Audit startup runs the toolkit check before scanners. Set
+  `CROSSDESK_TOOLKIT_ROOT` for a different local clone location.
+
+No audit was completed by this adoption. Interrupted evidence remains under
+`/tmp/crossdesk-audit-2026-09-05/`; do not stamp the audit log as current or
+resume remediation without the next audit instruction.
+
+---
+
 ## DEC-META-001 — Adopcja konwencji claude-toolkit §9.9
 
 **Data:** 2026-05-23 · **Status:** aktywna

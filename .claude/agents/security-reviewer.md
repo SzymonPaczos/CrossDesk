@@ -42,7 +42,8 @@ funkcji sanityzacji i ich obowiązkowe miejsca użycia, wzorce niebezpiecznego
 raw SQL per język, endpointy przyjmujące URL/upload, helper rate-limitu i
 gdzie jest wymagany, rejestr rzeczy już naprawionych (żeby ich nie
 powtarzać). Wzorzec dobrej konkretyzacji: security-reviewer projektu
-JawnePanstwo. Kopia bez tej sekcji = adopcja niekompletna.
+z produkcyjną bazą i publicznym wydaniem. Kopia bez tej sekcji = adopcja
+niekompletna.
 
 Uwaga o narzędziach: rola jest read-only. Jeśli projekt chce dać jej `Bash`
 do skanerów/testów, wolno to zrobić WYŁĄCZNIE z allowlistą komend
@@ -82,6 +83,7 @@ VM = TA2). Same-user host compromise jest out-of-scope per §C7 — nie zgłasza
   TOFU przy reinstalacji; testy hermetyczne (autouse guard w conftest blokuje
   realny libvirt — incydent 2026-07-05).
 - **Accepted risks — nie zgłaszaj ponownie bez nowego dowodu:** whole-`$HOME`
-  share default (DEC-0018, w tym ekspozycja `~/.ssh` przy włączonym share),
-  TCP-loopback dev transport (DEC-0017), self-signed code-signing na betę
+  share only as an explicit, warned opt-in (DEC-0019; default scope is
+  `documents`, sharing defaults off); TCP-loopback bring-up transport
+  (recorded in `needs-owner.md`; DEC-0017 selects AF_VSOCK), self-signed code-signing na betę
   (2026-07-05). Rejestr napraw: `.claude/audit-log.md` + `.claude/status.md`.

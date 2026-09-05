@@ -28,6 +28,8 @@ load.
 - @.claude/rules/change-provenance.md — ślad intencji w commicie
   (`Intent` / `Task-Ref` / `Gates`, tryb raportowy WARN); bez atrybucji
   AI (D-006). Szablon: `.gitmessage`.
+- @.claude/rules/test-evidence.md — tests prove the user-visible defect.
+- @.claude/rules/test-execution-economy.md — batch checks and retain exit codes.
 - @.claude/architecture.md — stack snapshot (timestamp bumped by
   pre-commit hook so it lands in the commit, not as drift).
 - @.claude/ignorefiles.md — dead code / generated artifacts manifest.
@@ -74,3 +76,20 @@ from `README.md`. Rather than duplicate its contents into a separate
 `universals.md` (kept in the repo as a reference template); they're
 intentionally short so an agent can load them every session without
 ceremony.
+
+## Toolkit adoption
+
+Current adoption: **2026.09.05**, recorded in `.claude/toolkit.lock` and
+DEC-META-009. Project instructions and prior owner decisions take precedence
+over generic conventions. PR/issue guidance does not enable GitHub PRs/issues;
+full multi-agent delivery stays inactive outside the existing audit roles.
+
+Run `bash .claude/toolkit-check.sh` to check the adopted copies. Set
+`CROSSDESK_TOOLKIT_ROOT` when the local clone lives elsewhere. The audit script
+runs this preflight before any scanner. A successful sync check means current
+copies, not a completed audit or green product gates.
+
+Use `weekly-audit` for review and `audyt-naprawczy` only when audit-with-repairs
+is requested. Read each entire skill, including its reference files. The
+new quality baseline and dependency/security conventions guide the next audit;
+this adoption does not execute it.

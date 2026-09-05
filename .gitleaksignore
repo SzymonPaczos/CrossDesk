@@ -15,3 +15,5 @@
 # Bliźniacza atrapa w tym samym pliku (linia 82) jest obsłużona markerem
 # `pre-push-allow-secret` w `.githooks/pre-push` — patrz backlog TOP 1b.
 89907d16eeb2aa16dbe3e358377fefd07542c94c:.claude/templates/test-gates.sh:generic-api-key:107
+# Ta sama atrapa test-gates.sh przeniesiona w 8c173e01 (2026-09-05) — nowy fingerprint
+8c173e01b57f4edcbec661df7003dc24767ace01:.claude/templates/test-gates.sh:generic-api-key:107

@@ -87,7 +87,7 @@ jobs:
             -f sarif -o ../bandit.sarif || true
       - name: Upload bandit SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: bandit.sarif
           category: bandit
@@ -145,7 +145,7 @@ jobs:
           semgrep ci --sarif --output semgrep.sarif || true
       - name: Upload semgrep SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
           category: semgrep
@@ -172,7 +172,7 @@ jobs:
         run: zizmor --no-progress --format sarif .github/workflows/ > zizmor.sarif
       - name: Upload zizmor SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: zizmor.sarif
           category: zizmor
@@ -200,12 +200,12 @@ jobs:
         with:
           persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
       # CodeQL auto-builds Python; no manual build step needed.
       - name: CodeQL analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: codeql-${{ matrix.language }}

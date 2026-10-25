@@ -17,7 +17,7 @@ license = "GPL-3.0-or-later"
 # can `pip install -e .[mock,dev]` without compile errors. Production
 # Linux installs use `pip install crossdesk-host[linux]`.
 dependencies = [
-    "grpcio>=1.63",
+    "grpcio>=1.82.1",
     "grpcio-tools>=1.63",
     "cryptography>=49.0.0",
     "structlog>=26.1.0",        # JSON-structured logging per DEC-0006

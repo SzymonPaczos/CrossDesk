@@ -26,7 +26,7 @@ hyper-util = { version = "0.1", features = ["tokio"] }
 proto   = { path = "../proto" }
 rand    = "0.8"
 hex     = "0.4"
-sha2    = "0.10"
+sha2    = "0.11"
 pem     = "3"
 
 # Windows-only: AF_VSOCK (virtio-vsock / viosock) connector — DEC-0017.

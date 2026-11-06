@@ -1,0 +1,33 @@
+{
+  "checker_sha256": "fca8e70cfc07c3b54b77ea0e84f86e1ce88b5157f8c02041f78600880ddf7538",
+  "tests_sha256": "70116ee31d8d34217a7e57485e95c6aa37862373fde55d0354e0cff5f7aa0e67",
+  "scope": "four selected regressions; not a global mutation score",
+  "detected": 2,
+  "total": 4,
+  "rows": [
+    {
+      "mutation": "ignore_open_stages",
+      "test": "test_topic_switch_does_not_close_parent_after_x2",
+      "control_passed": true,
+      "detected": false
+    },
+    {
+      "mutation": "ignore_missing_evidence",
+      "test": "test_checked_stage_without_evidence_is_incomplete",
+      "control_passed": true,
+      "detected": false
+    },
+    {
+      "mutation": "allow_no_baseline",
+      "test": "test_no_baseline_cannot_claim_scope_complete",
+      "control_passed": true,
+      "detected": true
+    },
+    {
+      "mutation": "ignore_scope_change",
+      "test": "test_deleted_or_rewritten_stage_fails_scope_comparison",
+      "control_passed": true,
+      "detected": true
+    }
+  ]
+}

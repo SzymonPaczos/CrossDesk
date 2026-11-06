@@ -16,6 +16,10 @@ SECURITY_REVIEW:      PASS | DEGRADED <powód> | NOT_TRIGGERED <powód>
 RED_TEAM:             <data ostatniego | n/a>
 BACKLOG_WRITE:        <ile pozycji dopisano>
 DEEP_REVIEW:          <tak/nie — czy była warstwa osądu, nie tylko grep>
+CONTEXT:              <zawsze ładowane B, handoff B, mediany wejścia Codex/Claude, MCP nieużywane | n/a>
+DELIVERY_REVIEW:      <okno 7/21 dni, uzgodnione cele, dowody, pozostałe etapy, blokady | UNVERIFIED z powodem>
+TASK_COMPLETENESS:    <zamknięcia rodziców vs wszystkie etapy | UNVERIFIED | n/a z powodem>
+PROCESS_DRIFT:        <dryf celu i skutek | CLEAR z dowodami | UNVERIFIED z powodem>
 VERDICT:              PASS | FAIL <powód>
 ```
 
@@ -29,7 +33,7 @@ dokładnie tą szczeliną.
 
 | ID | Sev | Rzecz | Dowód | Status |
 |---|---|---|---|---|
-| P0-1 | 🔴 | <co> | `plik:linia` + komenda | otwarte / naprawione `<sha>` |
+| AUD-001 | critical | <co> | `plik:linia` + komenda | otwarte / naprawione `<sha>` |
 
 ## Zweryfikowane i czyste
 
@@ -45,9 +49,15 @@ audyt bez listy własnych ograniczeń udaje kompletność>
 
 | Metryka | Poprzednio | Teraz |
 |---|---|---|
-| otwarte P0 | | |
+| otwarte critical | | |
 | testy | | |
 | dryf kopii vs master | | |
+| uzgodnione rezultaty i pozostałe etapy (7/21 dni) | | |
+
+Ścieżki i liczby commitów pomagają wybrać próbkę do oceny; nie mierzą czasu
+ani wartości. Testy, security i utrzymanie mogą być celem. Znaleziskiem jest
+udowodnione wypieranie uzgodnionego rezultatu albo fałszywe domknięcie, nie
+sam udział plików testowych. Niezweryfikowany zakres nie jest zaliczeniem.
 
 ## Wiarygodność tego raportu
 

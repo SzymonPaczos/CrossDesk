@@ -1,0 +1,16 @@
+#!/bin/bash
+# Antywzorzec A1 z conventions/rules-as-gates.md: hook czyta working tree
+# zamiast pushowanego commita. Materiał znany-zły dla templates/test-gates.sh.
+set -uo pipefail
+echo "Pre-Push: Security Review..."
+STATUS=0
+SECRET_PATTERNS='password[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{4,}|api[_-]?key[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{8,}|secret[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{8,}'
+while IFS= read -r plik; do
+    [ -f "$plik" ] || continue
+    if grep -qiE "$SECRET_PATTERNS" "$plik" 2>/dev/null; then
+        echo "SEKRET: $plik"
+        STATUS=1
+    fi
+done < <(git ls-files)
+echo "TODO/FIXME (advisory)"
+exit "$STATUS"

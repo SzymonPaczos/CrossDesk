@@ -1,0 +1,8 @@
+{
+  "base_sha": "<pełny zaakceptowany SHA>",
+  "expected_branch": "feat/example",
+  "scope": ["src/", "tests/"],
+  "gates": [
+    {"name": "unit", "argv": ["python3", "-m", "unittest", "discover", "-s", "tests"], "timeout_seconds": 120}
+  ]
+}

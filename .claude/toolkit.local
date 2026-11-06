@@ -1,2 +1,5 @@
 # Project path<TAB>reason; reviewed during the owner-authorized 2026-09-05 upgrade.
-.claude/agents/security-reviewer.md	Master 2026.09.05 plus CrossDesk threat-boundary checklist; preserved and aligned with DEC-0019. See DEC-META-009.
+.claude/agents/security-reviewer.md	Master 2026.11.06 merged with full CrossDesk threat-boundary checklist and read-only adapter contract; DEC-0019 preserved. See DEC-META-009/010 and ADP-2026-11-06-01.
+# Approved project process exception: PLAN=MVP, backlog=post-MVP/process; preserved legacy format. DEC-META-009/010 overrides generic one-board guidance; no backlog-lint PASS claimed.
+.claude/templates/codex-builder/preamble.md	Current master adapted to CrossDesk stack, protected boundaries, scoped sandbox-only target execution and inactive gate-spec contract; DEC-META-010.
+# Legacy authored instruction register/style is preserved where it encodes project contracts; current task-generic masters use source register. No style-lint PASS claimed.

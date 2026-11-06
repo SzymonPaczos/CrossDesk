@@ -1,0 +1,36 @@
+{
+  "toolkit_commit": "879edc6f6fcf08762adcd1c34244c582bb690535",
+  "skill_version": "2026.11.07",
+  "validators": [
+    {
+      "program": ".claude/skills/security-audit/validate-findings.cjs",
+      "input": "findings.json",
+      "exit_code": 0,
+      "result": "PASS: 0 findings valid"
+    },
+    {
+      "program": ".claude/skills/security-audit/validate-coverage-ledger.cjs",
+      "input": "coverage-ledger.json",
+      "exit_code": 0,
+      "result": "PASS: 19 coverage units valid"
+    }
+  ],
+  "coverage": {
+    "covered": 0,
+    "candidate": 0,
+    "blocked": 0,
+    "deferred": 17,
+    "out_of_scope": 2
+  },
+  "audit_status": "incomplete",
+  "scope_of_pass": "JSON structure and ledger invariants only; no completed security review or clean target claim",
+  "public_suitability_review": {
+    "copied_files_allowlisted": true,
+    "private_host_paths_removed": true,
+    "credentials_or_connection_config_copied": false,
+    "raw_prompts_or_transport_transcripts_copied": false,
+    "symlinks_copied": false,
+    "all_source_references_repository_relative": true,
+    "resume_requires_pending_explicit_consent": true
+  }
+}

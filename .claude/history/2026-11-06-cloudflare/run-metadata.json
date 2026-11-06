@@ -1,0 +1,106 @@
+{
+  "run_id": "crossdesk-20261106",
+  "repo": "SzymonPaczos/CrossDesk",
+  "target": ".",
+  "source_ref": {
+    "commit": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+    "dirty": false
+  },
+  "profile": "standard",
+  "scope_paths": [
+    "."
+  ],
+  "budget": null,
+  "execution_policy": "sandboxed-source-and-local-only",
+  "selected_companions": [
+    "DESKTOP-MOBILE-AND-LOCAL-IPC.md",
+    "PROTOCOLS-RPC-AND-MESSAGING.md",
+    "WEB-PROTOCOL-AND-AUTH.md",
+    "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+    "MEMORY-SAFETY-AND-BINARY.md",
+    "SUPPLY-CHAIN-AND-RELEASE.md",
+    "CLOUD-AND-DEPLOYMENT.md"
+  ],
+  "prior_run_paths": [],
+  "shared_file_owners": [
+    "parent"
+  ],
+  "run_status": "incomplete",
+  "phase": "phase1-blocked-with-explicit-phase6-partial-report",
+  "scope_exclusions": [
+    "third_party/winapps vendored reference",
+    "docs/GUI_DESIGN.md frozen design reference; executable GUI stays in scope"
+  ],
+  "per_invocation": {
+    "model": "claude-fable-5-1",
+    "max_budget_usd": 4,
+    "timeout_seconds": 240
+  },
+  "approval_gate": {
+    "status": "pending_required_user_consent",
+    "executed_blocked_calls": 0,
+    "approval_rejections": 2,
+    "reason": "automatic review rejects source payload export to an unverified external model destination until explicit payload/endpoint consent",
+    "public_source_evidence": "GitHub API identifies the repository as public; published commit and tree match the frozen baseline. Anonymous source checks also succeeded. This did not waive the required endpoint/payload consent gate."
+  },
+  "invocations": {
+    "completed_recon": 1,
+    "failed_recon": 2,
+    "not_executed_approval_rejections": 2,
+    "hunters": 0,
+    "post_wave_critics": 0,
+    "final_clean_critics": 0,
+    "candidate_verifiers": 0,
+    "record_verifiers": 0
+  },
+  "pre_recon_budget_gate": {
+    "global_budget": null,
+    "strict_limit": false,
+    "mandatory_remaining_recon": 3,
+    "mandatory_standard_critic_reserve": 2,
+    "independent_verifier_reserve_per_surviving_candidate": 2,
+    "hunting_allowance": "unset global budget; per-call caps preserved; approval gate forbids launches now"
+  },
+  "prior_evidence": {
+    "compatible_json_ledgers": 0,
+    "compatible_findings": 0,
+    "historical_prose": "clues only; no carried confirmations or exclusions"
+  },
+  "auxiliary_execution": {
+    "receipt_included": false,
+    "evidence_status": "external auxiliary evidence is not part of this checkpoint or its ledger local checks",
+    "summary": "Coordinator reports 94 selected CrossDesk tests passed; full suite blocked by missing structlog/pytest_asyncio. Not candidate-specific validation or a ledger local-check artifact."
+  },
+  "incomplete_reason": "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections",
+  "coverage_status_counts": {
+    "deferred": 17,
+    "out_of_scope": 2
+  },
+  "unvalidated_candidate_fingerprints": [],
+  "independent_verification_complete": false,
+  "required_resume": [
+    "Receive explicit user consent for exact public committed CrossDesk snapshot payload to Claude/Anthropic via claude-fable-5-1 CLI.",
+    "Verify effective pre-read source-packet confinement; post-hoc trace path checking alone is not a read sandbox.",
+    "Resume baseline recon-b/c/d through required strict read-only CLI, then reconcile preliminary units/companions before hunting.",
+    "Run focused hunter wave, immediate critic and distinct final-clean critic; validate every candidate and fresh final record independently."
+  ],
+  "toolkit_source": {
+    "repository": "SzymonPaczos/claude-toolkit",
+    "branch": "chore/project-adoptions-2026-11-06",
+    "commit": "879edc6f6fcf08762adcd1c34244c582bb690535",
+    "version": "2026.11.07",
+    "skill_path": ".claude/skills/security-audit"
+  },
+  "checkpoint": {
+    "public_sanitized": true,
+    "contains_raw_transcripts": false,
+    "contains_model_transport_logs": false,
+    "contains_credentials": false,
+    "baseline_source_only": true,
+    "current_workspace_not_audited": true,
+    "resume_method": "resume.md",
+    "audit_status": "incomplete-and-paused-awaiting-required-consent"
+  },
+  "target_path_base": "reviewed_repository_root",
+  "source_ref_scope": "frozen baseline, not the current publication/adoption commit"
+}

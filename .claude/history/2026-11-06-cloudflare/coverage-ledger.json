@@ -1,0 +1,2414 @@
+[
+  {
+    "coverage_id": ".github%2Fworkflows%2Fci.yml%23workflow-inputs::.github%2Fworkflows%2Fsecurity.yml%23workflow-token-artifact-authority::ci::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": ".github/workflows/ci.yml#workflow-inputs",
+      "boundary": ".github/workflows/security.yml#workflow-token-artifact-authority",
+      "subsystem": "ci",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": ".github/workflows/ci.yml#workflow-inputs",
+    "boundary": ".github/workflows/security.yml#workflow-token-artifact-authority",
+    "subsystem": "ci",
+    "attack_class": "Access control",
+    "starting_paths": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/security.yml",
+      ".github/workflows/release.yml"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "SUPPLY-CHAIN-AND-RELEASE.md#Core discipline",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Untrusted code in a privileged workflow",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Universal moves",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Validation rules",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Workflow command and expression confusion",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Automation identity overreach"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Dependency source and namespace confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Mutable and unbound build inputs",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Generated-source and codegen provenance gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Build-context inclusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Cache, artifact, and workspace trust mixing",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Build-to-promotion substitution",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Release authorization and signing-policy gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Update metadata and rollback confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Plugin and extension trust expansion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": ".github%2Fworkflows%2Frelease.yml%23release-promotion::infra%2Fcode-signing%2Fsign-agent.sh%23signed-artifact-identity::release::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+    "canonical_refs": {
+      "surface": ".github/workflows/release.yml#release-promotion",
+      "boundary": "infra/code-signing/sign-agent.sh#signed-artifact-identity",
+      "subsystem": "release",
+      "attack_class": "ATTACK-CLASSES.md#Cryptography and secrets"
+    },
+    "surface": ".github/workflows/release.yml#release-promotion",
+    "boundary": "infra/code-signing/sign-agent.sh#signed-artifact-identity",
+    "subsystem": "release",
+    "attack_class": "Cryptography and secrets",
+    "starting_paths": [
+      ".github/workflows/release.yml",
+      "infra/code-signing/sign-agent.sh",
+      "infra/code-signing/README.md"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Cryptography and secrets",
+    "selected_companion_blocks": [
+      "SUPPLY-CHAIN-AND-RELEASE.md#Core discipline",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Build-to-promotion substitution",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Universal moves",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Validation rules",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Release authorization and signing-policy gaps"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Dependency source and namespace confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Mutable and unbound build inputs",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Generated-source and codegen provenance gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Build-context inclusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Untrusted code in a privileged workflow",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Workflow command and expression confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Cache, artifact, and workspace trust mixing",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Automation identity overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Update metadata and rollback confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Plugin and extension trust expansion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "docs%2FGUI_DESIGN.md%23reference-only::docs%2FGUI_DESIGN.md%23explicit-scope-exclusion::docs%2FGUI_DESIGN.md::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "docs/GUI_DESIGN.md#reference-only",
+      "boundary": "docs/GUI_DESIGN.md#explicit-scope-exclusion",
+      "subsystem": "docs/GUI_DESIGN.md",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "frozen GUI design reference; executable GUI remains in scope",
+    "boundary": "Explicit owner scope exclusion",
+    "subsystem": "docs/GUI_DESIGN.md",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "docs/GUI_DESIGN.md"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Explicit scope excludes this non-execution reference material."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "out_of_scope",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "Explicit scope exclusion; not audited and not covered."
+    ]
+  },
+  {
+    "coverage_id": "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23firmware-host-identity::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23SMBIOS-buffer-identity::guest%2Fidentity::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "guest/crates/agent-svc/src/host_uuid.rs#firmware-host-identity",
+      "boundary": "guest/crates/agent-svc/src/host_uuid.rs#SMBIOS-buffer-identity",
+      "subsystem": "guest/identity",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "guest/crates/agent-svc/src/host_uuid.rs#firmware-host-identity",
+    "boundary": "guest/crates/agent-svc/src/host_uuid.rs#SMBIOS-buffer-identity",
+    "subsystem": "guest/identity",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "guest/crates/agent-svc/src/host_uuid.rs",
+      "guest/crates/agent-svc/src/planes.rs"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "MEMORY-SAFETY-AND-BINARY.md#Core discipline",
+      "MEMORY-SAFETY-AND-BINARY.md#Out-of-bounds read or write",
+      "MEMORY-SAFETY-AND-BINARY.md#Universal moves",
+      "MEMORY-SAFETY-AND-BINARY.md#Validation rules",
+      "MEMORY-SAFETY-AND-BINARY.md#Integer overflow, underflow, truncation, and signedness"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unit and pointer-depth confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Uninitialized or partially initialized data",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Use-after-free, stale view, and double free",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Type confusion and invalid downcast",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Reference-count and ownership races",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Shared-state races and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Lock-order, deadlock, and starvation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Pointer-length and ownership contract mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Layout, alignment, and enum disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unwind, exception, and thread-affinity violations",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Library, plugin, and executable search-order trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Missing artifact identity or signature binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Malformed binary metadata and relocation handling",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#JIT and generated-code consistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unload, reload, and teardown safety",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#User-copy bounds and repeated reads",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Privileged object lifecycle and dispatch consistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Under-authorized powerful interfaces",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fsession.rs%23credential-request::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fcredentials.rs%23Windows-logon-FFI::guest%2Fcredentials::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "guest/crates/agent-svc/src/session.rs#credential-request",
+      "boundary": "guest/crates/agent-svc/src/credentials.rs#Windows-logon-FFI",
+      "subsystem": "guest/credentials",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "guest/crates/agent-svc/src/session.rs#credential-request",
+    "boundary": "guest/crates/agent-svc/src/credentials.rs#Windows-logon-FFI",
+    "subsystem": "guest/credentials",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "guest/crates/agent-svc/src/session.rs",
+      "guest/crates/agent-svc/src/credentials.rs",
+      "guest/crates/agent-svc/src/service.rs"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "MEMORY-SAFETY-AND-BINARY.md#Core discipline",
+      "MEMORY-SAFETY-AND-BINARY.md#Pointer-length and ownership contract mismatch",
+      "MEMORY-SAFETY-AND-BINARY.md#Universal moves",
+      "MEMORY-SAFETY-AND-BINARY.md#Validation rules",
+      "MEMORY-SAFETY-AND-BINARY.md#Under-authorized powerful interfaces",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Peer identity to application-principal confusion",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Out-of-bounds read or write",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Integer overflow, underflow, truncation, and signedness",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unit and pointer-depth confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Uninitialized or partially initialized data",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Use-after-free, stale view, and double free",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Type confusion and invalid downcast",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Reference-count and ownership races",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Shared-state races and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Lock-order, deadlock, and starvation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Layout, alignment, and enum disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unwind, exception, and thread-affinity violations",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Library, plugin, and executable search-order trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Missing artifact identity or signature binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Malformed binary metadata and relocation handling",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#JIT and generated-code consistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Unload, reload, and teardown safety",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#User-copy bounds and repeated reads",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "MEMORY-SAFETY-AND-BINARY.md#Privileged object lifecycle and dispatch consistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Message boundary and canonicalization disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Union, enum, and default confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Envelope and payload identity mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Interceptor and method-path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Per-item and streaming authorization gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Callback and reply-correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Topic, routing-key, and subscription scope gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Dead-letter, retry, and diagnostic disclosure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Untrusted producer treated as control plane",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Duplicate delivery and idempotency gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Out-of-order and stale message acceptance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Acknowledgment/commit ordering defects",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Partial multi-consumer transitions",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fmain.rs%23native-GUI-entry::gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fqobjects%2Fmanager.rs%23native-action-authority::gui::ATTACK-CLASSES.md%23Injection",
+    "canonical_refs": {
+      "surface": "gui/crates/crossdesk-gui/src/main.rs#native-GUI-entry",
+      "boundary": "gui/crates/crossdesk-gui/src/qobjects/manager.rs#native-action-authority",
+      "subsystem": "gui",
+      "attack_class": "ATTACK-CLASSES.md#Injection"
+    },
+    "surface": "gui/crates/crossdesk-gui/src/main.rs#native-GUI-entry",
+    "boundary": "gui/crates/crossdesk-gui/src/qobjects/manager.rs#native-action-authority",
+    "subsystem": "gui",
+    "attack_class": "Injection",
+    "starting_paths": [
+      "gui/crates/crossdesk-gui/src/main.rs",
+      "gui/crates/crossdesk-gui/src/qobjects/manager.rs",
+      "host/src/crossdesk_host/cli/launch_cmd.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Injection",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fcli%2Finstall_cmd.py%23installer-inputs::host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fdomain_xml.py%23VM-and-file-authority::host%2Finstaller::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/cli/install_cmd.py#installer-inputs",
+      "boundary": "host/src/crossdesk_host/installer/domain_xml.py#VM-and-file-authority",
+      "subsystem": "host/installer",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "host/src/crossdesk_host/cli/install_cmd.py#installer-inputs",
+    "boundary": "host/src/crossdesk_host/installer/domain_xml.py#VM-and-file-authority",
+    "subsystem": "host/installer",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "host/src/crossdesk_host/cli/install_cmd.py",
+      "host/src/crossdesk_host/installer/domain_xml.py",
+      "host/src/crossdesk_host/installer/tools_iso.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fconfig%2F__init__.py%23effective-config::host%2Fsrc%2Fcrossdesk_host%2Fdaemon.py%23runtime-backend-and-bind-selection::host%2Fconfiguration::ATTACK-CLASSES.md%23Business%20logic",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/config/__init__.py#effective-config",
+      "boundary": "host/src/crossdesk_host/daemon.py#runtime-backend-and-bind-selection",
+      "subsystem": "host/configuration",
+      "attack_class": "ATTACK-CLASSES.md#Business logic"
+    },
+    "surface": "host/src/crossdesk_host/config/__init__.py#effective-config",
+    "boundary": "host/src/crossdesk_host/daemon.py#runtime-backend-and-bind-selection",
+    "subsystem": "host/configuration",
+    "attack_class": "Business logic",
+    "starting_paths": [
+      "host/src/crossdesk_host/config/__init__.py",
+      "host/src/crossdesk_host/daemon.py",
+      "host/src/crossdesk_host/transport/real.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Business logic",
+    "selected_companion_blocks": [
+      "CLOUD-AND-DEPLOYMENT.md#Core discipline",
+      "CLOUD-AND-DEPLOYMENT.md#Security-control precedence drift",
+      "CLOUD-AND-DEPLOYMENT.md#Universal moves",
+      "CLOUD-AND-DEPLOYMENT.md#Validation rules",
+      "CLOUD-AND-DEPLOYMENT.md#Unexpected service or management-plane reachability"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Workload identity overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Cross-account or cross-tenant role confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Application authorization delegated to cloud metadata",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Trusted-proxy and mesh identity bypass",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Metadata and internal-service reachability",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Host or control-plane capability exposure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Admission and policy path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Namespace and label trust confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Secret exposure across workload boundaries",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Credential renewal and outage fallback",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Object and signed-URL policy confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Event-source identity confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Edge/runtime boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23attach_share::host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23libvirt-device-XML::host%2Ffilesystem::ATTACK-CLASSES.md%23Injection",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/filesystem_ctl/real.py#attach_share",
+      "boundary": "host/src/crossdesk_host/filesystem_ctl/real.py#libvirt-device-XML",
+      "subsystem": "host/filesystem",
+      "attack_class": "ATTACK-CLASSES.md#Injection"
+    },
+    "surface": "host/src/crossdesk_host/filesystem_ctl/real.py#attach_share",
+    "boundary": "host/src/crossdesk_host/filesystem_ctl/real.py#libvirt-device-XML",
+    "subsystem": "host/filesystem",
+    "attack_class": "Injection",
+    "starting_paths": [
+      "host/src/crossdesk_host/filesystem_ctl/real.py",
+      "host/src/crossdesk_host/libvirt_ctl/real.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Injection",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fcredentials.py%23credential-persistence::host%2Fsrc%2Fcrossdesk_host%2Fintegrations%2Fkeyring%2Ffile_backend.py%23local-owner-secret::host%2Fcredentials::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/installer/credentials.py#credential-persistence",
+      "boundary": "host/src/crossdesk_host/integrations/keyring/file_backend.py#local-owner-secret",
+      "subsystem": "host/credentials",
+      "attack_class": "ATTACK-CLASSES.md#Cryptography and secrets"
+    },
+    "surface": "host/src/crossdesk_host/installer/credentials.py#credential-persistence",
+    "boundary": "host/src/crossdesk_host/integrations/keyring/file_backend.py#local-owner-secret",
+    "subsystem": "host/credentials",
+    "attack_class": "Cryptography and secrets",
+    "starting_paths": [
+      "host/src/crossdesk_host/installer/credentials.py",
+      "host/src/crossdesk_host/integrations/keyring/file_backend.py",
+      "host/src/crossdesk_host/observability/redaction.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Cryptography and secrets",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules",
+      "CLOUD-AND-DEPLOYMENT.md#Core discipline",
+      "CLOUD-AND-DEPLOYMENT.md#Secret exposure across workload boundaries",
+      "CLOUD-AND-DEPLOYMENT.md#Universal moves",
+      "CLOUD-AND-DEPLOYMENT.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Workload identity overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Cross-account or cross-tenant role confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Application authorization delegated to cloud metadata",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Unexpected service or management-plane reachability",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Trusted-proxy and mesh identity bypass",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Metadata and internal-service reachability",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Host or control-plane capability exposure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Admission and policy path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Namespace and label trust confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Security-control precedence drift",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Credential renewal and outage fallback",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Object and signed-URL policy confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Event-source identity confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Edge/runtime boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23ControlServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23per-frame-authentication::host%2Fipc%2Fcontrol::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/control.py#ControlServiceServicer",
+      "boundary": "host/src/crossdesk_host/ipc/auth.py#per-frame-authentication",
+      "subsystem": "host/ipc/control",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "host/src/crossdesk_host/ipc/control.py#ControlServiceServicer",
+    "boundary": "host/src/crossdesk_host/ipc/auth.py#per-frame-authentication",
+    "subsystem": "host/ipc/control",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/control.py",
+      "host/src/crossdesk_host/ipc/auth.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Interceptor and method-path inconsistency",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Per-item and streaming authorization gaps"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Message boundary and canonicalization disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Union, enum, and default confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Envelope and payload identity mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Peer identity to application-principal confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Callback and reply-correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Topic, routing-key, and subscription scope gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Dead-letter, retry, and diagnostic disclosure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Untrusted producer treated as control plane",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Duplicate delivery and idempotency gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Out-of-order and stale message acceptance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Acknowledgment/commit ordering defects",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Partial multi-consumer transitions",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23RailWindowEvents::host%2Fsrc%2Fcrossdesk_host%2Fdisplay%2Frail_manager.py%23guest-window-state::host%2Fdisplay::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/control.py#RailWindowEvents",
+      "boundary": "host/src/crossdesk_host/display/rail_manager.py#guest-window-state",
+      "subsystem": "host/display",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "host/src/crossdesk_host/ipc/control.py#RailWindowEvents",
+    "boundary": "host/src/crossdesk_host/display/rail_manager.py#guest-window-state",
+    "subsystem": "host/display",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/control.py",
+      "host/src/crossdesk_host/display/rail_manager.py",
+      "host/src/crossdesk_host/display/window_icon.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Unbounded buffering and cardinality",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Detached work after cancellation"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Superlinear parsing, matching, or evaluation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Decompression and representation amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Database and downstream query amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#File descriptor, handle, and temporary-resource leaks",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Pre-authentication work imbalance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Quota-accounting scope and reset gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Worker, pool, and priority starvation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Reachable fatal error or deadlock",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Retry storm and fail-open amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Poison-record and head-of-line blocking",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Unsafe recovery and capacity rollback",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23ShareChannel::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23mount-token-authority::host%2Fipc%2Ffilesystem::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/filesystem.py#ShareChannel",
+      "boundary": "host/src/crossdesk_host/ipc/filesystem.py#mount-token-authority",
+      "subsystem": "host/ipc/filesystem",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "host/src/crossdesk_host/ipc/filesystem.py#ShareChannel",
+    "boundary": "host/src/crossdesk_host/ipc/filesystem.py#mount-token-authority",
+    "subsystem": "host/ipc/filesystem",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/filesystem.py",
+      "host/src/crossdesk_host/ipc/auth.py",
+      "guest/crates/agent-svc/src/filesystem.rs"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Per-item and streaming authorization gaps",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Callback and reply-correlation confusion"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Message boundary and canonicalization disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Union, enum, and default confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Envelope and payload identity mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Interceptor and method-path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Peer identity to application-principal confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Topic, routing-key, and subscription scope gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Dead-letter, retry, and diagnostic disclosure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Untrusted producer treated as control plane",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Duplicate delivery and idempotency gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Out-of-order and stale message acceptance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Acknowledgment/commit ordering defects",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Partial multi-consumer transitions",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fheartbeat.py%23HeartbeatServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23stream-nonce-sequence-lifecycle::host%2Fipc%2Fheartbeat::ATTACK-CLASSES.md%23Business%20logic",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/heartbeat.py#HeartbeatServiceServicer",
+      "boundary": "host/src/crossdesk_host/ipc/auth.py#stream-nonce-sequence-lifecycle",
+      "subsystem": "host/ipc/heartbeat",
+      "attack_class": "ATTACK-CLASSES.md#Business logic"
+    },
+    "surface": "host/src/crossdesk_host/ipc/heartbeat.py#HeartbeatServiceServicer",
+    "boundary": "host/src/crossdesk_host/ipc/auth.py#stream-nonce-sequence-lifecycle",
+    "subsystem": "host/ipc/heartbeat",
+    "attack_class": "Business logic",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/heartbeat.py",
+      "host/src/crossdesk_host/ipc/auth.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Business logic",
+    "selected_companion_blocks": [
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Out-of-order and stale message acceptance",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#File descriptor, handle, and temporary-resource leaks",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Message boundary and canonicalization disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Union, enum, and default confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Envelope and payload identity mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Interceptor and method-path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Peer identity to application-principal confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Per-item and streaming authorization gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Callback and reply-correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Topic, routing-key, and subscription scope gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Dead-letter, retry, and diagnostic disclosure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Untrusted producer treated as control plane",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Duplicate delivery and idempotency gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Acknowledgment/commit ordering defects",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Partial multi-consumer transitions",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Superlinear parsing, matching, or evaluation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Decompression and representation amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Database and downstream query amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Unbounded buffering and cardinality",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Detached work after cancellation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Pre-authentication work imbalance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Quota-accounting scope and reset gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Worker, pool, and priority starvation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Reachable fatal error or deadlock",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Retry storm and fail-open amplification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Poison-record and head-of-line blocking",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Unsafe recovery and capacity rollback",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Launch::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23JIT-share-root-policy::host%2Ffilesystem::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/management.py#Launch",
+      "boundary": "host/src/crossdesk_host/ipc/management.py#JIT-share-root-policy",
+      "subsystem": "host/filesystem",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "host/src/crossdesk_host/ipc/management.py#Launch",
+    "boundary": "host/src/crossdesk_host/ipc/management.py#JIT-share-root-policy",
+    "subsystem": "host/filesystem",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/management.py",
+      "host/src/crossdesk_host/filesystem_ctl/real.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23ManagementServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Unix-socket-peer-authority::host%2Fipc%2Fmanagement::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/ipc/management.py#ManagementServiceServicer",
+      "boundary": "host/src/crossdesk_host/ipc/management.py#Unix-socket-peer-authority",
+      "subsystem": "host/ipc/management",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "host/src/crossdesk_host/ipc/management.py#ManagementServiceServicer",
+    "boundary": "host/src/crossdesk_host/ipc/management.py#Unix-socket-peer-authority",
+    "subsystem": "host/ipc/management",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "host/src/crossdesk_host/ipc/management.py",
+      "host/src/crossdesk_host/daemon.py",
+      "proto/crossdesk/v1/mgmt.proto"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Core discipline",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC peer-authentication gaps",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Universal moves",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Validation rules",
+      "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Claimed principal versus channel identity"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Custom-scheme and deep-link ambiguity",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#App and account handoff confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#File-open and intent authority confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Navigation-origin to bridge confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Over-broad native bridge capabilities",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Webview file and universal access",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Exported service, activity, receiver, or provider overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#IPC lifecycle and correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Privileged helper as confused deputy",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Install, update, and repair path trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Local file ownership and TOCTOU",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Credential-store and local-secret boundary mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Account switch, logout, and device restore leakage",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "DESKTOP-MOBILE-AND-LOCAL-IPC.md#Pending-action and user-presence confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "host%2Fsrc%2Fcrossdesk_host%2Ftransport%2Freal.py%23RealTransport::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23AuthValidator::host%2Ftransport::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+    "canonical_refs": {
+      "surface": "host/src/crossdesk_host/transport/real.py#RealTransport",
+      "boundary": "host/src/crossdesk_host/ipc/auth.py#AuthValidator",
+      "subsystem": "host/transport",
+      "attack_class": "ATTACK-CLASSES.md#Cryptography and secrets"
+    },
+    "surface": "host/src/crossdesk_host/transport/real.py#RealTransport",
+    "boundary": "host/src/crossdesk_host/ipc/auth.py#AuthValidator",
+    "subsystem": "host/transport",
+    "attack_class": "Cryptography and secrets",
+    "starting_paths": [
+      "host/src/crossdesk_host/transport/real.py",
+      "host/src/crossdesk_host/ipc/auth.py",
+      "guest/crates/agent-svc/src/planes.rs"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Cryptography and secrets",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Core discipline",
+      "WEB-PROTOCOL-AND-AUTH.md#mTLS peer and application-identity confusion",
+      "WEB-PROTOCOL-AND-AUTH.md#Universal moves",
+      "WEB-PROTOCOL-AND-AUTH.md#Validation rules",
+      "WEB-PROTOCOL-AND-AUTH.md#Certificate lifecycle fallback",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Peer identity to application-principal confusion",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Message boundary and canonicalization disagreement",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Union, enum, and default confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Envelope and payload identity mismatch",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Interceptor and method-path inconsistency",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Per-item and streaming authorization gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Callback and reply-correlation confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Topic, routing-key, and subscription scope gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Dead-letter, retry, and diagnostic disclosure",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Untrusted producer treated as control plane",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Duplicate delivery and idempotency gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Out-of-order and stale message acceptance",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Acknowledgment/commit ordering defects",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Partial multi-consumer transitions",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Request framing and desynchronization",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Web cache poisoning through unkeyed input",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Cache deception and private-response caching",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Host and forwarded-header trust",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Response-header injection",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Ordinary CSRF",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Session fixation and invalidation",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Cookie scope and transport",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#JWT verification and claim binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#OAuth/OIDC request and callback binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#SAML signed-object and assertion binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#MFA enrollment and assurance downgrade",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Step-up binding and bypass",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#WebAuthn and passkey verification",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Account linking and identity collision",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#Password reset and broader recovery",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#API-key scope and resource binding",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#API-key exposure and unsafe transport",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "packaging%2Faur%2FPKGBUILD%23package-source::packaging%2Faur%2FPKGBUILD%23installed-executable-identity::packaging::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "packaging/aur/PKGBUILD#package-source",
+      "boundary": "packaging/aur/PKGBUILD#installed-executable-identity",
+      "subsystem": "packaging",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "packaging/aur/PKGBUILD#package-source",
+    "boundary": "packaging/aur/PKGBUILD#installed-executable-identity",
+    "subsystem": "packaging",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "packaging/aur/PKGBUILD",
+      "flake.nix",
+      "host/pyproject.toml",
+      "guest/Cargo.lock"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "SUPPLY-CHAIN-AND-RELEASE.md#Core discipline",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Mutable and unbound build inputs",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Universal moves",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Validation rules",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Dependency source and namespace confusion",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Update metadata and rollback confusion"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Injection",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Access control",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Cryptography and secrets",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Business logic",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Chained vulnerabilities and trust boundaries",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Wildcard",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "ATTACK-CLASSES.md#Obvious things",
+        "reason": "Not assigned to this entry-boundary unit; preliminary independent recon and critics still required before any complete class-exclusion claim."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Generated-source and codegen provenance gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Build-context inclusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Untrusted code in a privileged workflow",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Workflow command and expression confusion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Cache, artifact, and workspace trust mixing",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Automation identity overreach",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Build-to-promotion substitution",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Release authorization and signing-policy gaps",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      },
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Plugin and extension trust expansion",
+        "reason": "Different boundary/class than this planning assignment; no coverage claim, pending baseline recon and coverage critics."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "deferred",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections; Phase1 recon-b/c/d and independent hunters/critics not executed; no negative security conclusion."
+    ]
+  },
+  {
+    "coverage_id": "third_party%2Fwinapps%23reference-only::third_party%2Fwinapps%23explicit-scope-exclusion::third_party%2Fwinapps::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "third_party/winapps#reference-only",
+      "boundary": "third_party/winapps#explicit-scope-exclusion",
+      "subsystem": "third_party/winapps",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "vendored WinApps reference",
+    "boundary": "Explicit owner scope exclusion",
+    "subsystem": "third_party/winapps",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "third_party/winapps"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [],
+    "excluded_blocks": [
+      {
+        "block": "ATTACK-CLASSES.md#Resource and file handling",
+        "reason": "Explicit scope excludes this non-execution reference material."
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 1,
+    "status": "out_of_scope",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
+    "result_fingerprints": [],
+    "unresolved": [
+      "Explicit scope exclusion; not audited and not covered."
+    ]
+  }
+]

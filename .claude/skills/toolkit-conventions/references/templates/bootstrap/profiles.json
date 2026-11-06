@@ -1,0 +1,45 @@
+{
+  "base": [
+    "conventions/project-state-layout.md",
+    "conventions/backlog-contract.md",
+    "conventions/quality-gates-and-dod.md",
+    "conventions/security-verification-gates.md",
+    "conventions/context-budget.md",
+    "conventions/toolkit-sync.md",
+    "templates/backlog.md",
+    "templates/backlog-lint.sh",
+    "templates/task-completion.py",
+    "templates/codex-builder",
+    "agents/security-reviewer.md",
+    "agents/reviewer.md"
+  ],
+  "hosted": [
+    "conventions/ci-cd.md",
+    "conventions/ci-pipeline-architecture.md"
+  ],
+  "local-first": [
+    "conventions/local-gate-orchestration.md",
+    "templates/local-gates"
+  ],
+  "production": [
+    "conventions/production-operations.md",
+    "conventions/progressive-delivery.md"
+  ],
+  "multi_agent": [
+    "agents",
+    "conventions/multi-agent-delivery.md",
+    "templates/work-graph.md"
+  ],
+  "integrated_base": {
+    "security-check": [
+      "templates/security-check.py",
+      "templates/security"
+    ]
+  },
+  "integrated_multi_agent": {
+    "agent-runtime": [
+      "templates/agent-runtime.py",
+      "templates/agent-runtime"
+    ]
+  }
+}

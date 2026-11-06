@@ -1,5 +1,9 @@
 # PLAN — droga do v0.1.0
 
+Process adoption/audit (not a second MVP queue):
+[ADP-2026-11-06-01](.claude/task-briefs/ADP-2026-11-06-01.md);
+canonical record in [.claude/backlog.md](.claude/backlog.md).
+
 **Jedyny board „co dalej".** Jak chcesz wiedzieć co robić — patrzysz tu i
 nigdzie indziej. Reszta to: [`status.md`](.claude/status.md) (znane problemy),
 [`needs-owner.md`](.claude/needs-owner.md) (czeka na Twoją decyzję),

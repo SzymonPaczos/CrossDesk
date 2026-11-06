@@ -1,0 +1,34 @@
+# Zapadka na ZAKRES, nie na liczbę naruszeń.
+#
+# Dla każdej bramki: ile rzeczy widzi na swoim materiale known-good. Bramka,
+# która nagle widzi MNIEJ, przechodziłaby jak gdyby nigdy nic — a to jest ta
+# sama awaria, co „collected: 0 tests" z kodem wyjścia zero, tylko rozłożona
+# na raty. Dlatego spadek tej liczby przewraca gate-selfcheck.sh i wymaga
+# jawnego, zacommitowanego zatwierdzenia w tym pliku.
+#
+# Wzrost jest wolny — bramka, która widzi więcej, mierzy więcej.
+# Odświeżenie po świadomej zmianie fixture'u:
+#   bash templates/gate-selfcheck.sh --zapisz-mianowniki
+#
+# bramka<TAB>ile-rzeczy-widzi
+backlog-lint.sh	2
+backlog-migrate.sh	2
+ci-effective-work.sh	5
+claim-release.sh	1
+code-structure.sh	3
+contract-enums.sh	4
+dependency-currency.sh	1
+document-numbers.sh	7
+identifier-language.sh	3
+import-depth.sh	2
+layer-direction.sh	2
+negative-verification.sh	6
+rejestr-regul.sh	38
+repo-hygiene.sh	2
+route-guards.sh	3
+ruff-ratchet.sh	2
+runtime-boundaries.sh	4
+stan-stosu.sh	3
+test-evidence.sh	1
+test-gates.sh	6
+ui-copy-lint.sh	2

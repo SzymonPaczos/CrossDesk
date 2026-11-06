@@ -1,0 +1,34 @@
+name: gates
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Bramki na materiale znanym-zlym
+        continue-on-error: true
+        run: bash scripts/gates.sh all || true
+      - name: Generat zgodny z indeksem
+        run: |
+          npm run openapi
+          git diff --exit-code -- src/lib/api-types.d.ts
+
+  live:
+    runs-on: ubuntu-latest
+    env:
+      EVAL_RECORD: "1"
+    steps:
+      - name: Czy klucz dostawcy jest skonfigurowany
+        id: key
+        if: always()
+        run: echo "present=${{ secrets.PROVIDER_KEY != '' }}" >> "$GITHUB_OUTPUT"
+      - name: Bateria na zywym modelu
+        if: steps.key.outputs.present == 'true'
+        run: pytest -m live

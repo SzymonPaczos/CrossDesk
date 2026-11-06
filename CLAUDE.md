@@ -1,95 +1,68 @@
-# CLAUDE.md
+# CrossDesk
 
-Auto-load list for Claude Code sessions in CrossDesk. The canonical
-source of project knowledge is [AGENTS.md](AGENTS.md) — that's the
-human-readable navigation map and coding ruleset, referenced from
-README.md. This file just tells the agent harness which rule files to
-load.
+Canonical project instructions. Linux Python host controls a Windows Rust
+NT-service guest through libvirt (`qemu:///session`) and gRPC/AF_VSOCK with
+mTLS and per-frame AuthContext. FreeRDP RAIL renders native windows.
 
-## Load these files
+## Work and acceptance
 
-- @PLAN.md — **jedyny board „co dalej" do v0.1.0** (TERAZ / NEXT /
-  LATER + 12 kryteriów akceptacji). Zaczynaj tu.
-- @AGENTS.md — project navigation, coding rules, agent workflow,
-  file boundaries.
-- @.claude/rules/general.md — universal prohibitions, commit
-  conventions, branch-per-agent rule, coordination protocol.
-- @.claude/rules/backend.md — Python (host) + Rust (guest)
-  path-specific rules.
-- @.claude/rules/audit.md — weekly audit procedure (statyczna +
-  głęboka warstwa; P0/P1/P2 definitions).
-- @.claude/rules/decisions.md — META-decyzje (proces / workflow /
-  layout); ADR `DEC-NNNN` żyją w `docs/DECISIONS.md`.
-- @.claude/rules/ci-cd.md — baseline CI/CD i supply chain (SHA-pinning,
-  permissions, lockfile, release provenance). Kopia z claude-toolkit
-  (adopcja 2026-07-12, DEC-META-008).
-- @.claude/rules/rules-as-gates.md — zamiana powtarzalnie łamanych reguł
-  w mechaniczne gate'y (report-mode → blokada).
-- @.claude/rules/change-provenance.md — ślad intencji w commicie
-  (`Intent` / `Task-Ref` / `Gates`, tryb raportowy WARN); bez atrybucji
-  AI (D-006). Szablon: `.gitmessage`.
-- @.claude/rules/test-evidence.md — tests prove the user-visible defect.
-- @.claude/rules/test-execution-economy.md — batch checks and retain exit codes.
-- @.claude/architecture.md — stack snapshot (timestamp bumped by
-  pre-commit hook so it lands in the commit, not as drift).
-- @.claude/ignorefiles.md — dead code / generated artifacts manifest.
-- @.claude/backlog.md — post-MVP / parking (NIE board MVP — to jest
-  PLAN.md). Długi ogon + kontekst techniczny.
-- @.claude/status.md — bieżące breakages / partial implementations.
-- @.claude/needs-owner.md — zaparkowane decyzje właściciela + drafty
-  boundary (czeka na podpis).
+- Follow the assigned brief. Read the relevant record, never the whole backlog.
+- Preserve the approved board split (DEC-META-009/010): PLAN.md is the MVP
+  board; .claude/backlog.md holds post-MVP and cross-cutting process work.
+  The current adoption has ONE plan: ADP-2026-11-06-01 in that backlog and
+  .claude/task-briefs/ADP-2026-11-06-01.md. Links elsewhere do not duplicate it.
+- Record accepted work before continuing. A topic change keeps every unfinished
+  stage, next action and blocker. Partial stages cannot close the whole task.
+- Use a separate branch per worker. Inspect original changes before deletion;
+  remove a worktree only after verified integration, preserving dirty, locked,
+  active or unmerged work. No hook bypass. Merge/push need owner authorization.
+- No fabricated data, mock completion, shipped placeholders, secrets or raw
+  conversations. Authored project code/docs/commits are English; unmodified
+  tracked vendor conventions/skills retain their source language.
+- Read .claude/status.md only for affected known issues; owner decisions are
+  parked in .claude/needs-owner.md. WORK_LOG START/END remains retired.
 
-WORK_LOG.md ceremony jest **wycofany** (2026-07-05) — nie ładuj, nie
-dopisuj START/END. Historia: `git log` + `history/completed-work.md`.
+## Boundaries
 
-## Audit reminder
+Technical ADRs in docs/DECISIONS.md, docs/THREAT_MODEL.md, requirements,
+MVP scope/goals, proto wire format and ROADMAP require explicit owner approval.
+Keep Docker/Podman out of the backend; no control-plane polling (DEC-META-006
+allows interactive log tail only). Sharing defaults off and to documents;
+whole-home sharing is explicit warned opt-in (DEC-0019).
 
-Sprawdź `.claude/audit-log.md` przy starcie sesji — jeśli ostatni wpis
-`## Audyt YYYY-MM-DD` jest >7 dni, zaproponuj cotygodniowy audyt
-(skill `weekly-audit`, procedura `.claude/rules/audit.md`).
+## Procedures on demand
 
-## One-time setup per clone
+- Domain/build/navigation: .claude/conventions/project-workflow.md and
+  path-scoped .claude/rules/backend.md.
+- Audit: .claude/conventions/audit.md; full weekly-audit skill and references.
+- Repairs: audyt-naprawczy and plan-naprawy skills, only for the assigned scope.
+- Delivery/review: petla-dostarczenia; conventions/backlog-contract.md,
+  multi-agent-delivery.md, test-evidence.md and test-execution-economy.md.
+- CI/security/dependencies: conventions/ci-cd.md, security-verification-gates.md,
+  dependency-currency.md and local-gate-orchestration.md.
+- Full META register: .claude/decisions-register.md (lookup the relevant ID).
+  Generic procedures are under .claude/conventions/; project decisions win.
 
-Hooks live under `.githooks/` and need activation after `git clone`:
+## Roles, controls and adoption state
 
-```sh
-chmod +x .githooks/pre-commit .githooks/pre-push .githooks/post-commit .githooks/commit-msg
-git config core.hooksPath .githooks
-git config commit.template .gitmessage
-```
+Existing profile is hybrid: GitHub Actions ci.yml/security.yml/release.yml
+plus local hooks; production/rollout procedures remain reference-only and no
+production operation is implied. Formal runner policy stays parked as before.
+Conventional Commit subjects block; Intent/Task-Ref/Gates remain WARN and no
+AI attribution is added (DEC-META-008). Local reviews/merges do not require PRs
+or GitHub Issues. Per-clone hook activation is a separate setup step.
 
-The `core.hooksPath` and `commit.template` settings are per-clone (they
-live in `.git/config`, not tracked) — re-run after every fresh clone.
+Full multi-agent delivery remains inactive by default; an explicit owner swarm
+request enables scoped parallel work for that task, not a permanent policy
+change. Security Reviewer remains independent/read-only (Read/Grep/Glob),
+weekly and risk-triggered; .claude/agents/security-reviewer.md preserves the
+CrossDesk checklist. Cloudflare security-audit is a separate full audit skill:
+active code/tests/scanners/PoCs require real OS sandbox, no external network,
+sanitized environment and limits; unavailable controls mean needs_validation.
+Never grant broad Bash to the read-only reviewer.
 
-`.claude/rules/multi-agent-delivery.md` oraz `.claude/agents/` (Security
-Reviewer, Red Team) to kopie masterów z toolkitu używane przez
-cotygodniowy audyt — pełny kontrakt zespołu multi-agent jest NIEaktywny
-(solo owner + jeden agent, DEC-META-008); nie ładuj ich do sesji poza
-audytem.
-
-## Why this layout
-
-`AGENTS.md` is the entry point for human contributors and is referenced
-from `README.md`. Rather than duplicate its contents into a separate
-`CLAUDE.md`, this file is a thin shim that delegates. The
-`.claude/rules/*` files are stack-agnostic guardrails extracted from
-`universals.md` (kept in the repo as a reference template); they're
-intentionally short so an agent can load them every session without
-ceremony.
-
-## Toolkit adoption
-
-Current adoption: **2026.09.05**, recorded in `.claude/toolkit.lock` and
-DEC-META-009. Project instructions and prior owner decisions take precedence
-over generic conventions. PR/issue guidance does not enable GitHub PRs/issues;
-full multi-agent delivery stays inactive outside the existing audit roles.
-
-Run `bash .claude/toolkit-check.sh` to check the adopted copies. Set
-`CROSSDESK_TOOLKIT_ROOT` when the local clone lives elsewhere. The audit script
-runs this preflight before any scanner. A successful sync check means current
-copies, not a completed audit or green product gates.
-
-Use `weekly-audit` for review and `audyt-naprawczy` only when audit-with-repairs
-is requested. Read each entire skill, including its reference files. The
-new quality baseline and dependency/security conventions guide the next audit;
-this adoption does not execute it.
+Toolkit source/version and per-file provenance: .claude/toolkit.lock and the
+in-progress adoption record. A1 copied/configured artifacts do not prove A2
+integration, A3 quality, A4 security or P5 publication. The known local audit
+script preflight behavior needs independent integration review; stale toolkit
+copies are a finding, not a reason to abandon independent product auditing.

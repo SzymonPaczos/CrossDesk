@@ -2,7 +2,7 @@
 
 Universal prohibitions and conventions that apply across the whole
 repo, regardless of language or layer. For project navigation,
-file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
+file boundaries, and the agent workflow, read [AGENTS.md](../../CLAUDE.md).
 
 ## Absolute prohibitions
 
@@ -45,7 +45,7 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   by the `commit-msg` hook since 2026-07-12.
 - **Change provenance** (adopted 2026-07-12, DEC-META-008): a
   non-trivial commit's body carries `Intent`, `Task-Ref` and `Gates`
-  trailers per [`change-provenance.md`](change-provenance.md); template
+  trailers per [`change-provenance.md`](../conventions/change-provenance.md); template
   in `.gitmessage`. Currently report-mode — the `commit-msg` hook WARNs
   on missing trailers, does not block. No AI attribution
   (`Co-Authored-By` / `AI-Contribution`) per toolkit D-006.
@@ -55,13 +55,13 @@ file boundaries, and the agent workflow, read [AGENTS.md](../../AGENTS.md).
   [`backlog.md`](../backlog.md) (unclear priority → its `Inbox`
   section) — without waiting for the owner to ask. Deduplicate first.
   Recording a task is not permission to start it.
-- **Terse engineering tone.** Diff > narrative. Avoid trailing
-  summaries when the user already sees the diff.
-- **Stage long tasks.** Break a multi-hour task into 3–5 stages,
-  `/clear` between stages, persist intermediate state to `PLAN.md` /
-  `.claude/backlog.md` items (WORK_LOG.md ceremony retired 2026-07-05).
+- **Communication:** state the concrete outcome, evidence and remaining gaps.
+  A visible diff does not replace the result or missing validation.
+- **Stage long tasks.** Use one durable acceptance plan in the board or brief.
+  Before a topic/context change, persist open stages, next action and blockers.
+  Completed stages do not close the parent; no automatic `/clear` ceremony.
 - **Language: English.** Code, comments, commit messages, and
-  in-repo docs are English. UI strings ship as English plus Polish
+  in-repo docs are English (verbatim vendor skills/conventions retain source language). UI strings ship as English plus Polish
   via `docs/I18N.md` (gettext + Qt `tr`).
 
 ## Branch-per-agent rule

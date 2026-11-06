@@ -1,0 +1,1 @@
+RunAgentInput.state	dokument stanu wspoldzielonego AG-UI: z protokolu otwarta mapa, pilnuje jej walidator aplikacji, nie schemat

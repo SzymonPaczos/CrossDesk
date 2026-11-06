@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "baseline_project_sha": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+  "declared_project_version": "2026.09.05",
+  "official_release_identity": "unverified-legacy-declaration",
+  "baseline_lock_sha256": "fa15c8d27c9f27066b8bd01b956ef1710c5b86ac95db60897d575dedbd9b5501",
+  "items": [
+    {
+      "project_path": ".claude/agents/red-team.md",
+      "master_path": "agents/red-team.md",
+      "locked_copy_sha256": "aef5d3534e93afd54d42ebe5bab4ef98c53085bfad1b082d162aa89c17ecd367",
+      "baseline_copy_sha256": "aef5d3534e93afd54d42ebe5bab4ef98c53085bfad1b082d162aa89c17ecd367",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "aef5d3534e93afd54d42ebe5bab4ef98c53085bfad1b082d162aa89c17ecd367",
+      "target_master_sha256": "c979c654edb06dc32151ac1461c15b7b4275ad6049b771ffe9fc0983d3fd39d8",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/agents/security-reviewer.md",
+      "master_path": "agents/security-reviewer.md",
+      "locked_copy_sha256": "cbb3ecbdf56920e8d92b6a3dabf2e13634a7772d78c05fa35ba5fb88b98d90d4",
+      "baseline_copy_sha256": "cbb3ecbdf56920e8d92b6a3dabf2e13634a7772d78c05fa35ba5fb88b98d90d4",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "fde74596dcadfb9187a007ecd6eb8d4d02b1f69c589419ebf90f0c96423ea773",
+      "target_master_sha256": "0034bbd1b3ce98bc51a28229375c45fb59dd04f95d26b9765fbc8ff3e0c839e3",
+      "classification": "declared-project-specialization"
+    },
+    {
+      "project_path": ".claude/rules/change-provenance.md",
+      "master_path": "conventions/change-provenance.md",
+      "locked_copy_sha256": "ba50643234ce8fdf506a2dc097f9de98ecfe5b8b441cd2329f611d961e223bcb",
+      "baseline_copy_sha256": "ba50643234ce8fdf506a2dc097f9de98ecfe5b8b441cd2329f611d961e223bcb",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "ba50643234ce8fdf506a2dc097f9de98ecfe5b8b441cd2329f611d961e223bcb",
+      "target_master_sha256": "2c4e0f5e62ff23f3c4c8e7511f3888135b8d9527e9f1cb400e692941672c3198",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/ci-cd.md",
+      "master_path": "conventions/ci-cd.md",
+      "locked_copy_sha256": "911b6c5ea8c1648d222dc55705d5bcb27db46b3dc0cf17252fe559c959502fad",
+      "baseline_copy_sha256": "911b6c5ea8c1648d222dc55705d5bcb27db46b3dc0cf17252fe559c959502fad",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "911b6c5ea8c1648d222dc55705d5bcb27db46b3dc0cf17252fe559c959502fad",
+      "target_master_sha256": "00c5e885f259968defca92d8570b6b5be803c7a6b8a2af906e42502b9f53b67f",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/dependency-currency.md",
+      "master_path": "conventions/dependency-currency.md",
+      "locked_copy_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "baseline_copy_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "target_master_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/issue-reporting.md",
+      "master_path": "conventions/issue-reporting.md",
+      "locked_copy_sha256": "00fec561c5a90a3ded03d4e2b38bad544d79178a5705a85e68b3bb901031b847",
+      "baseline_copy_sha256": "00fec561c5a90a3ded03d4e2b38bad544d79178a5705a85e68b3bb901031b847",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "00fec561c5a90a3ded03d4e2b38bad544d79178a5705a85e68b3bb901031b847",
+      "target_master_sha256": "77b15855ea4f1f3481ee11e774dda7d7d9042bcc26fb77e2f5061abf00e2cdbd",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/multi-agent-delivery.md",
+      "master_path": "conventions/multi-agent-delivery.md",
+      "locked_copy_sha256": "d39275a1e8406027d34ef56e4b353f12216f4ba3cbfdebd19796c464d37d3646",
+      "baseline_copy_sha256": "d39275a1e8406027d34ef56e4b353f12216f4ba3cbfdebd19796c464d37d3646",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "d39275a1e8406027d34ef56e4b353f12216f4ba3cbfdebd19796c464d37d3646",
+      "target_master_sha256": "ad61bbaa5a17b2ab8333aaea611eda5d5281b6e98a3bab0222bca9e5ddc014fa",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/pull-request-review.md",
+      "master_path": "conventions/pull-request-review.md",
+      "locked_copy_sha256": "176b7fa04c6e3a037fa134094a207fee91ff20f4b6ef1c7528a35b1f33885fd3",
+      "baseline_copy_sha256": "176b7fa04c6e3a037fa134094a207fee91ff20f4b6ef1c7528a35b1f33885fd3",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "176b7fa04c6e3a037fa134094a207fee91ff20f4b6ef1c7528a35b1f33885fd3",
+      "target_master_sha256": "cee89103e4bc55a8d6a6b9a5db71466755ae44f8a145f30b037ee8d9d3237dea",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/quality-gates-and-dod.md",
+      "master_path": "conventions/quality-gates-and-dod.md",
+      "locked_copy_sha256": "ca931b152153de7a9238533f7d7e8968ac0ee1d2270057bc3496b2285dab7226",
+      "baseline_copy_sha256": "ca931b152153de7a9238533f7d7e8968ac0ee1d2270057bc3496b2285dab7226",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "ca931b152153de7a9238533f7d7e8968ac0ee1d2270057bc3496b2285dab7226",
+      "target_master_sha256": "2a905dfd012f55c455627e262db2485a95596bab29481e14cf16305c9b27245f",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/repo-hygiene-gates.md",
+      "master_path": "conventions/repo-hygiene-gates.md",
+      "locked_copy_sha256": "ebcd857d7e2ae35f69942d974ad6d496358a054891bf10430aec2a5b9b57c672",
+      "baseline_copy_sha256": "ebcd857d7e2ae35f69942d974ad6d496358a054891bf10430aec2a5b9b57c672",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "ebcd857d7e2ae35f69942d974ad6d496358a054891bf10430aec2a5b9b57c672",
+      "target_master_sha256": "5af4a3643bcd1b99a2b2a926c2af66cb4db7d48c85ab718c5f3d5f07cea661e2",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/rules-as-gates.md",
+      "master_path": "conventions/rules-as-gates.md",
+      "locked_copy_sha256": "edd314d9e793e730e89a2342543b66657034fcc3a6c7ee18b8c5cd0cef96e19d",
+      "baseline_copy_sha256": "edd314d9e793e730e89a2342543b66657034fcc3a6c7ee18b8c5cd0cef96e19d",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "edd314d9e793e730e89a2342543b66657034fcc3a6c7ee18b8c5cd0cef96e19d",
+      "target_master_sha256": "d5910cd46f7f401d9b99f18be37560014fdd15ee7346735261a3cc0e4e97b58f",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/security-verification-gates.md",
+      "master_path": "conventions/security-verification-gates.md",
+      "locked_copy_sha256": "503e6246a1b182e3f3d7e70a836533e985693bccdc64e276813880216383fd29",
+      "baseline_copy_sha256": "503e6246a1b182e3f3d7e70a836533e985693bccdc64e276813880216383fd29",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "503e6246a1b182e3f3d7e70a836533e985693bccdc64e276813880216383fd29",
+      "target_master_sha256": "e79856ba872a64cb20b5cb7605d929e29d97fd81826f2569333fa516a7be7213",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/test-evidence.md",
+      "master_path": "conventions/test-evidence.md",
+      "locked_copy_sha256": "869f9a10d3b28b5bdadefa953c3a6430f6064201d3f594fe5a383091aec62a45",
+      "baseline_copy_sha256": "869f9a10d3b28b5bdadefa953c3a6430f6064201d3f594fe5a383091aec62a45",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "869f9a10d3b28b5bdadefa953c3a6430f6064201d3f594fe5a383091aec62a45",
+      "target_master_sha256": "f73b316c4684ef3ea22085ab27e4a7efb049d546c977a1c3697f29812d081fda",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/test-execution-economy.md",
+      "master_path": "conventions/test-execution-economy.md",
+      "locked_copy_sha256": "8de7753fa882dcce66d9d52a6ff0f156d32d41a4e253c9341632f3d5f37d95d1",
+      "baseline_copy_sha256": "8de7753fa882dcce66d9d52a6ff0f156d32d41a4e253c9341632f3d5f37d95d1",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "8de7753fa882dcce66d9d52a6ff0f156d32d41a4e253c9341632f3d5f37d95d1",
+      "target_master_sha256": "e0b5c42e48a0ec11ece169cf36613c1623ef417be515b50d323f553571a9a8ee",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/test-quality-baseline.md",
+      "master_path": "conventions/test-quality-baseline.md",
+      "locked_copy_sha256": "37fd9222eab204334dca90f1a0439c8663be7b461040c39fc07975fa77615d72",
+      "baseline_copy_sha256": "37fd9222eab204334dca90f1a0439c8663be7b461040c39fc07975fa77615d72",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "37fd9222eab204334dca90f1a0439c8663be7b461040c39fc07975fa77615d72",
+      "target_master_sha256": "28cc62a333ef5c425ad9517fca640a9810188bc18a46f204945c4ab282afddc0",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/rules/toolkit-sync.md",
+      "master_path": "conventions/toolkit-sync.md",
+      "locked_copy_sha256": "100e0007b1b9f8bfc3359c53a9ec111581cffc7038ed945062c57631f7faa617",
+      "baseline_copy_sha256": "100e0007b1b9f8bfc3359c53a9ec111581cffc7038ed945062c57631f7faa617",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "100e0007b1b9f8bfc3359c53a9ec111581cffc7038ed945062c57631f7faa617",
+      "target_master_sha256": "abcf80a219d38c3246f6da3bb27cea81b400bcbedf5373f33ede52f8da224fd8",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/skills/audyt-naprawczy/SKILL.md",
+      "master_path": "skills/audyt-naprawczy/SKILL.md",
+      "locked_copy_sha256": "4ba178f7dc111a38175c220215a689f99a513b939a6a01a2abd8573792121f2e",
+      "baseline_copy_sha256": "4ba178f7dc111a38175c220215a689f99a513b939a6a01a2abd8573792121f2e",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "4ba178f7dc111a38175c220215a689f99a513b939a6a01a2abd8573792121f2e",
+      "target_master_sha256": "dba83ac233a0b71bf20b23962e23c03cdb05465e8d911e19792e5f67aef26f99",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/skills/weekly-audit/SKILL.md",
+      "master_path": "skills/weekly-audit/SKILL.md",
+      "locked_copy_sha256": "65991e134a32e3b86d87e9d9ac15693979e58e6521b6c88edf2472b630606920",
+      "baseline_copy_sha256": "65991e134a32e3b86d87e9d9ac15693979e58e6521b6c88edf2472b630606920",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "65991e134a32e3b86d87e9d9ac15693979e58e6521b6c88edf2472b630606920",
+      "target_master_sha256": "149334e779f50c3379702a17494e14487412a7ee1352d6bd4deb75fa9398b34b",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/skills/weekly-audit/references/kontrola-glebokosci.md",
+      "master_path": "skills/weekly-audit/references/kontrola-glebokosci.md",
+      "locked_copy_sha256": "f5581c320b87e445e0c704cc88442e5d6fa096e67ea238f43a213b97aa284b77",
+      "baseline_copy_sha256": "f5581c320b87e445e0c704cc88442e5d6fa096e67ea238f43a213b97aa284b77",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "f5581c320b87e445e0c704cc88442e5d6fa096e67ea238f43a213b97aa284b77",
+      "target_master_sha256": "54d8f7ae3553bb8a73680e8228a1d6ae18e6d95e5198527399c768c36e4b6915",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/skills/weekly-audit/references/test-quality-baseline.md",
+      "master_path": "skills/weekly-audit/references/test-quality-baseline.md",
+      "locked_copy_sha256": "6ee63826663952e0b9a9f2ee231b9a27a10a313b8023dfb44f5cde5cde0eba9f",
+      "baseline_copy_sha256": "6ee63826663952e0b9a9f2ee231b9a27a10a313b8023dfb44f5cde5cde0eba9f",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "6ee63826663952e0b9a9f2ee231b9a27a10a313b8023dfb44f5cde5cde0eba9f",
+      "target_master_sha256": null,
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/templates/audit-log-entry.md",
+      "master_path": "templates/audit-log-entry.md",
+      "locked_copy_sha256": "d50a517ef2aab4405b1a38837c4a8ba4733793652d31d156f01a9dbf4a5edf5a",
+      "baseline_copy_sha256": "d50a517ef2aab4405b1a38837c4a8ba4733793652d31d156f01a9dbf4a5edf5a",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "d50a517ef2aab4405b1a38837c4a8ba4733793652d31d156f01a9dbf4a5edf5a",
+      "target_master_sha256": "20098b158b9ac73bf1e260fde0586ede67b6afb5cb84de65a7f5e00075d8d241",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/templates/review-record.md",
+      "master_path": "templates/review-record.md",
+      "locked_copy_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "baseline_copy_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "target_master_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "classification": "unchanged-copy"
+    },
+    {
+      "project_path": ".claude/templates/test-gates.sh",
+      "master_path": "templates/test-gates.sh",
+      "locked_copy_sha256": "d9fcf1f40e2c8c53e80da693041cce9f71485fd7d61a89657ca3efcecc020556",
+      "baseline_copy_sha256": "d9fcf1f40e2c8c53e80da693041cce9f71485fd7d61a89657ca3efcecc020556",
+      "baseline_matches_lock": true,
+      "locked_master_sha256": "d9fcf1f40e2c8c53e80da693041cce9f71485fd7d61a89657ca3efcecc020556",
+      "target_master_sha256": "ce3823feadae845259df57462b7c29e568dadd67ee0ee6dea14e4d37a0cd3f3a",
+      "classification": "unchanged-copy"
+    }
+  ],
+  "target_toolkit_sha": "d28a641f8e045773bd68c83c74917ae266b37d26",
+  "target_toolkit_version": "2026.11.07",
+  "target_toolkit_branch": "chore/project-adoptions-2026-11-06"
+}

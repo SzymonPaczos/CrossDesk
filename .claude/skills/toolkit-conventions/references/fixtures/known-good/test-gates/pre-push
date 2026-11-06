@@ -1,0 +1,95 @@
+#!/bin/bash
+# Pre-Push Hook: Security Review na tym, co faktycznie leci na serwer.
+# Stack-agnostic — używa tylko grep. Nie wymaga node/python/go w PATH.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+STATUS=0
+
+echo "🔍 Pre-Push: Security Review..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Protokół pre-push: <local ref> <local sha> <remote ref> <remote sha>
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+    # Sam zer = usunięcie gałęzi albo brak gałęzi na remote.
+    case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+
+    case "$remote_sha" in
+        *[!0]*) RANGE="$remote_sha..$local_sha" ;;
+        # Nowa gałąź: bierz commity nieobecne na żadnym innym refie remote.
+        *)      RANGE="$local_sha --not --remotes" ;;
+    esac
+
+    # shellcheck disable=SC2086
+    CHANGED_FILES="$(git -C "$REPO_ROOT" log --format= --name-only \
+        --diff-filter=ACMR $RANGE 2>/dev/null | sort -u | grep -v '^$' || true)"
+
+    if [ -z "$CHANGED_FILES" ]; then
+        echo "ℹ️  Brak zmian do sprawdzenia w $local_sha."
+        continue
+    fi
+
+    # Odtwórz pushowany commit obok, w oderwaniu od working tree.
+    WORKDIR="$(mktemp -d)"
+    rm -rf "$WORKDIR"
+    git -C "$REPO_ROOT" worktree add --detach --quiet "$WORKDIR" "$local_sha"
+
+    # === 1. Hardcoded secrets ===
+    echo "🔐 Sprawdzam hardcoded secrets w ${local_sha:0:8}..."
+    SECRET_PATTERNS='password[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{4,}|api[_-]?key[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{8,}|secret[[:space:]]*=[[:space:]]*["'"'"'][^"'"'"']{8,}'
+
+    FOUND=$(printf '%s\n' "$CHANGED_FILES" | while IFS= read -r file; do
+        [ -f "$WORKDIR/$file" ] || continue
+        printf '%s\n' "$file" | grep -qE '(node_modules|\.env|test|spec|mock|fixture)' && continue
+        grep -qiE "$SECRET_PATTERNS" "$WORKDIR/$file" && printf '%s\n' "$file"
+    done || true)
+
+    if [ -n "$FOUND" ]; then
+        echo "⚠️  UWAGA: potencjalne hardcoded secrets w:"
+        echo "$FOUND"
+        echo "     Usuń je przed pushem lub przenieś do .env"
+        STATUS=1
+    fi
+
+    # Checki 2–4 są advisory. Każdy pipeline kończy się `|| true`, bo pod
+    # `set -euo pipefail` puste dopasowanie grepa (exit 1) albo `head`
+    # zamykający potok (SIGPIPE) ubiłyby hook w środku — gate „przechodzi",
+    # nie wykonawszy kolejnych warstw. To ta sama klasa błędu co `exit 0`
+    # opisana w `conventions/rules-as-gates.md` §8.
+
+    # === 2. console.log w prodzie (Node/TS) ===
+    echo "🖨️  Sprawdzam console.log..."
+    { printf '%s\n' "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' \
+        | grep -v -E "(test|\.spec|mock|fixture)" | while IFS= read -r file; do
+        [ -f "$WORKDIR/$file" ] || continue
+        grep -H -n -E 'console\.(log|debug|warn)' "$WORKDIR/$file" 2>/dev/null || true
+    done | head -5; } || true
+
+    # === 3. print() w hot path (Python) ===
+    # Tylko ostrzeżenie, nie blokujące — print() bywa legit w skryptach.
+    echo "🐍 Sprawdzam print() w Python..."
+    { printf '%s\n' "$CHANGED_FILES" | grep -E '\.py$' \
+        | grep -v -E "(test_|conftest|scripts/)" | while IFS= read -r file; do
+        [ -f "$WORKDIR/$file" ] || continue
+        grep -H -n -E '^\s*print\(' "$WORKDIR/$file" 2>/dev/null || true
+    done | head -5; } || true
+
+    # === 4. TODO/FIXME w nowo dodanych liniach ===
+    echo "📝 Sprawdzam TODO/FIXME w diffie..."
+    # shellcheck disable=SC2086
+    { git -C "$REPO_ROOT" log --format= -p $RANGE 2>/dev/null \
+        | grep -E '^\+.*TODO|^\+.*FIXME' | head -10; } || true
+
+    git -C "$REPO_ROOT" worktree remove --force "$WORKDIR" 2>/dev/null || rm -rf "$WORKDIR"
+done
+
+echo ""
+if [ "$STATUS" -ne 0 ]; then
+    echo "❌ Pre-Push: gate zablokował push."
+else
+    echo "✅ Pre-Push checks zakończone."
+fi
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+exit "$STATUS"

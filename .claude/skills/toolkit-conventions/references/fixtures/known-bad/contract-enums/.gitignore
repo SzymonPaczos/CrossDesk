@@ -1,0 +1,9 @@
+# To jest MATERIAL fixture'u, nie higiena: wygenerowany klient kontraktu ukryty
+# przed gitem. `git diff` milczy o plikach nieśledzonych, więc strażnik
+# regeneracji meldowałby zgodność, ktorej nigdy nie sprawdzil.
+#
+# W repozytorium toolkitu ten plik jest dodany przez `git add -f`. Bez tego
+# fixture przyjechalby do swiezego klona BEZ pliku, bramka nie znalazlaby czego
+# szukac i drugie naruszenie zniknieloby po cichu — czyli fixture przestalby
+# dowodzic polowy tego, po co istnieje.
+apps/web/src/lib/api-types.d.ts

@@ -1,0 +1,10 @@
+{
+  "name": "Example service",
+  "stack": "Python service with a project-owned verification command",
+  "ci": "local-first",
+  "production": false,
+  "multi_agent": true,
+  "security_context": "Granice: niezaufane wejście HTTP; walidacja w module wejściowym. Autoryzacja i dostęp do danych wymagają testów negatywnych. Projekt nie ma obecnie skonfigurowanej produkcji.",
+  "verification_commands": [["python3", "-m", "unittest", "discover", "-s", "tests"]],
+  "setup_commands": []
+}

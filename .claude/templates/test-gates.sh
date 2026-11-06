@@ -2,7 +2,7 @@
 #
 # test-gates.sh — testy SAMYCH bramek, nie kodu projektu.
 #
-# Powód istnienia (conventions/rules-as-gates.md §9): gate, który sprawdzono
+# Powód istnienia (conventions/rules-as-gates.md §10): gate, który sprawdzono
 # wyłącznie na zdrowym repo, dowodzi tylko tego, że nie krzyczy bez powodu.
 # Wartość gate'a leży w tym, że BLOKUJE — a to trzeba udowodnić osobno.
 # Gate bez testu negatywnego cicho przestaje działać przy pierwszym refaktorze.
@@ -14,6 +14,15 @@
 
 set -uo pipefail
 
+# Skrypt bywa uruchamiany z hooka gita (pre-commit -> validate-toolkit.sh ->
+# gates.sh). Git eksportuje wtedy GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE, a
+# każde `git init`, `git add` i `git commit` w katalogu tymczasowym trafia
+# przez te zmienne do REPOZYTORIUM WOŁAJĄCEGO. Zmierzone 2026-09-08: komity
+# „material fixture" i „feat: nowa galaz" wylądowały na gałęzi integracyjnej
+# toolkitu, a HEAD przeskoczył na gałąź z fixture'u. Repozytoria tymczasowe
+# muszą widzieć wyłącznie własny katalog.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX GIT_COMMON_DIR
+
 HOOK="${1:-.githooks/pre-push}"
 [ -f "$HOOK" ] || { printf 'Nie znaleziono hooka: %s\n' "$HOOK" >&2; exit 2; }
 HOOK="$(cd "$(dirname "$HOOK")" && pwd)/$(basename "$HOOK")"
@@ -23,6 +32,10 @@ trap 'rm -rf "$TMP"' EXIT
 
 PASS=0
 FAIL=0
+# NEG liczy przypadki, w których hook MA zablokować. To jest właściwy mianownik
+# tego pliku: sześć zdanych testów, z których żaden nie sprawdza blokowania,
+# nie dowodzi niczego. Sam kod wyjścia tej różnicy nie pokazuje.
+NEG=0
 ok()  { printf '  ✅ %s\n' "$1"; PASS=$((PASS + 1)); }
 bad() { printf '  ❌ %s\n' "$1"; [ -n "${2:-}" ] && printf '%s\n' "$2"; FAIL=$((FAIL + 1)); }
 
@@ -59,6 +72,7 @@ run_hook() {
 
 expect_block() {
     local name="$1" repo="$2" local_sha="$3" remote_sha="$4" out rc
+    NEG=$((NEG + 1))
     out="$(run_hook "$repo" "$local_sha" "$remote_sha")"; rc=$?
     if [ "$rc" -ne 0 ]; then ok "$name"; else bad "$name (hook zwrócił 0)" "$out"; fi
 }
@@ -133,4 +147,21 @@ fi
 
 echo
 printf 'Wynik: %d zdanych, %d niezdanych\n' "$PASS" "$FAIL"
+printf 'GATE_TESTS_TOTAL: %s\n' "$((PASS + FAIL))"
+printf 'GATE_TESTS_PASSED: %s\n' "$PASS"
+printf 'GATE_TESTS_FAILED: %s\n' "$FAIL"
+printf 'GATE_TESTS_NEGATIVE: %s — testy, w których hook MA zablokować\n' "$NEG"
+printf 'GATE_TESTS_HOOK: %s\n' "$HOOK"
+
+# Zero uruchomionych testów przy zerowym kodzie wyjścia to najgorszy możliwy
+# wynik tego pliku: wygląda jak dowód, a znaczy „nie sprawdziłem niczego".
+if [ "$((PASS + FAIL))" -eq 0 ]; then
+    printf '\n❌ Nie wykonał się ani jeden test — plik nie ma czym dowodzić, że hook blokuje.\n' >&2
+    exit 1
+fi
+if [ "$NEG" -eq 0 ]; then
+    printf '\n❌ Ani jeden test nie sprawdza blokowania. „Przechodzi, gdy wszystko działa"\n' >&2
+    printf '   nie jest dowodem na nic (conventions/rules-as-gates.md §10).\n' >&2
+    exit 1
+fi
 [ "$FAIL" -eq 0 ]

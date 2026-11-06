@@ -4,13 +4,13 @@ description: Audyt jakości projektu zakończony NAPRAWĄ — zakłada gałąź 
 compatibility: Wymaga bash i git; repozytorium musi mieć czyste drzewo robocze. Naprawy automatyczne wymagają narzędzi projektu (formatter, linter, testy) — bez nich skill degraduje się do raportu. Zaprojektowane dla agentów czytających SKILL.md (Claude Code i pokrewne).
 metadata:
   author: claude-toolkit
-  version: "2026.09.05"
+  version: "2026.11.07"
 ---
 
 # Audyt naprawczy
 
 Ten skill robi to, czego `weekly-audit` **nie robi z założenia**: wprowadza
-zmiany. Tamten kończy się raportem i listą priorytetów, bo decyzja „co
+zmiany. Tamten kończy się raportem i listą działań, bo decyzja „co
 naprawiamy" należy do właściciela. Ten bierze z tej listy wyłącznie pozycje,
 przy których decyzja jest zbędna — bo poprawność zmiany da się **udowodnić
 bramką**, a nie osądem — i wykonuje je od razu.
@@ -64,7 +64,8 @@ Z Kroku 00 obowiązuje jedno odstępstwo: gdy `toolkit-sync check` pokaże
 **ZMIENIONY LOKALNIE**, nie naprawiasz tego automatycznie. Kopia reguły
 rozjechana z masterem jest decyzją (promocja albo cofnięcie), nie usterką.
 
-Wynikiem jest lista P0/P1/P2 — wejście do następnego kroku.
+Wynikiem jest lista znalezisk z wpływem `critical/high/medium/low` — wejście
+do następnego kroku.
 
 ## Krok 3 — Klasyfikacja: co wolno naprawić bez pytania
 
@@ -88,7 +89,8 @@ Kryterium jest jedno i nie ma od niego wyjątków:
 **Nie wolno automatycznie — to idzie do raportu:**
 
 - cokolwiek zmienia zachowanie widoczne dla użytkownika;
-- poprawki bezpieczeństwa wymagające decyzji projektowej (P0 zgłaszasz, nie
+- poprawki bezpieczeństwa wymagające decyzji projektowej (zgłaszasz je jako
+  `critical`, nie
   łatasz — zła łata na lukę jest gorsza niż jawna luka w backlogu);
 - zmiana kontraktu, API, schematu danych, migracja;
 - zmiana konfiguracji CI, bramek, progów, `decisions.md`;
@@ -111,6 +113,9 @@ Dla każdej dopuszczonej klasy, po kolei:
    pozycję do raportu jako niedowodliwą. Nie debuguj, nie łataj łaty.
 4. Zbiór pusty → commit. Wiadomość zgodna z `change-provenance.md`:
    `Intent:`, `Task-Ref:`, `Gates:` z faktycznie uruchomionymi komendami.
+   Gdy naprawa zamyka pozycję backlogu, `Task-Ref:` niesie **jej
+   identyfikator** — to jedyne, co pozwala później odpowiedzieć `git log
+   --grep`, co faktycznie tę pozycję zamknęło.
 
 Po każdej klasie drzewo robocze jest czyste. Jeśli nie jest — coś zostawiło
 artefakt i to też jest znalezisko.
@@ -141,6 +146,7 @@ NAPRAWIONE: <klasa: n commitów> …
 COFNIĘTE: <klasa: powód> …
 DO DECYZJI: <pozycje niedowodliwe, z propozycją>
 NOWE_CZERWONE: <lista | pusta>
+ZAMKNIETE_POZYCJE: <ID → komenda bramki | brak>
 ```
 
 `NOWE_CZERWONE` niepuste przy zakończeniu = błąd przebiegu, nie wynik. Zgłoś
@@ -148,6 +154,11 @@ to jako pierwszą rzecz w podsumowaniu.
 
 Na koniec pokaż właścicielowi: nazwę gałęzi, listę commitów jednolinijkowo
 i jedno zdanie — co dalej. Zapytaj o wypchnięcie, nie wypychaj.
+
+Pozycja backlogu, którą naprawa domknęła, **znika z backlogu** i trafia do
+`.claude/history/completed-work.md` razem z identyfikatorem, datą, komendą
+bramki i SHA commita — tego wpisu potrzebuje kontrola nawrotów w następnym
+audycie. Odhaczenie pola nie jest domknięciem.
 
 **HEAD zostaje na gałęzi audytu.** Nie wracaj na bazę bez polecenia: powrót
 sprawia, że praca znika z oczu właściciela, który widzi wtedy czyste repo
@@ -165,7 +176,7 @@ i wnioskuje, że audyt nic nie znalazł.
 **Raportują:**
 
 - brak narzędzia zdolnego udowodnić klasę (formatter, linter, testy);
-- pozycje P0/P1/P2 niedowodliwe;
+- znaleziska niedowodliwe;
 - propozycje ratchetu;
 - dryf kopii reguł z Kroku 00.
 

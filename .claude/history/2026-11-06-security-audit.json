@@ -1,0 +1,4471 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-11-06",
+  "project": "CrossDesk",
+  "source_sha": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+  "public_source_url": "https://github.com/SzymonPaczos/CrossDesk/tree/d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+  "scope": "Deterministic dependency metadata and bounded offline tests; no automatic fixes or application exploit claims.",
+  "metadata_query_started_at_utc": "2026-11-06T00:51:29.161745+00:00",
+  "metadata_query_finished_at_utc": "2026-11-06T00:51:32.945143+00:00",
+  "locks": [
+    {
+      "path": "guest/Cargo.lock",
+      "sha256": "183e4e51e5112c4d51da1c3e47234cdc248ce7a143713590b4686a4ce2d20d34",
+      "package_count": 274,
+      "public_crates_package_count": 266,
+      "unverified_package_count": 8,
+      "unverified_packages": [
+        {
+          "name": "agent-svc",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "fs-mount",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "ipc-vsock",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "observability",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "proto",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "rail-bridge",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "registry-scan",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "xtask",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        }
+      ]
+    },
+    {
+      "path": "gui/Cargo.lock",
+      "sha256": "d011412cdaadddf2af7ba521caf4b3b28052457dbc4b540565d4a5f3d7067563",
+      "package_count": 106,
+      "public_crates_package_count": 104,
+      "unverified_package_count": 2,
+      "unverified_packages": [
+        {
+          "name": "crossdesk-gui",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        },
+        {
+          "name": "crossdesk-tray",
+          "version": "0.1.0",
+          "coverage": "unverified-workspace-git-or-unknown-source"
+        }
+      ]
+    }
+  ],
+  "sca": {
+    "unique_exact_public_package_versions": 307,
+    "complete_queries": 307,
+    "package_versions_with_advisory_ids": 6,
+    "raw_unique_advisory_ids": 12,
+    "deduplicated_advisory_groups": 8,
+    "withdrawn_advisory_groups": 0,
+    "cve_aliases": [
+      "CVE-2026-111943"
+    ],
+    "kev_matches": [],
+    "network_errors": [],
+    "query_method": "POST https://api.osv.dev/v1/querybatch; crates.io package.name plus exact version; ordered responses and per-query pagination supported; no source code transmitted.",
+    "packages": [
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "adler2",
+        "pages": 1,
+        "purl": "pkg:cargo/adler2@2.0.1",
+        "query_complete": true,
+        "version": "2.0.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "aho-corasick",
+        "pages": 1,
+        "purl": "pkg:cargo/aho-corasick@1.1.4",
+        "query_complete": true,
+        "version": "1.1.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "anstyle",
+        "pages": 1,
+        "purl": "pkg:cargo/anstyle@1.0.14",
+        "query_complete": true,
+        "version": "1.0.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "anyhow",
+        "pages": 1,
+        "purl": "pkg:cargo/anyhow@1.0.103",
+        "query_complete": true,
+        "version": "1.0.103"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "async-stream",
+        "pages": 1,
+        "purl": "pkg:cargo/async-stream@0.3.6",
+        "query_complete": true,
+        "version": "0.3.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "async-stream-impl",
+        "pages": 1,
+        "purl": "pkg:cargo/async-stream-impl@0.3.6",
+        "query_complete": true,
+        "version": "0.3.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "async-trait",
+        "pages": 1,
+        "purl": "pkg:cargo/async-trait@0.1.89",
+        "query_complete": true,
+        "version": "0.1.89"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "atomic-waker",
+        "pages": 1,
+        "purl": "pkg:cargo/atomic-waker@1.1.2",
+        "query_complete": true,
+        "version": "1.1.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "autocfg",
+        "pages": 1,
+        "purl": "pkg:cargo/autocfg@1.5.0",
+        "query_complete": true,
+        "version": "1.5.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "axum",
+        "pages": 1,
+        "purl": "pkg:cargo/axum@0.7.9",
+        "query_complete": true,
+        "version": "0.7.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "axum-core",
+        "pages": 1,
+        "purl": "pkg:cargo/axum-core@0.4.5",
+        "query_complete": true,
+        "version": "0.4.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "base64",
+        "pages": 1,
+        "purl": "pkg:cargo/base64@0.22.1",
+        "query_complete": true,
+        "version": "0.22.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "bitflags",
+        "pages": 1,
+        "purl": "pkg:cargo/bitflags@1.3.2",
+        "query_complete": true,
+        "version": "1.3.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "bitflags",
+        "pages": 1,
+        "purl": "pkg:cargo/bitflags@2.11.1",
+        "query_complete": true,
+        "version": "2.11.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "block-buffer",
+        "pages": 1,
+        "purl": "pkg:cargo/block-buffer@0.10.4",
+        "query_complete": true,
+        "version": "0.10.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "bumpalo",
+        "pages": 1,
+        "purl": "pkg:cargo/bumpalo@3.20.2",
+        "query_complete": true,
+        "version": "3.20.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "bytes",
+        "pages": 1,
+        "purl": "pkg:cargo/bytes@1.11.1",
+        "query_complete": true,
+        "version": "1.11.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "cc",
+        "pages": 1,
+        "purl": "pkg:cargo/cc@1.2.60",
+        "query_complete": true,
+        "version": "1.2.60"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cc",
+        "pages": 1,
+        "purl": "pkg:cargo/cc@1.2.61",
+        "query_complete": true,
+        "version": "1.2.61"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "cfg-if",
+        "pages": 1,
+        "purl": "pkg:cargo/cfg-if@1.0.4",
+        "query_complete": true,
+        "version": "1.0.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "clang-format",
+        "pages": 1,
+        "purl": "pkg:cargo/clang-format@0.3.0",
+        "query_complete": true,
+        "version": "0.3.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "clap",
+        "pages": 1,
+        "purl": "pkg:cargo/clap@4.6.1",
+        "query_complete": true,
+        "version": "4.6.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "clap_builder",
+        "pages": 1,
+        "purl": "pkg:cargo/clap_builder@4.6.0",
+        "query_complete": true,
+        "version": "4.6.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "clap_lex",
+        "pages": 1,
+        "purl": "pkg:cargo/clap_lex@1.1.0",
+        "query_complete": true,
+        "version": "1.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "codespan-reporting",
+        "pages": 1,
+        "purl": "pkg:cargo/codespan-reporting@0.11.1",
+        "query_complete": true,
+        "version": "0.11.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "codespan-reporting",
+        "pages": 1,
+        "purl": "pkg:cargo/codespan-reporting@0.13.1",
+        "query_complete": true,
+        "version": "0.13.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "convert_case",
+        "pages": 1,
+        "purl": "pkg:cargo/convert_case@0.6.0",
+        "query_complete": true,
+        "version": "0.6.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "cpufeatures",
+        "pages": 1,
+        "purl": "pkg:cargo/cpufeatures@0.2.17",
+        "query_complete": true,
+        "version": "0.2.17"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "crc32fast",
+        "pages": 1,
+        "purl": "pkg:cargo/crc32fast@1.5.0",
+        "query_complete": true,
+        "version": "1.5.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "crypto-common",
+        "pages": 1,
+        "purl": "pkg:cargo/crypto-common@0.1.7",
+        "query_complete": true,
+        "version": "0.1.7"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0202",
+            "informational": [
+              "unsound"
+            ],
+            "kev_matches": [],
+            "modified": "2026-07-05T08:45:04.168768Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0202",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx@1.0.194",
+        "query_complete": true,
+        "version": "1.0.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-build",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-build@1.0.194",
+        "query_complete": true,
+        "version": "1.0.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-gen",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-gen@0.7.194",
+        "query_complete": true,
+        "version": "0.7.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-qt",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-qt@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-qt-build",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-qt-build@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-qt-gen",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-qt-gen@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-qt-lib",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-qt-lib@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxx-qt-macro",
+        "pages": 1,
+        "purl": "pkg:cargo/cxx-qt-macro@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxxbridge-cmd",
+        "pages": 1,
+        "purl": "pkg:cargo/cxxbridge-cmd@1.0.194",
+        "query_complete": true,
+        "version": "1.0.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxxbridge-flags",
+        "pages": 1,
+        "purl": "pkg:cargo/cxxbridge-flags@1.0.194",
+        "query_complete": true,
+        "version": "1.0.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "cxxbridge-macro",
+        "pages": 1,
+        "purl": "pkg:cargo/cxxbridge-macro@1.0.194",
+        "query_complete": true,
+        "version": "1.0.194"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "digest",
+        "pages": 1,
+        "purl": "pkg:cargo/digest@0.10.7",
+        "query_complete": true,
+        "version": "0.10.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "displaydoc",
+        "pages": 1,
+        "purl": "pkg:cargo/displaydoc@0.2.6",
+        "query_complete": true,
+        "version": "0.2.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "either",
+        "pages": 1,
+        "purl": "pkg:cargo/either@1.15.0",
+        "query_complete": true,
+        "version": "1.15.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "equivalent",
+        "pages": 1,
+        "purl": "pkg:cargo/equivalent@1.0.2",
+        "query_complete": true,
+        "version": "1.0.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "errno",
+        "pages": 1,
+        "purl": "pkg:cargo/errno@0.3.14",
+        "query_complete": true,
+        "version": "0.3.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "fastrand",
+        "pages": 1,
+        "purl": "pkg:cargo/fastrand@2.4.1",
+        "query_complete": true,
+        "version": "2.4.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "fdeflate",
+        "pages": 1,
+        "purl": "pkg:cargo/fdeflate@0.3.7",
+        "query_complete": true,
+        "version": "0.3.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "find-msvc-tools",
+        "pages": 1,
+        "purl": "pkg:cargo/find-msvc-tools@0.1.9",
+        "query_complete": true,
+        "version": "0.1.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "fixedbitset",
+        "pages": 1,
+        "purl": "pkg:cargo/fixedbitset@0.5.7",
+        "query_complete": true,
+        "version": "0.5.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "flate2",
+        "pages": 1,
+        "purl": "pkg:cargo/flate2@1.1.9",
+        "query_complete": true,
+        "version": "1.1.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "fnv",
+        "pages": 1,
+        "purl": "pkg:cargo/fnv@1.0.7",
+        "query_complete": true,
+        "version": "1.0.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "foldhash",
+        "pages": 1,
+        "purl": "pkg:cargo/foldhash@0.1.5",
+        "query_complete": true,
+        "version": "0.1.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "foldhash",
+        "pages": 1,
+        "purl": "pkg:cargo/foldhash@0.2.0",
+        "query_complete": true,
+        "version": "0.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "form_urlencoded",
+        "pages": 1,
+        "purl": "pkg:cargo/form_urlencoded@1.2.2",
+        "query_complete": true,
+        "version": "1.2.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-channel",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-channel@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-core",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-core@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-executor",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-executor@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-io",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-io@0.3.33",
+        "query_complete": true,
+        "version": "0.3.33"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-macro",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-macro@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-sink",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-sink@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-task",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-task@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "futures-util",
+        "pages": 1,
+        "purl": "pkg:cargo/futures-util@0.3.32",
+        "query_complete": true,
+        "version": "0.3.32"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "generic-array",
+        "pages": 1,
+        "purl": "pkg:cargo/generic-array@0.14.7",
+        "query_complete": true,
+        "version": "0.14.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "getrandom",
+        "pages": 1,
+        "purl": "pkg:cargo/getrandom@0.2.17",
+        "query_complete": true,
+        "version": "0.2.17"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "getrandom",
+        "pages": 1,
+        "purl": "pkg:cargo/getrandom@0.3.4",
+        "query_complete": true,
+        "version": "0.3.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "getrandom",
+        "pages": 1,
+        "purl": "pkg:cargo/getrandom@0.4.2",
+        "query_complete": true,
+        "version": "0.4.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "h2",
+        "pages": 1,
+        "purl": "pkg:cargo/h2@0.4.18",
+        "query_complete": true,
+        "version": "0.4.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hashbrown",
+        "pages": 1,
+        "purl": "pkg:cargo/hashbrown@0.12.3",
+        "query_complete": true,
+        "version": "0.12.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hashbrown",
+        "pages": 1,
+        "purl": "pkg:cargo/hashbrown@0.15.5",
+        "query_complete": true,
+        "version": "0.15.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "hashbrown",
+        "pages": 1,
+        "purl": "pkg:cargo/hashbrown@0.17.0",
+        "query_complete": true,
+        "version": "0.17.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "heck",
+        "pages": 1,
+        "purl": "pkg:cargo/heck@0.5.0",
+        "query_complete": true,
+        "version": "0.5.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hex",
+        "pages": 1,
+        "purl": "pkg:cargo/hex@0.4.3",
+        "query_complete": true,
+        "version": "0.4.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "http",
+        "pages": 1,
+        "purl": "pkg:cargo/http@1.4.0",
+        "query_complete": true,
+        "version": "1.4.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "http-body",
+        "pages": 1,
+        "purl": "pkg:cargo/http-body@1.0.1",
+        "query_complete": true,
+        "version": "1.0.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "http-body-util",
+        "pages": 1,
+        "purl": "pkg:cargo/http-body-util@0.1.3",
+        "query_complete": true,
+        "version": "0.1.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "httparse",
+        "pages": 1,
+        "purl": "pkg:cargo/httparse@1.10.1",
+        "query_complete": true,
+        "version": "1.10.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "httpdate",
+        "pages": 1,
+        "purl": "pkg:cargo/httpdate@1.0.3",
+        "query_complete": true,
+        "version": "1.0.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hyper",
+        "pages": 1,
+        "purl": "pkg:cargo/hyper@1.9.0",
+        "query_complete": true,
+        "version": "1.9.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hyper-timeout",
+        "pages": 1,
+        "purl": "pkg:cargo/hyper-timeout@0.5.2",
+        "query_complete": true,
+        "version": "0.5.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "hyper-util",
+        "pages": 1,
+        "purl": "pkg:cargo/hyper-util@0.1.20",
+        "query_complete": true,
+        "version": "0.1.20"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_collections",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_collections@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_locale_core",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_locale_core@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_normalizer",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_normalizer@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_normalizer_data",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_normalizer_data@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_properties",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_properties@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_properties_data",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_properties_data@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "icu_provider",
+        "pages": 1,
+        "purl": "pkg:cargo/icu_provider@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "id-arena",
+        "pages": 1,
+        "purl": "pkg:cargo/id-arena@2.3.0",
+        "query_complete": true,
+        "version": "2.3.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "idna",
+        "pages": 1,
+        "purl": "pkg:cargo/idna@1.1.0",
+        "query_complete": true,
+        "version": "1.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "idna_adapter",
+        "pages": 1,
+        "purl": "pkg:cargo/idna_adapter@1.2.2",
+        "query_complete": true,
+        "version": "1.2.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "indexmap",
+        "pages": 1,
+        "purl": "pkg:cargo/indexmap@1.9.3",
+        "query_complete": true,
+        "version": "1.9.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "indexmap",
+        "pages": 1,
+        "purl": "pkg:cargo/indexmap@2.14.0",
+        "query_complete": true,
+        "version": "2.14.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "indoc",
+        "pages": 1,
+        "purl": "pkg:cargo/indoc@2.0.7",
+        "query_complete": true,
+        "version": "2.0.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "ipnet",
+        "pages": 1,
+        "purl": "pkg:cargo/ipnet@2.12.0",
+        "query_complete": true,
+        "version": "2.12.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "itertools",
+        "pages": 1,
+        "purl": "pkg:cargo/itertools@0.13.0",
+        "query_complete": true,
+        "version": "0.13.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "itertools",
+        "pages": 1,
+        "purl": "pkg:cargo/itertools@0.14.0",
+        "query_complete": true,
+        "version": "0.14.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "itoa",
+        "pages": 1,
+        "purl": "pkg:cargo/itoa@1.0.18",
+        "query_complete": true,
+        "version": "1.0.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "jobserver",
+        "pages": 1,
+        "purl": "pkg:cargo/jobserver@0.1.34",
+        "query_complete": true,
+        "version": "0.1.34"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "js-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/js-sys@0.3.98",
+        "query_complete": true,
+        "version": "0.3.98"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "lazy_static",
+        "pages": 1,
+        "purl": "pkg:cargo/lazy_static@1.5.0",
+        "query_complete": true,
+        "version": "1.5.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "leb128fmt",
+        "pages": 1,
+        "purl": "pkg:cargo/leb128fmt@0.1.0",
+        "query_complete": true,
+        "version": "0.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "libc",
+        "pages": 1,
+        "purl": "pkg:cargo/libc@0.2.186",
+        "query_complete": true,
+        "version": "0.2.186"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "link-cplusplus",
+        "pages": 1,
+        "purl": "pkg:cargo/link-cplusplus@1.0.12",
+        "query_complete": true,
+        "version": "1.0.12"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "linux-raw-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/linux-raw-sys@0.12.1",
+        "query_complete": true,
+        "version": "0.12.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "litemap",
+        "pages": 1,
+        "purl": "pkg:cargo/litemap@0.8.2",
+        "query_complete": true,
+        "version": "0.8.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "lock_api",
+        "pages": 1,
+        "purl": "pkg:cargo/lock_api@0.4.14",
+        "query_complete": true,
+        "version": "0.4.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "log",
+        "pages": 1,
+        "purl": "pkg:cargo/log@0.4.29",
+        "query_complete": true,
+        "version": "0.4.29"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "matchers",
+        "pages": 1,
+        "purl": "pkg:cargo/matchers@0.2.0",
+        "query_complete": true,
+        "version": "0.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "matchit",
+        "pages": 1,
+        "purl": "pkg:cargo/matchit@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "memchr",
+        "pages": 1,
+        "purl": "pkg:cargo/memchr@2.8.0",
+        "query_complete": true,
+        "version": "2.8.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "mime",
+        "pages": 1,
+        "purl": "pkg:cargo/mime@0.3.17",
+        "query_complete": true,
+        "version": "0.3.17"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "minimal-lexical",
+        "pages": 1,
+        "purl": "pkg:cargo/minimal-lexical@0.2.1",
+        "query_complete": true,
+        "version": "0.2.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "miniz_oxide",
+        "pages": 1,
+        "purl": "pkg:cargo/miniz_oxide@0.8.9",
+        "query_complete": true,
+        "version": "0.8.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "mio",
+        "pages": 1,
+        "purl": "pkg:cargo/mio@1.2.0",
+        "query_complete": true,
+        "version": "1.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "multimap",
+        "pages": 1,
+        "purl": "pkg:cargo/multimap@0.10.1",
+        "query_complete": true,
+        "version": "0.10.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "nom",
+        "pages": 1,
+        "purl": "pkg:cargo/nom@7.1.3",
+        "query_complete": true,
+        "version": "7.1.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "nu-ansi-term",
+        "pages": 1,
+        "purl": "pkg:cargo/nu-ansi-term@0.50.3",
+        "query_complete": true,
+        "version": "0.50.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "once_cell",
+        "pages": 1,
+        "purl": "pkg:cargo/once_cell@1.21.4",
+        "query_complete": true,
+        "version": "1.21.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "opentelemetry",
+        "pages": 1,
+        "purl": "pkg:cargo/opentelemetry@0.32.0",
+        "query_complete": true,
+        "version": "0.32.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "opentelemetry-http",
+        "pages": 1,
+        "purl": "pkg:cargo/opentelemetry-http@0.32.0",
+        "query_complete": true,
+        "version": "0.32.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "opentelemetry-otlp",
+        "pages": 1,
+        "purl": "pkg:cargo/opentelemetry-otlp@0.32.0",
+        "query_complete": true,
+        "version": "0.32.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "opentelemetry-proto",
+        "pages": 1,
+        "purl": "pkg:cargo/opentelemetry-proto@0.32.0",
+        "query_complete": true,
+        "version": "0.32.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "opentelemetry_sdk",
+        "pages": 1,
+        "purl": "pkg:cargo/opentelemetry_sdk@0.32.1",
+        "query_complete": true,
+        "version": "0.32.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "parking_lot",
+        "pages": 1,
+        "purl": "pkg:cargo/parking_lot@0.12.5",
+        "query_complete": true,
+        "version": "0.12.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "parking_lot_core",
+        "pages": 1,
+        "purl": "pkg:cargo/parking_lot_core@0.9.12",
+        "query_complete": true,
+        "version": "0.9.12"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "pem",
+        "pages": 1,
+        "purl": "pkg:cargo/pem@3.0.6",
+        "query_complete": true,
+        "version": "3.0.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "percent-encoding",
+        "pages": 1,
+        "purl": "pkg:cargo/percent-encoding@2.3.2",
+        "query_complete": true,
+        "version": "2.3.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "petgraph",
+        "pages": 1,
+        "purl": "pkg:cargo/petgraph@0.7.1",
+        "query_complete": true,
+        "version": "0.7.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "pin-project",
+        "pages": 1,
+        "purl": "pkg:cargo/pin-project@1.1.11",
+        "query_complete": true,
+        "version": "1.1.11"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "pin-project-internal",
+        "pages": 1,
+        "purl": "pkg:cargo/pin-project-internal@1.1.11",
+        "query_complete": true,
+        "version": "1.1.11"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "pin-project-lite",
+        "pages": 1,
+        "purl": "pkg:cargo/pin-project-lite@0.2.17",
+        "query_complete": true,
+        "version": "0.2.17"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "png",
+        "pages": 1,
+        "purl": "pkg:cargo/png@0.17.16",
+        "query_complete": true,
+        "version": "0.17.16"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "portable-atomic",
+        "pages": 1,
+        "purl": "pkg:cargo/portable-atomic@1.14.0",
+        "query_complete": true,
+        "version": "1.14.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "potential_utf",
+        "pages": 1,
+        "purl": "pkg:cargo/potential_utf@0.1.5",
+        "query_complete": true,
+        "version": "0.1.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "ppv-lite86",
+        "pages": 1,
+        "purl": "pkg:cargo/ppv-lite86@0.2.21",
+        "query_complete": true,
+        "version": "0.2.21"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prettyplease",
+        "pages": 1,
+        "purl": "pkg:cargo/prettyplease@0.2.37",
+        "query_complete": true,
+        "version": "0.2.37"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "proc-macro2",
+        "pages": 1,
+        "purl": "pkg:cargo/proc-macro2@1.0.106",
+        "query_complete": true,
+        "version": "1.0.106"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost",
+        "pages": 1,
+        "purl": "pkg:cargo/prost@0.13.5",
+        "query_complete": true,
+        "version": "0.13.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost",
+        "pages": 1,
+        "purl": "pkg:cargo/prost@0.14.4",
+        "query_complete": true,
+        "version": "0.14.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost-build",
+        "pages": 1,
+        "purl": "pkg:cargo/prost-build@0.13.5",
+        "query_complete": true,
+        "version": "0.13.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/prost-derive@0.13.5",
+        "query_complete": true,
+        "version": "0.13.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/prost-derive@0.14.4",
+        "query_complete": true,
+        "version": "0.14.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost-types",
+        "pages": 1,
+        "purl": "pkg:cargo/prost-types@0.13.5",
+        "query_complete": true,
+        "version": "0.13.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "prost-types",
+        "pages": 1,
+        "purl": "pkg:cargo/prost-types@0.14.4",
+        "query_complete": true,
+        "version": "0.14.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-linux-aarch_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-linux-aarch_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-linux-ppcle_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-linux-ppcle_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-linux-s390_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-linux-s390_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-linux-x86_32",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-linux-x86_32@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-linux-x86_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-linux-x86_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-macos-aarch_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-macos-aarch_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-macos-x86_64",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-macos-x86_64@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "protoc-bin-vendored-win32",
+        "pages": 1,
+        "purl": "pkg:cargo/protoc-bin-vendored-win32@3.2.0",
+        "query_complete": true,
+        "version": "3.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "qt-build-utils",
+        "pages": 1,
+        "purl": "pkg:cargo/qt-build-utils@0.7.3",
+        "query_complete": true,
+        "version": "0.7.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "quote",
+        "pages": 1,
+        "purl": "pkg:cargo/quote@1.0.45",
+        "query_complete": true,
+        "version": "1.0.45"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "r-efi",
+        "pages": 1,
+        "purl": "pkg:cargo/r-efi@5.3.0",
+        "query_complete": true,
+        "version": "5.3.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "r-efi",
+        "pages": 1,
+        "purl": "pkg:cargo/r-efi@6.0.0",
+        "query_complete": true,
+        "version": "6.0.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand",
+        "pages": 1,
+        "purl": "pkg:cargo/rand@0.8.6",
+        "query_complete": true,
+        "version": "0.8.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand",
+        "pages": 1,
+        "purl": "pkg:cargo/rand@0.9.5",
+        "query_complete": true,
+        "version": "0.9.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand_chacha",
+        "pages": 1,
+        "purl": "pkg:cargo/rand_chacha@0.3.1",
+        "query_complete": true,
+        "version": "0.3.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand_chacha",
+        "pages": 1,
+        "purl": "pkg:cargo/rand_chacha@0.9.0",
+        "query_complete": true,
+        "version": "0.9.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand_core",
+        "pages": 1,
+        "purl": "pkg:cargo/rand_core@0.6.4",
+        "query_complete": true,
+        "version": "0.6.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rand_core",
+        "pages": 1,
+        "purl": "pkg:cargo/rand_core@0.9.5",
+        "query_complete": true,
+        "version": "0.9.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "redox_syscall",
+        "pages": 1,
+        "purl": "pkg:cargo/redox_syscall@0.5.18",
+        "query_complete": true,
+        "version": "0.5.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "regex",
+        "pages": 1,
+        "purl": "pkg:cargo/regex@1.12.3",
+        "query_complete": true,
+        "version": "1.12.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "regex-automata",
+        "pages": 1,
+        "purl": "pkg:cargo/regex-automata@0.4.14",
+        "query_complete": true,
+        "version": "0.4.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "regex-syntax",
+        "pages": 1,
+        "purl": "pkg:cargo/regex-syntax@0.8.10",
+        "query_complete": true,
+        "version": "0.8.10"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "reqwest",
+        "pages": 1,
+        "purl": "pkg:cargo/reqwest@0.13.4",
+        "query_complete": true,
+        "version": "0.13.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "ring",
+        "pages": 1,
+        "purl": "pkg:cargo/ring@0.17.14",
+        "query_complete": true,
+        "version": "0.17.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "rustix",
+        "pages": 1,
+        "purl": "pkg:cargo/rustix@1.1.4",
+        "query_complete": true,
+        "version": "1.1.4"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [
+              "RUSTSEC-2026-0285"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "GHSA-2mjx-qc3c-rqvc",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-27T15:30:05.509305Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/GHSA-2mjx-qc3c-rqvc",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "RUSTSEC-2026-0346"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "GHSA-c8m5-c952-6cm4",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-27T16:15:05.354395Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/GHSA-c8m5-c952-6cm4",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "RUSTSEC-2026-0348"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "GHSA-h2v8-394m-p7vv",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-27T16:15:05.337819Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/GHSA-h2v8-394m-p7vv",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "RUSTSEC-2026-0349"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "GHSA-w44r-93j7-qv28",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-27T16:15:05.340347Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/GHSA-w44r-93j7-qv28",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "GHSA-2mjx-qc3c-rqvc"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0285",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-12T18:00:10.944958Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0285",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "GHSA-c8m5-c952-6cm4"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0346",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-14T13:30:02.480694Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0346",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "GHSA-h2v8-394m-p7vv"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0348",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-14T13:30:02.480925Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0348",
+            "withdrawn": null
+          },
+          {
+            "aliases": [
+              "GHSA-w44r-93j7-qv28"
+            ],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0349",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-14T13:30:02.475705Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0349",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rustls",
+        "pages": 1,
+        "purl": "pkg:cargo/rustls@0.23.40",
+        "query_complete": true,
+        "version": "0.23.40"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2025-0134",
+            "informational": [
+              "unmaintained"
+            ],
+            "kev_matches": [],
+            "modified": "2025-12-05T19:07:59.622592Z",
+            "unmaintained": true,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2025-0134",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rustls-pemfile",
+        "pages": 1,
+        "purl": "pkg:cargo/rustls-pemfile@2.2.0",
+        "query_complete": true,
+        "version": "2.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rustls-pki-types",
+        "pages": 1,
+        "purl": "pkg:cargo/rustls-pki-types@1.14.1",
+        "query_complete": true,
+        "version": "1.14.1"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [
+              "BIT-golang-2026-111943",
+              "CVE-2026-111943",
+              "GO-2026-6809",
+              "RUSTSEC-2026-0381",
+              "RUSTSEC-2026-0383"
+            ],
+            "cve_aliases": [
+              "CVE-2026-111943"
+            ],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0382",
+            "informational": [],
+            "kev_matches": [],
+            "modified": "2026-10-29T10:55:54.096394Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0382",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "rustls-webpki",
+        "pages": 1,
+        "purl": "pkg:cargo/rustls-webpki@0.103.13",
+        "query_complete": true,
+        "version": "0.103.13"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "rustversion",
+        "pages": 1,
+        "purl": "pkg:cargo/rustversion@1.0.22",
+        "query_complete": true,
+        "version": "1.0.22"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "scopeguard",
+        "pages": 1,
+        "purl": "pkg:cargo/scopeguard@1.2.0",
+        "query_complete": true,
+        "version": "1.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "scratch",
+        "pages": 1,
+        "purl": "pkg:cargo/scratch@1.0.9",
+        "query_complete": true,
+        "version": "1.0.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "semver",
+        "pages": 1,
+        "purl": "pkg:cargo/semver@1.0.28",
+        "query_complete": true,
+        "version": "1.0.28"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "serde",
+        "pages": 1,
+        "purl": "pkg:cargo/serde@1.0.228",
+        "query_complete": true,
+        "version": "1.0.228"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "serde_core",
+        "pages": 1,
+        "purl": "pkg:cargo/serde_core@1.0.228",
+        "query_complete": true,
+        "version": "1.0.228"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "serde_derive",
+        "pages": 1,
+        "purl": "pkg:cargo/serde_derive@1.0.228",
+        "query_complete": true,
+        "version": "1.0.228"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "serde_json",
+        "pages": 1,
+        "purl": "pkg:cargo/serde_json@1.0.149",
+        "query_complete": true,
+        "version": "1.0.149"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "serde_json",
+        "pages": 1,
+        "purl": "pkg:cargo/serde_json@1.0.150",
+        "query_complete": true,
+        "version": "1.0.150"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "sha2",
+        "pages": 1,
+        "purl": "pkg:cargo/sha2@0.10.9",
+        "query_complete": true,
+        "version": "0.10.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "sharded-slab",
+        "pages": 1,
+        "purl": "pkg:cargo/sharded-slab@0.1.7",
+        "query_complete": true,
+        "version": "0.1.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "shlex",
+        "pages": 1,
+        "purl": "pkg:cargo/shlex@1.3.0",
+        "query_complete": true,
+        "version": "1.3.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "signal-hook-registry",
+        "pages": 1,
+        "purl": "pkg:cargo/signal-hook-registry@1.4.8",
+        "query_complete": true,
+        "version": "1.4.8"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "simd-adler32",
+        "pages": 1,
+        "purl": "pkg:cargo/simd-adler32@0.3.9",
+        "query_complete": true,
+        "version": "0.3.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "slab",
+        "pages": 1,
+        "purl": "pkg:cargo/slab@0.4.12",
+        "query_complete": true,
+        "version": "0.4.12"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "smallvec",
+        "pages": 1,
+        "purl": "pkg:cargo/smallvec@1.15.1",
+        "query_complete": true,
+        "version": "1.15.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "socket2",
+        "pages": 1,
+        "purl": "pkg:cargo/socket2@0.5.10",
+        "query_complete": true,
+        "version": "0.5.10"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "socket2",
+        "pages": 1,
+        "purl": "pkg:cargo/socket2@0.6.3",
+        "query_complete": true,
+        "version": "0.6.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "stable_deref_trait",
+        "pages": 1,
+        "purl": "pkg:cargo/stable_deref_trait@1.2.1",
+        "query_complete": true,
+        "version": "1.2.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "static_assertions",
+        "pages": 1,
+        "purl": "pkg:cargo/static_assertions@1.1.0",
+        "query_complete": true,
+        "version": "1.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "strsim",
+        "pages": 1,
+        "purl": "pkg:cargo/strsim@0.11.1",
+        "query_complete": true,
+        "version": "0.11.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "subtle",
+        "pages": 1,
+        "purl": "pkg:cargo/subtle@2.6.1",
+        "query_complete": true,
+        "version": "2.6.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "syn",
+        "pages": 1,
+        "purl": "pkg:cargo/syn@2.0.117",
+        "query_complete": true,
+        "version": "2.0.117"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "sync_wrapper",
+        "pages": 1,
+        "purl": "pkg:cargo/sync_wrapper@1.0.2",
+        "query_complete": true,
+        "version": "1.0.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "synstructure",
+        "pages": 1,
+        "purl": "pkg:cargo/synstructure@0.13.2",
+        "query_complete": true,
+        "version": "0.13.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tempfile",
+        "pages": 1,
+        "purl": "pkg:cargo/tempfile@3.27.0",
+        "query_complete": true,
+        "version": "3.27.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "termcolor",
+        "pages": 1,
+        "purl": "pkg:cargo/termcolor@1.4.1",
+        "query_complete": true,
+        "version": "1.4.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "thiserror",
+        "pages": 1,
+        "purl": "pkg:cargo/thiserror@1.0.69",
+        "query_complete": true,
+        "version": "1.0.69"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "thiserror",
+        "pages": 1,
+        "purl": "pkg:cargo/thiserror@2.0.18",
+        "query_complete": true,
+        "version": "2.0.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "thiserror-impl",
+        "pages": 1,
+        "purl": "pkg:cargo/thiserror-impl@1.0.69",
+        "query_complete": true,
+        "version": "1.0.69"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "thiserror-impl",
+        "pages": 1,
+        "purl": "pkg:cargo/thiserror-impl@2.0.18",
+        "query_complete": true,
+        "version": "2.0.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "thread_local",
+        "pages": 1,
+        "purl": "pkg:cargo/thread_local@1.1.9",
+        "query_complete": true,
+        "version": "1.1.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tinystr",
+        "pages": 1,
+        "purl": "pkg:cargo/tinystr@0.8.3",
+        "query_complete": true,
+        "version": "0.8.3"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0386",
+            "informational": [
+              "unsound"
+            ],
+            "kev_matches": [],
+            "modified": "2026-10-23T14:45:03.847864Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0386",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "tokio",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio@1.52.3",
+        "query_complete": true,
+        "version": "1.52.3"
+      },
+      {
+        "advisories": [
+          {
+            "aliases": [],
+            "cve_aliases": [],
+            "detail_available": true,
+            "id": "RUSTSEC-2026-0386",
+            "informational": [
+              "unsound"
+            ],
+            "kev_matches": [],
+            "modified": "2026-10-23T14:45:03.847864Z",
+            "unmaintained": false,
+            "url": "https://osv.dev/vulnerability/RUSTSEC-2026-0386",
+            "withdrawn": null
+          }
+        ],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tokio",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio@1.53.0",
+        "query_complete": true,
+        "version": "1.53.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tokio-macros",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio-macros@2.7.0",
+        "query_complete": true,
+        "version": "2.7.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tokio-rustls",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio-rustls@0.26.4",
+        "query_complete": true,
+        "version": "0.26.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tokio-stream",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio-stream@0.1.18",
+        "query_complete": true,
+        "version": "0.1.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tokio-util",
+        "pages": 1,
+        "purl": "pkg:cargo/tokio-util@0.7.18",
+        "query_complete": true,
+        "version": "0.7.18"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tonic",
+        "pages": 1,
+        "purl": "pkg:cargo/tonic@0.12.3",
+        "query_complete": true,
+        "version": "0.12.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tonic",
+        "pages": 1,
+        "purl": "pkg:cargo/tonic@0.14.6",
+        "query_complete": true,
+        "version": "0.14.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tonic-build",
+        "pages": 1,
+        "purl": "pkg:cargo/tonic-build@0.12.3",
+        "query_complete": true,
+        "version": "0.12.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tonic-prost",
+        "pages": 1,
+        "purl": "pkg:cargo/tonic-prost@0.14.6",
+        "query_complete": true,
+        "version": "0.14.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tonic-types",
+        "pages": 1,
+        "purl": "pkg:cargo/tonic-types@0.14.6",
+        "query_complete": true,
+        "version": "0.14.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tower",
+        "pages": 1,
+        "purl": "pkg:cargo/tower@0.4.13",
+        "query_complete": true,
+        "version": "0.4.13"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tower",
+        "pages": 1,
+        "purl": "pkg:cargo/tower@0.5.3",
+        "query_complete": true,
+        "version": "0.5.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tower-http",
+        "pages": 1,
+        "purl": "pkg:cargo/tower-http@0.6.11",
+        "query_complete": true,
+        "version": "0.6.11"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tower-layer",
+        "pages": 1,
+        "purl": "pkg:cargo/tower-layer@0.3.3",
+        "query_complete": true,
+        "version": "0.3.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tower-service",
+        "pages": 1,
+        "purl": "pkg:cargo/tower-service@0.3.3",
+        "query_complete": true,
+        "version": "0.3.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing@0.1.44",
+        "query_complete": true,
+        "version": "0.1.44"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing-attributes",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-attributes@0.1.31",
+        "query_complete": true,
+        "version": "0.1.31"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing-core",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-core@0.1.36",
+        "query_complete": true,
+        "version": "0.1.36"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing-log",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-log@0.2.0",
+        "query_complete": true,
+        "version": "0.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "tracing-opentelemetry",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-opentelemetry@0.33.0",
+        "query_complete": true,
+        "version": "0.33.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing-serde",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-serde@0.2.0",
+        "query_complete": true,
+        "version": "0.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "tracing-subscriber",
+        "pages": 1,
+        "purl": "pkg:cargo/tracing-subscriber@0.3.23",
+        "query_complete": true,
+        "version": "0.3.23"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "try-lock",
+        "pages": 1,
+        "purl": "pkg:cargo/try-lock@0.2.5",
+        "query_complete": true,
+        "version": "0.2.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "typenum",
+        "pages": 1,
+        "purl": "pkg:cargo/typenum@1.20.0",
+        "query_complete": true,
+        "version": "1.20.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "unicode-ident",
+        "pages": 1,
+        "purl": "pkg:cargo/unicode-ident@1.0.24",
+        "query_complete": true,
+        "version": "1.0.24"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "unicode-segmentation",
+        "pages": 1,
+        "purl": "pkg:cargo/unicode-segmentation@1.13.2",
+        "query_complete": true,
+        "version": "1.13.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "unicode-width",
+        "pages": 1,
+        "purl": "pkg:cargo/unicode-width@0.1.14",
+        "query_complete": true,
+        "version": "0.1.14"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "unicode-width",
+        "pages": 1,
+        "purl": "pkg:cargo/unicode-width@0.2.2",
+        "query_complete": true,
+        "version": "0.2.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "unicode-xid",
+        "pages": 1,
+        "purl": "pkg:cargo/unicode-xid@0.2.6",
+        "query_complete": true,
+        "version": "0.2.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "untrusted",
+        "pages": 1,
+        "purl": "pkg:cargo/untrusted@0.9.0",
+        "query_complete": true,
+        "version": "0.9.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "url",
+        "pages": 1,
+        "purl": "pkg:cargo/url@2.5.8",
+        "query_complete": true,
+        "version": "2.5.8"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "utf8_iter",
+        "pages": 1,
+        "purl": "pkg:cargo/utf8_iter@1.0.4",
+        "query_complete": true,
+        "version": "1.0.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "valuable",
+        "pages": 1,
+        "purl": "pkg:cargo/valuable@0.1.1",
+        "query_complete": true,
+        "version": "0.1.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "version_check",
+        "pages": 1,
+        "purl": "pkg:cargo/version_check@0.9.5",
+        "query_complete": true,
+        "version": "0.9.5"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "versions",
+        "pages": 1,
+        "purl": "pkg:cargo/versions@6.3.2",
+        "query_complete": true,
+        "version": "6.3.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "want",
+        "pages": 1,
+        "purl": "pkg:cargo/want@0.3.1",
+        "query_complete": true,
+        "version": "0.3.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "wasi",
+        "pages": 1,
+        "purl": "pkg:cargo/wasi@0.11.1+wasi-snapshot-preview1",
+        "query_complete": true,
+        "version": "0.11.1+wasi-snapshot-preview1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "wasip2",
+        "pages": 1,
+        "purl": "pkg:cargo/wasip2@1.0.3+wasi-0.2.9",
+        "query_complete": true,
+        "version": "1.0.3+wasi-0.2.9"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasip3",
+        "pages": 1,
+        "purl": "pkg:cargo/wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06",
+        "query_complete": true,
+        "version": "0.4.0+wasi-0.3.0-rc-2026-01-06"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-bindgen",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-bindgen@0.2.121",
+        "query_complete": true,
+        "version": "0.2.121"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-bindgen-futures",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-bindgen-futures@0.4.71",
+        "query_complete": true,
+        "version": "0.4.71"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-bindgen-macro",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-bindgen-macro@0.2.121",
+        "query_complete": true,
+        "version": "0.2.121"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-bindgen-macro-support",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-bindgen-macro-support@0.2.121",
+        "query_complete": true,
+        "version": "0.2.121"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-bindgen-shared",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-bindgen-shared@0.2.121",
+        "query_complete": true,
+        "version": "0.2.121"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-encoder",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-encoder@0.244.0",
+        "query_complete": true,
+        "version": "0.244.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasm-metadata",
+        "pages": 1,
+        "purl": "pkg:cargo/wasm-metadata@0.244.0",
+        "query_complete": true,
+        "version": "0.244.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wasmparser",
+        "pages": 1,
+        "purl": "pkg:cargo/wasmparser@0.244.0",
+        "query_complete": true,
+        "version": "0.244.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "web-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/web-sys@0.3.98",
+        "query_complete": true,
+        "version": "0.3.98"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "web-time",
+        "pages": 1,
+        "purl": "pkg:cargo/web-time@1.1.0",
+        "query_complete": true,
+        "version": "1.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "widestring",
+        "pages": 1,
+        "purl": "pkg:cargo/widestring@1.2.1",
+        "query_complete": true,
+        "version": "1.2.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "gui/Cargo.lock"
+        ],
+        "name": "winapi-util",
+        "pages": 1,
+        "purl": "pkg:cargo/winapi-util@0.1.11",
+        "query_complete": true,
+        "version": "0.1.11"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows",
+        "pages": 1,
+        "purl": "pkg:cargo/windows@0.58.0",
+        "query_complete": true,
+        "version": "0.58.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-core",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-core@0.58.0",
+        "query_complete": true,
+        "version": "0.58.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-implement",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-implement@0.58.0",
+        "query_complete": true,
+        "version": "0.58.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-interface",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-interface@0.58.0",
+        "query_complete": true,
+        "version": "0.58.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "windows-link",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-link@0.2.1",
+        "query_complete": true,
+        "version": "0.2.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-result",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-result@0.2.0",
+        "query_complete": true,
+        "version": "0.2.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-service",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-service@0.6.0",
+        "query_complete": true,
+        "version": "0.6.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-strings",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-strings@0.1.0",
+        "query_complete": true,
+        "version": "0.1.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-sys@0.45.0",
+        "query_complete": true,
+        "version": "0.45.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-sys@0.52.0",
+        "query_complete": true,
+        "version": "0.52.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "windows-sys",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-sys@0.61.2",
+        "query_complete": true,
+        "version": "0.61.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-targets",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-targets@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows-targets",
+        "pages": 1,
+        "purl": "pkg:cargo/windows-targets@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_aarch64_gnullvm",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_aarch64_gnullvm@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_aarch64_gnullvm",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_aarch64_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_aarch64_msvc@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_aarch64_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_i686_gnu",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_i686_gnu@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_i686_gnu",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_i686_gnu@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_i686_gnullvm",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_i686_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_i686_msvc@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_i686_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_i686_msvc@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_gnu",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_gnu@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_gnu",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_gnullvm",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_gnullvm@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_gnullvm",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_msvc@0.42.2",
+        "query_complete": true,
+        "version": "0.42.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "windows_x86_64_msvc",
+        "pages": 1,
+        "purl": "pkg:cargo/windows_x86_64_msvc@0.52.6",
+        "query_complete": true,
+        "version": "0.52.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-bindgen",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-bindgen@0.51.0",
+        "query_complete": true,
+        "version": "0.51.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "wit-bindgen",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-bindgen@0.57.1",
+        "query_complete": true,
+        "version": "0.57.1"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-bindgen-core",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-bindgen-core@0.51.0",
+        "query_complete": true,
+        "version": "0.51.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-bindgen-rust",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-bindgen-rust@0.51.0",
+        "query_complete": true,
+        "version": "0.51.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-bindgen-rust-macro",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-bindgen-rust-macro@0.51.0",
+        "query_complete": true,
+        "version": "0.51.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-component",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-component@0.244.0",
+        "query_complete": true,
+        "version": "0.244.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "wit-parser",
+        "pages": 1,
+        "purl": "pkg:cargo/wit-parser@0.244.0",
+        "query_complete": true,
+        "version": "0.244.0"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "writeable",
+        "pages": 1,
+        "purl": "pkg:cargo/writeable@0.6.3",
+        "query_complete": true,
+        "version": "0.6.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "yoke",
+        "pages": 1,
+        "purl": "pkg:cargo/yoke@0.8.3",
+        "query_complete": true,
+        "version": "0.8.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "yoke-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/yoke-derive@0.8.2",
+        "query_complete": true,
+        "version": "0.8.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerocopy",
+        "pages": 1,
+        "purl": "pkg:cargo/zerocopy@0.8.48",
+        "query_complete": true,
+        "version": "0.8.48"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerocopy-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/zerocopy-derive@0.8.48",
+        "query_complete": true,
+        "version": "0.8.48"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerofrom",
+        "pages": 1,
+        "purl": "pkg:cargo/zerofrom@0.1.8",
+        "query_complete": true,
+        "version": "0.1.8"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerofrom-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/zerofrom-derive@0.1.7",
+        "query_complete": true,
+        "version": "0.1.7"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zeroize",
+        "pages": 1,
+        "purl": "pkg:cargo/zeroize@1.8.2",
+        "query_complete": true,
+        "version": "1.8.2"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerotrie",
+        "pages": 1,
+        "purl": "pkg:cargo/zerotrie@0.2.4",
+        "query_complete": true,
+        "version": "0.2.4"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerovec",
+        "pages": 1,
+        "purl": "pkg:cargo/zerovec@0.11.6",
+        "query_complete": true,
+        "version": "0.11.6"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock"
+        ],
+        "name": "zerovec-derive",
+        "pages": 1,
+        "purl": "pkg:cargo/zerovec-derive@0.11.3",
+        "query_complete": true,
+        "version": "0.11.3"
+      },
+      {
+        "advisories": [],
+        "errors": [],
+        "locks": [
+          "guest/Cargo.lock",
+          "gui/Cargo.lock"
+        ],
+        "name": "zmij",
+        "pages": 1,
+        "purl": "pkg:cargo/zmij@1.0.21",
+        "query_complete": true,
+        "version": "1.0.21"
+      }
+    ],
+    "advisory_groups": [
+      {
+        "ids": [
+          "GHSA-2mjx-qc3c-rqvc",
+          "RUSTSEC-2026-0285"
+        ],
+        "aliases": [
+          "GHSA-2mjx-qc3c-rqvc",
+          "RUSTSEC-2026-0285"
+        ],
+        "packages": [
+          "pkg:cargo/rustls@0.23.40"
+        ],
+        "classifications": [
+          "active-security-advisory"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "rustls@0.23.45"
+        ],
+        "summaries": [
+          "Rustls: TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries",
+          "TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/GHSA-2mjx-qc3c-rqvc",
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0285"
+        ]
+      },
+      {
+        "ids": [
+          "GHSA-c8m5-c952-6cm4",
+          "RUSTSEC-2026-0346"
+        ],
+        "aliases": [
+          "GHSA-c8m5-c952-6cm4",
+          "RUSTSEC-2026-0346"
+        ],
+        "packages": [
+          "pkg:cargo/rustls@0.23.40"
+        ],
+        "classifications": [
+          "active-security-advisory"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "rustls@0.23.46",
+          "rustls@0.24.0-dev.2"
+        ],
+        "summaries": [
+          "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+          "`Debug` impls for client session values expose TLS secrets"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/GHSA-c8m5-c952-6cm4",
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0346"
+        ]
+      },
+      {
+        "ids": [
+          "GHSA-h2v8-394m-p7vv",
+          "RUSTSEC-2026-0348"
+        ],
+        "aliases": [
+          "GHSA-h2v8-394m-p7vv",
+          "RUSTSEC-2026-0348"
+        ],
+        "packages": [
+          "pkg:cargo/rustls@0.23.40"
+        ],
+        "classifications": [
+          "active-security-advisory"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "rustls@0.23.46",
+          "rustls@0.24.0-dev.2"
+        ],
+        "summaries": [
+          "Brotli certificate decompression can allocate up to 1 GiB before authentication",
+          "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication."
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/GHSA-h2v8-394m-p7vv",
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0348"
+        ]
+      },
+      {
+        "ids": [
+          "GHSA-w44r-93j7-qv28",
+          "RUSTSEC-2026-0349"
+        ],
+        "aliases": [
+          "GHSA-w44r-93j7-qv28",
+          "RUSTSEC-2026-0349"
+        ],
+        "packages": [
+          "pkg:cargo/rustls@0.23.40"
+        ],
+        "classifications": [
+          "active-security-advisory"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "rustls@0.23.46",
+          "rustls@0.24.0-dev.2"
+        ],
+        "summaries": [
+          "Unauthenticated ServerHello can downgrade later connections to classical key exchange",
+          "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/GHSA-w44r-93j7-qv28",
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0349"
+        ]
+      },
+      {
+        "ids": [
+          "RUSTSEC-2025-0134"
+        ],
+        "aliases": [],
+        "packages": [
+          "pkg:cargo/rustls-pemfile@2.2.0"
+        ],
+        "classifications": [
+          "unmaintained"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [],
+        "summaries": [
+          "rustls-pemfile is unmaintained"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/RUSTSEC-2025-0134"
+        ]
+      },
+      {
+        "ids": [
+          "RUSTSEC-2026-0202"
+        ],
+        "aliases": [],
+        "packages": [
+          "pkg:cargo/cxx@1.0.194"
+        ],
+        "classifications": [
+          "unsound"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "cxx@1.0.195"
+        ],
+        "summaries": [
+          "`let_cxx_string!` uses uninitialized value due to exception safety violations"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0202"
+        ]
+      },
+      {
+        "ids": [
+          "RUSTSEC-2026-0382"
+        ],
+        "aliases": [
+          "BIT-golang-2026-111943",
+          "CVE-2026-111943",
+          "GO-2026-6809",
+          "RUSTSEC-2026-0381",
+          "RUSTSEC-2026-0383"
+        ],
+        "packages": [
+          "pkg:cargo/rustls-webpki@0.103.13"
+        ],
+        "classifications": [
+          "active-security-advisory"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "rustls-webpki@0.103.16",
+          "rustls-webpki@0.104.0-alpha.8"
+        ],
+        "summaries": [
+          "Certificate verification may accept distrusted intermediates"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0382"
+        ]
+      },
+      {
+        "ids": [
+          "RUSTSEC-2026-0386"
+        ],
+        "aliases": [],
+        "packages": [
+          "pkg:cargo/tokio@1.52.3",
+          "pkg:cargo/tokio@1.53.0"
+        ],
+        "classifications": [
+          "unsound"
+        ],
+        "kev_matches": [],
+        "fixed_boundaries": [
+          "tokio@1.51.6",
+          "tokio@1.53.3"
+        ],
+        "summaries": [
+          "`AsyncFd::new` and related constructors violate I/O safety"
+        ],
+        "urls": [
+          "https://osv.dev/vulnerability/RUSTSEC-2026-0386"
+        ]
+      }
+    ]
+  },
+  "kev": {
+    "catalog_date": "2026-11-04T20:00:05.774Z",
+    "catalog_version": "2026.11.04",
+    "fetched_at": "2026-11-06T00:51:32.921137+00:00",
+    "freshness": "fetched-current-official-source",
+    "source": "https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json",
+    "vulnerability_count": 1768
+  },
+  "tests": [
+    {
+      "id": "crossdesk-host-tests",
+      "status": "BLOCKED",
+      "exit_code": 1,
+      "counts": {
+        "errors": 3
+      },
+      "missing_modules_observed": [
+        "structlog"
+      ],
+      "duration_seconds": 1.364,
+      "wall_timeout_seconds": 230,
+      "timed_out": false,
+      "oom_killed": false,
+      "test_command_from_source_root": "cd host\npython3 -m pytest -q --tb=short --maxfail=3 tests",
+      "selected_test_files": [],
+      "raw_log_sha256": "318da54c6c7d77ce0bbeb82f7b5510a6958e65374cae93f4e18f631a6010694f",
+      "raw_log_bytes": 4758,
+      "container_removed_before_evidence_promotion": true
+    },
+    {
+      "id": "crossdesk-focused-offline",
+      "status": "PASS",
+      "exit_code": 0,
+      "counts": {
+        "passed": 94
+      },
+      "missing_modules_observed": [],
+      "duration_seconds": 1.154,
+      "wall_timeout_seconds": 180,
+      "timed_out": false,
+      "oom_killed": false,
+      "test_command_from_source_root": "cd host\npython3 -m pytest -q --tb=short --maxfail=3 --continue-on-collection-errors tests/test_atomic_write.py tests/test_mime.py tests/test_domain_xml.py tests/test_version_negotiation.py tests/test_config_peripherals.py tests/test_drive_map.py",
+      "selected_test_files": [
+        "host/tests/test_atomic_write.py",
+        "host/tests/test_mime.py",
+        "host/tests/test_domain_xml.py",
+        "host/tests/test_version_negotiation.py",
+        "host/tests/test_config_peripherals.py",
+        "host/tests/test_drive_map.py"
+      ],
+      "raw_log_sha256": "62d290727ce539bc54323746dfa5f79fd76eb047662fc862920103ab5c1532a0",
+      "raw_log_bytes": 627,
+      "container_removed_before_evidence_promotion": true
+    }
+  ],
+  "test_input_provenance": {
+    "tracked_regular_blobs_at_source_sha": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+    "input_manifest_sha256": "d6ed8a77f307eb393cd2e199bc6f54e5921a09fd143b04ff9e33a5b6f4bc0c6b",
+    "current_explicit_overlays": {
+      ".claude/audit.sh": {
+        "sha256": "bca036b16201129568f719182bce6164d95379d5919b3e7be086be1c126e9a01",
+        "scope": "audit/metadata overlay; not represented as frozen source"
+      },
+      ".claude/decisions-register.md": {
+        "sha256": "e8b498d9a34523ab19b2726ec7f3164585cef64c853d0508de8b735d88663556",
+        "scope": "audit/metadata overlay; not represented as frozen source"
+      },
+      ".claude/rules/decisions.md": {
+        "sha256": "acc7aa17a938c6cab6657f0d64f451802fb835c0ced8748d64d158206e250654",
+        "scope": "audit/metadata overlay; not represented as frozen source"
+      }
+    }
+  },
+  "sandbox": {
+    "image_id": "sha256:7f1b0a1a50cfbac23da3b16f96bc968fd757b26dc9e54e93813d61768ea9184e",
+    "network": "none",
+    "read_only_root": true,
+    "source_bind_read_only": true,
+    "output_bind": "one controller-created regular file; maximum 8 MiB; no output directory mounted",
+    "user": "65534",
+    "capabilities_dropped": [
+      "ALL"
+    ],
+    "no_new_privileges": true,
+    "cpu_cores": 2,
+    "memory_bytes": 2147483648,
+    "memory_plus_swap_bytes": 2147483648,
+    "pid_limit": 64,
+    "cpu_seconds_limit": 180,
+    "file_size_limit_bytes": 8388608,
+    "nproc_limit": 64,
+    "scratch_tmpfs_bytes": 536870912,
+    "scratch_flags": [
+      "rw",
+      "exec",
+      "nosuid",
+      "nodev"
+    ],
+    "logging_driver": "none",
+    "environment": "empty initial environment with explicit safe allowlist; no inherited credentials",
+    "host_code_execution": "trusted controller/static scanner only; application tests executed only in container",
+    "cleanup": "Owned exact-name container removed and absence checked before bounded, no-follow regular-file promotion."
+  },
+  "secret_pattern_scan": {
+    "tool": "gitleaks",
+    "version": "8.30.1",
+    "exit_code": 1,
+    "timed_out": false,
+    "findings_count": 1,
+    "findings": [
+      {
+        "rule_id": "generic-api-key",
+        "file": ".claude/templates/test-gates.sh",
+        "line": 107,
+        "historical_commit": "8c173e01b57f4edcbec661df7003dc24767ace01",
+        "classification": "test-gate template/example assignment; credential status unverified",
+        "status": "owner triage pending",
+        "credential_value_included": false,
+        "suppressed": false
+      }
+    ],
+    "scope": "All history reachable from the frozen source SHA; embedded default rules; repository ignore/config and inline allow comments not applied; no baseline suppression.",
+    "interpretation": "Pattern candidates are not confirmed usable credentials. All original candidates remain visible.",
+    "redacted_original_report_sha256": "be7c6d9eaed3c9608a169f1e909702f629144247aea90d36dfbdbd3b9f85b1e0"
+  },
+  "suggested_backlog": [
+    {
+      "id": "AUDIT-20261106-TLS",
+      "priority": "high",
+      "title": "Remediate the locked Rust TLS advisories",
+      "scope": [
+        "guest/Cargo.lock: rustls 0.23.40",
+        "guest/Cargo.lock: rustls-webpki 0.103.13"
+      ],
+      "action": "Review dependency compatibility and upgrade the relevant graph; OSV lists stable fixed boundaries rustls 0.23.46 and rustls-webpki 0.103.16. Do not blindly force transitive versions.",
+      "gate": "Exact-version OSV recheck excludes the four rustls issue groups and RUSTSEC-2026-0382; guest build/tests and TLS rejection/handshake/session regression evidence on supported targets; reviewer checks actual enabled features and attack surfaces.",
+      "review_date": "2026-11-07",
+      "automatic_fix": false
+    },
+    {
+      "id": "AUDIT-20261106-SOUNDNESS",
+      "priority": "high",
+      "title": "Resolve cxx and tokio soundness advisories",
+      "scope": [
+        "gui/Cargo.lock: cxx 1.0.194, tokio 1.52.3",
+        "guest/Cargo.lock: tokio 1.53.0"
+      ],
+      "action": "Review RUSTSEC-2026-0202 and RUSTSEC-2026-0386; OSV fixed boundaries include cxx 1.0.195 and tokio 1.53.3 (also an older tokio maintenance branch). Establish API/feature applicability before updating.",
+      "gate": "Locked graph no longer matches those advisory IDs, supported-target build/tests pass, and reviewer records affected FFI exception/I/O-safety reachability.",
+      "review_date": "2026-11-07",
+      "automatic_fix": false
+    },
+    {
+      "id": "AUDIT-20261106-MAINTENANCE",
+      "priority": "medium",
+      "title": "Replace or explicitly review unmaintained rustls-pemfile",
+      "scope": [
+        "guest/Cargo.lock: rustls-pemfile 2.2.0"
+      ],
+      "action": "Review RUSTSEC-2025-0134 and choose a supported PEM API or a time-bounded owner decision with replacement plan.",
+      "gate": "Dependency removed/replaced with regression coverage for PEM parsing, or explicit dated owner risk review; no blanket advisory suppression.",
+      "review_date": "2026-11-13",
+      "automatic_fix": false
+    },
+    {
+      "id": "AUDIT-20261106-FULL-EVIDENCE",
+      "priority": "high",
+      "title": "Produce exact Python dependency inventory and complete Linux test evidence",
+      "scope": [
+        "host/pyproject.toml",
+        "host/tests",
+        "guest",
+        "gui"
+      ],
+      "action": "Create/review reproducible exact Python dependency inventory in the normal development workflow; rerun the complete host suite with required dependencies/plugins. Obtain real guest/GUI Rust build/test evidence on supported targets.",
+      "gate": "Full host collection and required tests pass, missing dependencies/plugins are resolved in a reviewed environment, exact Python versions are scanned, and Rust evidence is actual execution rather than metadata or mocks. Preserve the current partial result until replaced.",
+      "review_date": "2026-11-07",
+      "automatic_fix": false
+    },
+    {
+      "id": "AUDIT-20261106-SECRET-TRIAGE",
+      "priority": "medium",
+      "title": "Close the historical gate-template secret-pattern candidate",
+      "scope": [
+        ".claude/templates/test-gates.sh:107 at 8c173e01b57f4edcbec661df7003dc24767ace01"
+      ],
+      "action": "Owner reviews the redacted historical candidate and template purpose; determine whether it is an intentional example or any credential ever had a usable scope. No value is published.",
+      "gate": "Documented non-credential/test-example rationale, or credential revocation/rotation plus exposure review if confirmed; rerun the detector without silently dropping the finding.",
+      "review_date": "2026-11-13",
+      "automatic_fix": false
+    }
+  ],
+  "official_sources": {
+    "osv_query_api_documentation": "https://google.github.io/osv.dev/post-v1-querybatch/",
+    "osv_advisory_base": "https://osv.dev/vulnerability/",
+    "cisa_kev_official_mirror": "https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json"
+  },
+  "limitations": [
+    "OSV matches exact locked package versions; it does not establish runtime reachability, active features or application exploitability.",
+    "Identifiers and aliases are deduplicated into advisory groups. Unmaintained and unsound notices remain separately labelled; counts of classification labels can overlap.",
+    "No application attacks or exploit attempts were run. No external model calls were made. No dependencies were installed and no images were pulled.",
+    "Workspace/git/unknown-source packages are unverified, not counted as clean. No real Rust build or Rust tests were run: the cached image has no cargo/rustc.",
+    "No values from secret-pattern findings, email addresses, transcripts or host-specific paths are included.",
+    "Only the selected 94 synchronous tests passed. The full host run stopped after 3 collection errors; structlog was missing. Cached pytest_asyncio was absent too.",
+    "Python host dependencies are ranges in pyproject.toml, without an exact reviewed application lock inventory; Python SCA is not covered.",
+    "No live libvirt/dbus/boot services were started. No guest/GUI Rust compilation or Windows-target validation was performed.",
+    "An unrelated 10,098,915-byte third-party documentation GIF was excluded to respect the 8 MiB per-file limit; the tracked host/LICENSE symlink was excluded."
+  ],
+  "limited_sast": {
+    "tool": "semgrep",
+    "exit_code": 0,
+    "findings_count": 0,
+    "errors_count": 0,
+    "rule_count": 2,
+    "rules_sha256": "eb06084731f7c595a048672df617199ecb153f4bf8c72802ff82257411c36a1f",
+    "rules": [
+      "subprocess shell=True",
+      "eval/exec"
+    ],
+    "scope": "Frozen first-party host/src Python files only; two local rules; metrics/version checks disabled; no cloud rules.",
+    "limitation": "Zero findings in two rules is not a comprehensive security review; no Rust SAST."
+  }
+}

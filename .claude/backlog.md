@@ -1,5 +1,67 @@
 # Backlog — post-MVP / kiedyś (parking)
 
+## Current process work (approved exception to post-MVP parking)
+
+### ADP-2026-11-06-01 — Adopt toolkit, verify integration and audit, publish
+
+WPLYW: high
+STATUS: w trakcie
+ZRODLO: rozmowa 2026-11-06 (explicit owner adoption/audit/publication request)
+DOWOD: lock2026.11.07 source879edc6; configuration receipt accepted, runtime/security stages still open.
+BRAMKA_ZAMYKAJACA: odstepstwo: staged A1/A2/A3/A4/P5 evidence and exact-SHA independent review in linked brief; no copy-only closure.
+PRZEGLAD: 2026-11-13
+BRIEF: task-briefs/ADP-2026-11-06-01.md
+
+A1 configuration and scoped A3 evidence are accepted; next Coordinator owns
+A2 Linux lifecycle proof, A4 interrupted at platform guard and P5 final publication/Linux handoff. Remaining stages
+stay open until evidenced; topic changes preserve the plan.
+
+
+### QLT-2026-11-06-01 — Reconcile conflicting active and accepted states inside PLAN
+
+WPLYW: low
+STATUS: otwarte
+ZRODLO: audyt 2026-11-06 (bounded source quality review)
+DOWOD: PLAN.md:29-31/:72-75 lists #2/#4/#8 as upcoming; :125/:127/:131/:137 records them live-complete. See history/2026-11-06-quality-audit.md.
+BRAMKA_ZAMYKAJACA: odstepstwo: reconcile TERAZ/NEXT with the accepted criterion evidence and independently review the remaining set; do not invent fresh live verification.
+PRZEGLAD: 2026-11-13
+BRIEF: —
+
+Preserve DEC-META-009/010's approved PLAN=MVP/backlog=post-MVP split. This fixes inconsistent state within PLAN, not the owner's board policy. No implementation or runtime acceptance is implied by recording it.
+
+### SEC-2026-11-06-01 — Review the locked Rust TLS, FFI and I/O advisories
+
+WPLYW: high
+STATUS: otwarte
+ZRODLO: exact-version OSV audit2026-11-06
+DOWOD: history/2026-11-06-security-audit.md and JSON: rustls0.23.40, webpki0.103.13, cxx1.0.194, tokio1.52.3/1.53.0 match active/soundness advisories; exploitability unverified.
+BRAMKA_ZAMYKAJACA: odstepstwo: exact locked graph no longer matches the listed active/soundness IDs, supported guest/GUI builds and regression tests pass, independent review records actual feature/reachability limits.
+PRZEGLAD: 2026-11-07
+BRIEF: task-briefs/SEC-2026-11-06-01.md
+
+Do not force-upgrade cxx independently of cxx-qt: the existing backend/GUI debt records a real link incompatibility. These new advisory facts extend that migration evidence, preserving its existing context.
+
+### SEC-2026-11-06-02 — Review the unmaintained PEM dependency
+
+WPLYW: medium
+STATUS: otwarte
+ZRODLO: OSV RUSTSEC-2025-0134, audit2026-11-06
+DOWOD: locked rustls-pemfile2.2.0; history/2026-11-06-security-audit.md.
+BRAMKA_ZAMYKAJACA: odstepstwo: supported replacement with parsing regression coverage, or explicit dated owner risk decision and replacement plan; no blanket suppression.
+PRZEGLAD: 2026-11-13
+BRIEF: —
+
+### Audit intake2026-11-06 — deduplication map
+
+Canonical work is above or in the preserved existing items, not in report proposal headings:
+TLS and SOUNDNESS proposals -> SEC-2026-11-06-01; MAINTENANCE -> SEC-2026-11-06-02;
+FULL-EVIDENCE -> existing A0905-09/host environment debt plus this ADP Linux handoff;
+SECRET-TRIAGE -> ADP A4 (one historical template candidate, no usable credential verified).
+The existing cxx/cxx-qt migration remains the compatibility constraint, not a competing fix.
+ADP A4 must record rationale for the scanner candidate or revocation/exposure review if it proves real.
+
+## Preserved project backlog context
+
 > **To NIE jest board „co dalej".** Droga do v0.1.0 → [`PLAN.md`](../PLAN.md)
 > (jedyny board MVP). Ten plik = długi ogon pozycji **poza** v0.1.0 + kontekst
 > techniczny. Jak szukasz co robić teraz — nie tu. Stan / partiale —

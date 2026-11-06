@@ -1,0 +1,7 @@
+# Pliki testowe bez wiersza w docs/weryfikacja-negatywna.tsv, i dlaczego.
+# Lista dlugu, nie lista zwolnien: kazdy wiersz to plik, ktorego nikt nie
+# widzial na czerwono. Moze malec; sufit nizej nie pozwala jej rosnac.
+# sufit: 2
+# Czytaj przez awk -F'\t' albo IFS=$'\t' read -r; gole read sklei puste kolumny.
+test_file	reason
+tests/test_legacy.py	sciezka v1 bez srodowiska na runnerze; czerwien wymaga bazy, ktorej ten obraz nie niesie

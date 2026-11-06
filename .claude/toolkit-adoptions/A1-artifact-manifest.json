@@ -1,0 +1,2899 @@
+{
+  "schema_version": 1,
+  "phase": "A1-configuration-snapshot-not-runtime-attestation",
+  "project_base_sha": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+  "source_sha": "d28a641f8e045773bd68c83c74917ae266b37d26",
+  "source_branch": "chore/project-adoptions-2026-11-06",
+  "source_version": "2026.11.07",
+  "self_excluded": true,
+  "entries": [
+    {
+      "path": ".claude/agents/builder.md",
+      "size": 1778,
+      "sha256": "a7ccbe2c87ca7fe43ec2d11af249dddefd6366779e053d567f647b89052465f7",
+      "master_path": "agents/builder.md",
+      "master_sha256": "a7ccbe2c87ca7fe43ec2d11af249dddefd6366779e053d567f647b89052465f7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/agents/coordinator.md",
+      "size": 4192,
+      "sha256": "92c0788e29e02c217782b8cdbca7c10602c7adda661a972e9f8e3f06edfea4d1",
+      "master_path": "agents/coordinator.md",
+      "master_sha256": "92c0788e29e02c217782b8cdbca7c10602c7adda661a972e9f8e3f06edfea4d1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/agents/red-team.md",
+      "size": 2354,
+      "sha256": "c979c654edb06dc32151ac1461c15b7b4275ad6049b771ffe9fc0983d3fd39d8",
+      "master_path": "agents/red-team.md",
+      "master_sha256": "c979c654edb06dc32151ac1461c15b7b4275ad6049b771ffe9fc0983d3fd39d8",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/agents/reviewer.md",
+      "size": 2015,
+      "sha256": "8dfa3cb6f8a066f463c582322f6e7895a479fa0f3cef9f660a2ec0d0d5954fcc",
+      "master_path": "agents/reviewer.md",
+      "master_sha256": "8dfa3cb6f8a066f463c582322f6e7895a479fa0f3cef9f660a2ec0d0d5954fcc",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/agents/scout.md",
+      "size": 948,
+      "sha256": "bb5b4b4f8648c31b684121a911b007385f4b222e0ead52ca1dd4d7e10663a555",
+      "master_path": "agents/scout.md",
+      "master_sha256": "bb5b4b4f8648c31b684121a911b007385f4b222e0ead52ca1dd4d7e10663a555",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/agents/security-reviewer.md",
+      "size": 7350,
+      "sha256": "2f96f7f6f8a22755bed12fd8412e6a636b8392b9521df77eaf30a1dd1a26f989",
+      "master_path": "agents/security-reviewer.md",
+      "master_sha256": "0034bbd1b3ce98bc51a28229375c45fb59dd04f95d26b9765fbc8ff3e0c839e3",
+      "relation": "declared-project-adaptation"
+    },
+    {
+      "path": ".claude/audit.sh",
+      "size": 9888,
+      "sha256": "bca036b16201129568f719182bce6164d95379d5919b3e7be086be1c126e9a01",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/backlog.md",
+      "size": 76565,
+      "sha256": "47804f778a515eb66518b5b8103d8f0028e18618674e515316fff9000bec5d2c",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/conventions/agent-communication.md",
+      "size": 4148,
+      "sha256": "e082d33eea4c670adebd12805d84c4bcf05b4faa24468756cd10792e8cac3cb1",
+      "master_path": "conventions/agent-communication.md",
+      "master_sha256": "e082d33eea4c670adebd12805d84c4bcf05b4faa24468756cd10792e8cac3cb1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/api-contract-design.md",
+      "size": 13957,
+      "sha256": "6395cefb23dc198c3d3e9a8f893e11a0895ff6fbd33db73be67c26098d9a2330",
+      "master_path": "conventions/api-contract-design.md",
+      "master_sha256": "6395cefb23dc198c3d3e9a8f893e11a0895ff6fbd33db73be67c26098d9a2330",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/architecture-change.md",
+      "size": 11692,
+      "sha256": "9ed79ebd0c132fafa3959aa7a83d8b5645e987a153b3fb4593b1817c75453baa",
+      "master_path": "conventions/architecture-change.md",
+      "master_sha256": "9ed79ebd0c132fafa3959aa7a83d8b5645e987a153b3fb4593b1817c75453baa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/architecture-principles.md",
+      "size": 4728,
+      "sha256": "c6f7b479ce4bcf38cd4148750e47d4fec3cd909fbc22c72bdf9071ac502d1a47",
+      "master_path": "conventions/architecture-principles.md",
+      "master_sha256": "c6f7b479ce4bcf38cd4148750e47d4fec3cd909fbc22c72bdf9071ac502d1a47",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/audit.md",
+      "size": 1721,
+      "sha256": "5540de1d3f12f050ecbea71cf012d1089c0a44203fd01272b98cc7e1b450a5bb",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/conventions/backend-layers.md",
+      "size": 3356,
+      "sha256": "78239372b92fc8f368816104c47cce46d054d978a6cbe39575c85edd3f280965",
+      "master_path": "conventions/backend-layers.md",
+      "master_sha256": "78239372b92fc8f368816104c47cce46d054d978a6cbe39575c85edd3f280965",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/background-work.md",
+      "size": 7890,
+      "sha256": "2f848a523dfa1070578b45b7868b929926d3bc75c2cf02d6c529916927fbf84c",
+      "master_path": "conventions/background-work.md",
+      "master_sha256": "2f848a523dfa1070578b45b7868b929926d3bc75c2cf02d6c529916927fbf84c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/backlog-contract.md",
+      "size": 12547,
+      "sha256": "978bc87fb1346e8ee08869e3edf3c9addadffb0d882b221f9183bed3aa5cdb86",
+      "master_path": "conventions/backlog-contract.md",
+      "master_sha256": "978bc87fb1346e8ee08869e3edf3c9addadffb0d882b221f9183bed3aa5cdb86",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/backlog-premise-audit.md",
+      "size": 5883,
+      "sha256": "f86229dd3a473d2a5297b4aee5e8055130a66d6abd7ab128a789b6935ba914cf",
+      "master_path": "conventions/backlog-premise-audit.md",
+      "master_sha256": "f86229dd3a473d2a5297b4aee5e8055130a66d6abd7ab128a789b6935ba914cf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/change-provenance.md",
+      "size": 2441,
+      "sha256": "2c4e0f5e62ff23f3c4c8e7511f3888135b8d9527e9f1cb400e692941672c3198",
+      "master_path": "conventions/change-provenance.md",
+      "master_sha256": "2c4e0f5e62ff23f3c4c8e7511f3888135b8d9527e9f1cb400e692941672c3198",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/ci-cd.md",
+      "size": 9896,
+      "sha256": "00c5e885f259968defca92d8570b6b5be803c7a6b8a2af906e42502b9f53b67f",
+      "master_path": "conventions/ci-cd.md",
+      "master_sha256": "00c5e885f259968defca92d8570b6b5be803c7a6b8a2af906e42502b9f53b67f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/ci-pipeline-architecture.md",
+      "size": 15479,
+      "sha256": "2ddcc2f5615404faa748e05c0bf440583d333a521990012cbfe9f9d7db5cb10d",
+      "master_path": "conventions/ci-pipeline-architecture.md",
+      "master_sha256": "2ddcc2f5615404faa748e05c0bf440583d333a521990012cbfe9f9d7db5cb10d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/code-structure.md",
+      "size": 3336,
+      "sha256": "88888612b2c15a70c54242744a58092762fe2391275446adb4896135111dfeb2",
+      "master_path": "conventions/code-structure.md",
+      "master_sha256": "88888612b2c15a70c54242744a58092762fe2391275446adb4896135111dfeb2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/context-budget.md",
+      "size": 7829,
+      "sha256": "67e552ecbcc839051983a55cc20726972126d1bd608c25521c406c72aad33621",
+      "master_path": "conventions/context-budget.md",
+      "master_sha256": "67e552ecbcc839051983a55cc20726972126d1bd608c25521c406c72aad33621",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/contract-canon.md",
+      "size": 9954,
+      "sha256": "0fd0e7d7abf104862e5bb4da9a17f08f30013e4c0559ecc9210d05028f07dd07",
+      "master_path": "conventions/contract-canon.md",
+      "master_sha256": "0fd0e7d7abf104862e5bb4da9a17f08f30013e4c0559ecc9210d05028f07dd07",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/data-modeling.md",
+      "size": 5569,
+      "sha256": "8fb5a748323c9b1f53c26679248fbd39124f169558138158ab874b9aa262045c",
+      "master_path": "conventions/data-modeling.md",
+      "master_sha256": "8fb5a748323c9b1f53c26679248fbd39124f169558138158ab874b9aa262045c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/dependency-currency.md",
+      "size": 10288,
+      "sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "master_path": "conventions/dependency-currency.md",
+      "master_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/document-claim-drift.md",
+      "size": 8593,
+      "sha256": "84cd578c599f9ea6986bac0d008d57765fcb84bae0d78b0cc0b287a0968744c2",
+      "master_path": "conventions/document-claim-drift.md",
+      "master_sha256": "84cd578c599f9ea6986bac0d008d57765fcb84bae0d78b0cc0b287a0968744c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/instruction-style.md",
+      "size": 3043,
+      "sha256": "bcf1ef55b266e2c5669b9b6acd952c75858cd46f671d4b5f09412276e3659a31",
+      "master_path": "conventions/instruction-style.md",
+      "master_sha256": "bcf1ef55b266e2c5669b9b6acd952c75858cd46f671d4b5f09412276e3659a31",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/issue-reporting.md",
+      "size": 15213,
+      "sha256": "77b15855ea4f1f3481ee11e774dda7d7d9042bcc26fb77e2f5061abf00e2cdbd",
+      "master_path": "conventions/issue-reporting.md",
+      "master_sha256": "77b15855ea4f1f3481ee11e774dda7d7d9042bcc26fb77e2f5061abf00e2cdbd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/local-gate-orchestration.md",
+      "size": 9859,
+      "sha256": "f4dbd601ad0e57e79e53055a1cf241936bc6c248929db2ae0fe3eabf98e7b2fb",
+      "master_path": "conventions/local-gate-orchestration.md",
+      "master_sha256": "f4dbd601ad0e57e79e53055a1cf241936bc6c248929db2ae0fe3eabf98e7b2fb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/module-paths.md",
+      "size": 8619,
+      "sha256": "897ee9411786c2f44edddd9c07be0fd073c0e32a4d28e8e7a1623d1f7676dc59",
+      "master_path": "conventions/module-paths.md",
+      "master_sha256": "897ee9411786c2f44edddd9c07be0fd073c0e32a4d28e8e7a1623d1f7676dc59",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/multi-agent-delivery.md",
+      "size": 30903,
+      "sha256": "ad61bbaa5a17b2ab8333aaea611eda5d5281b6e98a3bab0222bca9e5ddc014fa",
+      "master_path": "conventions/multi-agent-delivery.md",
+      "master_sha256": "ad61bbaa5a17b2ab8333aaea611eda5d5281b6e98a3bab0222bca9e5ddc014fa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/naming-conventions.md",
+      "size": 15166,
+      "sha256": "ed40d1ea2532fbd632a5602ce6a4c28ba720de0ae574a2275ed13514e90bace0",
+      "master_path": "conventions/naming-conventions.md",
+      "master_sha256": "ed40d1ea2532fbd632a5602ce6a4c28ba720de0ae574a2275ed13514e90bace0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/negative-verification.md",
+      "size": 11683,
+      "sha256": "d86bf0d3a74dd01227744785d31c33e12af7ce205d7c74ab2180e796be1b2c57",
+      "master_path": "conventions/negative-verification.md",
+      "master_sha256": "d86bf0d3a74dd01227744785d31c33e12af7ce205d7c74ab2180e796be1b2c57",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/project-state-layout.md",
+      "size": 11315,
+      "sha256": "36827cd013cd1006aba1e745e97d9503b2c51b753c34f2470a7e4f1ea02b0e76",
+      "master_path": "conventions/project-state-layout.md",
+      "master_sha256": "36827cd013cd1006aba1e745e97d9503b2c51b753c34f2470a7e4f1ea02b0e76",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/project-workflow.md",
+      "size": 8475,
+      "sha256": "88c4e0c51f539c6697087ecf75efdc16658c93fad0563f5068ffea6ed90f676a",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/conventions/pull-request-review.md",
+      "size": 5728,
+      "sha256": "cee89103e4bc55a8d6a6b9a5db71466755ae44f8a145f30b037ee8d9d3237dea",
+      "master_path": "conventions/pull-request-review.md",
+      "master_sha256": "cee89103e4bc55a8d6a6b9a5db71466755ae44f8a145f30b037ee8d9d3237dea",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/quality-gates-and-dod.md",
+      "size": 4465,
+      "sha256": "2a905dfd012f55c455627e262db2485a95596bab29481e14cf16305c9b27245f",
+      "master_path": "conventions/quality-gates-and-dod.md",
+      "master_sha256": "2a905dfd012f55c455627e262db2485a95596bab29481e14cf16305c9b27245f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/reliability-and-observability.md",
+      "size": 2794,
+      "sha256": "fb5c1bdb2f7a07c2e5c7b3cde60b7fd3770e1c432c83521f4426fde185bb0ee4",
+      "master_path": "conventions/reliability-and-observability.md",
+      "master_sha256": "fb5c1bdb2f7a07c2e5c7b3cde60b7fd3770e1c432c83521f4426fde185bb0ee4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/repo-hygiene-gates.md",
+      "size": 4959,
+      "sha256": "5af4a3643bcd1b99a2b2a926c2af66cb4db7d48c85ab718c5f3d5f07cea661e2",
+      "master_path": "conventions/repo-hygiene-gates.md",
+      "master_sha256": "5af4a3643bcd1b99a2b2a926c2af66cb4db7d48c85ab718c5f3d5f07cea661e2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/rules-as-gates.md",
+      "size": 7568,
+      "sha256": "d5910cd46f7f401d9b99f18be37560014fdd15ee7346735261a3cc0e4e97b58f",
+      "master_path": "conventions/rules-as-gates.md",
+      "master_sha256": "d5910cd46f7f401d9b99f18be37560014fdd15ee7346735261a3cc0e4e97b58f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/runtime-boundaries.md",
+      "size": 2504,
+      "sha256": "d55b3e7c745d976ddafc33ee1cf39171719ae098946440dd4150cd925d7ff84a",
+      "master_path": "conventions/runtime-boundaries.md",
+      "master_sha256": "d55b3e7c745d976ddafc33ee1cf39171719ae098946440dd4150cd925d7ff84a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/security-verification-gates.md",
+      "size": 15771,
+      "sha256": "e79856ba872a64cb20b5cb7605d929e29d97fd81826f2569333fa516a7be7213",
+      "master_path": "conventions/security-verification-gates.md",
+      "master_sha256": "e79856ba872a64cb20b5cb7605d929e29d97fd81826f2569333fa516a7be7213",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/stack-composition.md",
+      "size": 7865,
+      "sha256": "eb7e40cb08358a386b3be03486f21b35d15b50eaf9a435993981315cb24c3db3",
+      "master_path": "conventions/stack-composition.md",
+      "master_sha256": "eb7e40cb08358a386b3be03486f21b35d15b50eaf9a435993981315cb24c3db3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/test-evidence.md",
+      "size": 6071,
+      "sha256": "f73b316c4684ef3ea22085ab27e4a7efb049d546c977a1c3697f29812d081fda",
+      "master_path": "conventions/test-evidence.md",
+      "master_sha256": "f73b316c4684ef3ea22085ab27e4a7efb049d546c977a1c3697f29812d081fda",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/test-execution-economy.md",
+      "size": 3178,
+      "sha256": "e0b5c42e48a0ec11ece169cf36613c1623ef417be515b50d323f553571a9a8ee",
+      "master_path": "conventions/test-execution-economy.md",
+      "master_sha256": "e0b5c42e48a0ec11ece169cf36613c1623ef417be515b50d323f553571a9a8ee",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/test-quality-baseline.md",
+      "size": 5728,
+      "sha256": "28cc62a333ef5c425ad9517fca640a9810188bc18a46f204945c4ab282afddc0",
+      "master_path": "conventions/test-quality-baseline.md",
+      "master_sha256": "28cc62a333ef5c425ad9517fca640a9810188bc18a46f204945c4ab282afddc0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/tool-adoption-and-measurement.md",
+      "size": 10491,
+      "sha256": "84b3c497c764a8bbe2a4a798a3bbc095c62f8f3e67ccfc40a157b8a35ac4778d",
+      "master_path": "conventions/tool-adoption-and-measurement.md",
+      "master_sha256": "84b3c497c764a8bbe2a4a798a3bbc095c62f8f3e67ccfc40a157b8a35ac4778d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/conventions/toolkit-sync.md",
+      "size": 11168,
+      "sha256": "abcf80a219d38c3246f6da3bb27cea81b400bcbedf5373f33ede52f8da224fd8",
+      "master_path": "conventions/toolkit-sync.md",
+      "master_sha256": "abcf80a219d38c3246f6da3bb27cea81b400bcbedf5373f33ede52f8da224fd8",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/decisions-register.md",
+      "size": 14948,
+      "sha256": "e8b498d9a34523ab19b2726ec7f3164585cef64c853d0508de8b735d88663556",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/history/instructions/2026-11-06-AGENTS.md",
+      "size": 15812,
+      "sha256": "67415a5abe66e457f28b278d309f82e7d7aec675bdf63f79a7c7e659faa4fa6d",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/history/instructions/2026-11-06-CLAUDE.md",
+      "size": 4492,
+      "sha256": "c40895d4fcdaa00718a3fcee3c34bcd3b7b70f04bdb151fe7cfb4913c23a445e",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/rules/backend.md",
+      "size": 4137,
+      "sha256": "9c1941d318a7f14efc1f6357e37bb4b2282844e808b0e2f637c4c76f5451378d",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/rules/decisions.md",
+      "size": 1518,
+      "sha256": "acc7aa17a938c6cab6657f0d64f451802fb835c0ced8748d64d158206e250654",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/rules/general.md",
+      "size": 5874,
+      "sha256": "b8b8cb001bc4dd72b959ecbad8d1b6bc319c2eb07fc491917f9802a13ae61ca9",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/skills/audyt-naprawczy/SKILL.md",
+      "size": 9455,
+      "sha256": "dba83ac233a0b71bf20b23962e23c03cdb05465e8d911e19792e5f67aef26f99",
+      "master_path": "skills/audyt-naprawczy/SKILL.md",
+      "master_sha256": "dba83ac233a0b71bf20b23962e23c03cdb05465e8d911e19792e5f67aef26f99",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/petla-dostarczenia/SKILL.md",
+      "size": 10223,
+      "sha256": "3b8d5f72a11912b85bc5399d9cc059d27139b8bf08abe2a2197bdba38df24be2",
+      "master_path": "skills/petla-dostarczenia/SKILL.md",
+      "master_sha256": "3b8d5f72a11912b85bc5399d9cc059d27139b8bf08abe2a2197bdba38df24be2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/plan-naprawy/SKILL.md",
+      "size": 8634,
+      "sha256": "9aed3e5c3a8de5ef764ba478707d4c6523861442acb2bc585c964acb71e1b793",
+      "master_path": "skills/plan-naprawy/SKILL.md",
+      "master_sha256": "9aed3e5c3a8de5ef764ba478707d4c6523861442acb2bc585c964acb71e1b793",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/AI-AND-LLM.md",
+      "size": 10617,
+      "sha256": "7335a95c43554eadefcf03ece639291bb0e038c398a179299e3887ffe06bd2ef",
+      "master_path": "skills/security-audit/AI-AND-LLM.md",
+      "master_sha256": "7335a95c43554eadefcf03ece639291bb0e038c398a179299e3887ffe06bd2ef",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/ATTACK-CLASSES.md",
+      "size": 15695,
+      "sha256": "3ee4f00c6e8c9dcf6dd02dd5ac2a4ceb322e2085f3e9fbe79cf0c6330bc7ef83",
+      "master_path": "skills/security-audit/ATTACK-CLASSES.md",
+      "master_sha256": "3ee4f00c6e8c9dcf6dd02dd5ac2a4ceb322e2085f3e9fbe79cf0c6330bc7ef83",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/CLIENT-SIDE.md",
+      "size": 8594,
+      "sha256": "613f6b98f86083e045525c5b60154ffdab122bac35f1e05eb17488e6e453370c",
+      "master_path": "skills/security-audit/CLIENT-SIDE.md",
+      "master_sha256": "613f6b98f86083e045525c5b60154ffdab122bac35f1e05eb17488e6e453370c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/CLOUD-AND-DEPLOYMENT.md",
+      "size": 8291,
+      "sha256": "3c80f3088be22345e07b057c056d6ed99fe2b0304f794398964f7ccd5a496ca3",
+      "master_path": "skills/security-audit/CLOUD-AND-DEPLOYMENT.md",
+      "master_sha256": "3c80f3088be22345e07b057c056d6ed99fe2b0304f794398964f7ccd5a496ca3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/DATA-ISOLATION-AND-LIFECYCLE.md",
+      "size": 7798,
+      "sha256": "307dcb3e24d292715c4a041190e7bb135646a37eb6187619ae01d000a634a4ad",
+      "master_path": "skills/security-audit/DATA-ISOLATION-AND-LIFECYCLE.md",
+      "master_sha256": "307dcb3e24d292715c4a041190e7bb135646a37eb6187619ae01d000a634a4ad",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/DESKTOP-MOBILE-AND-LOCAL-IPC.md",
+      "size": 8739,
+      "sha256": "58eae8ee0ca6a46611c501ec5a3ab47fdff88dd7db0d8d74789bbf8bb19d8cb2",
+      "master_path": "skills/security-audit/DESKTOP-MOBILE-AND-LOCAL-IPC.md",
+      "master_sha256": "58eae8ee0ca6a46611c501ec5a3ab47fdff88dd7db0d8d74789bbf8bb19d8cb2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/HUNTING.md",
+      "size": 22446,
+      "sha256": "71c121decea1322c47c718f6e110f1a892980bb4266bd7ac55ef043a213ade09",
+      "master_path": "skills/security-audit/HUNTING.md",
+      "master_sha256": "71c121decea1322c47c718f6e110f1a892980bb4266bd7ac55ef043a213ade09",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/LICENSE",
+      "size": 1078,
+      "sha256": "e598e694aa506650c7192d5ea3be0e50aca0d356ea00551c53429f0b01eb6391",
+      "master_path": "skills/security-audit/LICENSE",
+      "master_sha256": "e598e694aa506650c7192d5ea3be0e50aca0d356ea00551c53429f0b01eb6391",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/LOCAL-REVIEW.md",
+      "size": 3005,
+      "sha256": "2b8517b90820325f79763a8f5bf4d9cf90dabb4dda24e59f65d2e6ead1d65d23",
+      "master_path": "skills/security-audit/LOCAL-REVIEW.md",
+      "master_sha256": "2b8517b90820325f79763a8f5bf4d9cf90dabb4dda24e59f65d2e6ead1d65d23",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/MEMORY-SAFETY-AND-BINARY.md",
+      "size": 10513,
+      "sha256": "7c8b0dccfb35315cca2455509674d49632b2fe37e1f3aac16c1a496a7e9924a7",
+      "master_path": "skills/security-audit/MEMORY-SAFETY-AND-BINARY.md",
+      "master_sha256": "7c8b0dccfb35315cca2455509674d49632b2fe37e1f3aac16c1a496a7e9924a7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/PROTOCOLS-RPC-AND-MESSAGING.md",
+      "size": 7483,
+      "sha256": "8b73816fa5b3697c9c40977f0c836b40f01d6e81929ff2720fe83ce089e9a619",
+      "master_path": "skills/security-audit/PROTOCOLS-RPC-AND-MESSAGING.md",
+      "master_sha256": "8b73816fa5b3697c9c40977f0c836b40f01d6e81929ff2720fe83ce089e9a619",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/RECONNAISSANCE.md",
+      "size": 15902,
+      "sha256": "02ca887aca84de8ae137f1891bd2f0a54f28d3fa6da92a27f54734382b3381a2",
+      "master_path": "skills/security-audit/RECONNAISSANCE.md",
+      "master_sha256": "02ca887aca84de8ae137f1891bd2f0a54f28d3fa6da92a27f54734382b3381a2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+      "size": 7476,
+      "sha256": "4326fab5c92a0b4c420a70196254040105cd794026562130b59bf1a6db3e4baa",
+      "master_path": "skills/security-audit/RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+      "master_sha256": "4326fab5c92a0b4c420a70196254040105cd794026562130b59bf1a6db3e4baa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/SKILL.md",
+      "size": 22408,
+      "sha256": "9310e87a018221deb3a11f2632ed6fd4b2b38d6409e5f5e4ae66020f96c3c92b",
+      "master_path": "skills/security-audit/SKILL.md",
+      "master_sha256": "9310e87a018221deb3a11f2632ed6fd4b2b38d6409e5f5e4ae66020f96c3c92b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md",
+      "size": 7258,
+      "sha256": "f372e919940e335468ba1ae09f99026c3986a345f7fe26f8068f132e199f52a5",
+      "master_path": "skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md",
+      "master_sha256": "f372e919940e335468ba1ae09f99026c3986a345f7fe26f8068f132e199f52a5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/TOOLKIT-INTEGRATION.md",
+      "size": 5563,
+      "sha256": "e4986303230d218003dfbc54c37ce5413963285821979968e4cf58b3d2f7a675",
+      "master_path": "skills/security-audit/TOOLKIT-INTEGRATION.md",
+      "master_sha256": "e4986303230d218003dfbc54c37ce5413963285821979968e4cf58b3d2f7a675",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/UPSTREAM.json",
+      "size": 6864,
+      "sha256": "4cd4f70efead6b7665ffc4f4f7e5d0afabd760f447e34648ef156e47de03c627",
+      "master_path": "skills/security-audit/UPSTREAM.json",
+      "master_sha256": "4cd4f70efead6b7665ffc4f4f7e5d0afabd760f447e34648ef156e47de03c627",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/VALIDATION-AND-REPORTING.md",
+      "size": 17843,
+      "sha256": "b892470cb89bb31f33403e050d4bdfbe2cdaef940ade1496fa65e32b2e129449",
+      "master_path": "skills/security-audit/VALIDATION-AND-REPORTING.md",
+      "master_sha256": "b892470cb89bb31f33403e050d4bdfbe2cdaef940ade1496fa65e32b2e129449",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/WEB-PROTOCOL-AND-AUTH.md",
+      "size": 12300,
+      "sha256": "4f3066dffa23c5635859187be9b96c32f2aff29a688186b91ff0c63e47d62b5c",
+      "master_path": "skills/security-audit/WEB-PROTOCOL-AND-AUTH.md",
+      "master_sha256": "4f3066dffa23c5635859187be9b96c32f2aff29a688186b91ff0c63e47d62b5c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/report-schema.json",
+      "size": 14494,
+      "sha256": "6575c9de4a62255699ea052ebf9a49ebfb373a32891bcd89af6f55cc84b35519",
+      "master_path": "skills/security-audit/report-schema.json",
+      "master_sha256": "6575c9de4a62255699ea052ebf9a49ebfb373a32891bcd89af6f55cc84b35519",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/validate-coverage-ledger.cjs",
+      "size": 33522,
+      "sha256": "2eb280bd2e33c002916f86db9b29f9edfedb6454e5db973c766290465b868ac8",
+      "master_path": "skills/security-audit/validate-coverage-ledger.cjs",
+      "master_sha256": "2eb280bd2e33c002916f86db9b29f9edfedb6454e5db973c766290465b868ac8",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/validate-coverage-ledger.test.cjs",
+      "size": 28483,
+      "sha256": "cfb9df26b03469a4279a70e7664a2a5434dd6f8c2c204e91f9b0aeb9dd71e648",
+      "master_path": "skills/security-audit/validate-coverage-ledger.test.cjs",
+      "master_sha256": "cfb9df26b03469a4279a70e7664a2a5434dd6f8c2c204e91f9b0aeb9dd71e648",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/validate-findings.cjs",
+      "size": 28806,
+      "sha256": "e85f232e36bfac0f866f244da50376692d6b45c690beadcb00608b0e6c8b5283",
+      "master_path": "skills/security-audit/validate-findings.cjs",
+      "master_sha256": "e85f232e36bfac0f866f244da50376692d6b45c690beadcb00608b0e6c8b5283",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/security-audit/validate-findings.test.cjs",
+      "size": 26384,
+      "sha256": "b92001117a92c4161d43777a0ba2fa182a8a4d97f2304cc8c0cee5331497b73b",
+      "master_path": "skills/security-audit/validate-findings.test.cjs",
+      "master_sha256": "b92001117a92c4161d43777a0ba2fa182a8a4d97f2304cc8c0cee5331497b73b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/SKILL.md",
+      "size": 12143,
+      "sha256": "d1be3dcfd8da99a9b22c0213b06aabfe80818b9eed99fa59aedaab3ae5a4d892",
+      "master_path": "skills/toolkit-conventions/SKILL.md",
+      "master_sha256": "d1be3dcfd8da99a9b22c0213b06aabfe80818b9eed99fa59aedaab3ae5a4d892",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/agent-communication.md",
+      "size": 4148,
+      "sha256": "e082d33eea4c670adebd12805d84c4bcf05b4faa24468756cd10792e8cac3cb1",
+      "master_path": "skills/toolkit-conventions/references/conventions/agent-communication.md",
+      "master_sha256": "e082d33eea4c670adebd12805d84c4bcf05b4faa24468756cd10792e8cac3cb1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/api-contract-design.md",
+      "size": 13957,
+      "sha256": "6395cefb23dc198c3d3e9a8f893e11a0895ff6fbd33db73be67c26098d9a2330",
+      "master_path": "skills/toolkit-conventions/references/conventions/api-contract-design.md",
+      "master_sha256": "6395cefb23dc198c3d3e9a8f893e11a0895ff6fbd33db73be67c26098d9a2330",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/architecture-change.md",
+      "size": 11692,
+      "sha256": "9ed79ebd0c132fafa3959aa7a83d8b5645e987a153b3fb4593b1817c75453baa",
+      "master_path": "skills/toolkit-conventions/references/conventions/architecture-change.md",
+      "master_sha256": "9ed79ebd0c132fafa3959aa7a83d8b5645e987a153b3fb4593b1817c75453baa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/architecture-principles.md",
+      "size": 4728,
+      "sha256": "c6f7b479ce4bcf38cd4148750e47d4fec3cd909fbc22c72bdf9071ac502d1a47",
+      "master_path": "skills/toolkit-conventions/references/conventions/architecture-principles.md",
+      "master_sha256": "c6f7b479ce4bcf38cd4148750e47d4fec3cd909fbc22c72bdf9071ac502d1a47",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/backend-layers.md",
+      "size": 3356,
+      "sha256": "78239372b92fc8f368816104c47cce46d054d978a6cbe39575c85edd3f280965",
+      "master_path": "skills/toolkit-conventions/references/conventions/backend-layers.md",
+      "master_sha256": "78239372b92fc8f368816104c47cce46d054d978a6cbe39575c85edd3f280965",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/background-work.md",
+      "size": 7890,
+      "sha256": "2f848a523dfa1070578b45b7868b929926d3bc75c2cf02d6c529916927fbf84c",
+      "master_path": "skills/toolkit-conventions/references/conventions/background-work.md",
+      "master_sha256": "2f848a523dfa1070578b45b7868b929926d3bc75c2cf02d6c529916927fbf84c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/backlog-contract.md",
+      "size": 12547,
+      "sha256": "978bc87fb1346e8ee08869e3edf3c9addadffb0d882b221f9183bed3aa5cdb86",
+      "master_path": "skills/toolkit-conventions/references/conventions/backlog-contract.md",
+      "master_sha256": "978bc87fb1346e8ee08869e3edf3c9addadffb0d882b221f9183bed3aa5cdb86",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/backlog-premise-audit.md",
+      "size": 5883,
+      "sha256": "f86229dd3a473d2a5297b4aee5e8055130a66d6abd7ab128a789b6935ba914cf",
+      "master_path": "skills/toolkit-conventions/references/conventions/backlog-premise-audit.md",
+      "master_sha256": "f86229dd3a473d2a5297b4aee5e8055130a66d6abd7ab128a789b6935ba914cf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/change-provenance.md",
+      "size": 2441,
+      "sha256": "2c4e0f5e62ff23f3c4c8e7511f3888135b8d9527e9f1cb400e692941672c3198",
+      "master_path": "skills/toolkit-conventions/references/conventions/change-provenance.md",
+      "master_sha256": "2c4e0f5e62ff23f3c4c8e7511f3888135b8d9527e9f1cb400e692941672c3198",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/ci-cd.md",
+      "size": 9896,
+      "sha256": "00c5e885f259968defca92d8570b6b5be803c7a6b8a2af906e42502b9f53b67f",
+      "master_path": "skills/toolkit-conventions/references/conventions/ci-cd.md",
+      "master_sha256": "00c5e885f259968defca92d8570b6b5be803c7a6b8a2af906e42502b9f53b67f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/ci-pipeline-architecture.md",
+      "size": 15479,
+      "sha256": "2ddcc2f5615404faa748e05c0bf440583d333a521990012cbfe9f9d7db5cb10d",
+      "master_path": "skills/toolkit-conventions/references/conventions/ci-pipeline-architecture.md",
+      "master_sha256": "2ddcc2f5615404faa748e05c0bf440583d333a521990012cbfe9f9d7db5cb10d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/code-structure.md",
+      "size": 3336,
+      "sha256": "88888612b2c15a70c54242744a58092762fe2391275446adb4896135111dfeb2",
+      "master_path": "skills/toolkit-conventions/references/conventions/code-structure.md",
+      "master_sha256": "88888612b2c15a70c54242744a58092762fe2391275446adb4896135111dfeb2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/context-budget.md",
+      "size": 7829,
+      "sha256": "67e552ecbcc839051983a55cc20726972126d1bd608c25521c406c72aad33621",
+      "master_path": "skills/toolkit-conventions/references/conventions/context-budget.md",
+      "master_sha256": "67e552ecbcc839051983a55cc20726972126d1bd608c25521c406c72aad33621",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/contract-canon.md",
+      "size": 9954,
+      "sha256": "0fd0e7d7abf104862e5bb4da9a17f08f30013e4c0559ecc9210d05028f07dd07",
+      "master_path": "skills/toolkit-conventions/references/conventions/contract-canon.md",
+      "master_sha256": "0fd0e7d7abf104862e5bb4da9a17f08f30013e4c0559ecc9210d05028f07dd07",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/data-modeling.md",
+      "size": 5569,
+      "sha256": "8fb5a748323c9b1f53c26679248fbd39124f169558138158ab874b9aa262045c",
+      "master_path": "skills/toolkit-conventions/references/conventions/data-modeling.md",
+      "master_sha256": "8fb5a748323c9b1f53c26679248fbd39124f169558138158ab874b9aa262045c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/dependency-currency.md",
+      "size": 10288,
+      "sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "master_path": "skills/toolkit-conventions/references/conventions/dependency-currency.md",
+      "master_sha256": "50f1d34b12172bea41674acb7bb88ceeadc1dcab285fb479a7dd0565cd4c46cd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/design-system-foundations.md",
+      "size": 10646,
+      "sha256": "858d4cdb96e1ac3403ec5ae9fcaf76cb2ac3422cf0340aa076cc3ac2aa6f3acf",
+      "master_path": "skills/toolkit-conventions/references/conventions/design-system-foundations.md",
+      "master_sha256": "858d4cdb96e1ac3403ec5ae9fcaf76cb2ac3422cf0340aa076cc3ac2aa6f3acf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/document-claim-drift.md",
+      "size": 8593,
+      "sha256": "84cd578c599f9ea6986bac0d008d57765fcb84bae0d78b0cc0b287a0968744c2",
+      "master_path": "skills/toolkit-conventions/references/conventions/document-claim-drift.md",
+      "master_sha256": "84cd578c599f9ea6986bac0d008d57765fcb84bae0d78b0cc0b287a0968744c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/forms-and-validation.md",
+      "size": 11030,
+      "sha256": "7d8fb117a71b0ef98709a3fc0e5895e8c2c49195c33f0eb85793542d4149b875",
+      "master_path": "skills/toolkit-conventions/references/conventions/forms-and-validation.md",
+      "master_sha256": "7d8fb117a71b0ef98709a3fc0e5895e8c2c49195c33f0eb85793542d4149b875",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/frontend-architecture.md",
+      "size": 7948,
+      "sha256": "6787d0c23fee2d4475968c740e70bbff58be2889802ebb16a3114052cb8c89f4",
+      "master_path": "skills/toolkit-conventions/references/conventions/frontend-architecture.md",
+      "master_sha256": "6787d0c23fee2d4475968c740e70bbff58be2889802ebb16a3114052cb8c89f4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/instruction-style.md",
+      "size": 3043,
+      "sha256": "bcf1ef55b266e2c5669b9b6acd952c75858cd46f671d4b5f09412276e3659a31",
+      "master_path": "skills/toolkit-conventions/references/conventions/instruction-style.md",
+      "master_sha256": "bcf1ef55b266e2c5669b9b6acd952c75858cd46f671d4b5f09412276e3659a31",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/issue-reporting.md",
+      "size": 15213,
+      "sha256": "77b15855ea4f1f3481ee11e774dda7d7d9042bcc26fb77e2f5061abf00e2cdbd",
+      "master_path": "skills/toolkit-conventions/references/conventions/issue-reporting.md",
+      "master_sha256": "77b15855ea4f1f3481ee11e774dda7d7d9042bcc26fb77e2f5061abf00e2cdbd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/local-gate-orchestration.md",
+      "size": 9859,
+      "sha256": "f4dbd601ad0e57e79e53055a1cf241936bc6c248929db2ae0fe3eabf98e7b2fb",
+      "master_path": "skills/toolkit-conventions/references/conventions/local-gate-orchestration.md",
+      "master_sha256": "f4dbd601ad0e57e79e53055a1cf241936bc6c248929db2ae0fe3eabf98e7b2fb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/module-paths.md",
+      "size": 8619,
+      "sha256": "897ee9411786c2f44edddd9c07be0fd073c0e32a4d28e8e7a1623d1f7676dc59",
+      "master_path": "skills/toolkit-conventions/references/conventions/module-paths.md",
+      "master_sha256": "897ee9411786c2f44edddd9c07be0fd073c0e32a4d28e8e7a1623d1f7676dc59",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/multi-agent-delivery.md",
+      "size": 30903,
+      "sha256": "ad61bbaa5a17b2ab8333aaea611eda5d5281b6e98a3bab0222bca9e5ddc014fa",
+      "master_path": "skills/toolkit-conventions/references/conventions/multi-agent-delivery.md",
+      "master_sha256": "ad61bbaa5a17b2ab8333aaea611eda5d5281b6e98a3bab0222bca9e5ddc014fa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/naming-conventions.md",
+      "size": 15166,
+      "sha256": "ed40d1ea2532fbd632a5602ce6a4c28ba720de0ae574a2275ed13514e90bace0",
+      "master_path": "skills/toolkit-conventions/references/conventions/naming-conventions.md",
+      "master_sha256": "ed40d1ea2532fbd632a5602ce6a4c28ba720de0ae574a2275ed13514e90bace0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/negative-verification.md",
+      "size": 11683,
+      "sha256": "d86bf0d3a74dd01227744785d31c33e12af7ce205d7c74ab2180e796be1b2c57",
+      "master_path": "skills/toolkit-conventions/references/conventions/negative-verification.md",
+      "master_sha256": "d86bf0d3a74dd01227744785d31c33e12af7ce205d7c74ab2180e796be1b2c57",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/production-operations.md",
+      "size": 9148,
+      "sha256": "9b1393e30e462020393e90ac0f2e64f851d00850a6dd7e4ad5e3f1d425699550",
+      "master_path": "skills/toolkit-conventions/references/conventions/production-operations.md",
+      "master_sha256": "9b1393e30e462020393e90ac0f2e64f851d00850a6dd7e4ad5e3f1d425699550",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/progressive-delivery.md",
+      "size": 8151,
+      "sha256": "14a4b6ae4c066002bd7f5918510e34263600de3fc3172e1012aad0f3c1ff8c15",
+      "master_path": "skills/toolkit-conventions/references/conventions/progressive-delivery.md",
+      "master_sha256": "14a4b6ae4c066002bd7f5918510e34263600de3fc3172e1012aad0f3c1ff8c15",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/project-state-layout.md",
+      "size": 11315,
+      "sha256": "36827cd013cd1006aba1e745e97d9503b2c51b753c34f2470a7e4f1ea02b0e76",
+      "master_path": "skills/toolkit-conventions/references/conventions/project-state-layout.md",
+      "master_sha256": "36827cd013cd1006aba1e745e97d9503b2c51b753c34f2470a7e4f1ea02b0e76",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/pull-request-review.md",
+      "size": 5728,
+      "sha256": "cee89103e4bc55a8d6a6b9a5db71466755ae44f8a145f30b037ee8d9d3237dea",
+      "master_path": "skills/toolkit-conventions/references/conventions/pull-request-review.md",
+      "master_sha256": "cee89103e4bc55a8d6a6b9a5db71466755ae44f8a145f30b037ee8d9d3237dea",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/quality-gates-and-dod.md",
+      "size": 4465,
+      "sha256": "2a905dfd012f55c455627e262db2485a95596bab29481e14cf16305c9b27245f",
+      "master_path": "skills/toolkit-conventions/references/conventions/quality-gates-and-dod.md",
+      "master_sha256": "2a905dfd012f55c455627e262db2485a95596bab29481e14cf16305c9b27245f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/reliability-and-observability.md",
+      "size": 2794,
+      "sha256": "fb5c1bdb2f7a07c2e5c7b3cde60b7fd3770e1c432c83521f4426fde185bb0ee4",
+      "master_path": "skills/toolkit-conventions/references/conventions/reliability-and-observability.md",
+      "master_sha256": "fb5c1bdb2f7a07c2e5c7b3cde60b7fd3770e1c432c83521f4426fde185bb0ee4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/repo-hygiene-gates.md",
+      "size": 4959,
+      "sha256": "5af4a3643bcd1b99a2b2a926c2af66cb4db7d48c85ab718c5f3d5f07cea661e2",
+      "master_path": "skills/toolkit-conventions/references/conventions/repo-hygiene-gates.md",
+      "master_sha256": "5af4a3643bcd1b99a2b2a926c2af66cb4db7d48c85ab718c5f3d5f07cea661e2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/rules-as-gates.md",
+      "size": 7568,
+      "sha256": "d5910cd46f7f401d9b99f18be37560014fdd15ee7346735261a3cc0e4e97b58f",
+      "master_path": "skills/toolkit-conventions/references/conventions/rules-as-gates.md",
+      "master_sha256": "d5910cd46f7f401d9b99f18be37560014fdd15ee7346735261a3cc0e4e97b58f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/runtime-boundaries.md",
+      "size": 2504,
+      "sha256": "d55b3e7c745d976ddafc33ee1cf39171719ae098946440dd4150cd925d7ff84a",
+      "master_path": "skills/toolkit-conventions/references/conventions/runtime-boundaries.md",
+      "master_sha256": "d55b3e7c745d976ddafc33ee1cf39171719ae098946440dd4150cd925d7ff84a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/security-verification-gates.md",
+      "size": 15771,
+      "sha256": "e79856ba872a64cb20b5cb7605d929e29d97fd81826f2569333fa516a7be7213",
+      "master_path": "skills/toolkit-conventions/references/conventions/security-verification-gates.md",
+      "master_sha256": "e79856ba872a64cb20b5cb7605d929e29d97fd81826f2569333fa516a7be7213",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/stack-composition.md",
+      "size": 7865,
+      "sha256": "eb7e40cb08358a386b3be03486f21b35d15b50eaf9a435993981315cb24c3db3",
+      "master_path": "skills/toolkit-conventions/references/conventions/stack-composition.md",
+      "master_sha256": "eb7e40cb08358a386b3be03486f21b35d15b50eaf9a435993981315cb24c3db3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/test-evidence.md",
+      "size": 6071,
+      "sha256": "f73b316c4684ef3ea22085ab27e4a7efb049d546c977a1c3697f29812d081fda",
+      "master_path": "skills/toolkit-conventions/references/conventions/test-evidence.md",
+      "master_sha256": "f73b316c4684ef3ea22085ab27e4a7efb049d546c977a1c3697f29812d081fda",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/test-execution-economy.md",
+      "size": 3178,
+      "sha256": "e0b5c42e48a0ec11ece169cf36613c1623ef417be515b50d323f553571a9a8ee",
+      "master_path": "skills/toolkit-conventions/references/conventions/test-execution-economy.md",
+      "master_sha256": "e0b5c42e48a0ec11ece169cf36613c1623ef417be515b50d323f553571a9a8ee",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/test-quality-baseline.md",
+      "size": 5728,
+      "sha256": "28cc62a333ef5c425ad9517fca640a9810188bc18a46f204945c4ab282afddc0",
+      "master_path": "skills/toolkit-conventions/references/conventions/test-quality-baseline.md",
+      "master_sha256": "28cc62a333ef5c425ad9517fca640a9810188bc18a46f204945c4ab282afddc0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/third-party-assets-privacy.md",
+      "size": 17930,
+      "sha256": "96d42b0b604d9ef8a57479d8fae1ec0c3312cd61014c56bbd02164ce102a628d",
+      "master_path": "skills/toolkit-conventions/references/conventions/third-party-assets-privacy.md",
+      "master_sha256": "96d42b0b604d9ef8a57479d8fae1ec0c3312cd61014c56bbd02164ce102a628d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/tool-adoption-and-measurement.md",
+      "size": 10491,
+      "sha256": "84b3c497c764a8bbe2a4a798a3bbc095c62f8f3e67ccfc40a157b8a35ac4778d",
+      "master_path": "skills/toolkit-conventions/references/conventions/tool-adoption-and-measurement.md",
+      "master_sha256": "84b3c497c764a8bbe2a4a798a3bbc095c62f8f3e67ccfc40a157b8a35ac4778d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/toolkit-sync.md",
+      "size": 11168,
+      "sha256": "abcf80a219d38c3246f6da3bb27cea81b400bcbedf5373f33ede52f8da224fd8",
+      "master_path": "skills/toolkit-conventions/references/conventions/toolkit-sync.md",
+      "master_sha256": "abcf80a219d38c3246f6da3bb27cea81b400bcbedf5373f33ede52f8da224fd8",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/typescript-javascript.md",
+      "size": 2795,
+      "sha256": "f29c689526f566ac7357941bdde416818e70d68e4accf15cae466ca775aab034",
+      "master_path": "skills/toolkit-conventions/references/conventions/typescript-javascript.md",
+      "master_sha256": "f29c689526f566ac7357941bdde416818e70d68e4accf15cae466ca775aab034",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/conventions/ui-copy.md",
+      "size": 10914,
+      "sha256": "0c4d81d1a573cec325a2bc6d829833f2c198affaac5f5d8c389e1e4d13db6d7e",
+      "master_path": "skills/toolkit-conventions/references/conventions/ui-copy.md",
+      "master_sha256": "0c4d81d1a573cec325a2bc6d829833f2c198affaac5f5d8c389e1e4d13db6d7e",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/backlog-lint/.claude/backlog.md",
+      "size": 323,
+      "sha256": "e531d7fd27b70b2a1652e7ef210d0317ffc3af4676793ae717526bd3beb3c929",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/backlog-lint/.claude/backlog.md",
+      "master_sha256": "e531d7fd27b70b2a1652e7ef210d0317ffc3af4676793ae717526bd3beb3c929",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/backlog-migrate/.claude/backlog.md",
+      "size": 225,
+      "sha256": "c98dfb9b14d656feccb66d6e7ce2f852b24d62180c5575b6fb1e32d919aebb43",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/backlog-migrate/.claude/backlog.md",
+      "master_sha256": "c98dfb9b14d656feccb66d6e7ce2f852b24d62180c5575b6fb1e32d919aebb43",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ci-effective-work/.github/workflows/gates.yml",
+      "size": 832,
+      "sha256": "3ce346eb49799b3fba4ff790481fb99a6c4a0f57ac4856af72463722c32a3beb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ci-effective-work/.github/workflows/gates.yml",
+      "master_sha256": "3ce346eb49799b3fba4ff790481fb99a6c4a0f57ac4856af72463722c32a3beb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/claim-release/src/browser_jobs.py",
+      "size": 723,
+      "sha256": "8a566af3c8060907efbc9122f2c220377a869783b7ac18b241e61641a7031295",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/claim-release/src/browser_jobs.py",
+      "master_sha256": "8a566af3c8060907efbc9122f2c220377a869783b7ac18b241e61641a7031295",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/app/page.ts",
+      "size": 101,
+      "sha256": "16d954de0be60168e9745de80445d08940e30cffd5263d03f18adbc482d3cce4",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/app/page.ts",
+      "master_sha256": "16d954de0be60168e9745de80445d08940e30cffd5263d03f18adbc482d3cce4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/cykl_a.py",
+      "size": 47,
+      "sha256": "43c92557aff8a6c0a2dcc2b3efbfaa593c82c1fb68e5edd68f654391fee7c0da",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/cykl_a.py",
+      "master_sha256": "43c92557aff8a6c0a2dcc2b3efbfaa593c82c1fb68e5edd68f654391fee7c0da",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/cykl_b.py",
+      "size": 41,
+      "sha256": "77f04d1c37651e8bc847710914b8be8202cbdd9cfdaf31ce7c9bb46db60be266",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/cykl_b.py",
+      "master_sha256": "77f04d1c37651e8bc847710914b8be8202cbdd9cfdaf31ce7c9bb46db60be266",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/features/orders/internal/repository.ts",
+      "size": 46,
+      "sha256": "468dc528584bc5d0506c4640240510df51c492baccb628691c9014058e22f682",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/features/orders/internal/repository.ts",
+      "master_sha256": "468dc528584bc5d0506c4640240510df51c492baccb628691c9014058e22f682",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/features/orders/public.ts",
+      "size": 39,
+      "sha256": "e66341f114f1b3374124110110e863d0d2ed8f2182d1bccd1fc2d8cc854d5aaf",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/code-structure/src/features/orders/public.ts",
+      "master_sha256": "e66341f114f1b3374124110110e863d0d2ed8f2182d1bccd1fc2d8cc854d5aaf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/.claude/otwarte-slowniki.txt",
+      "size": 129,
+      "sha256": "91a401b5a4bd7631f880710820b1bd2a5a14dadd76e2e363482ee7cb436cb3e7",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/.claude/otwarte-slowniki.txt",
+      "master_sha256": "91a401b5a4bd7631f880710820b1bd2a5a14dadd76e2e363482ee7cb436cb3e7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/.gitignore",
+      "size": 530,
+      "sha256": "b4d23cad72de7f21fc286b8e8de1b178aa5902c1f66cac84ab21d3984e341419",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/.gitignore",
+      "master_sha256": "b4d23cad72de7f21fc286b8e8de1b178aa5902c1f66cac84ab21d3984e341419",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/apps/web/src/lib/api-types.d.ts",
+      "size": 66,
+      "sha256": "77d210d08405b22dafe32ae8790f063c7072fb217cc2b7bd4c083d2e3c57bc0d",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/apps/web/src/lib/api-types.d.ts",
+      "master_sha256": "77d210d08405b22dafe32ae8790f063c7072fb217cc2b7bd4c083d2e3c57bc0d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/openapi.json",
+      "size": 706,
+      "sha256": "f405493e7b311fe3e61cc15dd883344d198ea5862e19f5b40eb3a13f3b857e2b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/contract-enums/openapi.json",
+      "master_sha256": "f405493e7b311fe3e61cc15dd883344d198ea5862e19f5b40eb3a13f3b857e2b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/.python-version",
+      "size": 4,
+      "sha256": "e69adfdeaa200c3eb6e41838fdc46e05d2430296d51adbe29a45f84084e8b385",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/.python-version",
+      "master_sha256": "e69adfdeaa200c3eb6e41838fdc46e05d2430296d51adbe29a45f84084e8b385",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/eol/python",
+      "size": 125,
+      "sha256": "3dae0ede012473ef2c48407e76da6d83d96dfde86419bc93ff4280d23eb03f61",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/eol/python",
+      "master_sha256": "3dae0ede012473ef2c48407e76da6d83d96dfde86419bc93ff4280d23eb03f61",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/pyproject.toml",
+      "size": 72,
+      "sha256": "e8049f21541e881863777db98236f542eb2bce7541b98e1e8da4c4b56978b23f",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/dependency-currency/pyproject.toml",
+      "master_sha256": "e8049f21541e881863777db98236f542eb2bce7541b98e1e8da4c4b56978b23f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/document-numbers/docs/mapa-wdrozenia.md",
+      "size": 469,
+      "sha256": "5ee8312ae4abdaa6f8dadfe9ab96717c4f4ea9389b9299ff31988b52ccf975f7",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/document-numbers/docs/mapa-wdrozenia.md",
+      "master_sha256": "5ee8312ae4abdaa6f8dadfe9ab96717c4f4ea9389b9299ff31988b52ccf975f7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/document-numbers/docs/ostatni-przebieg.txt",
+      "size": 184,
+      "sha256": "9335c4ad9b70c06f4ec4726f05eaa6162cad6c96e53ab08fc9e915099853ff9b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/document-numbers/docs/ostatni-przebieg.txt",
+      "master_sha256": "9335c4ad9b70c06f4ec4726f05eaa6162cad6c96e53ab08fc9e915099853ff9b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/bez-mianownika.sh",
+      "size": 372,
+      "sha256": "16ba9112fb7b5599347cd8b343af5d453f747f21f8e85ec1c3d92952ec5e57ba",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/bez-mianownika.sh",
+      "master_sha256": "16ba9112fb7b5599347cd8b343af5d453f747f21f8e85ec1c3d92952ec5e57ba",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/rozjazd.sh",
+      "size": 546,
+      "sha256": "e7b87dad6d7a0121f6fdcd7afccd4b8a2bd17565ed1c6d9192434fdeb4bc45f1",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/rozjazd.sh",
+      "master_sha256": "e7b87dad6d7a0121f6fdcd7afccd4b8a2bd17565ed1c6d9192434fdeb4bc45f1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/zero-mianownika.sh",
+      "size": 387,
+      "sha256": "928da22960caaba1c1e097993bd515d5bd66aecfc2e687346e686178a45ee28b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/bramki/zero-mianownika.sh",
+      "master_sha256": "928da22960caaba1c1e097993bd515d5bd66aecfc2e687346e686178a45ee28b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/other.py",
+      "size": 26,
+      "sha256": "fce8979f376944027ebd9a9c22d4f73cbe7a02d12413e62a26fbd5ab7dd6e879",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/other.py",
+      "master_sha256": "fce8979f376944027ebd9a9c22d4f73cbe7a02d12413e62a26fbd5ab7dd6e879",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/third.py",
+      "size": 26,
+      "sha256": "040fe801a1f55857143ee74cdadc14c502b4c736ecd8ccec9ad1e153192f3229",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/third.py",
+      "master_sha256": "040fe801a1f55857143ee74cdadc14c502b4c736ecd8ccec9ad1e153192f3229",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/value.py",
+      "size": 26,
+      "sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/gate-selfcheck/src/value.py",
+      "master_sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/.claude/identyfikatory.baseline",
+      "size": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/.claude/identyfikatory.baseline",
+      "master_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/src/orders.py",
+      "size": 46,
+      "sha256": "34f6afc7b9564bd226c0e1dea2e09fc843160004ab07d095438e2f9e936023e5",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/src/orders.py",
+      "master_sha256": "34f6afc7b9564bd226c0e1dea2e09fc843160004ab07d095438e2f9e936023e5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/src/zlecenia.py",
+      "size": 123,
+      "sha256": "5b42d4dfd0075c82d7b52a38637554f10a02eacb1b3a9fc6936d93bf1d1f2964",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/identifier-language/src/zlecenia.py",
+      "master_sha256": "5b42d4dfd0075c82d7b52a38637554f10a02eacb1b3a9fc6936d93bf1d1f2964",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/c/deep.ts",
+      "size": 78,
+      "sha256": "a02f17784f07657dc2d329a8427dadc314c8258e42e26c24ff09ef0a8a4ead2c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/c/deep.ts",
+      "master_sha256": "a02f17784f07657dc2d329a8427dadc314c8258e42e26c24ff09ef0a8a4ead2c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/c/near-import.ts",
+      "size": 59,
+      "sha256": "92fa1c80b4f76a7daf9815a3869432b52bd74c3e6aa9c5a4b197cb0d3264adb9",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/c/near-import.ts",
+      "master_sha256": "92fa1c80b4f76a7daf9815a3869432b52bd74c3e6aa9c5a4b197cb0d3264adb9",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/near.ts",
+      "size": 23,
+      "sha256": "2458cc3bd5100d2c05012839db57d1898a01d89bacd34887013c295bee591984",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/import-depth/src/a/b/near.ts",
+      "master_sha256": "2458cc3bd5100d2c05012839db57d1898a01d89bacd34887013c295bee591984",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/domain/order.py",
+      "size": 93,
+      "sha256": "932166f565966e4d38721e160d0fbc0d5366ec290a924366573550c9e8d2a950",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/domain/order.py",
+      "master_sha256": "932166f565966e4d38721e160d0fbc0d5366ec290a924366573550c9e8d2a950",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/domain/pricing.py",
+      "size": 90,
+      "sha256": "786074b9507a352d6ef70313584e72548c9eeb6aea6da09cda496323af89b4eb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/domain/pricing.py",
+      "master_sha256": "786074b9507a352d6ef70313584e72548c9eeb6aea6da09cda496323af89b4eb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/infrastructure/repository.py",
+      "size": 34,
+      "sha256": "7a701e0ada66f1c60839f22931a1c1e69b508646694f035f3a393b1a5f7725eb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/layer-direction/src/infrastructure/repository.py",
+      "master_sha256": "7a701e0ada66f1c60839f22931a1c1e69b508646694f035f3a393b1a5f7725eb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/docs/bez-weryfikacji-negatywnej.tsv",
+      "size": 438,
+      "sha256": "754b657fc492600cbb12f256b914ccf5dc4dabfeca89fda4ff30dbea155718f3",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/docs/bez-weryfikacji-negatywnej.tsv",
+      "master_sha256": "754b657fc492600cbb12f256b914ccf5dc4dabfeca89fda4ff30dbea155718f3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/docs/weryfikacja-negatywna.tsv",
+      "size": 627,
+      "sha256": "f30977d76c3d73b90baf715cce7435ec9f8ec8c159408359adb085d17fdf859d",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/docs/weryfikacja-negatywna.tsv",
+      "master_sha256": "f30977d76c3d73b90baf715cce7435ec9f8ec8c159408359adb085d17fdf859d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_legacy.py",
+      "size": 71,
+      "sha256": "1b5ae428e215840cb3f0e67506247c2f3ed5de5d40d752e3f931158cebd2f8d4",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_legacy.py",
+      "master_sha256": "1b5ae428e215840cb3f0e67506247c2f3ed5de5d40d752e3f931158cebd2f8d4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_orders.py",
+      "size": 66,
+      "sha256": "3e67aa20a196f0236a9a9efa8e971cec8d088aa55aef9d69bcbe3f596d5bf815",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_orders.py",
+      "master_sha256": "3e67aa20a196f0236a9a9efa8e971cec8d088aa55aef9d69bcbe3f596d5bf815",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_pricing.py",
+      "size": 62,
+      "sha256": "8c261696c2dc0ac869728289d7599420badf749e2cfda0736b15ec460772f14a",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_pricing.py",
+      "master_sha256": "8c261696c2dc0ac869728289d7599420badf749e2cfda0736b15ec460772f14a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_queue.py",
+      "size": 67,
+      "sha256": "784345abee0e598bd200e45200458a879fd598bdcdf45532897d83ccbe3d42eb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/negative-verification/tests/test_queue.py",
+      "master_sha256": "784345abee0e598bd200e45200458a879fd598bdcdf45532897d83ccbe3d42eb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/.claude/notatki.md",
+      "size": 58,
+      "sha256": "3b35fe0bf939fee11c241fe447ab87aea0bc9d0977772c9f91f42b61eb1f32af",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/.claude/notatki.md",
+      "master_sha256": "3b35fe0bf939fee11c241fe447ab87aea0bc9d0977772c9f91f42b61eb1f32af",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/.vscode/tasks.json",
+      "size": 104,
+      "sha256": "c7456b436c8fb19ca1fced6a98b3336c0938ec577f4d953191a7f2606498448b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/.vscode/tasks.json",
+      "master_sha256": "c7456b436c8fb19ca1fced6a98b3336c0938ec577f4d953191a7f2606498448b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/src/value.ts",
+      "size": 24,
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/src/value.ts",
+      "master_sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/src/value.ts.bak",
+      "size": 24,
+      "sha256": "f8ff18e7dea68bb8dd4181fa54e8c2401abc2aae9008c0f7595483eb6a2074ec",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/repo-hygiene/src/value.ts.bak",
+      "master_sha256": "f8ff18e7dea68bb8dd4181fa54e8c2401abc2aae9008c0f7595483eb6a2074ec",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/api/auth.py",
+      "size": 36,
+      "sha256": "c0c168de08723214332ab11511e8e6572a26c02d87dd5dc2cecda9e6d932bd34",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/api/auth.py",
+      "master_sha256": "c0c168de08723214332ab11511e8e6572a26c02d87dd5dc2cecda9e6d932bd34",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/api/orders.py",
+      "size": 341,
+      "sha256": "66e7674bfa097d2e13b7d1381f65b5f4dd2901b7dcc9b65fd43b6c8c25d99ae6",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/api/orders.py",
+      "master_sha256": "66e7674bfa097d2e13b7d1381f65b5f4dd2901b7dcc9b65fd43b6c8c25d99ae6",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/main.py",
+      "size": 164,
+      "sha256": "66fdcf5b88928a9d696e93aa4eda96453d957d5aa5838950d181f1f584e9b703",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/route-guards/app/main.py",
+      "master_sha256": "66fdcf5b88928a9d696e93aa4eda96453d957d5aa5838950d181f1f584e9b703",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/.claude/ruff.baseline",
+      "size": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/.claude/ruff.baseline",
+      "master_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/pyproject.toml",
+      "size": 30,
+      "sha256": "fc60c178de02b75ccb0d1958443eb14e4e64af47b8879a988e86f2e7ac4275ed",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/pyproject.toml",
+      "master_sha256": "fc60c178de02b75ccb0d1958443eb14e4e64af47b8879a988e86f2e7ac4275ed",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/src/other.py",
+      "size": 33,
+      "sha256": "2097d8762c890550887d4383f51fadb8ffb27bccf20003ef8c1fc6a31d8cb6c2",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/src/other.py",
+      "master_sha256": "2097d8762c890550887d4383f51fadb8ffb27bccf20003ef8c1fc6a31d8cb6c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/src/value.py",
+      "size": 23,
+      "sha256": "285f00c95e5a31ef10363ec7b0db9f66ad9a14d61b6ee26cde78d731c6c24689",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ruff-ratchet/src/value.py",
+      "master_sha256": "285f00c95e5a31ef10363ec7b0db9f66ad9a14d61b6ee26cde78d731c6c24689",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/components/checkout.tsx",
+      "size": 52,
+      "sha256": "83fec82b57e18847fb4be0f3314184ea4d7b51a4ce99c1a37010c1bbf6937594",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/components/checkout.tsx",
+      "master_sha256": "83fec82b57e18847fb4be0f3314184ea4d7b51a4ce99c1a37010c1bbf6937594",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/components/order-list.tsx",
+      "size": 104,
+      "sha256": "1e3237cea76a6fef793ba2c45d7f7abeae98ef50fcef39fe0918892598e58302",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/components/order-list.tsx",
+      "master_sha256": "1e3237cea76a6fef793ba2c45d7f7abeae98ef50fcef39fe0918892598e58302",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/server/db.ts",
+      "size": 61,
+      "sha256": "d03bb5116b673b26af7c603816c32bb42f8560a25d16a816471faf20450cb94c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/runtime-boundaries/server/db.ts",
+      "master_sha256": "d03bb5116b673b26af7c603816c32bb42f8560a25d16a816471faf20450cb94c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/test-evidence/src/orders.py",
+      "size": 40,
+      "sha256": "859cb6b0c69f0e06bb5ae054c70fb7148c1955b918465157dbc4882c71830125",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/test-evidence/src/orders.py",
+      "master_sha256": "859cb6b0c69f0e06bb5ae054c70fb7148c1955b918465157dbc4882c71830125",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/test-evidence/tests/test_orders.py",
+      "size": 208,
+      "sha256": "fa4837fc28b3e735113b3c00da03ed486686549985b2a87f9c2cc925d7519260",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/test-evidence/tests/test_orders.py",
+      "master_sha256": "fa4837fc28b3e735113b3c00da03ed486686549985b2a87f9c2cc925d7519260",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/test-gates/pre-push",
+      "size": 654,
+      "sha256": "3b2db9dd385903d831080f190ce9f4e7f8ae0be9ada9451ddb8b750eec4df765",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/test-gates/pre-push",
+      "master_sha256": "3b2db9dd385903d831080f190ce9f4e7f8ae0be9ada9451ddb8b750eec4df765",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ui-copy-lint/src/hero.tsx",
+      "size": 183,
+      "sha256": "5d4b51dc5127275404bb6183d9779cba61860e5c78a1be2f01fe98d478dca30c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ui-copy-lint/src/hero.tsx",
+      "master_sha256": "5d4b51dc5127275404bb6183d9779cba61860e5c78a1be2f01fe98d478dca30c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-bad/ui-copy-lint/src/panel.tsx",
+      "size": 69,
+      "sha256": "2e9cfd264e6ac05f440d3bb5bc8ea8429504c52db3a51ce7db2d68218649885b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-bad/ui-copy-lint/src/panel.tsx",
+      "master_sha256": "2e9cfd264e6ac05f440d3bb5bc8ea8429504c52db3a51ce7db2d68218649885b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/backlog-lint/.claude/backlog.md",
+      "size": 616,
+      "sha256": "ced46de56c76a3dd26de9ea86da17423b5fc2772800e57d8557c3ddd82babd2a",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/backlog-lint/.claude/backlog.md",
+      "master_sha256": "ced46de56c76a3dd26de9ea86da17423b5fc2772800e57d8557c3ddd82babd2a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/backlog-migrate/.claude/backlog.md",
+      "size": 191,
+      "sha256": "02c91603c4c50256e1207f659ec21a820002da2e2cfb8c3de76cb3cf7509502e",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/backlog-migrate/.claude/backlog.md",
+      "master_sha256": "02c91603c4c50256e1207f659ec21a820002da2e2cfb8c3de76cb3cf7509502e",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ci-effective-work/.github/workflows/gates.yml",
+      "size": 1172,
+      "sha256": "3979cd95c0be146be849c564b8ab7f32430912398bc8659bf00740c2a1729b26",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ci-effective-work/.github/workflows/gates.yml",
+      "master_sha256": "3979cd95c0be146be849c564b8ab7f32430912398bc8659bf00740c2a1729b26",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/claim-release/src/browser_jobs.py",
+      "size": 892,
+      "sha256": "b68ea9aee0d5de673556b116122430c078c860b34aac24ffdbd7bf7ac8db960c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/claim-release/src/browser_jobs.py",
+      "master_sha256": "b68ea9aee0d5de673556b116122430c078c860b34aac24ffdbd7bf7ac8db960c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/orders.py",
+      "size": 33,
+      "sha256": "680513989d8adac14759890594ce451a4f5cb5ddd367d22266f4c2219a377533",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/orders.py",
+      "master_sha256": "680513989d8adac14759890594ce451a4f5cb5ddd367d22266f4c2219a377533",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/public.ts",
+      "size": 44,
+      "sha256": "7d03ca55e383ec618dde1ad539bc7bf2418c6a949b03f58eb5a5e9060e37d6bd",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/public.ts",
+      "master_sha256": "7d03ca55e383ec618dde1ad539bc7bf2418c6a949b03f58eb5a5e9060e37d6bd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/read-orders.ts",
+      "size": 36,
+      "sha256": "40dfe9134a4a8d8058ce98e842ec19728e4b7104796aeb50a70d2145d5869475",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/code-structure/src/read-orders.ts",
+      "master_sha256": "40dfe9134a4a8d8058ce98e842ec19728e4b7104796aeb50a70d2145d5869475",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/contract-enums/.claude/otwarte-slowniki.txt",
+      "size": 129,
+      "sha256": "91a401b5a4bd7631f880710820b1bd2a5a14dadd76e2e363482ee7cb436cb3e7",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/contract-enums/.claude/otwarte-slowniki.txt",
+      "master_sha256": "91a401b5a4bd7631f880710820b1bd2a5a14dadd76e2e363482ee7cb436cb3e7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/contract-enums/apps/web/src/lib/api-types.d.ts",
+      "size": 66,
+      "sha256": "77d210d08405b22dafe32ae8790f063c7072fb217cc2b7bd4c083d2e3c57bc0d",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/contract-enums/apps/web/src/lib/api-types.d.ts",
+      "master_sha256": "77d210d08405b22dafe32ae8790f063c7072fb217cc2b7bd4c083d2e3c57bc0d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/contract-enums/openapi.json",
+      "size": 735,
+      "sha256": "271269aba3b4efbdb76ee011e652343e6c0ca3813373491a1e6070ef34e4c53c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/contract-enums/openapi.json",
+      "master_sha256": "271269aba3b4efbdb76ee011e652343e6c0ca3813373491a1e6070ef34e4c53c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/.python-version",
+      "size": 5,
+      "sha256": "02e735b3dfe1c32833eb550b7ff8ffa17f5f2bc3fa1e7bae61a8f5a3883ce398",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/.python-version",
+      "master_sha256": "02e735b3dfe1c32833eb550b7ff8ffa17f5f2bc3fa1e7bae61a8f5a3883ce398",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/eol/python",
+      "size": 126,
+      "sha256": "8c2034914045c19faef9250e29970f033c14e0397b2a69c7d5322d7e19dd825a",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/eol/python",
+      "master_sha256": "8c2034914045c19faef9250e29970f033c14e0397b2a69c7d5322d7e19dd825a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/pyproject.toml",
+      "size": 73,
+      "sha256": "8892be9140f29cb26ca2d446967b3172b5f168861238aac863a5eb87f7cb21f5",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/dependency-currency/pyproject.toml",
+      "master_sha256": "8892be9140f29cb26ca2d446967b3172b5f168861238aac863a5eb87f7cb21f5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/document-numbers/docs/mapa-wdrozenia.md",
+      "size": 469,
+      "sha256": "d11d327c90399c7d628a2782a7c600d4abec06a8cfac1b026b07e87b37c6f484",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/document-numbers/docs/mapa-wdrozenia.md",
+      "master_sha256": "d11d327c90399c7d628a2782a7c600d4abec06a8cfac1b026b07e87b37c6f484",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/document-numbers/docs/ostatni-przebieg.txt",
+      "size": 185,
+      "sha256": "24735567c4181f6f17bee4cc34449e398b07932a7ec2f2cdfcbe56ede91ee455",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/document-numbers/docs/ostatni-przebieg.txt",
+      "master_sha256": "24735567c4181f6f17bee4cc34449e398b07932a7ec2f2cdfcbe56ede91ee455",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/identifier-language/.claude/identyfikatory.baseline",
+      "size": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/identifier-language/.claude/identyfikatory.baseline",
+      "master_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/identifier-language/src/orders.py",
+      "size": 80,
+      "sha256": "18e9291d9f5d53697d1940202873f0f9022085c7c7e45e20f43b9b47253b469e",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/identifier-language/src/orders.py",
+      "master_sha256": "18e9291d9f5d53697d1940202873f0f9022085c7c7e45e20f43b9b47253b469e",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/identifier-language/src/reports.py",
+      "size": 39,
+      "sha256": "b4fa2d227a51d1cb14dbbe03d47699dabfa6f6af012feabb139fdc7188fbefae",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/identifier-language/src/reports.py",
+      "master_sha256": "b4fa2d227a51d1cb14dbbe03d47699dabfa6f6af012feabb139fdc7188fbefae",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/import-depth/src/a/b/helper.ts",
+      "size": 25,
+      "sha256": "f017cf92f05e097238bd7bdba695cd0a83b4c4729384b1ad79000b5674ce4a27",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/import-depth/src/a/b/helper.ts",
+      "master_sha256": "f017cf92f05e097238bd7bdba695cd0a83b4c4729384b1ad79000b5674ce4a27",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/import-depth/src/a/b/index.ts",
+      "size": 64,
+      "sha256": "0f676c0229f77affbc8bb7005745af6761963287fe53dd19e66e09b6fe278627",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/import-depth/src/a/b/index.ts",
+      "master_sha256": "0f676c0229f77affbc8bb7005745af6761963287fe53dd19e66e09b6fe278627",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/domain/order.py",
+      "size": 51,
+      "sha256": "ae90962f61e9e3c2276edff0080c517f8892df57f95f31d3b615f585d4bf4f2c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/domain/order.py",
+      "master_sha256": "ae90962f61e9e3c2276edff0080c517f8892df57f95f31d3b615f585d4bf4f2c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/domain/pricing.py",
+      "size": 43,
+      "sha256": "99a9692077d7d7bb4150598ac30ce38c6659eec046aab72ebff2d0dd6a3b90be",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/domain/pricing.py",
+      "master_sha256": "99a9692077d7d7bb4150598ac30ce38c6659eec046aab72ebff2d0dd6a3b90be",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/infrastructure/repository.py",
+      "size": 54,
+      "sha256": "ae82dc3672749531a1abac0e744d460378a07797961a821194d065f535c47feb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/layer-direction/src/infrastructure/repository.py",
+      "master_sha256": "ae82dc3672749531a1abac0e744d460378a07797961a821194d065f535c47feb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/docs/bez-weryfikacji-negatywnej.tsv",
+      "size": 438,
+      "sha256": "754b657fc492600cbb12f256b914ccf5dc4dabfeca89fda4ff30dbea155718f3",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/docs/bez-weryfikacji-negatywnej.tsv",
+      "master_sha256": "754b657fc492600cbb12f256b914ccf5dc4dabfeca89fda4ff30dbea155718f3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/docs/weryfikacja-negatywna.tsv",
+      "size": 989,
+      "sha256": "417428aae5c4dd4f4a24486fe8236c7115e146e5d40d317edce6b748218d7fe1",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/docs/weryfikacja-negatywna.tsv",
+      "master_sha256": "417428aae5c4dd4f4a24486fe8236c7115e146e5d40d317edce6b748218d7fe1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_legacy.py",
+      "size": 71,
+      "sha256": "1b5ae428e215840cb3f0e67506247c2f3ed5de5d40d752e3f931158cebd2f8d4",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_legacy.py",
+      "master_sha256": "1b5ae428e215840cb3f0e67506247c2f3ed5de5d40d752e3f931158cebd2f8d4",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_orders.py",
+      "size": 66,
+      "sha256": "3e67aa20a196f0236a9a9efa8e971cec8d088aa55aef9d69bcbe3f596d5bf815",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_orders.py",
+      "master_sha256": "3e67aa20a196f0236a9a9efa8e971cec8d088aa55aef9d69bcbe3f596d5bf815",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_pricing.py",
+      "size": 62,
+      "sha256": "8c261696c2dc0ac869728289d7599420badf749e2cfda0736b15ec460772f14a",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_pricing.py",
+      "master_sha256": "8c261696c2dc0ac869728289d7599420badf749e2cfda0736b15ec460772f14a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_queue.py",
+      "size": 67,
+      "sha256": "784345abee0e598bd200e45200458a879fd598bdcdf45532897d83ccbe3d42eb",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/negative-verification/tests/test_queue.py",
+      "master_sha256": "784345abee0e598bd200e45200458a879fd598bdcdf45532897d83ccbe3d42eb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/package.json",
+      "size": 38,
+      "sha256": "9072baa3779fd1e008f608260592a4204efec51b575ac46cd6ec0b74b09859ef",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/package.json",
+      "master_sha256": "9072baa3779fd1e008f608260592a4204efec51b575ac46cd6ec0b74b09859ef",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/src/value.py",
+      "size": 26,
+      "sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/src/value.py",
+      "master_sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/src/value.ts",
+      "size": 24,
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/rejestr-regul/src/value.ts",
+      "master_sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/repo-hygiene/.claude/notatki.md",
+      "size": 41,
+      "sha256": "f41870cbc0a0ac782cf7417330672946bca77e6a21715b4f80bbbdaf9dae3cfd",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/repo-hygiene/.claude/notatki.md",
+      "master_sha256": "f41870cbc0a0ac782cf7417330672946bca77e6a21715b4f80bbbdaf9dae3cfd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/repo-hygiene/src/value.ts",
+      "size": 24,
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/repo-hygiene/src/value.ts",
+      "master_sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/route-guards/.claude/trasy-publiczne.txt",
+      "size": 47,
+      "sha256": "e0685c4f150b0f09dc6944790863e7fee65a303f2d1e12574de86bc7242d6da8",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/route-guards/.claude/trasy-publiczne.txt",
+      "master_sha256": "e0685c4f150b0f09dc6944790863e7fee65a303f2d1e12574de86bc7242d6da8",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/api/auth.py",
+      "size": 36,
+      "sha256": "c0c168de08723214332ab11511e8e6572a26c02d87dd5dc2cecda9e6d932bd34",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/api/auth.py",
+      "master_sha256": "c0c168de08723214332ab11511e8e6572a26c02d87dd5dc2cecda9e6d932bd34",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/api/orders.py",
+      "size": 271,
+      "sha256": "864f7d8dc638bbb0fe76a4416bc1c30c45dc6a69ab355e02f295aa2e6c7831a0",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/api/orders.py",
+      "master_sha256": "864f7d8dc638bbb0fe76a4416bc1c30c45dc6a69ab355e02f295aa2e6c7831a0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/main.py",
+      "size": 164,
+      "sha256": "66fdcf5b88928a9d696e93aa4eda96453d957d5aa5838950d181f1f584e9b703",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/route-guards/app/main.py",
+      "master_sha256": "66fdcf5b88928a9d696e93aa4eda96453d957d5aa5838950d181f1f584e9b703",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/.claude/ruff.baseline",
+      "size": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/.claude/ruff.baseline",
+      "master_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/pyproject.toml",
+      "size": 30,
+      "sha256": "fc60c178de02b75ccb0d1958443eb14e4e64af47b8879a988e86f2e7ac4275ed",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/pyproject.toml",
+      "master_sha256": "fc60c178de02b75ccb0d1958443eb14e4e64af47b8879a988e86f2e7ac4275ed",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/src/other.py",
+      "size": 33,
+      "sha256": "2097d8762c890550887d4383f51fadb8ffb27bccf20003ef8c1fc6a31d8cb6c2",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/src/other.py",
+      "master_sha256": "2097d8762c890550887d4383f51fadb8ffb27bccf20003ef8c1fc6a31d8cb6c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/src/value.py",
+      "size": 33,
+      "sha256": "71252aafd55f8de64c716835b2f40f6a32d132f4f6b442a6a1d7304e8de7a88f",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ruff-ratchet/src/value.py",
+      "master_sha256": "71252aafd55f8de64c716835b2f40f6a32d132f4f6b442a6a1d7304e8de7a88f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/components/order-list.tsx",
+      "size": 122,
+      "sha256": "3a73eaf382041ef9a3695468f5ea943246a743913570ca8caff3007c70527a9c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/components/order-list.tsx",
+      "master_sha256": "3a73eaf382041ef9a3695468f5ea943246a743913570ca8caff3007c70527a9c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/server/db.ts",
+      "size": 61,
+      "sha256": "d03bb5116b673b26af7c603816c32bb42f8560a25d16a816471faf20450cb94c",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/server/db.ts",
+      "master_sha256": "d03bb5116b673b26af7c603816c32bb42f8560a25d16a816471faf20450cb94c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/server/read-orders.ts",
+      "size": 93,
+      "sha256": "0fab089852ec589fcc561c5496e9f463d77894412a00292485e7c06a440770a1",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/server/read-orders.ts",
+      "master_sha256": "0fab089852ec589fcc561c5496e9f463d77894412a00292485e7c06a440770a1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/shared/contracts.ts",
+      "size": 44,
+      "sha256": "e97dee4023675c1f6b90bd7a1d40dac513fa56a74c6e5a76f775caac5e6c794d",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/runtime-boundaries/shared/contracts.ts",
+      "master_sha256": "e97dee4023675c1f6b90bd7a1d40dac513fa56a74c6e5a76f775caac5e6c794d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/package.json",
+      "size": 38,
+      "sha256": "9072baa3779fd1e008f608260592a4204efec51b575ac46cd6ec0b74b09859ef",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/package.json",
+      "master_sha256": "9072baa3779fd1e008f608260592a4204efec51b575ac46cd6ec0b74b09859ef",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/src/value.py",
+      "size": 26,
+      "sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/src/value.py",
+      "master_sha256": "5d080563b57287276f589c2b2714ef499269efe7405a288b3c1474f5a92bf271",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/src/value.ts",
+      "size": 24,
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/stan-stosu/src/value.ts",
+      "master_sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/test-evidence/src/orders.py",
+      "size": 40,
+      "sha256": "859cb6b0c69f0e06bb5ae054c70fb7148c1955b918465157dbc4882c71830125",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/test-evidence/src/orders.py",
+      "master_sha256": "859cb6b0c69f0e06bb5ae054c70fb7148c1955b918465157dbc4882c71830125",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/test-evidence/tests/test_orders.py",
+      "size": 153,
+      "sha256": "f65606f86692886e234f2b90e332043679fe16d96f09e2e3d8529899589ee442",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/test-evidence/tests/test_orders.py",
+      "master_sha256": "f65606f86692886e234f2b90e332043679fe16d96f09e2e3d8529899589ee442",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/test-gates/pre-push",
+      "size": 4083,
+      "sha256": "4ec5da828b8625cfa408dbbf3aedf01dc944c57e51a7ad09111dfda3012dcf6b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/test-gates/pre-push",
+      "master_sha256": "4ec5da828b8625cfa408dbbf3aedf01dc944c57e51a7ad09111dfda3012dcf6b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ui-copy-lint/src/hero.tsx",
+      "size": 63,
+      "sha256": "266d39250c44b45e891cc832ce30dc381af2c6d5f53b77713ce4b46d749a7b5b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ui-copy-lint/src/hero.tsx",
+      "master_sha256": "266d39250c44b45e891cc832ce30dc381af2c6d5f53b77713ce4b46d749a7b5b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/known-good/ui-copy-lint/src/panel.tsx",
+      "size": 69,
+      "sha256": "2e9cfd264e6ac05f440d3bb5bc8ea8429504c52db3a51ce7db2d68218649885b",
+      "master_path": "skills/toolkit-conventions/references/fixtures/known-good/ui-copy-lint/src/panel.tsx",
+      "master_sha256": "2e9cfd264e6ac05f440d3bb5bc8ea8429504c52db3a51ce7db2d68218649885b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/mianowniki.baseline",
+      "size": 1054,
+      "sha256": "acbd1980048593249400f705016cc74366980ff950ea6f4b1a9799028ad23621",
+      "master_path": "skills/toolkit-conventions/references/fixtures/mianowniki.baseline",
+      "master_sha256": "acbd1980048593249400f705016cc74366980ff950ea6f4b1a9799028ad23621",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/rejestr-bramek.tsv",
+      "size": 9081,
+      "sha256": "63ee2d2415e07923c7f8c48a627417a1a0e293d642ce44be225670d6d9c97845",
+      "master_path": "skills/toolkit-conventions/references/fixtures/rejestr-bramek.tsv",
+      "master_sha256": "63ee2d2415e07923c7f8c48a627417a1a0e293d642ce44be225670d6d9c97845",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/workflow-eval/README.md",
+      "size": 5677,
+      "sha256": "8b418e1436a3c5e78c37051de104d83b0ed757c554210e8ac1e3da0f944e17d7",
+      "master_path": "skills/toolkit-conventions/references/fixtures/workflow-eval/README.md",
+      "master_sha256": "8b418e1436a3c5e78c37051de104d83b0ed757c554210e8ac1e3da0f944e17d7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/workflow-eval/cases.json",
+      "size": 4104,
+      "sha256": "8498ae43368f500058678d71c2afeff94789262e25022866c84cb648b4cba658",
+      "master_path": "skills/toolkit-conventions/references/fixtures/workflow-eval/cases.json",
+      "master_sha256": "8498ae43368f500058678d71c2afeff94789262e25022866c84cb648b4cba658",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/fixtures/workflow-eval/fake-claude.py",
+      "size": 4926,
+      "sha256": "ff88e6bc3be7f794f0f3b6c920d5240d414ff65d4a0366e992145768ac2ebbe5",
+      "master_path": "skills/toolkit-conventions/references/fixtures/workflow-eval/fake-claude.py",
+      "master_sha256": "ff88e6bc3be7f794f0f3b6c920d5240d414ff65d4a0366e992145768ac2ebbe5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/README.md",
+      "size": 1828,
+      "sha256": "b78d18f9fa49308985765a9a3831b9a77783592114d877787ff60580e9613d97",
+      "master_path": "skills/toolkit-conventions/references/references/README.md",
+      "master_sha256": "b78d18f9fa49308985765a9a3831b9a77783592114d877787ff60580e9613d97",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/agentic-harness-2026-08.md",
+      "size": 9134,
+      "sha256": "09b6765daef040c9d36ff21ad7bb528b5eef7e4ec209752c5f49ab3465cf5a38",
+      "master_path": "skills/toolkit-conventions/references/references/agentic-harness-2026-08.md",
+      "master_sha256": "09b6765daef040c9d36ff21ad7bb528b5eef7e4ec209752c5f49ab3465cf5a38",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/agentic-runtime-2026-11.md",
+      "size": 2966,
+      "sha256": "e1b59b52df5dfd82a05f081147ea926a8c47289b0b0b6a88620c2bb420af7704",
+      "master_path": "skills/toolkit-conventions/references/references/agentic-runtime-2026-11.md",
+      "master_sha256": "e1b59b52df5dfd82a05f081147ea926a8c47289b0b0b6a88620c2bb420af7704",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/agentic-stack-2026-08.md",
+      "size": 8206,
+      "sha256": "02b7841c6d6a7458f9b3652fe59a7c664768be823edd8ca82854615c65b0dde7",
+      "master_path": "skills/toolkit-conventions/references/references/agentic-stack-2026-08.md",
+      "master_sha256": "02b7841c6d6a7458f9b3652fe59a7c664768be823edd8ca82854615c65b0dde7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/agentic-znane-pulapki-2026-08.md",
+      "size": 7059,
+      "sha256": "7fa556c994f8d5be323f769334700d558c2ab9a230c66d3c9a376bdd1d0bef96",
+      "master_path": "skills/toolkit-conventions/references/references/agentic-znane-pulapki-2026-08.md",
+      "master_sha256": "7fa556c994f8d5be323f769334700d558c2ab9a230c66d3c9a376bdd1d0bef96",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/instruction-evidence.md",
+      "size": 4992,
+      "sha256": "fdd47fab4ff5340708121bb3bd8e8c80b79823f4e6906cc390f8ceb8339e270d",
+      "master_path": "skills/toolkit-conventions/references/references/instruction-evidence.md",
+      "master_sha256": "fdd47fab4ff5340708121bb3bd8e8c80b79823f4e6906cc390f8ceb8339e270d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/language-toolchains-2026-08.md",
+      "size": 13565,
+      "sha256": "cfb3cc2f7b206d6f0fce2f75f115ab73c96b122a8c0d3198fabedf3828d2acbd",
+      "master_path": "skills/toolkit-conventions/references/references/language-toolchains-2026-08.md",
+      "master_sha256": "cfb3cc2f7b206d6f0fce2f75f115ab73c96b122a8c0d3198fabedf3828d2acbd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/measurements/continuity-mutations-after-2026-11-05.json",
+      "size": 989,
+      "sha256": "cf903d4728278a98d344d8632b02aed27004d1750ec332edec95d75b925dc020",
+      "master_path": "skills/toolkit-conventions/references/references/measurements/continuity-mutations-after-2026-11-05.json",
+      "master_sha256": "cf903d4728278a98d344d8632b02aed27004d1750ec332edec95d75b925dc020",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/measurements/continuity-mutations-before-2026-11-05.json",
+      "size": 991,
+      "sha256": "6d97e1b4523a130585a14dc64f695aad4c5c8e6d60eec1f4e570ad1b4c95783c",
+      "master_path": "skills/toolkit-conventions/references/references/measurements/continuity-mutations-before-2026-11-05.json",
+      "master_sha256": "6d97e1b4523a130585a14dc64f695aad4c5c8e6d60eec1f4e570ad1b4c95783c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/measurements/security-pilot-2026-11-05.json",
+      "size": 4536,
+      "sha256": "0fb22e421fa2cfc3361e0161205be5406d4ebe81f97ba887e4210cdbf07da131",
+      "master_path": "skills/toolkit-conventions/references/references/measurements/security-pilot-2026-11-05.json",
+      "master_sha256": "0fb22e421fa2cfc3361e0161205be5406d4ebe81f97ba887e4210cdbf07da131",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/measurements/versioned-runner-smoke-2026-11-05.json",
+      "size": 3257,
+      "sha256": "474dde9f161a3ace31b5dfe230e77eb448417ff33d3ea2d0125bd93197850d60",
+      "master_path": "skills/toolkit-conventions/references/references/measurements/versioned-runner-smoke-2026-11-05.json",
+      "master_sha256": "474dde9f161a3ace31b5dfe230e77eb448417ff33d3ea2d0125bd93197850d60",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/measurements/workflow-pilot-2026-11-05.json",
+      "size": 19491,
+      "sha256": "e9aaf6dd8159dc78b5eccf48b8c3dad144ff82619f45c41e7479d5bc9b50569d",
+      "master_path": "skills/toolkit-conventions/references/references/measurements/workflow-pilot-2026-11-05.json",
+      "master_sha256": "e9aaf6dd8159dc78b5eccf48b8c3dad144ff82619f45c41e7479d5bc9b50569d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/naming-toolchain-2026-08.md",
+      "size": 5514,
+      "sha256": "b1c22ea5de6c7100d17fcc58d05667af061b319e051e96ad685f20fd47adf985",
+      "master_path": "skills/toolkit-conventions/references/references/naming-toolchain-2026-08.md",
+      "master_sha256": "b1c22ea5de6c7100d17fcc58d05667af061b319e051e96ad685f20fd47adf985",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/references/workflow-evaluation-2026-11-05.md",
+      "size": 12888,
+      "sha256": "116b60696d0377260a97300c474253656cae8bf65630b891d46f65731dc1c6fb",
+      "master_path": "skills/toolkit-conventions/references/references/workflow-evaluation-2026-11-05.md",
+      "master_sha256": "116b60696d0377260a97300c474253656cae8bf65630b891d46f65731dc1c6fb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/adopt-and-audit.md",
+      "size": 5179,
+      "sha256": "6cd5e7f67bdc9ab3642845b0f62256828b9ef606e810d426f440bbd77f4de7a1",
+      "master_path": "skills/toolkit-conventions/references/templates/adopt-and-audit.md",
+      "master_sha256": "6cd5e7f67bdc9ab3642845b0f62256828b9ef606e810d426f440bbd77f4de7a1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/agent-runtime.py",
+      "size": 55784,
+      "sha256": "5a4e4903481a456042d608bf71b08319d73a0c15e23e815059498223fa5cd53f",
+      "master_path": "skills/toolkit-conventions/references/templates/agent-runtime.py",
+      "master_sha256": "5a4e4903481a456042d608bf71b08319d73a0c15e23e815059498223fa5cd53f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/agent-runtime/README.md",
+      "size": 15148,
+      "sha256": "ec68342cead2ff7f96f18cab2debeabde25e38ad4e5c7af9bb41e3f751188038",
+      "master_path": "skills/toolkit-conventions/references/templates/agent-runtime/README.md",
+      "master_sha256": "ec68342cead2ff7f96f18cab2debeabde25e38ad4e5c7af9bb41e3f751188038",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/agent-runtime/example.json",
+      "size": 452,
+      "sha256": "0ed69a2044dfad5e6315d09573e769717ddf8878d37c4f7ad6f4ff2ccf7e1bea",
+      "master_path": "skills/toolkit-conventions/references/templates/agent-runtime/example.json",
+      "master_sha256": "0ed69a2044dfad5e6315d09573e769717ddf8878d37c4f7ad6f4ff2ccf7e1bea",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/agent-runtime/readonly-review.py",
+      "size": 13170,
+      "sha256": "e73b49b2b350a2d88f8bf27dc30b68f22778d2ed402a9555d1ee67ad80b32c5e",
+      "master_path": "skills/toolkit-conventions/references/templates/agent-runtime/readonly-review.py",
+      "master_sha256": "e73b49b2b350a2d88f8bf27dc30b68f22778d2ed402a9555d1ee67ad80b32c5e",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/audit-log-entry.md",
+      "size": 3092,
+      "sha256": "20098b158b9ac73bf1e260fde0586ede67b6afb5cb84de65a7f5e00075d8d241",
+      "master_path": "skills/toolkit-conventions/references/templates/audit-log-entry.md",
+      "master_sha256": "20098b158b9ac73bf1e260fde0586ede67b6afb5cb84de65a7f5e00075d8d241",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/backlog-lint.sh",
+      "size": 10539,
+      "sha256": "6ba338d331c3b588f82578852783e6411788388b2b47ca6f40a8ad05822e103c",
+      "master_path": "skills/toolkit-conventions/references/templates/backlog-lint.sh",
+      "master_sha256": "6ba338d331c3b588f82578852783e6411788388b2b47ca6f40a8ad05822e103c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/backlog-migrate.sh",
+      "size": 14855,
+      "sha256": "630c6c177b46b1262ad9000d80a4a8f0292edbe7ff53319858562194ed4adb02",
+      "master_path": "skills/toolkit-conventions/references/templates/backlog-migrate.sh",
+      "master_sha256": "630c6c177b46b1262ad9000d80a4a8f0292edbe7ff53319858562194ed4adb02",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/backlog.md",
+      "size": 1950,
+      "sha256": "b947b8718537516869b25fea6b03abd8be9b3132f36bb8e686e7089aa970b627",
+      "master_path": "skills/toolkit-conventions/references/templates/backlog.md",
+      "master_sha256": "b947b8718537516869b25fea6b03abd8be9b3132f36bb8e686e7089aa970b627",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/AGENTS.md",
+      "size": 246,
+      "sha256": "3cf02150814b41114c60b045bed75fbd8c0e0e75417165ad510d2f69790a4efc",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/AGENTS.md",
+      "master_sha256": "3cf02150814b41114c60b045bed75fbd8c0e0e75417165ad510d2f69790a4efc",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/CLAUDE.md",
+      "size": 1089,
+      "sha256": "6444727900b9d50b5d0ab02b4b7dac3cb168f7c5e37c8f9cc0ef1eee0a9b4319",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/CLAUDE.md",
+      "master_sha256": "6444727900b9d50b5d0ab02b4b7dac3cb168f7c5e37c8f9cc0ef1eee0a9b4319",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/README.md",
+      "size": 4648,
+      "sha256": "54cf0328135c67a2578c00622d04c54703aa111a9cb0776c365eb21037a957e9",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/README.md",
+      "master_sha256": "54cf0328135c67a2578c00622d04c54703aa111a9cb0776c365eb21037a957e9",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/example.json",
+      "size": 488,
+      "sha256": "3cdfd805872c7bbab183d83f5f22f32e96d534fe3109510115543a532aea4561",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/example.json",
+      "master_sha256": "3cdfd805872c7bbab183d83f5f22f32e96d534fe3109510115543a532aea4561",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/github-workflow.yml",
+      "size": 299,
+      "sha256": "2ff627d783426093835a114606f4a489a54ca6d90437db83519423caf2912fba",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/github-workflow.yml",
+      "master_sha256": "2ff627d783426093835a114606f4a489a54ca6d90437db83519423caf2912fba",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/pre-push.py",
+      "size": 301,
+      "sha256": "52ead88cfb48def41772d1fa056aadcb2de9926b7a714711594fde1580b41961",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/pre-push.py",
+      "master_sha256": "52ead88cfb48def41772d1fa056aadcb2de9926b7a714711594fde1580b41961",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/profiles.json",
+      "size": 1122,
+      "sha256": "16630fa1d184e7b15e2047c5d8a7df31bfafe13f77cfcf5c2de11d2381375f30",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/profiles.json",
+      "master_sha256": "16630fa1d184e7b15e2047c5d8a7df31bfafe13f77cfcf5c2de11d2381375f30",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/bootstrap/run-checks.py",
+      "size": 1453,
+      "sha256": "00df6229c60b23b66212b08fbd88e9620cd89cb9ca80283204fc2364e12a7538",
+      "master_path": "skills/toolkit-conventions/references/templates/bootstrap/run-checks.py",
+      "master_sha256": "00df6229c60b23b66212b08fbd88e9620cd89cb9ca80283204fc2364e12a7538",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/ci-effective-work.sh",
+      "size": 9439,
+      "sha256": "05a35fed753a0f5021dcd7c135a74162ab71ee806f3765d5c56cf4d4c30c254f",
+      "master_path": "skills/toolkit-conventions/references/templates/ci-effective-work.sh",
+      "master_sha256": "05a35fed753a0f5021dcd7c135a74162ab71ee806f3765d5c56cf4d4c30c254f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/claim-release.sh",
+      "size": 7711,
+      "sha256": "bf783a46dabd72ee577626914913b4603bb4d32c4a3a4508e8f6a887a1941520",
+      "master_path": "skills/toolkit-conventions/references/templates/claim-release.sh",
+      "master_sha256": "bf783a46dabd72ee577626914913b4603bb4d32c4a3a4508e8f6a887a1941520",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/code-structure.sh",
+      "size": 12642,
+      "sha256": "0a1b8a1c8616225a0c2700bd51d64ffe9d41ee1bc8b5546c27b8296b58604055",
+      "master_path": "skills/toolkit-conventions/references/templates/code-structure.sh",
+      "master_sha256": "0a1b8a1c8616225a0c2700bd51d64ffe9d41ee1bc8b5546c27b8296b58604055",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/README.md",
+      "size": 3534,
+      "sha256": "80f182dad71260fe6e958a6891c36008f8250b3af3bc59eb66f05d29c86fc482",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/README.md",
+      "master_sha256": "80f182dad71260fe6e958a6891c36008f8250b3af3bc59eb66f05d29c86fc482",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/builder-runner.py",
+      "size": 16481,
+      "sha256": "e30b55095d2aa796b960a61844be2aeb4094c89bc0dd7cf32bb6d8dd1f00bfb7",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/builder-runner.py",
+      "master_sha256": "e30b55095d2aa796b960a61844be2aeb4094c89bc0dd7cf32bb6d8dd1f00bfb7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/codex-builder.sh",
+      "size": 439,
+      "sha256": "f5d4d821e94f74892773020eed580a149c2fb76ef1fd2bc4674bbd8041a77280",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/codex-builder.sh",
+      "master_sha256": "f5d4d821e94f74892773020eed580a149c2fb76ef1fd2bc4674bbd8041a77280",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/gate-spec.example.json",
+      "size": 244,
+      "sha256": "375f000720cb581fcb88f2a62a64695232add30914db5b0718a5a53ac7442861",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/gate-spec.example.json",
+      "master_sha256": "375f000720cb581fcb88f2a62a64695232add30914db5b0718a5a53ac7442861",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/preamble.md",
+      "size": 3577,
+      "sha256": "0a12ae49d2e39acd63e88273e89d4ff38b28433ffda3901896dd4c167a70ed44",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/preamble.md",
+      "master_sha256": "0a12ae49d2e39acd63e88273e89d4ff38b28433ffda3901896dd4c167a70ed44",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/report.schema.json",
+      "size": 932,
+      "sha256": "44f3188ecc1a9723917d16630b877c288a3d9aa2097d2c6076c01317cc65eacd",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/report.schema.json",
+      "master_sha256": "44f3188ecc1a9723917d16630b877c288a3d9aa2097d2c6076c01317cc65eacd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/codex-builder/watchdog.py",
+      "size": 3657,
+      "sha256": "a0e5f4c3ba346aca3febbb06626c4b493150a7c44795ad0abdfb7c0306e1a0d7",
+      "master_path": "skills/toolkit-conventions/references/templates/codex-builder/watchdog.py",
+      "master_sha256": "a0e5f4c3ba346aca3febbb06626c4b493150a7c44795ad0abdfb7c0306e1a0d7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/contract-enums.sh",
+      "size": 8522,
+      "sha256": "d94359ea0067e5d889292f66520f3e5eb389e1fd66f64ab0e10b42142e87c0c6",
+      "master_path": "skills/toolkit-conventions/references/templates/contract-enums.sh",
+      "master_sha256": "d94359ea0067e5d889292f66520f3e5eb389e1fd66f64ab0e10b42142e87c0c6",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/decision-record.md",
+      "size": 1208,
+      "sha256": "36396cba046b2d73050f696ae6a672ff2f06a650dda5cb2bedbcd9e48b930116",
+      "master_path": "skills/toolkit-conventions/references/templates/decision-record.md",
+      "master_sha256": "36396cba046b2d73050f696ae6a672ff2f06a650dda5cb2bedbcd9e48b930116",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/delivery-log.md",
+      "size": 546,
+      "sha256": "208046a8c61fed1ae2d98deb015673dd6f7f2e8e012eda45c8192199249c9b59",
+      "master_path": "skills/toolkit-conventions/references/templates/delivery-log.md",
+      "master_sha256": "208046a8c61fed1ae2d98deb015673dd6f7f2e8e012eda45c8192199249c9b59",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/dependency-currency.sh",
+      "size": 15503,
+      "sha256": "150dbe1862db578cbb2c65e6b4f2b83ff53a0c7d47fc2c6d028f1e32bb29d8e5",
+      "master_path": "skills/toolkit-conventions/references/templates/dependency-currency.sh",
+      "master_sha256": "150dbe1862db578cbb2c65e6b4f2b83ff53a0c7d47fc2c6d028f1e32bb29d8e5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/document-numbers.sh",
+      "size": 6960,
+      "sha256": "1c1f22c6d0a2cd4f958d3c7ea7b175d4694890adf83f764e19f4bcb0d0bdabbb",
+      "master_path": "skills/toolkit-conventions/references/templates/document-numbers.sh",
+      "master_sha256": "1c1f22c6d0a2cd4f958d3c7ea7b175d4694890adf83f764e19f4bcb0d0bdabbb",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/gate-selfcheck.sh",
+      "size": 20187,
+      "sha256": "a89eb4e171c7620b07ceb77275be1ff7d339689d7a42cfcf2c3ee4b79641ca6b",
+      "master_path": "skills/toolkit-conventions/references/templates/gate-selfcheck.sh",
+      "master_sha256": "a89eb4e171c7620b07ceb77275be1ff7d339689d7a42cfcf2c3ee4b79641ca6b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/gitmessage.txt",
+      "size": 207,
+      "sha256": "1619c7e1b93f2aee531db0879904a625c4abb0f98cd9b6909a20a8ff2ac3fbf3",
+      "master_path": "skills/toolkit-conventions/references/templates/gitmessage.txt",
+      "master_sha256": "1619c7e1b93f2aee531db0879904a625c4abb0f98cd9b6909a20a8ff2ac3fbf3",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/identifier-language.sh",
+      "size": 6713,
+      "sha256": "b5864b424d5773f0f208a1afcd5b4ab5c2f75664fb45dced435276ef27fa1131",
+      "master_path": "skills/toolkit-conventions/references/templates/identifier-language.sh",
+      "master_sha256": "b5864b424d5773f0f208a1afcd5b4ab5c2f75664fb45dced435276ef27fa1131",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/import-depth.sh",
+      "size": 7314,
+      "sha256": "1eead084cef916e1167f7426e6a178c95e47401ba40e963b12b369c5eaa6c67a",
+      "master_path": "skills/toolkit-conventions/references/templates/import-depth.sh",
+      "master_sha256": "1eead084cef916e1167f7426e6a178c95e47401ba40e963b12b369c5eaa6c67a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/issue-report.md",
+      "size": 2140,
+      "sha256": "c1446b4f7270edce8f5af71dc03a707e80a7e50c4cdd5da452512d24299ed008",
+      "master_path": "skills/toolkit-conventions/references/templates/issue-report.md",
+      "master_sha256": "c1446b4f7270edce8f5af71dc03a707e80a7e50c4cdd5da452512d24299ed008",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/layer-direction.sh",
+      "size": 5760,
+      "sha256": "255fc9acbe170bd444159375832236b3b610d21d9c06bb8c247170be2d43d93a",
+      "master_path": "skills/toolkit-conventions/references/templates/layer-direction.sh",
+      "master_sha256": "255fc9acbe170bd444159375832236b3b610d21d9c06bb8c247170be2d43d93a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/lexicon.md",
+      "size": 1814,
+      "sha256": "9aee82dfefbc3310ad78a9633a50e5a5ed76f6bf894ae35fb8c9eeafc339ce7d",
+      "master_path": "skills/toolkit-conventions/references/templates/lexicon.md",
+      "master_sha256": "9aee82dfefbc3310ad78a9633a50e5a5ed76f6bf894ae35fb8c9eeafc339ce7d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/local-gates/heavy-slot.py",
+      "size": 20937,
+      "sha256": "89455dc419f8122e280b6c0e49284b30a5feba4f2352559d2a3f3482fe9647e0",
+      "master_path": "skills/toolkit-conventions/references/templates/local-gates/heavy-slot.py",
+      "master_sha256": "89455dc419f8122e280b6c0e49284b30a5feba4f2352559d2a3f3482fe9647e0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/local-gates/heavy-slot.sh",
+      "size": 1476,
+      "sha256": "fabd721b6e59fa415d126d17c335726b0038d32473d76760726608bd3d9c63f0",
+      "master_path": "skills/toolkit-conventions/references/templates/local-gates/heavy-slot.sh",
+      "master_sha256": "fabd721b6e59fa415d126d17c335726b0038d32473d76760726608bd3d9c63f0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/local-gates/push-lock.sh",
+      "size": 409,
+      "sha256": "190f8d70179723d37bb37a765ea8727ef3b17f2893de85f86c8ee56945faea3f",
+      "master_path": "skills/toolkit-conventions/references/templates/local-gates/push-lock.sh",
+      "master_sha256": "190f8d70179723d37bb37a765ea8727ef3b17f2893de85f86c8ee56945faea3f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/negative-verification.sh",
+      "size": 19776,
+      "sha256": "1cf96615d5c964a3267ecd4fde8d49eebee3d51c830fd299c09d4aa0fc5d23c2",
+      "master_path": "skills/toolkit-conventions/references/templates/negative-verification.sh",
+      "master_sha256": "1cf96615d5c964a3267ecd4fde8d49eebee3d51c830fd299c09d4aa0fc5d23c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/plan-funkcji.md",
+      "size": 3739,
+      "sha256": "4a58e90470c9e2177b0ae0983f1ca7c953db29d0e305f7dde3ebaf8297dafeea",
+      "master_path": "skills/toolkit-conventions/references/templates/plan-funkcji.md",
+      "master_sha256": "4a58e90470c9e2177b0ae0983f1ca7c953db29d0e305f7dde3ebaf8297dafeea",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/rejestr-regul.sh",
+      "size": 15098,
+      "sha256": "11c35c20759ca2f200e17646153a72b1f95365e2e4f74873f27cc8912265cddc",
+      "master_path": "skills/toolkit-conventions/references/templates/rejestr-regul.sh",
+      "master_sha256": "11c35c20759ca2f200e17646153a72b1f95365e2e4f74873f27cc8912265cddc",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/repo-hygiene.sh",
+      "size": 7362,
+      "sha256": "c5f55ac3b049a055847d65e76bc37b017df049369492aeb0ff416058e98ea9e9",
+      "master_path": "skills/toolkit-conventions/references/templates/repo-hygiene.sh",
+      "master_sha256": "c5f55ac3b049a055847d65e76bc37b017df049369492aeb0ff416058e98ea9e9",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/review-record.md",
+      "size": 796,
+      "sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "master_path": "skills/toolkit-conventions/references/templates/review-record.md",
+      "master_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/route-guards.sh",
+      "size": 8458,
+      "sha256": "51377f8ac87f7dbe51d9cd10e3e94e5c0d3912fceb8aa79fefeef8293b011b61",
+      "master_path": "skills/toolkit-conventions/references/templates/route-guards.sh",
+      "master_sha256": "51377f8ac87f7dbe51d9cd10e3e94e5c0d3912fceb8aa79fefeef8293b011b61",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/ruff-ratchet.sh",
+      "size": 5297,
+      "sha256": "a01ec73f5d1f893032c9bc50a3dd9dd591087315e6c1442f405205de0d7f514d",
+      "master_path": "skills/toolkit-conventions/references/templates/ruff-ratchet.sh",
+      "master_sha256": "a01ec73f5d1f893032c9bc50a3dd9dd591087315e6c1442f405205de0d7f514d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/runtime-boundaries.sh",
+      "size": 5372,
+      "sha256": "30e5c682f74379dde355efb904a0cbaff0e3b7525a7534a876037bf7a885210f",
+      "master_path": "skills/toolkit-conventions/references/templates/runtime-boundaries.sh",
+      "master_sha256": "30e5c682f74379dde355efb904a0cbaff0e3b7525a7534a876037bf7a885210f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/scenariusz-presji.md",
+      "size": 2022,
+      "sha256": "39e31ded0db110975881edb9bad4a0f789382c510f0d24527ce0bc496c46ff26",
+      "master_path": "skills/toolkit-conventions/references/templates/scenariusz-presji.md",
+      "master_sha256": "39e31ded0db110975881edb9bad4a0f789382c510f0d24527ce0bc496c46ff26",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/security-check.py",
+      "size": 36570,
+      "sha256": "dcdc97de3d01c7d92b6f846eeba7f0e11ce4d31d11ddf1d0ffba659c70350245",
+      "master_path": "skills/toolkit-conventions/references/templates/security-check.py",
+      "master_sha256": "dcdc97de3d01c7d92b6f846eeba7f0e11ce4d31d11ddf1d0ffba659c70350245",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/security/README.md",
+      "size": 6698,
+      "sha256": "367fd10e7a1ed1df33553d6a9e0e6b4b59412bb4c3e3eb41e5efd3b21c96c18b",
+      "master_path": "skills/toolkit-conventions/references/templates/security/README.md",
+      "master_sha256": "367fd10e7a1ed1df33553d6a9e0e6b4b59412bb4c3e3eb41e5efd3b21c96c18b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/stan-stosu.sh",
+      "size": 15347,
+      "sha256": "a6eb55f9fc37f23d09657437f68fc6c3766c8c727497ec04d1d792c82dc18b18",
+      "master_path": "skills/toolkit-conventions/references/templates/stan-stosu.sh",
+      "master_sha256": "a6eb55f9fc37f23d09657437f68fc6c3766c8c727497ec04d1d792c82dc18b18",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/task-completion.py",
+      "size": 7724,
+      "sha256": "fca8e70cfc07c3b54b77ea0e84f86e1ce88b5157f8c02041f78600880ddf7538",
+      "master_path": "skills/toolkit-conventions/references/templates/task-completion.py",
+      "master_sha256": "fca8e70cfc07c3b54b77ea0e84f86e1ce88b5157f8c02041f78600880ddf7538",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/test-evidence.sh",
+      "size": 8513,
+      "sha256": "0156654c55d2bd64a4f665e79ca2335d9d5ec3eaa47ff56b944d4dcac2f3e6d7",
+      "master_path": "skills/toolkit-conventions/references/templates/test-evidence.sh",
+      "master_sha256": "0156654c55d2bd64a4f665e79ca2335d9d5ec3eaa47ff56b944d4dcac2f3e6d7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/test-gates.sh",
+      "size": 7115,
+      "sha256": "ce3823feadae845259df57462b7c29e568dadd67ee0ee6dea14e4d37a0cd3f3a",
+      "master_path": "skills/toolkit-conventions/references/templates/test-gates.sh",
+      "master_sha256": "ce3823feadae845259df57462b7c29e568dadd67ee0ee6dea14e4d37a0cd3f3a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/ui-copy-lint.sh",
+      "size": 8737,
+      "sha256": "19b9558511d9e326757888ecfdf417515a96ef1ede0cc5f81eb5e6eb4dcac91d",
+      "master_path": "skills/toolkit-conventions/references/templates/ui-copy-lint.sh",
+      "master_sha256": "19b9558511d9e326757888ecfdf417515a96ef1ede0cc5f81eb5e6eb4dcac91d",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/toolkit-conventions/references/templates/work-graph.md",
+      "size": 2291,
+      "sha256": "ecb68357a93c58520393f7d80d3ec7c5f25456ae95700fdeaf62ed9a015fe092",
+      "master_path": "skills/toolkit-conventions/references/templates/work-graph.md",
+      "master_sha256": "ecb68357a93c58520393f7d80d3ec7c5f25456ae95700fdeaf62ed9a015fe092",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/weekly-audit/SKILL.md",
+      "size": 20339,
+      "sha256": "149334e779f50c3379702a17494e14487412a7ee1352d6bd4deb75fa9398b34b",
+      "master_path": "skills/weekly-audit/SKILL.md",
+      "master_sha256": "149334e779f50c3379702a17494e14487412a7ee1352d6bd4deb75fa9398b34b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/weekly-audit/references/kontrola-glebokosci.md",
+      "size": 28962,
+      "sha256": "54d8f7ae3553bb8a73680e8228a1d6ae18e6d95e5198527399c768c36e4b6915",
+      "master_path": "skills/weekly-audit/references/kontrola-glebokosci.md",
+      "master_sha256": "54d8f7ae3553bb8a73680e8228a1d6ae18e6d95e5198527399c768c36e4b6915",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/skills/weekly-audit/references/toolkit-sync-w-audycie.md",
+      "size": 1769,
+      "sha256": "b82eb2047fd8eb83979f095ba810aaa41bc3dd6afe076a6e693ef39a1b405b59",
+      "master_path": "skills/weekly-audit/references/toolkit-sync-w-audycie.md",
+      "master_sha256": "b82eb2047fd8eb83979f095ba810aaa41bc3dd6afe076a6e693ef39a1b405b59",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/task-briefs/ADP-2026-11-06-01.md",
+      "size": 2965,
+      "sha256": "16f080f7d8cbcff2e494964ed5ead29b2b824fa03016fce2bafefff0b80970e1",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/templates/adopt-and-audit.md",
+      "size": 5179,
+      "sha256": "6cd5e7f67bdc9ab3642845b0f62256828b9ef606e810d426f440bbd77f4de7a1",
+      "master_path": "templates/adopt-and-audit.md",
+      "master_sha256": "6cd5e7f67bdc9ab3642845b0f62256828b9ef606e810d426f440bbd77f4de7a1",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/agent-runtime.py",
+      "size": 55784,
+      "sha256": "5a4e4903481a456042d608bf71b08319d73a0c15e23e815059498223fa5cd53f",
+      "master_path": "templates/agent-runtime.py",
+      "master_sha256": "5a4e4903481a456042d608bf71b08319d73a0c15e23e815059498223fa5cd53f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/agent-runtime/README.md",
+      "size": 15148,
+      "sha256": "ec68342cead2ff7f96f18cab2debeabde25e38ad4e5c7af9bb41e3f751188038",
+      "master_path": "templates/agent-runtime/README.md",
+      "master_sha256": "ec68342cead2ff7f96f18cab2debeabde25e38ad4e5c7af9bb41e3f751188038",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/agent-runtime/example.json",
+      "size": 452,
+      "sha256": "0ed69a2044dfad5e6315d09573e769717ddf8878d37c4f7ad6f4ff2ccf7e1bea",
+      "master_path": "templates/agent-runtime/example.json",
+      "master_sha256": "0ed69a2044dfad5e6315d09573e769717ddf8878d37c4f7ad6f4ff2ccf7e1bea",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/agent-runtime/readonly-review.py",
+      "size": 13170,
+      "sha256": "e73b49b2b350a2d88f8bf27dc30b68f22778d2ed402a9555d1ee67ad80b32c5e",
+      "master_path": "templates/agent-runtime/readonly-review.py",
+      "master_sha256": "e73b49b2b350a2d88f8bf27dc30b68f22778d2ed402a9555d1ee67ad80b32c5e",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/audit-log-entry.md",
+      "size": 3092,
+      "sha256": "20098b158b9ac73bf1e260fde0586ede67b6afb5cb84de65a7f5e00075d8d241",
+      "master_path": "templates/audit-log-entry.md",
+      "master_sha256": "20098b158b9ac73bf1e260fde0586ede67b6afb5cb84de65a7f5e00075d8d241",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/backlog-lint.sh",
+      "size": 10539,
+      "sha256": "6ba338d331c3b588f82578852783e6411788388b2b47ca6f40a8ad05822e103c",
+      "master_path": "templates/backlog-lint.sh",
+      "master_sha256": "6ba338d331c3b588f82578852783e6411788388b2b47ca6f40a8ad05822e103c",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/backlog-migrate.sh",
+      "size": 14855,
+      "sha256": "630c6c177b46b1262ad9000d80a4a8f0292edbe7ff53319858562194ed4adb02",
+      "master_path": "templates/backlog-migrate.sh",
+      "master_sha256": "630c6c177b46b1262ad9000d80a4a8f0292edbe7ff53319858562194ed4adb02",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/backlog.md",
+      "size": 1950,
+      "sha256": "b947b8718537516869b25fea6b03abd8be9b3132f36bb8e686e7089aa970b627",
+      "master_path": "templates/backlog.md",
+      "master_sha256": "b947b8718537516869b25fea6b03abd8be9b3132f36bb8e686e7089aa970b627",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/README.md",
+      "size": 3534,
+      "sha256": "80f182dad71260fe6e958a6891c36008f8250b3af3bc59eb66f05d29c86fc482",
+      "master_path": "templates/codex-builder/README.md",
+      "master_sha256": "80f182dad71260fe6e958a6891c36008f8250b3af3bc59eb66f05d29c86fc482",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/builder-runner.py",
+      "size": 16481,
+      "sha256": "e30b55095d2aa796b960a61844be2aeb4094c89bc0dd7cf32bb6d8dd1f00bfb7",
+      "master_path": "templates/codex-builder/builder-runner.py",
+      "master_sha256": "e30b55095d2aa796b960a61844be2aeb4094c89bc0dd7cf32bb6d8dd1f00bfb7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/codex-builder.sh",
+      "size": 439,
+      "sha256": "f5d4d821e94f74892773020eed580a149c2fb76ef1fd2bc4674bbd8041a77280",
+      "master_path": "templates/codex-builder/codex-builder.sh",
+      "master_sha256": "f5d4d821e94f74892773020eed580a149c2fb76ef1fd2bc4674bbd8041a77280",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/gate-spec.example.json",
+      "size": 244,
+      "sha256": "375f000720cb581fcb88f2a62a64695232add30914db5b0718a5a53ac7442861",
+      "master_path": "templates/codex-builder/gate-spec.example.json",
+      "master_sha256": "375f000720cb581fcb88f2a62a64695232add30914db5b0718a5a53ac7442861",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/preamble.md",
+      "size": 3175,
+      "sha256": "f09d56400ba5cea45893af08b0921a23c6c16cce56dc6c2ac8e630bdbead14ea",
+      "master_path": "templates/codex-builder/preamble.md",
+      "master_sha256": "0a12ae49d2e39acd63e88273e89d4ff38b28433ffda3901896dd4c167a70ed44",
+      "relation": "declared-project-adaptation"
+    },
+    {
+      "path": ".claude/templates/codex-builder/report.schema.json",
+      "size": 932,
+      "sha256": "44f3188ecc1a9723917d16630b877c288a3d9aa2097d2c6076c01317cc65eacd",
+      "master_path": "templates/codex-builder/report.schema.json",
+      "master_sha256": "44f3188ecc1a9723917d16630b877c288a3d9aa2097d2c6076c01317cc65eacd",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/codex-builder/watchdog.py",
+      "size": 3657,
+      "sha256": "a0e5f4c3ba346aca3febbb06626c4b493150a7c44795ad0abdfb7c0306e1a0d7",
+      "master_path": "templates/codex-builder/watchdog.py",
+      "master_sha256": "a0e5f4c3ba346aca3febbb06626c4b493150a7c44795ad0abdfb7c0306e1a0d7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/delivery-log.md",
+      "size": 546,
+      "sha256": "208046a8c61fed1ae2d98deb015673dd6f7f2e8e012eda45c8192199249c9b59",
+      "master_path": "templates/delivery-log.md",
+      "master_sha256": "208046a8c61fed1ae2d98deb015673dd6f7f2e8e012eda45c8192199249c9b59",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/dependency-currency.sh",
+      "size": 15503,
+      "sha256": "150dbe1862db578cbb2c65e6b4f2b83ff53a0c7d47fc2c6d028f1e32bb29d8e5",
+      "master_path": "templates/dependency-currency.sh",
+      "master_sha256": "150dbe1862db578cbb2c65e6b4f2b83ff53a0c7d47fc2c6d028f1e32bb29d8e5",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/local-gates/heavy-slot.py",
+      "size": 20937,
+      "sha256": "89455dc419f8122e280b6c0e49284b30a5feba4f2352559d2a3f3482fe9647e0",
+      "master_path": "templates/local-gates/heavy-slot.py",
+      "master_sha256": "89455dc419f8122e280b6c0e49284b30a5feba4f2352559d2a3f3482fe9647e0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/local-gates/heavy-slot.sh",
+      "size": 1476,
+      "sha256": "fabd721b6e59fa415d126d17c335726b0038d32473d76760726608bd3d9c63f0",
+      "master_path": "templates/local-gates/heavy-slot.sh",
+      "master_sha256": "fabd721b6e59fa415d126d17c335726b0038d32473d76760726608bd3d9c63f0",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/local-gates/push-lock.sh",
+      "size": 409,
+      "sha256": "190f8d70179723d37bb37a765ea8727ef3b17f2893de85f86c8ee56945faea3f",
+      "master_path": "templates/local-gates/push-lock.sh",
+      "master_sha256": "190f8d70179723d37bb37a765ea8727ef3b17f2893de85f86c8ee56945faea3f",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/negative-verification.sh",
+      "size": 19776,
+      "sha256": "1cf96615d5c964a3267ecd4fde8d49eebee3d51c830fd299c09d4aa0fc5d23c2",
+      "master_path": "templates/negative-verification.sh",
+      "master_sha256": "1cf96615d5c964a3267ecd4fde8d49eebee3d51c830fd299c09d4aa0fc5d23c2",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/review-record.md",
+      "size": 796,
+      "sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "master_path": "templates/review-record.md",
+      "master_sha256": "b567d4965251fd097e1b5ddf2d12d4bac8aa6a8c302ead5943121bde20a97fdf",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/security-check.py",
+      "size": 36570,
+      "sha256": "dcdc97de3d01c7d92b6f846eeba7f0e11ce4d31d11ddf1d0ffba659c70350245",
+      "master_path": "templates/security-check.py",
+      "master_sha256": "dcdc97de3d01c7d92b6f846eeba7f0e11ce4d31d11ddf1d0ffba659c70350245",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/security/README.md",
+      "size": 6698,
+      "sha256": "367fd10e7a1ed1df33553d6a9e0e6b4b59412bb4c3e3eb41e5efd3b21c96c18b",
+      "master_path": "templates/security/README.md",
+      "master_sha256": "367fd10e7a1ed1df33553d6a9e0e6b4b59412bb4c3e3eb41e5efd3b21c96c18b",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/task-completion.py",
+      "size": 7724,
+      "sha256": "fca8e70cfc07c3b54b77ea0e84f86e1ce88b5157f8c02041f78600880ddf7538",
+      "master_path": "templates/task-completion.py",
+      "master_sha256": "fca8e70cfc07c3b54b77ea0e84f86e1ce88b5157f8c02041f78600880ddf7538",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/test-evidence.sh",
+      "size": 8513,
+      "sha256": "0156654c55d2bd64a4f665e79ca2335d9d5ec3eaa47ff56b944d4dcac2f3e6d7",
+      "master_path": "templates/test-evidence.sh",
+      "master_sha256": "0156654c55d2bd64a4f665e79ca2335d9d5ec3eaa47ff56b944d4dcac2f3e6d7",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/test-gates.sh",
+      "size": 7115,
+      "sha256": "ce3823feadae845259df57462b7c29e568dadd67ee0ee6dea14e4d37a0cd3f3a",
+      "master_path": "templates/test-gates.sh",
+      "master_sha256": "ce3823feadae845259df57462b7c29e568dadd67ee0ee6dea14e4d37a0cd3f3a",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/templates/work-graph.md",
+      "size": 2291,
+      "sha256": "ecb68357a93c58520393f7d80d3ec7c5f25456ae95700fdeaf62ed9a015fe092",
+      "master_path": "templates/work-graph.md",
+      "master_sha256": "ecb68357a93c58520393f7d80d3ec7c5f25456ae95700fdeaf62ed9a015fe092",
+      "relation": "verbatim-master"
+    },
+    {
+      "path": ".claude/toolkit-adoptions/2026.09.05-contradiction-scan.json",
+      "size": 2318,
+      "sha256": "2e3b17ad4762e2fb927da73120e593fb85520b70fbb242314e04c03cf319f1fe",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit-adoptions/2026.09.05-copy-inventory.json",
+      "size": 14265,
+      "sha256": "4bcf72bb8c901fae4d6cc2054f82dfe87d90bdf6894014b8ef82f781b6d28d52",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit-adoptions/2026.09.05-to-2026.11.07.md",
+      "size": 5740,
+      "sha256": "be8a7b82702b07ed3dff21df0f4f7dac7349dc8c059dca6b4333b2ec9adf69c7",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit-adoptions/A1-review.md",
+      "size": 7322,
+      "sha256": "0a4ea8843f1759fd0b9b252aa962e62bc520bb22ead9606e4f662620ed0e2b44",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit-check.sh",
+      "size": 724,
+      "sha256": "6bb595612cbf58ecae72fab798e4e3afc09a1f72eed45a3563a17808ddc1cd32",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit.local",
+      "size": 836,
+      "sha256": "f3280d1726daf12eeeb3574c154dd046fc147b9735b00528e5260bebba765d80",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": ".claude/toolkit.lock",
+      "size": 22175,
+      "sha256": "12b957ecc6414a4f375b54a6bb82023b14566eda41496af3ffb336deab2f2001",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": "AGENTS.md",
+      "size": 896,
+      "sha256": "9b25a1601b50a7207ce7d67e5815a2ff3221f1a4f7a210724633df1ed9e73cae",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": "CLAUDE.md",
+      "size": 3995,
+      "sha256": "0f7dd8db82b62f32b8b355e4fa8c320b5b2d26eae1251c7e0b4062f92e75086a",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    },
+    {
+      "path": "PLAN.md",
+      "size": 13990,
+      "sha256": "a8d1b28a952f8279d0e8309fd2ca538ecfc489c6ad453a0c01e97c070a8d0a68",
+      "master_path": null,
+      "master_sha256": null,
+      "relation": "project-metadata-or-reference"
+    }
+  ]
+}

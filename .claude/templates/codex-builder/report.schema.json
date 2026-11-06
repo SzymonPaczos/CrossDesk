@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "assessed_sha", "commits", "changed_files", "gates", "skipped", "blockers"],
+  "properties": {
+    "status": {"type": "string", "enum": ["ready_for_checks", "completed", "blocked"]},
+    "assessed_sha": {"type": "string"},
+    "commits": {"type": "array", "items": {"type": "string"}},
+    "changed_files": {"type": "array", "items": {"type": "string"}},
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "exit_code", "evidence_ref"],
+        "properties": {
+          "name": {"type": "string"},
+          "exit_code": {"type": ["integer", "null"]},
+          "evidence_ref": {"type": "string"}
+        }
+      }
+    },
+    "skipped": {"type": "array", "items": {"type": "string"}},
+    "blockers": {"type": "array", "items": {"type": "string"}}
+  }
+}

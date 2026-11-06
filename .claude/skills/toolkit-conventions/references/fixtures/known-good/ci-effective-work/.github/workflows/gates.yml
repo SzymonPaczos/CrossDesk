@@ -1,0 +1,38 @@
+name: gates
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Bramki na materiale znanym-zlym
+        run: bash scripts/gates.sh all
+      - name: Generat zgodny z commitem, nie z indeksem
+        run: |
+          npm run openapi
+          git diff --exit-code HEAD -- src/lib/api-types.d.ts
+
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Czy klucz dostawcy jest skonfigurowany
+        id: key
+        env:
+          PROVIDER_KEY: ${{ secrets.PROVIDER_KEY }}
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' }}
+        run: |
+          if [ -n "${PROVIDER_KEY}" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "present=false" >> "$GITHUB_OUTPUT"
+          if [ "${IS_FORK_PR}" = "true" ]; then echo "::notice::pominiete na forku"; exit 0; fi
+          echo "::error::brak klucza na wlasnej galezi: bateria niczego by nie dowiodla"
+          exit 1
+      - name: Bateria na zywym modelu
+        if: steps.key.outputs.present == 'true'
+        run: pytest -m live

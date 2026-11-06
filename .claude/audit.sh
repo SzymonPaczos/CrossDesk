@@ -14,15 +14,19 @@
 # lint+format) + QML (qmllint) + sec (gitleaks worktree) + drift
 # (Last Updated w architecture.md vs git) + decisions count.
 #
-# Procedura cotygodniowa (warstwa głęboka) → .claude/rules/audit.md.
+# Procedura cotygodniowa (warstwa głęboka) → .claude/conventions/audit.md.
 
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-# Do not produce a fresh audit header using an outdated checklist.
-bash "$REPO_ROOT/.claude/toolkit-check.sh" || exit $?
+# Toolkit freshness is a separate finding; continue independent audit scope.
+TOOLKIT_PREFLIGHT_STATUS=0
+bash "$REPO_ROOT/.claude/toolkit-check.sh" || TOOLKIT_PREFLIGHT_STATUS=$?
+if [ "$TOOLKIT_PREFLIGHT_STATUS" -ne 0 ]; then
+  echo "Toolkit preflight incomplete (exit $TOOLKIT_PREFLIGHT_STATUS); independent audit continues, adoption remains unverified." >&2
+fi
 
 # Python tooling (ruff/mypy/pytest/bandit) lives in host/.venv, not on
 # PATH — without this the whole Python section reported "n/a" (audit
@@ -48,6 +52,9 @@ to_epoch() { date -d "$1" +%s 2>/dev/null || date -j -f '%Y-%m-%d' "$1" +%s 2>/d
 add "## Audyt $DATE"
 add ""
 add "**Git:** \`$(git rev-parse --short HEAD 2>/dev/null || echo unknown)\` on \`$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)\`"
+add ""
+add "**Toolkit preflight:** exit $TOOLKIT_PREFLIGHT_STATUS (nonzero = unresolved, not PASS)."
+add "Static text counts are measurements, not scanner exit/report verification."
 add ""
 add "### Warstwa statyczna (automat)"
 add ""
@@ -178,11 +185,11 @@ if [ -f .claude/architecture.md ]; then
     add "- architecture.md Last Updated: $ARCH_TS (${ARCH_AGE_DAYS}d ago)"
   fi
 fi
-if [ -f .claude/rules/decisions.md ]; then
+if [ -f .claude/decisions-register.md ]; then
   # grep -c always prints the count on stdout AND exits non-zero when
   # the count is 0 — `|| echo 0` doubles up the "0\n0"; use `|| true`.
-  DEC_META="$(grep -cE '^## DEC-META-[0-9]+' .claude/rules/decisions.md 2>/dev/null || true)"
-  add "- META decisions (status: aktywna): ${DEC_META:-0}"
+  DEC_META="$(grep -cE '^## DEC-META-[0-9]+' .claude/decisions-register.md 2>/dev/null || true)"
+  add "- META decisions (all recorded statuses): ${DEC_META:-0}"
 fi
 if [ -f docs/DECISIONS.md ]; then
   DEC_NNNN="$(grep -cE '^## DEC-[0-9]+' docs/DECISIONS.md 2>/dev/null || true)"
@@ -217,7 +224,7 @@ else
 fi
 add ""
 
-add "**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z \`.claude/rules/decisions.md\` + \`docs/DECISIONS.md\`, MCP/skills. Procedura: \`.claude/rules/audit.md\`."
+add "**Do przeglądu agentem (warstwa głęboka):** bezpieczeństwo, slop, jakość testów, architektura, dead-code weryfikacja, zgodność z \`.claude/decisions-register.md\` + \`docs/DECISIONS.md\`, MCP/skills. Procedura: \`.claude/conventions/audit.md\`."
 add ""
 add "---"
 add ""
@@ -235,3 +242,6 @@ mv "$TMP" "$LOG"
 
 echo "$SECTION"
 echo "Wrote section to $LOG"
+
+# A recorded incomplete preflight must never become a successful audit exit.
+exit "$TOOLKIT_PREFLIGHT_STATUS"

@@ -1,8 +1,16 @@
+---
+paths:
+  - "host/**"
+  - "guest/**"
+  - "gui/**"
+  - "proto/**"
+---
+
 # Backend Rules
 
 Path-scoped rules for `host/**` (Python orchestrator) and `guest/**`
 (Rust NT service). The high-level "Coding rules" in
-[AGENTS.md](../../AGENTS.md) is the canonical statement; this file
+[AGENTS.md](../../CLAUDE.md) is the canonical statement; this file
 restates and adds the path-specific guardrails universals expects.
 
 ## Host (Python 3.9+) — `host/**`
@@ -61,7 +69,7 @@ Any new RPC, regardless of language:
 
 1. Edit `proto/crossdesk/v1/<service>.proto` (single source of
    truth — wire-format changes need owner approval per
-   [AGENTS.md](../../AGENTS.md) "File boundaries").
+   [AGENTS.md](../../CLAUDE.md) "File boundaries").
 2. Regenerate stubs: `python build_proto.py` for host, `cargo
    build` for guest (tonic regenerates as part of the build).
 3. Implement the servicer in

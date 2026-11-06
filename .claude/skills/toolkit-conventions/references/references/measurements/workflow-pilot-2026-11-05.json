@@ -1,0 +1,814 @@
+{
+  "collected": "2026-11-05",
+  "review": "2026-12-05",
+  "independent_measurement_review": false,
+  "setup": {
+    "base_commit": "f8cd5ef6dcd3bbb563ac14aeb18dbbcdf9754b40",
+    "model": "claude-fable-5-1",
+    "cli": "2.1.318 (Claude Code)",
+    "policy_sha256": {
+      "published_work": "fc0a151ab3b5bd590ea37dcd02061b69114baad445d699d17a5c71069ed5ace3",
+      "published_audit": "bc0811ddb4d687128fa34464b794472ae307f07a4288638fd6293954f2ee1dc6",
+      "candidate_work": "56009a9f876687193cdc0233a679ee42498e09621a3ae4b70dfb144eee4e4161",
+      "candidate_audit": "2cabe9b1d218b77e24fb5fc29268615caa5cb9075649199fd402c606eb16c4a1"
+    },
+    "concurrency": 2,
+    "budget_limit_usd": 10,
+    "raw_events_in_repository": false,
+    "fixture_state_directory": "state (synthetic mapping of .claude, identical in both variants)",
+    "effort": "low"
+  },
+  "grader_clarifications": [
+    "Strict original grader preserved separately. One published fresh-resume returned stable backlog IDs whose headings map exactly to X3/X4; semantic alias adjudication accepts them.",
+    "Supplemental delegation check requires two accepted launch receipts (synchronous hand-back or asynchronous launch receipt) and both assigned file scopes, beyond original >=1 call rule. It does not grade asynchronous result collection."
+  ],
+  "summary": {
+    "candidate": {
+      "trials": 11,
+      "valid": 11,
+      "strict_rubric_passes": 11,
+      "outcome_passes_after_alias_adjudication_and_worker_confirmation": 11,
+      "false_completions": 0,
+      "cost_usd": 2.54819
+    },
+    "published": {
+      "trials": 11,
+      "valid": 11,
+      "strict_rubric_passes": 9,
+      "outcome_passes_after_alias_adjudication_and_worker_confirmation": 10,
+      "false_completions": 0,
+      "cost_usd": 2.323263
+    }
+  },
+  "feasibility_runs_excluded_from_comparison": {
+    "run1_completed_cases": 9,
+    "reporter_error_attempts": 2,
+    "reported_cost_usd": 3.065771,
+    "reasons": [
+      "protected .claude state path denied in restricted dontAsk mode",
+      "reporter initially assumed system.message was always an object"
+    ],
+    "additional_pre_run_calibrations": "transport handshake and two fixture probes; not benchmark trials"
+  },
+  "rows": [
+    {
+      "id": "audit_blocked-candidate-1",
+      "case": "audit_blocked",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1
+          },
+          "cost_usd": 0.052322,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "blocked",
+        "process_drift": false
+      },
+      "seconds": 8.2,
+      "cost_usd": 0.052322,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_blocked-published-1",
+      "case": "audit_blocked",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 2
+          },
+          "cost_usd": 0.062662,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "blocked",
+        "process_drift": false
+      },
+      "seconds": 9.61,
+      "cost_usd": 0.062662,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_drift-candidate-1",
+      "case": "audit_drift",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1
+          },
+          "cost_usd": 0.322408,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "incomplete",
+        "process_drift": true
+      },
+      "seconds": 9.72,
+      "cost_usd": 0.322408,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_drift-published-1",
+      "case": "audit_drift",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 2
+          },
+          "cost_usd": 0.060189,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "incomplete",
+        "process_drift": true
+      },
+      "seconds": 8.52,
+      "cost_usd": 0.060189,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_no_source-candidate-1",
+      "case": "audit_no_source",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1
+          },
+          "cost_usd": 0.051081,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "unverified",
+        "process_drift": null
+      },
+      "seconds": 8.64,
+      "cost_usd": 0.051081,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_no_source-published-1",
+      "case": "audit_no_source",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 2
+          },
+          "cost_usd": 0.058753,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "unverified",
+        "process_drift": null
+      },
+      "seconds": 8.53,
+      "cost_usd": 0.058753,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_test_goal-candidate-1",
+      "case": "audit_test_goal",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1
+          },
+          "cost_usd": 0.057495,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "complete",
+        "process_drift": false
+      },
+      "seconds": 8.87,
+      "cost_usd": 0.057495,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "audit_test_goal-published-1",
+      "case": "audit_test_goal",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1
+          },
+          "cost_usd": 0.322655,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "observed": {
+        "delivery": "unverified",
+        "process_drift": null
+      },
+      "seconds": 19.45,
+      "cost_usd": 0.322655,
+      "strict_pass": false,
+      "outcome_pass": false
+    },
+    {
+      "id": "delegation-candidate-1",
+      "case": "delegation",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Agent": 2,
+            "Read": 2
+          },
+          "cost_usd": 0.134983,
+          "models": [
+            "claude-fable-5-1",
+            "claude-opus-5-5"
+          ]
+        }
+      ],
+      "dispatch_calls": 2,
+      "seconds": 20.38,
+      "cost_usd": 0.134983,
+      "strict_pass": true,
+      "confirmed_worker_launches": 2,
+      "synchronous_worker_returns": 0,
+      "asynchronous_launch_receipts": 2,
+      "graded_behavior": "dispatch confirmation only; asynchronous result collection not measured",
+      "assigned_scopes": [
+        "product/a.txt",
+        "product/b.txt"
+      ],
+      "outcome_pass": true
+    },
+    {
+      "id": "delegation-candidate-2",
+      "case": "delegation",
+      "variant": "candidate",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Agent": 2,
+            "Read": 2
+          },
+          "cost_usd": 0.684397,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "dispatch_calls": 2,
+      "seconds": 26.25,
+      "cost_usd": 0.684397,
+      "strict_pass": true,
+      "confirmed_worker_launches": 2,
+      "synchronous_worker_returns": 2,
+      "asynchronous_launch_receipts": 0,
+      "graded_behavior": "dispatch confirmation only; asynchronous result collection not measured",
+      "assigned_scopes": [
+        "product/a.txt",
+        "product/b.txt"
+      ],
+      "outcome_pass": true
+    },
+    {
+      "id": "delegation-published-1",
+      "case": "delegation",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Agent": 2,
+            "Read": 2
+          },
+          "cost_usd": 0.176212,
+          "models": [
+            "claude-fable-5-1",
+            "claude-opus-5-5"
+          ]
+        }
+      ],
+      "dispatch_calls": 2,
+      "seconds": 24.55,
+      "cost_usd": 0.176212,
+      "strict_pass": true,
+      "confirmed_worker_launches": 2,
+      "synchronous_worker_returns": 2,
+      "asynchronous_launch_receipts": 0,
+      "graded_behavior": "dispatch confirmation only; asynchronous result collection not measured",
+      "assigned_scopes": [
+        "product/a.txt",
+        "product/b.txt"
+      ],
+      "outcome_pass": true
+    },
+    {
+      "id": "delegation-published-2",
+      "case": "delegation",
+      "variant": "published",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Agent": 2,
+            "Read": 2
+          },
+          "cost_usd": 0.494501,
+          "models": [
+            "claude-fable-5-1",
+            "claude-opus-5-5"
+          ]
+        }
+      ],
+      "dispatch_calls": 2,
+      "seconds": 23.1,
+      "cost_usd": 0.494501,
+      "strict_pass": true,
+      "confirmed_worker_launches": 2,
+      "synchronous_worker_returns": 2,
+      "asynchronous_launch_receipts": 0,
+      "graded_behavior": "dispatch confirmation only; asynchronous result collection not measured",
+      "assigned_scopes": [
+        "product/a.txt",
+        "product/b.txt"
+      ],
+      "outcome_pass": true
+    },
+    {
+      "id": "fresh_resume-candidate-1",
+      "case": "fresh_resume",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Edit": 1,
+            "Write": 2
+          },
+          "cost_usd": 0.1384,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        },
+        {
+          "tool_calls": {
+            "Grep": 1,
+            "Read": 3,
+            "Glob": 2
+          },
+          "cost_usd": 0.118872,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 31.67,
+      "cost_usd": 0.257272,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "fresh_resume-candidate-2",
+      "case": "fresh_resume",
+      "variant": "candidate",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Edit": 1,
+            "Write": 2
+          },
+          "cost_usd": 0.522947,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        },
+        {
+          "tool_calls": {
+            "Grep": 1,
+            "Read": 1,
+            "Glob": 1
+          },
+          "cost_usd": 0.084219,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 28.79,
+      "cost_usd": 0.607166,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "fresh_resume-published-1",
+      "case": "fresh_resume",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Write": 3
+          },
+          "cost_usd": 0.128918,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        },
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 3
+          },
+          "cost_usd": 0.085827,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "ROZ-2026-11-05-01",
+          "ROZ-2026-11-05-02"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 26.9,
+      "cost_usd": 0.214745,
+      "strict_pass": false,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": true,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "fresh_resume-published-2",
+      "case": "fresh_resume",
+      "variant": "published",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Write": 2,
+            "Edit": 1
+          },
+          "cost_usd": 0.142083,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        },
+        {
+          "tool_calls": {
+            "Grep": 1,
+            "Glob": 2,
+            "Read": 1
+          },
+          "cost_usd": 0.085453,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 28.46,
+      "cost_usd": 0.227536,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "topic_switch-candidate-1",
+      "case": "topic_switch",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Edit": 1,
+            "Write": 2
+          },
+          "cost_usd": 0.175486,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 22.55,
+      "cost_usd": 0.175486,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "topic_switch-candidate-2",
+      "case": "topic_switch",
+      "variant": "candidate",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Edit": 1,
+            "Write": 2
+          },
+          "cost_usd": 0.184591,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 23.95,
+      "cost_usd": 0.184591,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "topic_switch-published-1",
+      "case": "topic_switch",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Write": 2,
+            "Edit": 1
+          },
+          "cost_usd": 0.188995,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 23.14,
+      "cost_usd": 0.188995,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "topic_switch-published-2",
+      "case": "topic_switch",
+      "variant": "published",
+      "repeat": 2,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {
+            "Glob": 1,
+            "Read": 1,
+            "Write": 2,
+            "Edit": 1
+          },
+          "cost_usd": 0.181741,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "initial_artifacts_ok": true,
+      "durable_scope_recorded": true,
+      "observed": {
+        "completed": false,
+        "remaining_stage_ids": [
+          "X3",
+          "X4"
+        ]
+      },
+      "false_completion": false,
+      "seconds": 24.29,
+      "cost_usd": 0.181741,
+      "strict_pass": true,
+      "normalized_remaining_stage_ids": [
+        "X3",
+        "X4"
+      ],
+      "alias_adjudication": false,
+      "artifact_contents_ok": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "trivial_control-candidate-1",
+      "case": "trivial_control",
+      "variant": "candidate",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {},
+          "cost_usd": 0.020989,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "unnecessary_task_record": false,
+      "seconds": 2.63,
+      "cost_usd": 0.020989,
+      "strict_pass": true,
+      "outcome_pass": true
+    },
+    {
+      "id": "trivial_control-published-1",
+      "case": "trivial_control",
+      "variant": "published",
+      "repeat": 1,
+      "valid": true,
+      "sessions": [
+        {
+          "tool_calls": {},
+          "cost_usd": 0.335274,
+          "models": [
+            "claude-fable-5-1"
+          ]
+        }
+      ],
+      "unnecessary_task_record": false,
+      "seconds": 2.54,
+      "cost_usd": 0.335274,
+      "strict_pass": true,
+      "outcome_pass": true
+    }
+  ]
+}

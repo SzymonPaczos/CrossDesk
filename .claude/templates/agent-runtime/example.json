@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "read-only-smoke",
+  "integration_branch": "main",
+  "capacity": 1,
+  "nodes": [
+    {
+      "id": "inspect",
+      "authorized": true,
+      "role": "scout",
+      "argv": ["git", "status", "--short"],
+      "cwd": ".",
+      "scope": ["."],
+      "depends_on": [],
+      "acceptance": [["git", "diff", "--check"]],
+      "timeout_seconds": 30,
+      "max_attempts": 1,
+      "blocked_exit_codes": [2, 78]
+    }
+  ]
+}

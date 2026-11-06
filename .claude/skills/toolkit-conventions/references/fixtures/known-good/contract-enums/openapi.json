@@ -1,0 +1,24 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "orders", "version": "2.0.0" },
+  "components": {
+    "schemas": {
+      "ProposalStatus": { "enum": ["pending", "approved", "rejected"], "type": "string" },
+      "ProposalResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/ProposalStatus" },
+          "action": { "enum": ["capture", "discard"], "type": "string" },
+          "provenance": { "anyOf": [{ "enum": ["live", "cache"], "type": "string" }, { "type": "null" }] }
+        }
+      },
+      "RunAgentInput": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+nodeid_or_label	commit	exit_code	date	note
+tests/test_orders.py::test_order_total_adds_shipping	1111111111111111111111111111111111111111	1	2026-08-23	red: shipping component removed from total()
+tests/test_orders.py	1111111111111111111111111111111111111111	0	2026-08-23	green: the whole file passes again after the fix
+tests/test_pricing.py::test_price_of_two_variants	2222222222222222222222222222222222222222	0	2026-08-23	red: price_of returns the flat per-call rate again
+tests/test_queue.py::test_claim_is_released_on_error	3333333333333333333333333333333333333333	1	2026-08-23	red: release moved out of the try block again

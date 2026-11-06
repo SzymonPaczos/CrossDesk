@@ -1,0 +1,43 @@
+{
+  "project": "CrossDesk",
+  "toolkit_sha": "879edc6f6fcf08762adcd1c34244c582bb690535",
+  "syntax": {
+    "shell": 39,
+    "python": 59,
+    "json": 23
+  },
+  "syntax_errors": [],
+  "whole_skill_directories": {
+    "audyt-naprawczy": {
+      "files": 1,
+      "exact_master": true
+    },
+    "petla-dostarczenia": {
+      "files": 1,
+      "exact_master": true
+    },
+    "toolkit-conventions": {
+      "files": 237,
+      "exact_master": true
+    },
+    "security-audit": {
+      "files": 24,
+      "exact_master": true
+    },
+    "plan-naprawy": {
+      "files": 1,
+      "exact_master": true
+    },
+    "weekly-audit": {
+      "files": 3,
+      "exact_master": true
+    }
+  },
+  "always_loaded_bytes": 12283,
+  "reviewer_master_prefix": true,
+  "sync_check_exit": 1,
+  "sync_check_reason": "in-progress adoption, zero undisclosed copy mismatches; declared Reviewer/preamble local extensions retain old lock baselines",
+  "production_changes": [],
+  "metadata_test_wrapper_change": false,
+  "source_snapshot": "d761d6805be6e70a9a23b0276fad16b1b6e6c969"
+}

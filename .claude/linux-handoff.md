@@ -15,8 +15,8 @@ Toolkit source is the PUBLISHED FEATURE BRANCH chore/project-adoptions-2026-11-0
 version 2026.11.07, exact pin 879edc6f6fcf08762adcd1c34244c582bb690535.
 This is not toolkit main. CrossDesk work branch is
 chore/toolkit-adoption-audit-2026-11-06, based on origin/main
- d761d6805be6e70a9a23b0276fad16b1b6e6c969. The project branch becomes remotely
-available only after P5; obtain the reviewed final project SHA from Coordinator.
+ d761d6805be6e70a9a23b0276fad16b1b6e6c969. The project branch is the WIP Linux handoff; confirm its final SHA against
+the Coordinator publication receipt before running checks.
 The old local audit branch with 11 unique commits must not be merged/deleted
 implicitly during setup.
 
@@ -114,20 +114,26 @@ cargo-deny and gitleaks still run and can block publication. Existing local-revi
 policy remains; this handoff does not introduce mandatory PRs or main protection.
 Scanner details are in the quality/security reports. A failed gate remains failed.
 
-## Coordinator evidence and next Linux action
+## Final audit/runtime checkpoint
 
-Read history/2026-11-06-integration-status.md, the quality audit and
-history/2026-11-06-security-audit.md before running checks. Whole skill
-catalogs are adopted, including Cloudflare; the actual Cloudflare run is
-INCOMPLETE at history/2026-11-06-cloudflare/REPORT.md. Its resume.md lists
-remaining phases. Zero final findings do not mean a clean security audit.
-Further Claude/Fable source review requires the pending owner provider consent.
+Read history/2026-11-06-security-audit.md (deterministic checks),
+history/2026-11-06-quality-audit.md and history/2026-11-06-runtime-proof.md.
+A1 configuration and scoped A3 audit evidence are accepted. A2/A4 remain OPEN.
+Full Cloudflare source review stopped at platform_guard_interruption, after
+owner consent was received. Its exact retained coverage and unfinished phases
+are in history/2026-11-06-cloudflare/REPORT.md. Zero final findings means no
+candidate completed independent verification; it is not a clean security audit.
+Do not bypass the platform guard or retry its interrupted operation indirectly.
 
-The Coordinator executed only bounded cached-image checks: CrossDesk 94 selected
-synchronous tests passed; full collection blocked on dependencies. BootControl
-10 wrapper meta-tests passed with mocked compiler/build output. The receipt
-records source hashes, overlay hashes and sandbox controls. No actual Rust
-build, real Polkit, live libvirt or firmware verification was performed.
-A2 and A4 remain open in the canonical ADP brief. No copied runtime or green
-metadata validation closes these stages. toolkit-sync check exits 1 because
-adoption is in progress; the earlier fragment-link false positive is fixed.
+Runtime proof used real Fable sessions and main result persistence/ACK; refill
+occurred while another session ran. Boot live controller restart preserved its
+session; malformed Boot SLOW JSON correctly stayed BLOCKED. The deterministic
+Git lifecycle fixture still needs real ps in the isolated image. A configurable
+refactor is kept only as a review candidate under reference/a2-on-demand/README.md,
+not activated or verified end-to-end. No daemon, global skill or startup hook
+was installed. Backend watch interval does not guarantee 1 second chat delivery.
+
+Next on Linux: reproduce the existing full project gates in the agreed sandbox,
+complete A2 lifecycle evidence, and resume A4 only where remaining review is
+permitted. The canonical ADP brief/backlog preserves those stages. Rust/Windows,
+real Polkit/firmware/libvirt and complete host tests are still unverified.

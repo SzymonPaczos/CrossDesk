@@ -4,9 +4,9 @@ Source is frozen clean d761d6805be6e70a9a23b0276fad16b1b6e6c969. Standard profil
 first-party host Python, guest Rust, GUI/local IPC and maintained CI/release/
 packaging are in scope. Vendored WinApps and frozen design reference art are
 out of scope. Compatible prior JSON findings/ledgers: none. Historical prose
-is a clue, not confirmation or an exclusion. Only baseline recon-a completed;
-recon-b/c/d are pending a required model source-payload/endpoint consent gate.
-This map and its deterministic planned units are preliminary, not a coverage claim.
+is a clue, not confirmation or an exclusion. All four baseline reconnaissance roles have structured read-only results.
+Explicit owner consent resolved the source-payload/model-endpoint gate.
+This map and planned units remain coverage obligations, not a coverage claim.
 
 CrossDesk is a single-user desktop controller for Windows applications displayed
 on Linux via FreeRDP RAIL. Host and operator share the intended OS account. The
@@ -53,5 +53,16 @@ cached modules. That evidence is not a candidate-specific proof. Target tests,
 PoCs/builds require the full OS boundary, no external network, empty allowlisted
 environment, read-only inputs/tools, scratch-only writes, limits and trusted
 no-follow bounded artifact promotion. CLI source review has only Read/Glob/Grep
-and formatting-only StructuredOutput; it grants no execution. Two launch approval
-rejections executed no model process. No new remote calls until required consent.
+and formatting-only StructuredOutput; it grants no execution. Two earlier launch approval rejections executed no model process. Explicit owner
+consent now permits the requested source review; it does not authorize target
+execution or expand tools. Any recon statement about installed caches, scanner
+blocking status or unconditional network fetching must be independently checked
+against actual controls rather than treated as a vulnerability conclusion.
+
+Recon-specific remaining obligations: per-method/per-frame and cross-plane replay
+state; directory/socket identity through restart; cancellation/error versus normal
+stream cleanup; host path/root and XML policy; RAIL aggregation before icon validation;
+Windows caller/FFI/installer ACLs and actual firmware inputs; GUI/desktop actions;
+and release/signing/PKGBUILD identity across every source-to-artifact handoff.
+Existing code/tests and source-visible accepted risks must be read, not inferred
+from old audit prose. No live VM, endpoint, registry or deployment is probed.

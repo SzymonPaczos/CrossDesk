@@ -1,100 +1,55 @@
 # CrossDesk security audit — INCOMPLETE
 
-This is a partial standard-profile run, not a completed security audit or PASS.
-Required independent source-payload/model-endpoint consent remains pending:
-automatic approval review rejected recon-b twice BEFORE either model process
-executed. No alternate transport/agent was used. The second rejection persisted
-after public repository/tree-equality evidence and explicitly requires consent
-for the payload and external destination. Coordinator has asked the user.
+Reason: `platform_guard_interruption`. This is a partial standard-profile audit,
+not a completed security review. The owner granted the earlier source/provider
+consent and all four reconnaissance roles completed. A later platform safety
+guard interrupted source-hunting coordination. The interrupted operation was
+not retried, rephrased or routed through another agent/tool.
 
-## Identity, scope and invocation accounting
+Source: `d761d6805be6e70a9a23b0276fad16b1b6e6c969`, clean original public
+CrossDesk source. Scope: first-party host, guest, GUI/local IPC and release
+controls; two explicit reference-material exclusions. No compatible prior JSON
+ledger/findings was available. Provisional coverage IDs were retained when
+reconnaissance expanded the deterministic plan. No global invocation budget was
+set; per-call bounds and failed attempts remain in private transport receipts.
 
-Frozen clean source: d761d6805be6e70a9a23b0276fad16b1b6e6c969,
-SzymonPaczos/CrossDesk. Standard profile, first-party host Python, guest Rust,
-GUI/local IPC, release/packaging controls; vendored WinApps and frozen design
-reference material are out of scope. No global invocation budget was set;
-requested per-call cap is 4 USD/240 s, model claude-fable-5-1. Baseline recon-a-r2
-completed after two preserved failed recon-a attempts. Recon-b/c/d, hunters,
-post-wave critic, distinct final-clean critic and candidate/final verifiers
-have NOT run in this continuation. Two approval-blocked launches are not model
-invocations or evidence of source review.
+## Results and limits
 
-No compatible prior JSON ledger/findings was available. Old prose audits are
-clues, not carried confirmed findings, exclusions or complete prior coverage.
-The required budget reserves remain explicit in run-metadata.json; the blocker
-is approval/source confinement, not a fabricated spend cap.
+There are **0 independently validated final findings**. Empty findings.json
+means no candidate completed independent Phase3/Phase5 verification; it does
+not mean the application is secure. No severity or confirmed exploit claim is
+assigned to unvalidated ledger candidates. Both mandatory critics and final
+verification remain unexecuted; there is no clean-coverage claim.
 
-## Security posture statement
+Coverage counts: {"candidate": 4, "covered": 19, "deferred": 31, "out_of_scope": 2}. All unresolved planned work is explicitly
+deferred; four candidate units remain unresolved. Only already-accepted parent
+ledger state was retained; raw unharvested payloads were not promoted.
 
-There is no independently validated final finding in this run. Empty findings
-means no candidate reached the required independent decision path; it does NOT
-mean no vulnerability exists. Completed recon-a establishes product/entrypoint
-facts only. Its transport PASS is structured research completion, not a target
-security verdict. The architecture map is preliminary and later reconnaissance
-may add or correct units.
+The separate deterministic dependency audit and 94 selected synchronous tests
+are in ../2026-11-06-security-audit.md. Full Python collection was blocked by
+missing dependencies; Rust/Windows/real-VM validation was not performed.
+Those receipts do not establish candidate-specific reproduction. No new PoC
+or target execution was performed after the platform guard.
 
-Source-visible mechanisms include separate user-session host/Windows guest,
-per-frame AuthContext/mTLS, an independent Unix management plane, sharing/token
-controls and maintained signing/packaging paths. Their completeness was not
-established by this interrupted run. Same-owner authority must not be confused
-with another local user, compromised guest or lower-trust file/message input.
-No deployed reachability, Windows identity, release provenance or live control
-was probed or certified.
+## Unvalidated ledger candidates
 
-## Confirmed findings
+- `crossdesk/host/jitlite-parent-follows-guest-writable-symlink`
+- `host/ipc/auth:stream-nonce-rebinding-unbounded-active-streams`
+- `release.yml:sign-agent:unprotected-signing-on-tag-or-dispatch`
 
-None independently validated; no severity or exploit claim is assigned.
-FINDINGS-DETAIL.md has no confirmed medium/high/critical reproduction.
+These identifiers are unresolved bookkeeping only, not security findings.
+They require fresh independent source decisions and final record checks.
 
-## NEEDS VALIDATION
+## Remaining work
 
-No schema-shaped vulnerability lead has completed independent candidate
-validation, so none is presented as a needs_validation security finding.
-NEEDS-VALIDATION.md records RUN-LEVEL gaps separately. Historical source clues
-are not promoted to findings without tracing/verification.
+Preserve the exact source/coverage identity. Resume only in an environment
+that permits the remaining authorized review; do not bypass the platform guard.
+Complete deferred units, immediate post-wave and distinct final-clean critics,
+then fresh candidate and final-record verification. Any actual target check
+requires the full offline OS sandbox and safe evidence promotion. Native Linux,
+guest/VM and deployment observations remain separate unmet validation tasks.
 
-## Coverage and controls
-
-coverage-ledger.json has 17 deferred first-party units and 2 out-of-scope
-reference units; covered 0, candidate 0, blocked 0. Deferred units preserve visible
-management IPC, mTLS/per-frame/replay/stream paths, share/file/XML/RAIL state,
-credentials/Windows FFI, GUI/installer, configuration and CI/release/package
-boundaries. Their selected blocks are a resumable preliminary plan, not an
-assertion of exhaustive material combinations. No hunter wave ran, so neither
-mandatory standard-profile critic ran; no clean-coverage claim is made.
-
-No target code was executed by this Parent. Coordinator supplied separate
-OS-sandbox receipts for 94 selected CrossDesk tests; full host collection was
-blocked by missing cached modules. That auxiliary test evidence is not a
-candidate-specific local proof and is not mislabeled as a ledger local check.
-Root-owned SCA/OSV/KEV/secrets work is separate and was not duplicated here.
-
-Source packets exclude Git metadata and ignored/secret filenames. The adapter
-checks tool paths in its final trace, but effective pre-read confinement must
-also be established; a rejected outside-path trace after execution would not
-by itself prove host data had never been read. Until consent and confinement
-are resolved, no new remote source call will be made.
-
-## Resumption and artifacts
-
-Resume only after the required user response. Continue recon-b/c/d, complete
-architecture/unit maps, then focused hunting, immediate and distinct final
-critics, independent candidate decisions and fresh final record checks. Actual
-candidate checks require the prescribed OS sandbox and safe artifact promotion.
-The parent alone owns shared files. Validators prove format/state consistency,
-not truth, completed coverage or target security.
-
-Artifacts: run-metadata.json; architecture.md; coverage-ledger.json;
-findings.json; approval-review.json; recon-a-facts.json;
-FINDINGS-DETAIL.md; NEEDS-VALIDATION.md. Earlier failed recon attempts remain private and are not bundled. Their
-counts are retained; no raw prompts, source packets or transport logs are published. Source/ref, scope and incomplete reason are explicit in metadata.
-
-## Public checkpoint scope
-
-This sanitized checkpoint includes curated recon-a facts, metadata and the
-preliminary ledger, not private execution logs or an executable audit launcher.
-The reviewed target is the recorded baseline commit, not a later adoption
-commit. Private helper paths and model connection details are intentionally
-absent. See resume.md for the installed skill procedure and validation commands.
-Automatic approval rejected two source-egress launches before execution; the
-auditing process remains paused pending the required explicit user response.
+Artifacts: run-metadata.json, architecture.md, coverage-ledger.json,
+findings.json, FINDINGS-DETAIL.md, NEEDS-VALIDATION.md. Validators check structure
+and state consistency only. The project's canonical ADP backlog/brief owns
+remaining work; this ledger is audit accounting, not another product backlog.

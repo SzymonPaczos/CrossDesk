@@ -13,7 +13,7 @@ PRZEGLAD: 2026-11-13
 BRIEF: task-briefs/ADP-2026-11-06-01.md
 
 A1 configuration and scoped A3 evidence are accepted; next Coordinator owns
-A2 runtime proof, A4 security and P5 publication/Linux handoff. Remaining stages
+A2 Linux lifecycle proof, A4 interrupted at platform guard and P5 final publication/Linux handoff. Remaining stages
 stay open until evidenced; topic changes preserve the plan.
 
 

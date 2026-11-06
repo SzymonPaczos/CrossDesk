@@ -1,6 +1,5 @@
-# Confirmed finding detail — none independently validated
+# Confirmed finding detail
 
-This run is INCOMPLETE. No medium/high/critical record passed candidate and
-fresh final-record verification. No source hypothesis, old prose audit or
-unexecuted test is presented as a confirmed reproduction. See REPORT.md and
-run-metadata.json for the required approval/confinement and coverage gaps.
+No final record completed independent Phase3/Phase5 verification. This run is
+INCOMPLETE due to platform_guard_interruption; no reproduction/severity is
+asserted. Unvalidated candidates remain only in the coverage ledger.

@@ -1,62 +1,15 @@
 {
-  "schema_version": 1,
-  "checkpoint_status": "incomplete-paused",
-  "self_excluded": true,
-  "files": [
-    {
-      "path": "FINDINGS-DETAIL.md",
-      "bytes": 362,
-      "sha256": "ef3efb846959588b3864d2f055519d1b7d4eda77358e39e5b857380229054dff"
-    },
-    {
-      "path": "NEEDS-VALIDATION.md",
-      "bytes": 1671,
-      "sha256": "b4494906f89df6288ac04f7babd1fa78c43e2b9d63a4c4a33af6684a96231831"
-    },
-    {
-      "path": "REPORT.md",
-      "bytes": 5662,
-      "sha256": "8a87083a944781462f6423f989d4b82be8d405e00ffcf52087ecd521063c4de2"
-    },
-    {
-      "path": "approval-review.json",
-      "bytes": 569,
-      "sha256": "e1979a1fb968bd8dd4aa9880c9fb8b0185ecf0d400f7ef123c5cc21ebf163681"
-    },
-    {
-      "path": "architecture.md",
-      "bytes": 3920,
-      "sha256": "3fb73a3cc5cceaa411c1b202b6c77db80fe69750e2ee91ddb9bab8b23cf28354"
-    },
-    {
-      "path": "coverage-ledger.json",
-      "bytes": 136411,
-      "sha256": "dd33f8c73abc01675475b7dd5a73eb9ecaff5cbc31b33bb8317ff321e692bbef"
-    },
-    {
-      "path": "findings.json",
-      "bytes": 3,
-      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
-    },
-    {
-      "path": "recon-a-facts.json",
-      "bytes": 8871,
-      "sha256": "22e614e852e22c95ac30314361dc52673979e40202a023b197d88f59304f20c0"
-    },
-    {
-      "path": "resume.md",
-      "bytes": 5800,
-      "sha256": "c86bf1753bd40557994989b442933d7b33a09aed4e3c195a1288ba2d41eae95d"
-    },
-    {
-      "path": "run-metadata.json",
-      "bytes": 4290,
-      "sha256": "f1c2cbe8a9cb6e17fdecdc5c4e8a3fadaeb8150cd671ba1f8c1249242e198b13"
-    },
-    {
-      "path": "validation.json",
-      "bytes": 1136,
-      "sha256": "68c8a5dc375030a4d761a63c10efd2f45324ec07b4253015eb90bbe7b3ab1979"
-    }
-  ]
+  "source_sha": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
+  "run_status": "incomplete",
+  "reason": "platform_guard_interruption",
+  "files": {
+    "run-metadata.json": "218ef4eaf679cb5352c9afb75c96931dbc1605bdb8c86e4fac3b73da4b9ccc24",
+    "FINDINGS-DETAIL.md": "63ec1e020f485923d2f33730cb293eb48cd83eef6906dc65daac94f337c86140",
+    "architecture.md": "315499137761da4fa308a1702902908d072960b0a1fa4c060225170b9b2be110",
+    "NEEDS-VALIDATION.md": "b0c7d8385f4ca07be749b96a5ebd154124a3a76387f5327516b37bfdb9425df8",
+    "REPORT.md": "cc2a45b9c38ca3bc7fa3be864bec359e0a3889aafc9cdd7f306a9ba011a03780",
+    "resume-bookkeeping.md": "df88dbc1b2a51add02bb6e9c8362ac302504475d73b765c5a9ddd235bec938ed",
+    "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "coverage-ledger.json": "b1e73028aec270e40a9f5d1f492be6863810aa7c67ed852c99bbab41f884e4f0"
+  }
 }

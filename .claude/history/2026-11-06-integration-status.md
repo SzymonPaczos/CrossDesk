@@ -1,36 +1,60 @@
-# Adoption integration status — 2026-11-06
+# Final adoption/integration status — 2026-11-06
 
-A1 configuration is accepted within the scope of the JSON static receipt.
-This is an adoption in progress, not an application release or full gate PASS.
-Toolkit source: published review branch chore/project-adoptions-2026-11-06,
-2026.11.07 at 879edc6f6fcf08762adcd1c34244c582bb690535 (toolkit PR46).
-No production application source was modified. BootControl alone has a
-changed audit-wrapper regression test, executed as 10mock cases in isolation.
-Whole adopted skill directories match this source byte for byte. Security
-Reviewer retains its complete local domain extension after the exact current
-master prefix. Old override lock hashes intentionally preserve their original
-baseline; they are not an undisclosed mismatch or rewritten provenance.
+A1 configuration and scoped A3 source/Git audit are accepted. The adoption
+record stays Status: in-progress; A2/A4 are OPEN. toolkit-sync check exits 1
+because adoption is unfinished, not because the fragment-link helper defect
+remains. Published review source 879edc6f6fcf08762adcd1c34244c582bb690535,
+version 2026.11.07, toolkit PR46; source is not toolkit main.
 
-A2 remains OPEN. Native workers really dispatched and returned to Coordinator
-for this task, but copied runtime/collector/local-gate templates do not establish
-project start/resume/result/merge integration, fast/slow refill/restart behavior,
-permission enforcement or post-merge cleanup. CrossDesk's approved default
-multi-agent-inactive exception is preserved; no new always-on daemon or hook
-was activated. Linux follow-up must demonstrate these behaviors against the
-reviewed final revision before closing A2.
+Whole adopted skill directories match the pinned source. Security Reviewer
+retains the exact current master prefix and complete project domain extension.
+No production Rust/Python or Cargo lockfile remediation was performed.
+BootControl alone changes the audit-wrapper meta-test and warning link; its
+10 mock cases passed. Old override lock hashes intentionally retain provenance.
 
-A3 source/Git review is in 2026-11-06-quality-audit.md. The independent execution
-receipt in 2026-11-06-security-audit.md adds bounded tests with limitations;
-it does not convert missing application/Linux/real-Polkit evidence to PASS.
+## A2 — real partial runtime proof
 
-A4 remains OPEN. Cloudflare checkpoint under 2026-11-06-cloudflare/ is explicitly
-INCOMPLETE. Automatic approval review rejected further Claude/Fable source
-review calls and requires explicit owner source-to-provider consent. No further
-call was routed through a different agent/tool. Local exact-version advisory
-checks and secret/SAST candidates remain distinct from validated app exploits.
+See 2026-11-06-runtime-proof.md and JSON. Actual Fable sessions, per-attempt
+run IDs, typed provider session handles, main persistence/ACK and genuine slot
+refill were measured. Native_task_id remains null: no native background-task
+API/chat-push capability was claimed. Backend 1 second polling did not imply
+1 second main-chat delivery; measured delivery/persistence was about 58 seconds.
+Boot controller live restart preserved the same session/run without redispatch;
+Cross completed-state resume was replay/dedup only. Boot SLOW malformed JSON
+remained BLOCKED despite CLI exit 0; main acknowledged the result, not success.
 
-P5 publication state is tracked in the canonical ADP brief and GitHub branch/PR.
-No main merge, deployment, actual boot/ESP/libvirt mutation or gate bypass is
-part of this handoff. Active failed gates must remain failures. The adoption
-record stays Status: in-progress and toolkit-sync check exits 1 because A2/A4
-are open. The helper fragment-link bug is fixed at the pinned source.
+The strict cached Docker image lacks real ps, so deterministic Builder/merge,
+timeout and cleanup proof remains BLOCKED before accepted task execution.
+No tool shim, dependency installation, extra image or resource relaxation was
+used. The configurable refactor is kept only as a reference candidate under
+../reference/a2-on-demand, with metadata/syntax guards and no provider end-to-end
+validation after refactoring. It was not installed as an active project feature.
+No daemon, startup hook, global skill or always-on swarm was activated.
+
+## A4 — explicit incomplete security audit
+
+Owner explicitly approved public source to Claude/Anthropic Fable; the earlier
+consent checkpoint is historical. A separate platform safety guard interrupted
+Phase 2 coordination in both projects. No retry/rephrasing/alternate route was
+used after the guard. Current reason: platform_guard_interruption.
+
+This project's retained units: {"candidate": 4, "covered": 19, "deferred": 31, "out_of_scope": 2}.
+There are 0 independently validated final findings. Unvalidated candidates stay
+ledger-only, without severity or promotion into findings.json. Both mandatory
+critics and independent Phase3/Phase5 verification are unfinished. Structural
+validator PASS is not a clean security result. Exact phase/scope/gaps are in
+2026-11-06-cloudflare/REPORT.md and its JSON metadata/ledger.
+
+The separate 2026-11-06-security-audit.md records exact-version OSV/CISA checks,
+secret-pattern candidates and bounded tests. Cross 94 selected synchronous tests
+passed; full collection remains blocked by missing modules. No actual Rust,
+Windows guest, real Polkit/firmware/libvirt or complete native acceptance ran.
+These facts never become a candidate-specific reproduction or full audit PASS.
+
+## Publication and remaining work
+
+Linux instructions: ../linux-handoff.md. The canonical ADP brief/backlog keeps
+A2/A4 open with concrete gaps. Publication is WIP/draft, without merge/release.
+Owner granted one CrossDesk WIP publication with pre-push exception; it does
+not mean its full Linux/scanner gates passed or authorize a permanent bypass.
+Boot's original hooksPath was unset; nothing was disabled for its publication.

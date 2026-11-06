@@ -1,7 +1,7 @@
 {
   "run_id": "crossdesk-20261106",
   "repo": "SzymonPaczos/CrossDesk",
-  "target": ".",
+  "target": "<private-audit-root>/snapshots/CrossDesk",
   "source_ref": {
     "commit": "d761d6805be6e70a9a23b0276fad16b1b6e6c969",
     "dirty": false
@@ -26,7 +26,7 @@
     "parent"
   ],
   "run_status": "incomplete",
-  "phase": "phase1-blocked-with-explicit-phase6-partial-report",
+  "phase": "phase2-interrupted-terminal-checkpoint",
   "scope_exclusions": [
     "third_party/winapps vendored reference",
     "docs/GUI_DESIGN.md frozen design reference; executable GUI stays in scope"
@@ -37,21 +37,20 @@
     "timeout_seconds": 240
   },
   "approval_gate": {
-    "status": "pending_required_user_consent",
-    "executed_blocked_calls": 0,
-    "approval_rejections": 2,
-    "reason": "automatic review rejects source payload export to an unverified external model destination until explicit payload/endpoint consent",
-    "public_source_evidence": "GitHub API identifies the repository as public; published commit and tree match the frozen baseline. Anonymous source checks also succeeded. This did not waive the required endpoint/payload consent gate."
+    "status": "explicit_owner_consent_received",
+    "scope": "public frozen CrossDesk source to Claude/Anthropic Fable for audit",
+    "note": "Later platform safety interruption is separate and not waived or bypassed."
   },
   "invocations": {
-    "completed_recon": 1,
+    "completed_recon": 4,
     "failed_recon": 2,
     "not_executed_approval_rejections": 2,
     "hunters": 0,
     "post_wave_critics": 0,
     "final_clean_critics": 0,
     "candidate_verifiers": 0,
-    "record_verifiers": 0
+    "record_verifiers": 0,
+    "failed_hunters": 1
   },
   "pre_recon_budget_gate": {
     "global_budget": null,
@@ -67,16 +66,20 @@
     "historical_prose": "clues only; no carried confirmations or exclusions"
   },
   "auxiliary_execution": {
-    "receipt_included": false,
-    "evidence_status": "external auxiliary evidence is not part of this checkpoint or its ledger local checks",
+    "receipt": "<private-audit-root>/execution/artifacts/FINAL-execution-summary.json",
     "summary": "Coordinator reports 94 selected CrossDesk tests passed; full suite blocked by missing structlog/pytest_asyncio. Not candidate-specific validation or a ledger local-check artifact."
   },
-  "incomplete_reason": "required_source_payload_and_model_endpoint_consent_pending_after_automatic_approval_rejections",
   "coverage_status_counts": {
-    "deferred": 17,
+    "covered": 19,
+    "deferred": 31,
+    "candidate": 4,
     "out_of_scope": 2
   },
-  "unvalidated_candidate_fingerprints": [],
+  "unvalidated_candidate_fingerprints": [
+    "crossdesk/host/jitlite-parent-follows-guest-writable-symlink",
+    "host/ipc/auth:stream-nonce-rebinding-unbounded-active-streams",
+    "release.yml:sign-agent:unprotected-signing-on-tag-or-dispatch"
+  ],
   "independent_verification_complete": false,
   "required_resume": [
     "Receive explicit user consent for exact public committed CrossDesk snapshot payload to Claude/Anthropic via claude-fable-5-1 CLI.",
@@ -84,23 +87,118 @@
     "Resume baseline recon-b/c/d through required strict read-only CLI, then reconcile preliminary units/companions before hunting.",
     "Run focused hunter wave, immediate critic and distinct final-clean critic; validate every candidate and fresh final record independently."
   ],
-  "toolkit_source": {
-    "repository": "SzymonPaczos/claude-toolkit",
-    "branch": "chore/project-adoptions-2026-11-06",
-    "commit": "879edc6f6fcf08762adcd1c34244c582bb690535",
-    "version": "2026.11.07",
-    "skill_path": ".claude/skills/security-audit"
+  "wave1_plan": {
+    "hunters": 16,
+    "coverage_units": 54,
+    "immediate_post_wave_critics_reserved": 1,
+    "distinct_final_clean_critics_reserved": 1,
+    "fresh_verifiers_reserved_per_surviving_candidate": 2,
+    "global_budget": null,
+    "per_call_limits": {
+      "max_usd": 4,
+      "seconds": 240
+    },
+    "refinement_reason": "13-unit auth cluster exhausted per-call4USD before structured output. Discarded partial result; reassigned all54 units by16 focused source subsystems with fresh IDs/low effort; no source unit dropped or marked covered."
   },
-  "checkpoint": {
-    "public_sanitized": true,
-    "contains_raw_transcripts": false,
-    "contains_model_transport_logs": false,
-    "contains_credentials": false,
-    "baseline_source_only": true,
-    "current_workspace_not_audited": true,
-    "resume_method": "resume.md",
-    "audit_status": "incomplete-and-paused-awaiting-required-consent"
+  "coverage_reconciliation": {
+    "provisional_snapshot": "planning/provisional-coverage-ledger.json",
+    "provisional_sha256": "dd33f8c73abc01675475b7dd5a73eb9ecaff5cbc31b33bb8317ff321e692bbef",
+    "old_first_party_units": 17,
+    "old_out_of_scope_units": 2,
+    "current_first_party_units": 54,
+    "current_out_of_scope_units": 2,
+    "retained_coverage_ids": [
+      ".github%2Fworkflows%2Fci.yml%23workflow-inputs::.github%2Fworkflows%2Fsecurity.yml%23workflow-token-artifact-authority::ci::ATTACK-CLASSES.md%23Access%20control",
+      ".github%2Fworkflows%2Frelease.yml%23release-promotion::infra%2Fcode-signing%2Fsign-agent.sh%23signed-artifact-identity::release::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+      "docs%2FGUI_DESIGN.md%23reference-only::docs%2FGUI_DESIGN.md%23explicit-scope-exclusion::docs%2FGUI_DESIGN.md::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23firmware-host-identity::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23SMBIOS-buffer-identity::guest%2Fidentity::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fsession.rs%23credential-request::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fcredentials.rs%23Windows-logon-FFI::guest%2Fcredentials::ATTACK-CLASSES.md%23Access%20control",
+      "gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fmain.rs%23native-GUI-entry::gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fqobjects%2Fmanager.rs%23native-action-authority::gui::ATTACK-CLASSES.md%23Injection",
+      "host%2Fsrc%2Fcrossdesk_host%2Fcli%2Finstall_cmd.py%23installer-inputs::host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fdomain_xml.py%23VM-and-file-authority::host%2Finstaller::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "host%2Fsrc%2Fcrossdesk_host%2Fconfig%2F__init__.py%23effective-config::host%2Fsrc%2Fcrossdesk_host%2Fdaemon.py%23runtime-backend-and-bind-selection::host%2Fconfiguration::ATTACK-CLASSES.md%23Business%20logic",
+      "host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23attach_share::host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23libvirt-device-XML::host%2Ffilesystem::ATTACK-CLASSES.md%23Injection",
+      "host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fcredentials.py%23credential-persistence::host%2Fsrc%2Fcrossdesk_host%2Fintegrations%2Fkeyring%2Ffile_backend.py%23local-owner-secret::host%2Fcredentials::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23ControlServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23per-frame-authentication::host%2Fipc%2Fcontrol::ATTACK-CLASSES.md%23Access%20control",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23RailWindowEvents::host%2Fsrc%2Fcrossdesk_host%2Fdisplay%2Frail_manager.py%23guest-window-state::host%2Fdisplay::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23ShareChannel::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23mount-token-authority::host%2Fipc%2Ffilesystem::ATTACK-CLASSES.md%23Access%20control",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fheartbeat.py%23HeartbeatServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23stream-nonce-sequence-lifecycle::host%2Fipc%2Fheartbeat::ATTACK-CLASSES.md%23Business%20logic",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Launch::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23JIT-share-root-policy::host%2Ffilesystem::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23ManagementServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Unix-socket-peer-authority::host%2Fipc%2Fmanagement::ATTACK-CLASSES.md%23Access%20control",
+      "host%2Fsrc%2Fcrossdesk_host%2Ftransport%2Freal.py%23RealTransport::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23AuthValidator::host%2Ftransport::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+      "packaging%2Faur%2FPKGBUILD%23package-source::packaging%2Faur%2FPKGBUILD%23installed-executable-identity::packaging::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+      "third_party%2Fwinapps%23reference-only::third_party%2Fwinapps%23explicit-scope-exclusion::third_party%2Fwinapps::ATTACK-CLASSES.md%23Resource%20and%20file%20handling"
+    ],
+    "added_material_class_coverage_ids": [
+      ".github%2Fworkflows%2Fci.yml%23workflow-inputs::.github%2Fworkflows%2Fsecurity.yml%23workflow-token-artifact-authority::ci::SUPPLY-CHAIN-AND-RELEASE.md%23Automation%20identity%20overreach",
+      ".github%2Fworkflows%2Fci.yml%23workflow-inputs::.github%2Fworkflows%2Fsecurity.yml%23workflow-token-artifact-authority::ci::SUPPLY-CHAIN-AND-RELEASE.md%23Untrusted%20code%20in%20a%20privileged%20workflow",
+      ".github%2Fworkflows%2Fci.yml%23workflow-inputs::.github%2Fworkflows%2Fsecurity.yml%23workflow-token-artifact-authority::ci::SUPPLY-CHAIN-AND-RELEASE.md%23Workflow%20command%20and%20expression%20confusion",
+      ".github%2Fworkflows%2Frelease.yml%23release-promotion::infra%2Fcode-signing%2Fsign-agent.sh%23signed-artifact-identity::release::SUPPLY-CHAIN-AND-RELEASE.md%23Build-to-promotion%20substitution",
+      ".github%2Fworkflows%2Frelease.yml%23release-promotion::infra%2Fcode-signing%2Fsign-agent.sh%23signed-artifact-identity::release::SUPPLY-CHAIN-AND-RELEASE.md%23Release%20authorization%20and%20signing-policy%20gaps",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23firmware-host-identity::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23SMBIOS-buffer-identity::guest%2Fidentity::MEMORY-SAFETY-AND-BINARY.md%23Integer%20overflow%2C%20underflow%2C%20truncation%2C%20and%20signedness",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23firmware-host-identity::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fhost_uuid.rs%23SMBIOS-buffer-identity::guest%2Fidentity::MEMORY-SAFETY-AND-BINARY.md%23Out-of-bounds%20read%20or%20write",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fsession.rs%23credential-request::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fcredentials.rs%23Windows-logon-FFI::guest%2Fcredentials::MEMORY-SAFETY-AND-BINARY.md%23Pointer-length%20and%20ownership%20contract%20mismatch",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fsession.rs%23credential-request::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fcredentials.rs%23Windows-logon-FFI::guest%2Fcredentials::MEMORY-SAFETY-AND-BINARY.md%23Under-authorized%20powerful%20interfaces",
+      "guest%2Fcrates%2Fagent-svc%2Fsrc%2Fsession.rs%23credential-request::guest%2Fcrates%2Fagent-svc%2Fsrc%2Fcredentials.rs%23Windows-logon-FFI::guest%2Fcredentials::PROTOCOLS-RPC-AND-MESSAGING.md%23Peer%20identity%20to%20application-principal%20confusion",
+      "gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fmain.rs%23native-GUI-entry::gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fqobjects%2Fmanager.rs%23native-action-authority::gui::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Custom-scheme%20and%20deep-link%20ambiguity",
+      "gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fmain.rs%23native-GUI-entry::gui%2Fcrates%2Fcrossdesk-gui%2Fsrc%2Fqobjects%2Fmanager.rs%23native-action-authority::gui::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23File-open%20and%20intent%20authority%20confusion",
+      "host%2Fsrc%2Fcrossdesk_host%2Fcli%2Finstall_cmd.py%23installer-inputs::host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fdomain_xml.py%23VM-and-file-authority::host%2Finstaller::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Install%2C%20update%2C%20and%20repair%20path%20trust",
+      "host%2Fsrc%2Fcrossdesk_host%2Fcli%2Finstall_cmd.py%23installer-inputs::host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fdomain_xml.py%23VM-and-file-authority::host%2Finstaller::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Local%20file%20ownership%20and%20TOCTOU",
+      "host%2Fsrc%2Fcrossdesk_host%2Fconfig%2F__init__.py%23effective-config::host%2Fsrc%2Fcrossdesk_host%2Fdaemon.py%23runtime-backend-and-bind-selection::host%2Fconfiguration::CLOUD-AND-DEPLOYMENT.md%23Security-control%20precedence%20drift",
+      "host%2Fsrc%2Fcrossdesk_host%2Fconfig%2F__init__.py%23effective-config::host%2Fsrc%2Fcrossdesk_host%2Fdaemon.py%23runtime-backend-and-bind-selection::host%2Fconfiguration::CLOUD-AND-DEPLOYMENT.md%23Unexpected%20service%20or%20management-plane%20reachability",
+      "host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23attach_share::host%2Fsrc%2Fcrossdesk_host%2Ffilesystem_ctl%2Freal.py%23libvirt-device-XML::host%2Ffilesystem::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Privileged%20helper%20as%20confused%20deputy",
+      "host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fcredentials.py%23credential-persistence::host%2Fsrc%2Fcrossdesk_host%2Fintegrations%2Fkeyring%2Ffile_backend.py%23local-owner-secret::host%2Fcredentials::CLOUD-AND-DEPLOYMENT.md%23Secret%20exposure%20across%20workload%20boundaries",
+      "host%2Fsrc%2Fcrossdesk_host%2Finstaller%2Fcredentials.py%23credential-persistence::host%2Fsrc%2Fcrossdesk_host%2Fintegrations%2Fkeyring%2Ffile_backend.py%23local-owner-secret::host%2Fcredentials::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Credential-store%20and%20local-secret%20boundary%20mismatch",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23ControlServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23per-frame-authentication::host%2Fipc%2Fcontrol::PROTOCOLS-RPC-AND-MESSAGING.md%23Interceptor%20and%20method-path%20inconsistency",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23ControlServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23per-frame-authentication::host%2Fipc%2Fcontrol::PROTOCOLS-RPC-AND-MESSAGING.md%23Per-item%20and%20streaming%20authorization%20gaps",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23RailWindowEvents::host%2Fsrc%2Fcrossdesk_host%2Fdisplay%2Frail_manager.py%23guest-window-state::host%2Fdisplay::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Detached%20work%20after%20cancellation",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fcontrol.py%23RailWindowEvents::host%2Fsrc%2Fcrossdesk_host%2Fdisplay%2Frail_manager.py%23guest-window-state::host%2Fdisplay::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Unbounded%20buffering%20and%20cardinality",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23ShareChannel::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23mount-token-authority::host%2Fipc%2Ffilesystem::PROTOCOLS-RPC-AND-MESSAGING.md%23Callback%20and%20reply-correlation%20confusion",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23ShareChannel::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Ffilesystem.py%23mount-token-authority::host%2Fipc%2Ffilesystem::PROTOCOLS-RPC-AND-MESSAGING.md%23Per-item%20and%20streaming%20authorization%20gaps",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fheartbeat.py%23HeartbeatServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23stream-nonce-sequence-lifecycle::host%2Fipc%2Fheartbeat::PROTOCOLS-RPC-AND-MESSAGING.md%23Out-of-order%20and%20stale%20message%20acceptance",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fheartbeat.py%23HeartbeatServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23stream-nonce-sequence-lifecycle::host%2Fipc%2Fheartbeat::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23File%20descriptor%2C%20handle%2C%20and%20temporary-resource%20leaks",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Launch::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23JIT-share-root-policy::host%2Ffilesystem::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23File-open%20and%20intent%20authority%20confusion",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Launch::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23JIT-share-root-policy::host%2Ffilesystem::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Local%20file%20ownership%20and%20TOCTOU",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23ManagementServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Unix-socket-peer-authority::host%2Fipc%2Fmanagement::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23Claimed%20principal%20versus%20channel%20identity",
+      "host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23ManagementServiceServicer::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fmanagement.py%23Unix-socket-peer-authority::host%2Fipc%2Fmanagement::DESKTOP-MOBILE-AND-LOCAL-IPC.md%23IPC%20peer-authentication%20gaps",
+      "host%2Fsrc%2Fcrossdesk_host%2Ftransport%2Freal.py%23RealTransport::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23AuthValidator::host%2Ftransport::PROTOCOLS-RPC-AND-MESSAGING.md%23Peer%20identity%20to%20application-principal%20confusion",
+      "host%2Fsrc%2Fcrossdesk_host%2Ftransport%2Freal.py%23RealTransport::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23AuthValidator::host%2Ftransport::WEB-PROTOCOL-AND-AUTH.md%23Certificate%20lifecycle%20fallback",
+      "host%2Fsrc%2Fcrossdesk_host%2Ftransport%2Freal.py%23RealTransport::host%2Fsrc%2Fcrossdesk_host%2Fipc%2Fauth.py%23AuthValidator::host%2Ftransport::WEB-PROTOCOL-AND-AUTH.md%23mTLS%20peer%20and%20application-identity%20confusion",
+      "packaging%2Faur%2FPKGBUILD%23package-source::packaging%2Faur%2FPKGBUILD%23installed-executable-identity::packaging::SUPPLY-CHAIN-AND-RELEASE.md%23Dependency%20source%20and%20namespace%20confusion",
+      "packaging%2Faur%2FPKGBUILD%23package-source::packaging%2Faur%2FPKGBUILD%23installed-executable-identity::packaging::SUPPLY-CHAIN-AND-RELEASE.md%23Mutable%20and%20unbound%20build%20inputs",
+      "packaging%2Faur%2FPKGBUILD%23package-source::packaging%2Faur%2FPKGBUILD%23installed-executable-identity::packaging::SUPPLY-CHAIN-AND-RELEASE.md%23Update%20metadata%20and%20rollback%20confusion"
+    ],
+    "dropped_coverage_ids": [],
+    "reason": "Baseline recon seed refinement creates explicit per-companion attack-class axes; all original ordinary-class units and scope exclusions retained. Nonexistent initial verify-agent.ps1 starting path corrected to actual signing README; sign-agent source remains assigned."
   },
-  "target_path_base": "reviewed_repository_root",
-  "source_ref_scope": "frozen baseline, not the current publication/adoption commit"
+  "wave1_execution_order": [
+    "hunt-host-ipc-filesystem",
+    "hunt-host-display",
+    "hunt-host-ipc-control",
+    "hunt-host-transport",
+    "hunt-release",
+    "hunt-ci",
+    "hunt-packaging",
+    "hunt-host-filesystem",
+    "hunt-host-installer",
+    "hunt-guest-credentials",
+    "hunt-guest-identity",
+    "hunt-host-credentials",
+    "hunt-host-ipc-management",
+    "hunt-gui",
+    "hunt-host-configuration"
+  ],
+  "wave1_priority_reason": "Guest-controlled host boundaries first; release/CI/package trust next; file/native/credential and same-owner local configuration paths after. Each assigned ID remains sorted; no domain is omitted.",
+  "incomplete_reason": "platform_guard_interruption",
+  "remaining_phases": [
+    "finish unresolved source coverage",
+    "immediate post-wave critic",
+    "separate final-clean critic",
+    "fresh Phase3 candidate decisions",
+    "fresh Phase5 final record checks"
+  ],
+  "finished_at": "2026-11-06T10:42:05.284525+00:00",
+  "execution_cleanup": {
+    "owned_audit_adapters_running": 0,
+    "evidence": "host identity-only process inventory after guard interruption; every retained transport receipt reports complete process cleanup"
+  }
 }
